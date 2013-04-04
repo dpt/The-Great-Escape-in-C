@@ -1,4 +1,4 @@
-/* tge.c */
+/* TheGreatEscape.c */
 
 #include <stdint.h>
 #include <string.h>
