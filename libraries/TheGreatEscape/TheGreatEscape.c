@@ -1,4 +1,10 @@
-/* TheGreatEscape.c */
+/* TheGreatEscape.c
+ *
+ * Reimplementation of The Great Escape by Denton Designs.
+ *
+ * This reimplementation copyright (c) David Thomas, 2012-2013.
+ * <dave@davespace.co.uk>.
+ */
 
 #include <stdint.h>
 #include <string.h>
@@ -6,12 +12,16 @@
 /* ----------------------------------------------------------------------- */
 
 #define UNKNOWN 1
+#define NELEMS(a) ((int) (sizeof(a) / sizeof(a[0])))
 
 /* ----------------------------------------------------------------------- */
 
 // ENUMERATIONS
 //
 
+/**
+ * Identifiers of game items.
+ */
 enum item
 {
   item_WIRESNIPS,
@@ -34,6 +44,9 @@ enum item
   item_NONE = 255
 };
 
+/**
+ * Identifiers of game messages.
+ */
 enum message
 {
   message_MISSED_ROLL_CALL,
@@ -60,7 +73,9 @@ enum message
   message_NONE = 255
 };
 
-// this duplicates data...
+/**
+ * Identifiers of objects used to build interiors.
+ */
 enum interior_object
 {
   interiorobject_TUNNEL_0,
@@ -120,6 +135,9 @@ enum interior_object
   interiorobject__LIMIT
 };
 
+/**
+ * Identifiers of tiles used to draw interior objects.
+ */
 enum interior_object_tile
 {
   interiorobjecttile_MAX = 194,
@@ -146,30 +164,54 @@ enum interior_object_tile
 // TYPES
 //
 
-/** The state of the game. */
+/**
+ * The current state of the game.
+ */
 typedef struct tgestate tgestate_t;
 
-/** A game object. */
+/**
+ * A game object.
+ */
 typedef struct tgeobject tgeobject_t;
 
-/** A message. */
+/**
+ * A game message.
+ */
 typedef enum message message_t;
 
-/** An interior object. */
+/**
+ * An object used to build interiors.
+ */
 typedef enum interior_object object_t;
 
-/** An interior object tile. */
+/**
+ * A tile used to draw interior objects.
+ */
 typedef enum interior_object_tile objecttile_t;
 
-/** Tiles (also known as UDGs). */
+/**
+ * A tile index.
+ */
 typedef uint8_t tileindex_t;
+
+/**
+ * An 8-pixel wide row within a tile.
+ */
 typedef uint8_t tilerow_t;
+
+/**
+ * An 8-by-8 tile.
+ */
 typedef struct { tilerow_t row[8]; } tile_t;
 
-/** An item. */
+/**
+ * A game item.
+ */
 typedef enum item item_t;
 
-/** A wall or a fence */
+/**
+ * A boundary such as a wall or fence.
+ */
 typedef struct wall
 {
   uint8_t a, b;
@@ -194,6 +236,9 @@ extern const uint8_t *game_screen_scanline_start_addresses[128]; // CHECK
 // STATIC CONSTS
 //
 
+/**
+ * $A69E: Bitmap font definition.
+ */
 static const tile_t bitmap_font[] =
 {
   { { 0x00, 0x7C, 0xFE, 0xEE, 0xEE, 0xEE, 0xFE, 0x7C } }, // 0 or O
@@ -233,12 +278,15 @@ static const tile_t bitmap_font[] =
   { { 0x00, 0xFE, 0xFE, 0x0E, 0x38, 0xE0, 0xFE, 0xFE } }, // Z
   { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // SPACE
   { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x30 } }, // FULL STOP
-  { { 0x55, 0xCC, 0x55, 0xCC, 0x55, 0xCC, 0x55, 0xCC } }, // UNKNOWN
+  { { 0x55, 0xCC, 0x55, 0xCC, 0x55, 0xCC, 0x55, 0xCC } }, // UNKNOWN (added)
 };
 
-#define _ 38 // UNKNOWN
+/**
+ * A table which maps from ASCII into the in-game glyph encoding.
+ */
 static const unsigned char ascii_to_font[256] =
 {
+#define _ 38 // UNKNOWN
   _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,
   _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,
  36,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _, 37,  _,
@@ -254,8 +302,8 @@ static const unsigned char ascii_to_font[256] =
   _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,
   _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,
   _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,  _,
-};
 #undef _
+};
 
 /* ----------------------------------------------------------------------- */
 
@@ -264,7 +312,7 @@ static const unsigned char ascii_to_font[256] =
 
 uint8_t *plot_single_glyph(int A, uint8_t *output);
 void wipe_message(tgestate_t *state);
-void shunt_buffer_back_by_two(tgestate_t *state);
+void next_message(tgestate_t *state);
 
 static const char *messages_table[message__LIMIT];
 
@@ -277,6 +325,9 @@ static const wall_t walls[];
 // STRUCTURES
 //
 
+/**
+ * The current state of the game.
+ */
 struct tgestate
 {
   // ADDITIONAL VARIABLES
@@ -290,10 +341,10 @@ struct tgestate
   uint8_t      indoor_room_index;           // $68A0
   uint8_t      current_door;                // $68A1
 
-  uint8_t      message_buffer[19];          // $7CFC
+  uint8_t      message_queue[19];           // $7CFC
   uint8_t      message_display_counter;     // $7D0F
   uint8_t      message_display_index;       // $7D10
-  uint8_t     *message_buffer_pointer;      // $7D11
+  uint8_t     *message_queue_pointer;       // $7D11
   uint8_t     *current_message_character;   // $7D13
 
   uint16_t     word_81A4;                   // $81A4
@@ -306,6 +357,9 @@ struct tgestate
   uint8_t      RAM[65536];
 };
 
+/**
+ * A game object.
+ */
 struct tgeobject
 {
   uint8_t      width, height;
@@ -314,7 +368,15 @@ struct tgeobject
 
 /* ----------------------------------------------------------------------- */
 
-/* $6AB5 */
+/**
+ * $6AB5: Expands an object.
+ *
+ * \param[in]  state  Game state.
+ * \param[in]  index  Object index to expand.
+ * \param[out] output Screen location to expand to.
+ *
+ * \return Nothing.
+ */
 void expand_object(tgestate_t *state, object_t index, uint8_t *output)
 {
   int                columns;
@@ -419,7 +481,13 @@ range:
 
 /* ----------------------------------------------------------------------- */
 
-/* $6B42 */
+/**
+ * $6B42: Plot indoor tiles.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
 void plot_indoor_tiles(tgestate_t *state)
 {
   int                  rows;
@@ -466,8 +534,14 @@ void plot_indoor_tiles(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-/* $7CE9 */
-/* Given a screen address, return the same position on the next scanline. */
+/**
+ * $7CE9: Given a screen address, return the same position on the next
+ * scanline.
+ *
+ * \param[in] HL Scanline number.
+ *
+ * \return Subsequent scanline number.
+ */
 uint16_t get_next_scanline(uint16_t HL) /* stateless */
 {
   uint16_t DE;
@@ -486,16 +560,24 @@ uint16_t get_next_scanline(uint16_t HL) /* stateless */
 
 /* ----------------------------------------------------------------------- */
 
-/* $7D15 */
-/* The original code accepts BC as the message index. However all-but-one of
- * the callers only setup B, not BC. We therefore ignore the second argument
- * here. */
+/**
+ * $7D15: Add a message to the display queue.
+ *
+ * Conversion note: The original code accepts BC as the message index.
+ * However all-but-one of the callers only setup B, not BC. We therefore
+ * ignore the second argument here.
+ *
+ * \param[in] state         Game state.
+ * \param[in] message_index message_t to display.
+ *
+ * \return Nothing.
+ */
 void queue_message_for_display(tgestate_t *state,
                                message_t   message_index)
 {
   uint8_t *HL;
 
-  HL = state->message_buffer_pointer; // insertion point pointer?
+  HL = state->message_queue_pointer; // insertion point pointer?
   if (*HL == message_NONE)
     return;
 
@@ -507,17 +589,32 @@ void queue_message_for_display(tgestate_t *state,
   /* Add it to the queue. */
   *HL++ = message_index;
   *HL++ = 0;
-  *state->message_buffer_pointer = HL;
+  *state->message_queue_pointer = HL;
 }
 
 /* ----------------------------------------------------------------------- */
 
-/* $7D2F */
+/**
+ * $7D2F: Indirectly plot a glyph.
+ *
+ * \param[in] pcharacter Pointer to character to plot.
+ * \param[in] output     Where to plot.
+ *
+ * \return Pointer to next character along.
+ */
 uint8_t *plot_glyph(const char *pcharacter, uint8_t *output)
 {
   return plot_single_glyph(*pcharacter, output);
 }
 
+/**
+ * $????: Plot a single glyph.
+ *
+ * \param[in] character Character to plot.
+ * \param[in] output    Where to plot.
+ *
+ * \return Pointer to next character along.
+ */
 uint8_t *plot_single_glyph(int character, uint8_t *output)
 {
   const tile_t    *glyph;
@@ -539,7 +636,13 @@ uint8_t *plot_single_glyph(int character, uint8_t *output)
 
 /* ----------------------------------------------------------------------- */
 
-/* $7D48 */
+/**
+ * $7D48: Incrementally display queued game messages.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
 void message_display(tgestate_t *state)
 {
   uint8_t        A;
@@ -555,7 +658,7 @@ void message_display(tgestate_t *state)
   A = state->message_display_index;
   if (A == 128)
   {
-    shunt_buffer_back_by_two(state);
+    next_message(state);
   }
   else if (A > 128)
   {
@@ -582,7 +685,13 @@ void message_display(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-/* $7D87 */
+/**
+ * $7D87: Incrementally wipe away any on-screen game message.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
 void wipe_message(tgestate_t *state)
 {
   int      index;
@@ -596,14 +705,20 @@ void wipe_message(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-/* $7D99 */
-void shunt_buffer_back_by_two(tgestate_t *state)
+/**
+ * $7D99: Change to displaying the next queued game message.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
+void next_message(tgestate_t *state)
 {
   uint8_t    *DE;
   const char *message;
 
-  DE = &state->message_buffer[0];
-  if (state->message_buffer_pointer == DE)
+  DE = &state->message_queue[0];
+  if (state->message_queue_pointer == DE)
     return;
 
   // message id is stored in the buffer itself
@@ -611,14 +726,16 @@ void shunt_buffer_back_by_two(tgestate_t *state)
   message = messages_table[*DE];
 
   state->current_message_character = (uint8_t *) message; // should i cast away const?
-  memmove(state->message_buffer, state->message_buffer + 2, 16);
-  state->message_buffer_pointer -= 2;
+  memmove(state->message_queue, state->message_queue + 2, 16);
+  state->message_queue_pointer -= 2;
   state->message_display_index = 0;
 }
 
 /* ----------------------------------------------------------------------- */
 
-/* $7DCD */
+/**
+ * $7DCD: Table of game messages.
+ */
 static const char *messages_table[message__LIMIT] =
 {
   "MISSED ROLL CALL",
@@ -642,13 +759,26 @@ static const char *messages_table[message__LIMIT] =
 
 /* ----------------------------------------------------------------------- */
 
-/* $A59C */
+/**
+ * $A59C: Return bitmask indicating the presence of required items.
+ *
+ * \param[in] pitem    Pointer to item.
+ * \param[in] previous Previous bitfield.
+ *
+ * \return Sum of bitmasks.
+ */
 int have_required_items(const item_t *pitem, int previous)
 {
   return item_to_bitmask(*pitem) + previous;
 }
 
-/* $A5A3 */
+/**
+ * $A5A3: Return a bitmask indicating the presence of required items.
+ *
+ * \param[in] item Item.
+ *
+ * \return COMPASS, PAPERS, PURSE, UNIFORM => 1, 2, 4, 8.
+ */
 int item_to_bitmask(item_t item)
 {
   switch (item)
@@ -663,7 +793,14 @@ int item_to_bitmask(item_t item)
 
 /* ----------------------------------------------------------------------- */
 
-/* $A5BF */
+/**
+ * $A5BF: Plot a screenlocstring.
+ *
+ * \param[in] state Game state.
+ * \param[in] HL    Pointer to screenlocstring.
+ *
+ * \return Nothing.
+ */
 void screenlocstring_plot(tgestate_t *state, uint8_t *HL)
 {
   uint8_t *screenaddr;
@@ -679,7 +816,13 @@ void screenlocstring_plot(tgestate_t *state, uint8_t *HL)
 
 /* ----------------------------------------------------------------------- */
 
-/* $B14C */
+/**
+ * $B14C: Check the character is inside of bounds.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
 int bounds_check(tgestate_t *state)
 {
   uint8_t       B;
@@ -724,7 +867,13 @@ int bounds_check(tgestate_t *state)
 
 #define door_FLAG_LOCKED (1 << 7)
 
-/* $B1D4 */
+/**
+ * $B1D4: Locate current door and queue message if it's locked.
+ *
+ * \param[in] state Game state.
+ *
+ * \return 0 => open, 1 => locked.
+ */
 int is_door_open(tgestate_t *state)
 {
   int      mask;
@@ -735,7 +884,7 @@ int is_door_open(tgestate_t *state)
   mask  = 0xFF & ~door_FLAG_LOCKED;
   cur   = state->current_door & mask;
   door  = &state->gates_and_doors[0];
-  iters = 9;
+  iters = 9; // NELEMS(gates_and_doors);
   do
   {
     if ((*door & mask) == cur)
@@ -755,9 +904,12 @@ int is_door_open(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
+/**
+ * $B53E: Walls.
+ * $B586: Fences
+ */
 static const wall_t walls[] =
 {
-  /* $B53E */ /* walls */
   { 0x6A, 0x6E, 0x52, 0x62, 0x00, 0x0B },
   { 0x5E, 0x62, 0x52, 0x62, 0x00, 0x0B },
   { 0x52, 0x56, 0x52, 0x62, 0x00, 0x0B },
@@ -770,7 +922,6 @@ static const wall_t walls[] =
   { 0x6E, 0x82, 0x46, 0x47, 0x00, 0x0A },
   { 0x6D, 0x6F, 0x45, 0x49, 0x00, 0x12 },
   { 0x67, 0x69, 0x45, 0x49, 0x00, 0x12 },
-  /* $B586 */ /* fences */
   { 0x46, 0x46, 0x46, 0x6A, 0x00, 0x08 },
   { 0x3E, 0x3E, 0x3E, 0x6A, 0x00, 0x08 },
   { 0x4E, 0x4E, 0x2E, 0x3E, 0x00, 0x08 },
@@ -791,7 +942,13 @@ static const wall_t walls[] =
 
 #define SCREEN_BUFFER_BASE 0xF291
 
-/* $EED3 */
+/**
+ * $EED3: Plot the game screen.
+ *
+ * \param[in] state Game state.
+ *
+ * \return Nothing.
+ */
 void plot_game_screen(tgestate_t *state)
 {
   uint8_t  A;
