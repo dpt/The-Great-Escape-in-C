@@ -315,11 +315,11 @@ uint8_t *plot_single_glyph(int A, uint8_t *output);
 void wipe_message(tgestate_t *state);
 void next_message(tgestate_t *state);
 
-static const char *messages_table[message__LIMIT];
+extern const char *messages_table[];
 
 int item_to_bitmask(item_t item);
 
-static const wall_t walls[];
+extern const wall_t walls[];
 
 /* ----------------------------------------------------------------------- */
 
@@ -737,7 +737,9 @@ void next_message(tgestate_t *state)
 /**
  * $7DCD: Table of game messages.
  */
-static const char *messages_table[message__LIMIT] =
+/* Note: I intended to make this static and have a forward reference to it,
+ * but you can't do that: it must be 'extern'. */
+const char *messages_table[message__LIMIT] =
 {
   "MISSED ROLL CALL",
   "TIME TO WAKE UP",
@@ -909,7 +911,7 @@ int is_door_open(tgestate_t *state)
  * $B53E: Walls.
  * $B586: Fences
  */
-static const wall_t walls[] =
+const wall_t walls[] =
 {
   { 0x6A, 0x6E, 0x52, 0x62, 0x00, 0x0B },
   { 0x5E, 0x62, 0x52, 0x62, 0x00, 0x0B },
