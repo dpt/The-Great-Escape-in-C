@@ -24,6 +24,7 @@ usage:
 	@echo '  analyze	Perform a clang analyze run'
 	@echo '  splint	Perform a splint run'
 	@echo '  ctags		Generate ctags'
+	@echo '  astyle	Run astyle on the source'
 	@echo
 	@echo 'MODE=<release|debug>'
 
@@ -44,6 +45,10 @@ splint:
 .PHONY: ctags
 ctags:
 	ctags -R .
+
+.PHONY: astyle
+astyle:
+	astyle --options=$(TOP)/.astylerc --recursive "$(TOP)/*.h" "$(TOP)/*.c"
 
 .PHONY: clean
 clean:
