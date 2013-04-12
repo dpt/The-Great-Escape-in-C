@@ -346,7 +346,7 @@ struct tgestate
   uint8_t      message_display_counter;     // $7D0F
   uint8_t      message_display_index;       // $7D10
   uint8_t     *message_queue_pointer;       // $7D11
-  uint8_t     *current_message_character;   // $7D13
+  const char  *current_message_character;   // $7D13
 
   uint16_t     word_81A4;                   // $81A4
   uint16_t     word_81A6;                   // $81A6
@@ -566,7 +566,7 @@ uint16_t get_next_scanline(uint16_t HL) /* stateless */
  *
  * Conversion note: The original code accepts BC as the message index.
  * However all-but-one of the callers only setup B, not BC. We therefore
- * ignore the second argument here.
+ * ignore the second argument here, treating it as zero.
  *
  * \param[in] state         Game state.
  * \param[in] message_index message_t to display.
@@ -576,21 +576,20 @@ uint16_t get_next_scanline(uint16_t HL) /* stateless */
 void queue_message_for_display(tgestate_t *state,
                                message_t   message_index)
 {
-  uint8_t *HL;
+  uint8_t *qp;
 
-  HL = state->message_queue_pointer; // insertion point pointer?
-  if (*HL == message_NONE)
+  qp = state->message_queue_pointer; // insertion point pointer
+  if (*qp == message_NONE)
     return;
 
   /* Are we already about to show this message? */
-  HL -= 2;
-  if (*HL++ == message_index && *HL++ == 0)
+  if (qp[-2] == message_index && qp[-1] == 0)
     return;
 
   /* Add it to the queue. */
-  *HL++ = message_index;
-  *HL++ = 0;
-  *state->message_queue_pointer = HL;
+  qp[0] = message_index;
+  qp[1] = 0;
+  state->message_queue_pointer = qp + 2;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -646,9 +645,9 @@ uint8_t *plot_single_glyph(int character, uint8_t *output)
  */
 void message_display(tgestate_t *state)
 {
-  uint8_t        A;
-  const uint8_t *HL;
-  uint8_t       *DE;
+  uint8_t     A;
+  const char *HL;
+  uint8_t    *DE;
 
   if (state->message_display_counter > 0)
   {
@@ -668,7 +667,7 @@ void message_display(tgestate_t *state)
   else
   {
     HL = state->current_message_character;
-    DE = screen_text_start_address + A;
+    DE = &state->RAM[screen_text_start_address + A];
     plot_glyph(HL, DE);
     state->message_display_index = (intptr_t) DE & 31;
     A = *++HL;
@@ -689,6 +688,8 @@ void message_display(tgestate_t *state)
 /**
  * $7D87: Incrementally wipe away any on-screen game message.
  *
+ * Called while message_display_index > 128.
+ *
  * \param[in] state Game state.
  *
  * \return Nothing.
@@ -700,7 +701,7 @@ void wipe_message(tgestate_t *state)
 
   index = state->message_display_index;
   state->message_display_index = --index;
-  DE = screen_text_start_address + index;
+  DE = &state->RAM[screen_text_start_address + index];
   plot_single_glyph(' ', DE); // plot a SPACE character
 }
 
@@ -708,6 +709,8 @@ void wipe_message(tgestate_t *state)
 
 /**
  * $7D99: Change to displaying the next queued game message.
+ *
+ * Called when message_display_index == 128.
  *
  * \param[in] state Game state.
  *
@@ -726,7 +729,7 @@ void next_message(tgestate_t *state)
 
   message = messages_table[*DE];
 
-  state->current_message_character = (uint8_t *) message; // should i cast away const?
+  state->current_message_character = message;
   memmove(state->message_queue, state->message_queue + 2, 16);
   state->message_queue_pointer -= 2;
   state->message_display_index = 0;
