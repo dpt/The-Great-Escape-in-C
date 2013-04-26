@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "speccy/speccy.h"
+
 /* ----------------------------------------------------------------------- */
 
 #define UNKNOWN 1
@@ -338,6 +340,8 @@ struct tgestate
   uint8_t     *screen_buf;
   tileindex_t *tile_buf;
 
+  speccystate_t speccy;
+
   // EXISTING VARIABLES
   uint8_t      indoor_room_index;           // $68A0
   uint8_t      current_door;                // $68A1
@@ -353,9 +357,6 @@ struct tgestate
   uint16_t     word_81A8;                   // $81A8
 
   uint8_t      gates_and_doors[9];          // $F05D
-
-
-  uint8_t      RAM[65536];
 };
 
 /**
@@ -667,7 +668,7 @@ void message_display(tgestate_t *state)
   else
   {
     HL = state->current_message_character;
-    DE = &state->RAM[screen_text_start_address + A];
+    DE = &state->speccy.screen[screen_text_start_address + A];
     plot_glyph(HL, DE);
     state->message_display_index = (intptr_t) DE & 31;
     A = *++HL;
@@ -701,7 +702,7 @@ void wipe_message(tgestate_t *state)
 
   index = state->message_display_index;
   state->message_display_index = --index;
-  DE = &state->RAM[screen_text_start_address + index];
+  DE = &state->speccy.screen[screen_text_start_address + index];
   plot_single_glyph(' ', DE); // plot a SPACE character
 }
 
@@ -805,19 +806,21 @@ int item_to_bitmask(item_t item)
  * \param[in] state Game state.
  * \param[in] HL    Pointer to screenlocstring.
  *
- * \return Nothing.
+ * \return Pointer to byte after screenlocstring.
  */
-void screenlocstring_plot(tgestate_t *state, uint8_t *HL)
+uint8_t *screenlocstring_plot(tgestate_t *state, uint8_t *HL)
 {
   uint8_t *screenaddr;
   int      nbytes;
 
-  screenaddr = state->screen_buf + HL[0] + (HL[1] << 8);
+  screenaddr = &state->speccy.screen[0] + HL[0] + (HL[1] << 8);
   nbytes     = HL[2];
   HL += 3;
   do
     screenaddr = plot_glyph((const char *) HL++, screenaddr);
   while (--nbytes);
+
+  return HL;
 }
 
 /* ----------------------------------------------------------------------- */
