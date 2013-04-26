@@ -1,8 +1,10 @@
 TOP=../..
 
+INCLUDES=$(TOP)/include
+
 CC=clang
 LD=clang
-CFLAGS=-std=c99 -Wall -Wextra -MMD -MP -I. -I$(TOP)/include
+CFLAGS=-std=c99 -Wall -Wextra -MMD -MP -I. -I$(INCLUDES)
 
 ifeq ($(MODE),release)
   CFLAGS+=-O2 -DNDEBUG
@@ -40,7 +42,7 @@ analyze:
 
 .PHONY: splint
 splint:
-	splint -f $(TOP)/.splintrc $(SRC)
+	splint -f $(TOP)/.splintrc -I$(INCLUDES) $(SRC)
 
 .PHONY: ctags
 ctags:
