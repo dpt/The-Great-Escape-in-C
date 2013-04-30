@@ -8,6 +8,8 @@
 #ifndef SPECCY_H
 #define SPECCY_H
 
+#include <stdint.h>
+
 enum
 {
   attribute_BLUE_OVER_BLACK = 1,
