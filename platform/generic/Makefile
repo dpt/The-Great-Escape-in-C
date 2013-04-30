@@ -55,9 +55,9 @@ astyle:
 .PHONY: clean
 clean:
 	@echo 'Cleaning...'
-	-rm $(OBJ)
-	-rm $(DEP)
-	-rm TheGreatEscape
+	-rm -f $(OBJ)
+	-rm -f $(DEP)
+	-rm -f TheGreatEscape
 
 -include $(DEP)
 
