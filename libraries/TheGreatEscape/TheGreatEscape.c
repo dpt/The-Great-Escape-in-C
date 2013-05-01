@@ -232,6 +232,18 @@ typedef struct wall
 }
 wall_t;
 
+/**
+ * A screen location and string, for drawing strings.
+ */
+typedef struct screenlocstring screenlocstring_t;
+
+struct screenlocstring
+{
+  uint16_t  screenloc; /* screen offset */
+  uint8_t   length;
+  char     *string;
+};
+
 /* ----------------------------------------------------------------------- */
 
 // EXTERNS
@@ -822,24 +834,26 @@ int item_to_bitmask(item_t item)
 /**
  * $A5BF: Plot a screenlocstring.
  *
- * \param[in] state Game state.
- * \param[in] HL    Pointer to screenlocstring.
+ * \param[in] state    Game state.
+ * \param[in] slstring Pointer to screenlocstring.
  *
- * \return Pointer to byte after screenlocstring.
+ * \return Pointer to next screenlocstring.
  */
-uint8_t *screenlocstring_plot(tgestate_t *state, uint8_t *HL)
+const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
+                                              const screenlocstring_t *slstring)
 {
-  uint8_t *screenaddr;
-  int      nbytes;
+  uint8_t    *screenaddr;
+  int         length;
+  const char *string;
 
-  screenaddr = &state->speccy.screen[0] + HL[0] + (HL[1] << 8);
-  nbytes     = HL[2];
-  HL += 3;
+  screenaddr = &state->speccy.screen[slstring->screenloc];
+  length     = slstring->length;
+  string     = slstring->string;
   do
-    screenaddr = plot_glyph((const char *) HL++, screenaddr);
-  while (--nbytes);
+    screenaddr = plot_glyph(string++, screenaddr);
+  while (--length);
 
-  return HL;
+  return slstring + 1;
 }
 
 /* ----------------------------------------------------------------------- */
