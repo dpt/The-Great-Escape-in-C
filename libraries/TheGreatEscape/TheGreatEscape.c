@@ -550,24 +550,33 @@ void plot_indoor_tiles(tgestate_t *state)
  * $7CE9: Given a screen address, return the same position on the next
  * scanline.
  *
- * \param[in] HL Scanline number.
+ * \param[in] state Game state.
+ * \param[in] slp   Scanline pointer.
  *
- * \return Subsequent scanline number.
+ * \return Subsequent scanline pointer.
  */
-uint16_t get_next_scanline(uint16_t HL) /* stateless */
+const uint8_t *get_next_scanline(tgestate_t *state, const uint8_t *slp)
 {
+  uint8_t *screenbase;
+  uint16_t HL;
   uint16_t DE;
+
+  screenbase = &state->speccy.screen[0];
+
+  HL = slp - screenbase;
 
   HL += 0x0100;
   if (HL & 0x0700)
-    return HL; /* line count didn't rollover */
+    return screenbase + HL; /* line count didn't rollover */
 
   if ((HL & 0xFF) >= 0xE0)
     DE = 0xFF20;
   else
     DE = 0xF820;
 
-  return HL + DE; /* needs to be a 16-bit add! */
+  HL += DE; /* needs to be a 16-bit add! */
+
+  return screenbase + HL;
 }
 
 /* ----------------------------------------------------------------------- */
