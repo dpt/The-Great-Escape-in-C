@@ -6,6 +6,16 @@
  * <dave@davespace.co.uk>.
  */
 
+/* ----------------------------------------------------------------------- */
+
+// NOTES
+//
+// - Strings are ASCII, not the custom encoding the original game uses. The
+//   font remains encoded as per the game. An ascii_to_font table exists to
+//   convert from ASCII to the font encoding.
+
+/* ----------------------------------------------------------------------- */
+
 #include <stdint.h>
 #include <string.h>
 
