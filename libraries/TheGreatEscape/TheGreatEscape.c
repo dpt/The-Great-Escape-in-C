@@ -679,7 +679,7 @@ void message_display(tgestate_t *state)
   {
     HL = state->current_message_character;
     DE = &state->speccy.screen[screen_text_start_address + A];
-    plot_glyph(HL, DE);
+    (void) plot_glyph(HL, DE);
     state->message_display_index = (intptr_t) DE & 31;
     A = *++HL;
     if (A == 255) // end of string
@@ -713,7 +713,7 @@ void wipe_message(tgestate_t *state)
   index = state->message_display_index;
   state->message_display_index = --index;
   DE = &state->speccy.screen[screen_text_start_address + index];
-  plot_single_glyph(' ', DE); // plot a SPACE character
+  (void) plot_single_glyph(' ', DE); // plot a SPACE character
 }
 
 /* ----------------------------------------------------------------------- */
