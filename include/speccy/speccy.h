@@ -28,6 +28,17 @@ enum
   attribute_BRIGHT_WHITE_OVER_BLACK = 71
 };
 
+/**
+ * Identifiers of port numbers.
+ */
+enum port_keyboard
+{
+  port_KEYBOARD_12345 = 0xF7FE,
+  port_KEYBOARD_POIUY = 0xDFFE,
+  port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE,
+  port_KEYBOARD_09876 = 0xEFFE,
+};
+
 #define screen_length                   (256 / 8 * 192)
 #define screen_attributes_length        (256 / 8 * 192 / 8)
 
