@@ -5,6 +5,9 @@ INCLUDES=$(TOP)/include
 CC=clang
 LD=clang
 CFLAGS=-std=c99 -Wall -Wextra -MMD -MP -I. -I$(INCLUDES)
+LDFLAGS=
+
+SANITIZE=-fsanitize=integer -fsanitize=address
 
 ifeq ($(MODE),release)
   CFLAGS+=-O2 -DNDEBUG
@@ -17,7 +20,7 @@ SRC=$(shell find $(TOP)/libraries $(TOP)/platform/generic -type f -name '*.c' -p
 OBJ=$(SRC:.c=.o)
 DEP=$(SRC:.c=.d)
 
-.c.o:;	$(CC) -c $(CFLAGS) $< -o $@
+.c.o:;	$(CC) -c $(CFLAGS) $(SANITIZE) $< -o $@
 
 .PHONY: usage
 usage:
@@ -34,7 +37,7 @@ usage:
 build: TheGreatEscape
 
 TheGreatEscape: $(OBJ)
-	$(LD) -o $@ $^
+	$(LD) $(LDFLAGS) $(SANITIZE) -o $@ $^
 
 .PHONY: analyze
 analyze:
