@@ -1,10 +1,15 @@
 TOP=../..
 
-INCLUDES=$(TOP)/include
+INCLUDES=-I$(TOP)/include -I$(TOP)/libraries/TheGreatEscape/include
+WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
-CC=clang
-LD=clang
-CFLAGS=-std=c99 -Wall -Wextra -MMD -MP -I. -I$(INCLUDES)
+#CLANG=~/src/llvm-build/Debug+Asserts/bin/clang
+CLANG=clang
+CTAGS=/usr/local/bin/ctags
+
+CC=$(CLANG)
+LD=$(CLANG)
+CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) -ferror-limit=2
 LDFLAGS=
 
 SANITIZE=-fsanitize=integer -fsanitize=address
@@ -27,8 +32,8 @@ usage:
 	@echo 'Usage:'
 	@echo '  build		Build'
 	@echo '  analyze	Perform a clang analyze run'
-	@echo '  splint	Perform a splint run'
-	@echo '  ctags		Generate ctags'
+	@echo '  lint	Perform a lint run'
+	@echo '  tags		Generate tags'
 	@echo '  astyle	Run astyle on the source'
 	@echo
 	@echo 'MODE=<release|debug>'
@@ -43,13 +48,13 @@ TheGreatEscape: $(OBJ)
 analyze:
 	clang --analyze $(CFLAGS) -pedantic $(SRC)
 
-.PHONY: splint
-splint:
-	splint -f $(TOP)/.splintrc -I$(INCLUDES) $(SRC)
+.PHONY: lint
+lint:
+	splint -f $(TOP)/.splintrc $(INCLUDES) $(SRC)
 
-.PHONY: ctags
-ctags:
-	ctags -R .
+.PHONY: tags
+tags:
+	$(CTAGS) -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+q -f $(TOP)/tags $(TOP)
 
 .PHONY: astyle
 astyle:
