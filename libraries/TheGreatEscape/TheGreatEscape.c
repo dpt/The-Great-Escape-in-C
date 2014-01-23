@@ -2,75 +2,13 @@
  * TheGreatEscape.c
  *
  * Reimplementation of the ZX Spectrum 48K game "The Great Escape" created by
- * Denton Designs published in 1986 by Ocean Software.
+ * Denton Designs and published in 1986 by Ocean Software.
  *
  * This reimplementation copyright (c) David Thomas, 2012-2014.
  * <dave@davespace.co.uk>.
  */
 
 /* ----------------------------------------------------------------------- */
-
-/* OVERVIEW
- *
- * This is a work in progress reimplementation in portable C of "The Great
- * Escape". A 1986 isometric 3D game originally written in Z80 assembly
- * language for the Sinclair ZX Spectrum 48K. The logic was reverse
- * engineered from a binary snapshot of the (initial state) original game and
- * reimplemented routine by routine.
- */
-
-/* THE REIMPLEMENTATION
- *
- * Reimplemented routines are modelled as closely as possible, given language
- * constraints, on the original game code. For example, loops which are
- * idiomatically written as 'for' loops in regular C are typically written as
- * 'do .. while' loops here, as that most closely matches the original game
- * code.
- *
- * Sometimes it isn't possible to closely match the original code, as it uses
- * techniques unavailable in C. For example, some routines have multiple
- * entry points the last of which falls through from the end of the function
- * into a final chunk of common code. We can't replicate that in C, so in
- * these cases the routine ends with a final call out to the following
- * function.
- *
- * Functions are declared in the same order as in the original game code.
- * Leading comments which precede the function list the original hex address
- * of the routine being implemented.
- *
- * Game bitmaps, masks, tiles, maps and other large data blobs are factored
- * out to separate source files.
- *
- * Rather than relying on global data, the game's state is encapsulated in a
- * 'tgestate' structure which is passed around everywhere as the first
- * argument (except in the case of leaf functions which don't need to access
- * it).
- *
- * Strings are stored in ASCII rather than the glyph encoding the original
- * game used. The font bitmap data remains encoded as per the game but an
- * ascii_to_font table is introduced to convert from ASCII to the font
- * encoding.
- *
- * Many of the game's data structures are largely, but not entirely, const.
- * For example, the room definitions have object indices poked into them.
- */
-
-/* STYLE
- *
- * - Follow the existing style.
- * - Use spaces not tabs. Indent by two spaces.
- * - Format source lines to 80 columns wide (to allow side-by-side diffs).
- * - Order functions and data by address of the original.
- * - Order #includes consistently (list in 'depth' order, C stdlib first,
- *   etc.).
- * - name_funcs_like_this.
- * - Suffix type names with _t.
- * - Use Javadoc/Doxygen style comments throughout.
- * - Aim for strict C89 code (for portability).
- * - Don't use global variables. Place any 'globals' in tgestate_t.
- * - Separate logic and data. Place large data blobs in external source
- *   files.
- */
 
 /* TODO
  *
