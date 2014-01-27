@@ -644,14 +644,11 @@ extern const screenlocstring_t define_key_prompts[6];
 
 extern const uint8_t keyboard_port_hi_bytes[10];
 
-extern const char counted_string_enter[];
-extern const char counted_string_caps[];
-extern const char counted_string_symbol[];
-extern const char counted_string_space[];
+extern const char counted_strings[];
 
-extern const char key_tables[8 * 5];
+extern const unsigned char key_tables[8 * 5];
 
-extern const uint16_t key_name_screen_addrs[5];
+extern const uint16_t key_name_screen_offsets[5];
 
 void wipe_game_screen(tgestate_t *state);
 
@@ -12019,7 +12016,7 @@ void select_input_device(tgestate_t *state)
      * $F075. */
 
     if (state->chosen_input_device == inputdevice_KEYBOARD)
-      choose_keys(state); // keyboard was selected
+      choose_keys(state); /* Keyboard was selected. */
   }
 }
 
@@ -12038,29 +12035,34 @@ const screenlocstring_t define_key_prompts[6] =
 const uint8_t keyboard_port_hi_bytes[10] =
 {
   /* The first byte here is unused AFAICT. */
+  /* Final zero byte is a terminator. */
   0x24, 0xF7, 0xEF, 0xFB, 0xDF, 0xFD, 0xBF, 0xFE, 0x7F, 0x00,
 };
 
-// counted_strings
-const char counted_string_enter[]  = "\x05" "ENTER";
-const char counted_string_caps[]   = "\x04" "CAPS";
-const char counted_string_symbol[] = "\x06" "SYMBOL";
-const char counted_string_space[]  = "\x05" "SPACE";
+const char counted_strings[] = "\x05" "ENTER"
+                               "\x04" "CAPS"   /* CAPS SHIFT */
+                               "\x06" "SYMBOL" /* SYMBOL SHIFT */
+                               "\x05" "SPACE";
 
-const char key_tables[8 * 5] =
+/* Each table entry is a character (in original code: a glyph index) OR if
+ * its top bit is set then bottom seven bits are an index into
+ * counted_strings. */
+#define O(n) (0x80 + n)
+const unsigned char key_tables[8 * 5] =
 {
-  0x01, 0x02, 0x03, 0x04, 0x05, /* table_12345 */
-  0x00, 0x09, 0x08, 0x07, 0x06, /* table_09876 */
-  0x19, 0x1F, 0x0E, 0x1A, 0x1C, /* table_QWERT */
-  0x18, 0x00, 0x12, 0x1D, 0x21, /* table_POIUY */
-  0x0A, 0x1B, 0x0D, 0x0F, 0x10, /* table_ASDFG */
-  0x80, 0x15, 0x14, 0x13, 0x11, /* table_ENTERLKJH */
-  0x86, 0x22, 0x20, 0x0C, 0x1E, /* table_SHIFTZXCV */
-  0x92, 0x8B, 0x16, 0x17, 0x0B, /* table_SPACESYMSHFTMNB */
+  '1',   '2',   '3',   '4',   '5', /* table_12345 */
+  '0',   '9',   '8',   '7',   '6', /* table_09876 */
+  'Q',   'W',   'E',   'R',   'T', /* table_QWERT */
+  'P',   'O',   'I',   'U',   'Y', /* table_POIUY */
+  'A',   'S',   'D',   'F',   'G', /* table_ASDFG */
+  O(0),  'L',   'K',   'J',   'H', /* table_ENTERLKJH */
+  O(6),  'Z',   'X',   'C',   'V', /* table_SHIFTZXCV */
+  O(18), O(11), 'M',   'N',   'B', /* table_SPACESYMSHFTMNB */
 };
+#undef O
 
-/* Converted to offsets. */
-const uint16_t key_name_screen_addrs[5] =
+/* Screen offsets where to plot key names. (in original code: absolute addresses). */
+const uint16_t key_name_screen_offsets[5] =
 {
   0x00D5,
   0x0815,
@@ -12105,6 +12107,9 @@ void choose_keys(tgestate_t *state)
   uint8_t                  Binner;
   const char              *HLstring;
   uint16_t                 BC;
+  const uint16_t          *HLoffset;
+  const uint16_t          *HLkeybytes;
+  uint8_t                 *self_F3E9;
 
   for (;;)
   {
@@ -12134,40 +12139,38 @@ void choose_keys(tgestate_t *state)
     /* Wipe keydefs */
     memset(&state->keydefs.defs[0], 0, 10);
 
-#if 0
-    B = 5; /* iterations */ L/R/U/D/F
-    HL = &key_name_screen_addrs[0];
+    B = 5; /* iterations */ /* L/R/U/D/F */
+    HLoffset = &key_name_screen_offsets[0];
     do
     {
+#if 0
       // PUSH BC
-      E = *HL++;
-      D = *HL++;
-      // PUSH HL
-      self_F3E9 = DE; // self modify screen addr
+      DE = *HLoffset++;
+      // PUSH HLaddrs
+      self_F3E9 = /*screenaddr + */ DE; // self modify screen addr
       A = 0xFF;
 
 f38b:
       for (;;)
       {
-        HL = &keyboard_port_hi_bytes[-1]; /* &byte_F2E1 */
+        HLkeybytes = &keyboard_port_hi_bytes[-1];
         D = 0xFF;
         do
         {
           HL++;
           D++;
-          Adash = *HL;
+          Adash = *HLkeybytes;
           if (Adash == 0) /* Hit end of keyboard_port_hi_bytes. */
             goto f38b;
-          B = Adash;
-          C = port_BORDER;
-          Adash = ~state->speccy->in(state->speccy, C);
+
+          Adash = ~state->speccy->in(state->speccy, (Adash << 8) | port_BORDER);
           E = Adash;
           C = 0x20;
 
 f3a0:
           C >>= 1;
         }
-        while (carry);  // loop structure is not quite right
+        while (carry);  // this loop structure is not quite right
         Adash = C & E;
         if (Adash == 0)
           goto f3a0;
@@ -12176,8 +12179,7 @@ f3a0:
           goto f38b;
         A = D;
 
-        HL = 0xF06A;
-
+        HL = &state->keydefs[-1]; // is this pointing to the byte before?
 f3b1:
         HL++;
         Adash = *HL;
@@ -12195,18 +12197,19 @@ f3c1:
       *HL++ = B;
       *HL = C;
 
-      A *= 5;
-      HL = 0xF302;  // &key_tables[0] - 1 byte + A // strange: off by one
-      HL += A;
+      // A = row
+      HL = &key_tables[A * 5] - 1; /* off by one to compensate for preincrement */
+      do
+      {
+        HL++;
+        carry_out = C & 1; C = (C >> 1) | (carry << 7); carry = carry_out; // RR C;
+      }
+      while (!carry);
 
-f3d1:
-      HL++;
-      // RR C;
-      // JR NC, f3d1
       B = 1;
       A = *HL;
       A |= A;
-      // JP P, f3e8
+      // JP P, f3e8 // P => 'sign positive'  == MSB of accumulator == ie. if (A & (1<<7)) then jump
       A &= 0x7F;
       HL = &counted_strings[0] + A;
       B = *HL++;
@@ -12224,9 +12227,9 @@ f3e8:
       while (--B);
       // POP HL;
       // POP BC;
+#endif
     }
     while (--B);
-#endif
 
     /* Delay loop */
     BC = 0xFFFF;
