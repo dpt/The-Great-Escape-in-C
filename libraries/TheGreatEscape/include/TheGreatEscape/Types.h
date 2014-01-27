@@ -265,14 +265,14 @@ enum escapeitem_flags
 /* These are offsets from the start of the attributes bank. */
 #define morale_flag_attributes_offset ((uint16_t) 0x0042)
 
-/* Unused as yet. */
-//#define visible_tiles_start_address   ((uint16_t) 0xF0F8)
-//#define visible_tiles_end_address     ((uint16_t) 0xF28F) /* inclusive */
+/* These are absolute addresses. Here for reference. */
+#define visible_tiles_start_address   ((uint16_t) 0xF0F8)
+#define visible_tiles_end_address     ((uint16_t) 0xF28F) /* inclusive */
 #define visible_tiles_length          (24 * 17)
 
-/* Unused as yet. */
-//#define screen_buffer_start_address   ((uint16_t) 0xF290)
-//#define screen_buffer_end_address     ((uint16_t) 0xFF4F) /* inclusive */
+/* These are absolute addresses. Here for reference. */
+#define screen_buffer_start_address   ((uint16_t) 0xF290)
+#define screen_buffer_end_address     ((uint16_t) 0xFF4F) /* inclusive */
 #define screen_buffer_length          (24 * 8 * 17)
 
 /**
