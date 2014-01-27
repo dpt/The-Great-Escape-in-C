@@ -12,19 +12,19 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config)
 
   assert(config);
 
-  if (config == NULL)
+  if (!config)
     return NULL;
 
   state = malloc(sizeof(*state));
   if (state == NULL)
     return NULL;
-  
+
   /* Initialise additional variables */
 
   state->speccy = speccy;
-  
+
   /* Initialise original game variables */
-  
+
   state->moraleflag_screen_address = &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
 
   return state;
