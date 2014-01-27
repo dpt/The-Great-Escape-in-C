@@ -17,7 +17,7 @@
  *   message_queue).
  * - Fix bad naming: Rename *struct types to *def.
  * - Replace uint8_t counters etc. with int where possible. [later]
- * - Move item_structs into tgestate.
+ * - Move item_structs into tgestate (in fact, anything writable).
  * - Some enums might be wider than expected (int vs uint8_t).
  */
 
