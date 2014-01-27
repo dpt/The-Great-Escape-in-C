@@ -1432,7 +1432,7 @@ const uint8_t data_7838[] = { 0x5A, 0xFF };
 /**
  * $783A: (unknown)
  */
-static const uint16_t word_783A[156] =
+static const uint16_t word_783A[78] =
 {
   0x6845,
   0x5444,
