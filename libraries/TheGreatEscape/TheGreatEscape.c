@@ -12237,8 +12237,7 @@ uint8_t input_device_select_keyscan(tgestate_t *state)
   uint8_t B;
 
   E = 0;
-  A = state->speccy->in(state->speccy, port_KEYBOARD_12345);
-  A = ~A & 0x0F;
+  A = ~state->speccy->in(state->speccy, port_KEYBOARD_12345) & 0xF;
   if (A)
   {
     B = 4; /* iterations */
@@ -12256,8 +12255,7 @@ uint8_t input_device_select_keyscan(tgestate_t *state)
   }
   else
   {
-    A = state->speccy->in(state->speccy, port_KEYBOARD_09876);
-    if ((A & 1) == 0)
+    if ((state->speccy->in(state->speccy, port_KEYBOARD_09876) & 1) == 0)
       return E; /* always zero */
 
     return 0xFF; /* no keypress */
