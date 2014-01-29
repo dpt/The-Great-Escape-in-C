@@ -21,6 +21,12 @@
  * - Some enums might be wider than expected (int vs uint8_t).
  */
 
+/* GLOSSARY
+ *
+ * - A call marked "exit via"
+ *   -- The original code branched directly to this routine.
+ */
+
 /* ----------------------------------------------------------------------- */
 
 #include <assert.h>
