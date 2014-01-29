@@ -2466,7 +2466,7 @@ void process_player_input(tgestate_t *state)
       state->vischars[0].target   = 0x002B;
       state->vischars[0].mi.pos.y = 0x34;
       state->vischars[0].mi.pos.x = 0x3E;
-      /*roomdef_25_breakfast[bench_G] = interiorobject_EMPTY_BENCH;*/
+      roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
       state->player_in_breakfast = 0;
     }
     else
@@ -2477,7 +2477,7 @@ void process_player_input(tgestate_t *state)
       state->vischars[0].mi.pos.y  = 0x2E;
       state->vischars[0].mi.pos.x  = 0x2E;
       state->vischars[0].mi.pos.vo = 24;
-      /*roomdef_2_hut2_left[player_bed] = interiorobject_EMPTY_BED;*/
+      roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED;
       state->player_in_bed = 0;
     }
 
@@ -3429,7 +3429,7 @@ void wake_up(tgestate_t *state)
   while (--B);
 
   /* Update the player's bed object to be empty. */
-  /*roomdef_2_hut2_left[player_bed] = interiorobject_EMPTY_BED;*/
+  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED;
   if (state->room_index == room_0_outdoors || state->room_index >= room_6)
     return;
 
@@ -3476,17 +3476,17 @@ void breakfast_time(tgestate_t *state)
   while (--B);
 
   Adash = 144;
-  // C = 3;
+  // C = 3; // B already 0
   sub_A373(state, &Adash);
 
   /* Update all the benches to be empty. */
-  roomdef_23_breakfast[37 + 0] = interiorobject_EMPTY_BENCH; /* bench_A */
-  roomdef_23_breakfast[37 + 3] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[37 + 6] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[29 + 0] = interiorobject_EMPTY_BENCH; /* bench_D */
-  roomdef_25_breakfast[29 + 3] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[29 + 6] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[29 + 9] = interiorobject_EMPTY_BENCH;
+  roomdef_23_breakfast[roomdef_23_BENCH_A] = interiorobject_EMPTY_BENCH;
+  roomdef_23_breakfast[roomdef_23_BENCH_B] = interiorobject_EMPTY_BENCH;
+  roomdef_23_breakfast[roomdef_23_BENCH_C] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_D] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_E] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_F] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
 
   if (state->room_index == 0 || state->room_index >= room_29_secondtunnelstart)
     return;
@@ -3784,11 +3784,11 @@ void character_sits(tgestate_t *state, character_t A, uint8_t *formerHL)
   // EX DE,HL
   index = A - 18;
   // first three characters
-  HL = &roomdef_25_breakfast[29]; /* bench_D */
+  HL = &roomdef_25_breakfast[roomdef_25_BENCH_D];
   if (index >= 3) // character_21
   {
     // second three characters
-    HL = &roomdef_23_breakfast[37]; /* bench_A */
+    HL = &roomdef_23_breakfast[roomdef_23_BENCH_A];
     index -= 3;
   }
   /* Poke object. */
@@ -3868,7 +3868,7 @@ void select_room_and_plot(tgestate_t *state)
  */
 void player_sits(tgestate_t *state)
 {
-  roomdef_25_breakfast[38] = interiorobject_PRISONER_SAT_DOWN_END_TABLE; /* bench_G */
+  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_PRISONER_SAT_DOWN_END_TABLE;
   player_sit_sleep_common(state, &state->player_in_breakfast);
 }
 
@@ -3879,7 +3879,7 @@ void player_sits(tgestate_t *state)
  */
 void player_sleeps(tgestate_t *state)
 {
-  roomdef_2_hut2_left[26] = interiorobject_OCCUPIED_BED;
+  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_OCCUPIED_BED;
   player_sit_sleep_common(state, &state->player_in_bed);
 }
 
@@ -6352,8 +6352,8 @@ void action_shovel(tgestate_t *state)
   if (roomdef_50_blocked_tunnel[2] == 255)
     return; /* blockage already cleared */
 
-  roomdef_50_blocked_tunnel[2] = 255; // hoist these constants
-  roomdef_50_blocked_tunnel[23] = interiorobject_TUNNEL_0; /* remove blockage graphic */
+  roomdef_50_blocked_tunnel[2] = 255; /* release boundary */
+  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_TUNNEL_0; /* remove blockage graphic */
 
   setup_room(state);
   choose_game_window_attributes(state);
@@ -6973,8 +6973,8 @@ void reset_map_and_characters(tgestate_t *state)
   state->clock = 7;
   state->day_or_night = 0;
   state->vischars[0].flags = 0;
-  roomdef_50_blocked_tunnel[0x708C - 0x7075] = interiorobject_COLLAPSED_TUNNEL;
-  roomdef_50_blocked_tunnel[0x7077 - 0x7075] = 0x34; /* reset boundary */
+  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL;
+  roomdef_50_blocked_tunnel[2] = 0x34; /* reset boundary */
 
   /* Lock the gates. */
   HLgate = &state->gates_and_doors[0];
@@ -6991,14 +6991,14 @@ void reset_map_and_characters(tgestate_t *state)
   while (--B);
 
   /* Clear the mess halls. */
-  roomdef_23_breakfast[0x6F17 - 0x6EF2] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[0x6F1A - 0x6EF2] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[0x6F1D - 0x6EF2] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[0x6F4F - 0x6F32] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[0x6F52 - 0x6F32] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[0x6F55 - 0x6F32] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[0x6F58 - 0x6F32] = interiorobject_EMPTY_BENCH;
-
+  roomdef_23_breakfast[roomdef_23_BENCH_A] = interiorobject_EMPTY_BENCH;
+  roomdef_23_breakfast[roomdef_23_BENCH_B] = interiorobject_EMPTY_BENCH;
+  roomdef_23_breakfast[roomdef_23_BENCH_C] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_D] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_E] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_F] = interiorobject_EMPTY_BENCH;
+  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
+  
   /* Reset characters 12..15 and 20..25. */
   DE = &character_structs[character_12];
   C = NELEMS(character_reset_data); /* iterations */

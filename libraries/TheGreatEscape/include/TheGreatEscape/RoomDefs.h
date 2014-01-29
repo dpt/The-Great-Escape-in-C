@@ -43,5 +43,17 @@ extern uint8_t roomdef_40[];
 extern uint8_t roomdef_44[];
 extern uint8_t roomdef_50_blocked_tunnel[];
 
-#endif /* ROOMDEFS_H */
+#define roomdef_23_BENCH_A     (10 +  9 * 3)
+#define roomdef_23_BENCH_B     (10 + 10 * 3)
+#define roomdef_23_BENCH_C     (10 + 11 * 3)
 
+#define roomdef_25_BENCH_D     ( 8 +  7 * 3)
+#define roomdef_25_BENCH_E     ( 8 +  8 * 3)
+#define roomdef_25_BENCH_F     ( 8 +  9 * 3)
+#define roomdef_25_BENCH_G     ( 8 + 10 * 3)
+
+#define roomdef_2_BED          (14 +  4 * 3)
+
+#define roomdef_50_BLOCKAGE    (14 +  3 * 3)
+
+#endif /* ROOMDEFS_H */
