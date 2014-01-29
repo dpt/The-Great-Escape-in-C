@@ -179,18 +179,6 @@ void snipping_wire(tgestate_t *state);
 
 extern const uint8_t table_9EE0[4];
 
-extern const byte_to_pointer_t twentyonelong[7];
-
-extern const uint8_t byte_9EF9[];
-extern const uint8_t byte_9EFC[];
-extern const uint8_t byte_9F01[];
-extern const uint8_t byte_9F08[];
-extern const uint8_t byte_9F0E[];
-extern const uint8_t byte_9F11[];
-extern const uint8_t byte_9F13[];
-
-extern const uint8_t byte_9F15[12];
-
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
 
@@ -2424,34 +2412,6 @@ const uint8_t table_9EE0[4] =
 
 /* ----------------------------------------------------------------------- */
 
-const byte_to_pointer_t twentyonelong[7] =
-{
-  { 42, &byte_9EF9[0] },
-  {  5, &byte_9EFC[0] },
-  { 14, &byte_9F01[0] },
-  { 16, &byte_9F08[0] },
-  { 44, &byte_9F0E[0] },
-  { 43, &byte_9F11[0] },
-  { 45, &byte_9F13[0] },
-};
-
-/* 0xFF terminated */
-const uint8_t byte_9EF9[] = { 0x82, 0x82, 0xFF                         };
-const uint8_t byte_9EFC[] = { 0x83, 0x01, 0x01, 0x01, 0xFF             };
-const uint8_t byte_9F01[] = { 0x01, 0x01, 0x01, 0x00, 0x02, 0x02, 0xFF };
-const uint8_t byte_9F08[] = { 0x01, 0x01, 0x95, 0x97, 0x99, 0xFF       };
-const uint8_t byte_9F0E[] = { 0x83, 0x82, 0xFF                         };
-const uint8_t byte_9F11[] = { 0x99, 0xFF                               };
-const uint8_t byte_9F13[] = { 0x01, 0xFF                               };
-
-// These are probably pairs of lo-hi bounds.
-const uint8_t byte_9F15[12] =
-{
-  0x56, 0x5E, 0x3D, 0x48,
-  0x4E, 0x84, 0x47, 0x74,
-  0x4F, 0x69, 0x2F, 0x3F
-};
-
 /**
  * $9F21: In permitted area.
  *
@@ -2459,6 +2419,32 @@ const uint8_t byte_9F15[12] =
  */
 void in_permitted_area(tgestate_t *state)
 {
+  /**
+   * $9EF9 +
+   */
+  /* 0xFF terminated */
+  static const uint8_t byte_9EF9[] = { 0x82, 0x82, 0xFF                         };
+  static const uint8_t byte_9EFC[] = { 0x83, 0x01, 0x01, 0x01, 0xFF             };
+  static const uint8_t byte_9F01[] = { 0x01, 0x01, 0x01, 0x00, 0x02, 0x02, 0xFF };
+  static const uint8_t byte_9F08[] = { 0x01, 0x01, 0x95, 0x97, 0x99, 0xFF       };
+  static const uint8_t byte_9F0E[] = { 0x83, 0x82, 0xFF                         };
+  static const uint8_t byte_9F11[] = { 0x99, 0xFF                               };
+  static const uint8_t byte_9F13[] = { 0x01, 0xFF                               };
+  
+  /**
+   * $????
+   */
+  static const byte_to_pointer_t byte_to_pointer[7] =
+  {
+    { 42, &byte_9EF9[0] },
+    {  5, &byte_9EFC[0] },
+    { 14, &byte_9F01[0] },
+    { 16, &byte_9F08[0] },
+    { 44, &byte_9F0E[0] },
+    { 43, &byte_9F11[0] },
+    { 45, &byte_9F13[0] },
+  };
+  
   pos_t       *vcpos;
   tinypos_t   *pos;
   attribute_t  attr;
@@ -2529,9 +2515,9 @@ void in_permitted_area(tgestate_t *state)
     byte_to_pointer_t *tab;
     uint8_t            B;
 
-    A &= 0x7F;
-    tab = &twentyonelong[0]; // table mapping bytes to offsets
-    B = 7;
+    A &= ~vischar_BYTE2_BIT7;
+    tab = &byte_to_pointer[0]; // table mapping bytes to offsets
+    B = NELEMS(byte_to_pointer);
     do
     {
       if (A == tab->byte)
