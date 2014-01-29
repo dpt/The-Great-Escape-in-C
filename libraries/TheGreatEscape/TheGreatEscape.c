@@ -181,6 +181,7 @@ extern const uint8_t table_9EE0[4];
 
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
+int in_permitted_area_end_bit_2(tgestate_t *state, uint8_t A, tinypos_t *DE);
 
 /* $A000 onwards */
 
@@ -2605,7 +2606,6 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   tinypos_t     *DE;
   uint8_t        A;
   uint8_t        B;
-  const uint8_t *HL2;
 
   HL = &state->room_index;
 
@@ -2616,23 +2616,33 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
     return 0; /* Indoors. */
 
   DE = &state->player_map_position;
+  
+  return in_permitted_area_end_bit_2(state, 0, DE);
+}
 
-  A = 0; // added
+/**
+ * $A01A: In permitted area (end bit 2).
+ *
+ * \param[in] state          Pointer to game state.
+ * \param[in] A              ...
+ *
+ * \return 0 if in permitted? area, 1 otherwise.
+ */
+int in_permitted_area_end_bit_2(tgestate_t *state, uint8_t A, tinypos_t *DE)
+{
+  // These are probably pairs of lo-hi bounds.
+  static const uint8_t byte_9F15[12] =
+  {
+    0x56, 0x5E, 0x3D, 0x48,
+    0x4E, 0x84, 0x47, 0x74,
+    0x4F, 0x69, 0x2F, 0x3F
+  };
+  const uint8_t *HL2;
 
   // another entry point: (A is index 0..2)
   HL2 = &byte_9F15[A * 4];
-  B = 2;
-  A = DE->y;
-  do
-  {
-    if (A < HL2[0] || A >= HL2[1])
-      return 1; /* return NZ */
-    HL2 += 2;
-    A = DE->x;
-  }
-  while (--B);
-
-  return 0; /* return Z */
+  return DE->y < HL2[0] || DE->y >= HL2[1] ||
+         DE->x < HL2[2] || DE->x >= HL2[3];
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9296,25 +9306,20 @@ void solitary(tgestate_t *state)
     if (A == room_0_outdoors)
     {
       A = *--HL;
-      HL += 2;
+      HL += 2; // -> .pos
       // EX DE, HL
       // EX AF, AF'
       A = 0;
       do
       {
-        // PUSH AF
-        // PUSH DE
-        CALL $A01A // end of in_permitted_area
-        if (Z) goto $CBD5;
-        // POP DE
-        // POP AF
+        if (in_permitted_area_end_bit_2(state, A, DE) == 0)
+          goto cbd5;
       }
       while (++A != 3);
 
       goto next;
-
-      // POP DE
-      // POP AF
+      
+cbd5:
       // EX AF,AF'
       C = A;
       item_discovered(state, C);
