@@ -8682,32 +8682,32 @@ a_1:
     }
     else if (A == 3)
     {
-      PUSH HL
-      EX DE, HL
+      // PUSH HL
+      // EX DE, HL
       if (item_structs[item_FOOD].room & itemstruct_ROOM_FLAG_ITEM_NEARBY)
       {
         HL++;
         DE += 3; // likely w04
         *DE++ = *HL++;
         *DE++ = *HL++;
-        POP HL
+        // POP HL
         goto jump_c9c0;
       }
       else
       {
         A = 0;
         *DE = A;
-        EX DE, HL
+        // EX DE, HL
         *++HL = 0xFF;
         *++HL = 0;
-        POP HL
+        // POP HL
         sub_CB23(state, HL);
         return;
       }
     }
     else if (A == 4)
     {
-      PUSH HL
+      // PUSH HL
       A = state->bribed_character;
       if (A != character_NONE)
       {
@@ -8721,15 +8721,15 @@ a_1:
         }
         while (--B);
       }
-      POP HL
+      // POP HL
       *HL++ = 0;
       sub_CB23(state, HL);
       return;
 
 found_bribed:
       HL += 15; // in
-      POP DE;
-      PUSH DE;
+      // POP DE;
+      // PUSH DE;
       DE += 3; // out
       if (state->room_index > 0)
       {
@@ -8743,7 +8743,7 @@ found_bribed:
         HL++;
         *DE++ = *HL++;
       }
-      POP HL;
+      // POP HL;
       goto jump_c9c0;
     }
   }
