@@ -2654,16 +2654,16 @@ int in_permitted_area_end_bit_2(tgestate_t *state, uint8_t A, tinypos_t *DE)
  */
 void wave_morale_flag(tgestate_t *state)
 {
-  uint8_t       *pcounter;
+  uint8_t       *pgame_counter;
   uint8_t        A;
   uint8_t       *HL;
   const uint8_t *flag_bitmap;
 
-  pcounter = &state->game_counter;
-  (*pcounter)++;
+  pgame_counter = &state->game_counter;
+  (*pgame_counter)++;
 
   /* Wave the flag on every other turn */
-  if (*pcounter & 1)
+  if (*pgame_counter & 1)
     return;
 
   A = state->morale;
@@ -2686,7 +2686,7 @@ void wave_morale_flag(tgestate_t *state)
   }
 
   flag_bitmap = flag_down;
-  if (*pcounter & 2)
+  if (*pgame_counter & 2)
     flag_bitmap = flag_up;
   plot_bitmap(state, 3, 25, flag_bitmap, state->moraleflag_screen_address);
 }
