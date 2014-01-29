@@ -130,47 +130,6 @@ itemstruct_t *find_nearby_item(tgestate_t *state);
 
 extern itemstruct_t item_structs[item__LIMIT];
 
-extern const uint8_t *table_7738[46];
-
-extern const uint8_t data_7795[];
-extern const uint8_t data_7799[];
-extern const uint8_t data_77A0[];
-extern const uint8_t data_77CD[];
-extern const uint8_t data_77D0[];
-extern const uint8_t data_77D4[];
-extern const uint8_t data_77D8[];
-extern const uint8_t data_77DA[];
-extern const uint8_t data_77DC[];
-extern const uint8_t data_77DE[];
-extern const uint8_t data_77E1[];
-extern const uint8_t data_77E7[];
-extern const uint8_t data_77EC[];
-extern const uint8_t data_77F1[];
-extern const uint8_t data_77F3[];
-extern const uint8_t data_77F5[];
-extern const uint8_t data_77F7[];
-extern const uint8_t data_77F9[];
-extern const uint8_t data_77FB[];
-extern const uint8_t data_77FD[];
-extern const uint8_t data_77FF[];
-extern const uint8_t data_7801[];
-extern const uint8_t data_7803[];
-extern const uint8_t data_7805[];
-extern const uint8_t data_7807[];
-extern const uint8_t data_7809[];
-extern const uint8_t data_780B[];
-extern const uint8_t data_780D[];
-extern const uint8_t data_780F[];
-extern const uint8_t data_7815[];
-extern const uint8_t data_781A[];
-extern const uint8_t data_781F[];
-extern const uint8_t data_7825[];
-extern const uint8_t data_782B[];
-extern const uint8_t data_7831[];
-extern const uint8_t data_7833[];
-extern const uint8_t data_7835[];
-extern const uint8_t data_7838[];
-
 void plot_bitmap(tgestate_t    *state,
                  uint8_t        width,
                  uint8_t        height,
@@ -1332,100 +1291,6 @@ itemstruct_t item_structs[item__LIMIT] =
   { item_PURSE,            room_NONE,        { 36, 44,  4 }, 0x7E, 0xF4 },
   { item_COMPASS,          room_NONE,        { 52, 28,  4 }, 0x7E, 0xF4 },
 };
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $7738: (unknown)
- */
-const uint8_t *table_7738[46] =
-{
-  NULL, /* was zero */
-  &data_7795[0],
-  &data_7799[0],
-  &data_77A0[0],
-  &data_77CD[0],
-  &data_77D0[0],
-  &data_77D4[0],
-  &data_77D8[0],
-  &data_77DA[0],
-  &data_77DC[0],
-  &data_77D8[0], /* dupe */
-  &data_77DA[0], /* dupe */
-  &data_77DC[0], /* dupe */
-  &data_77DE[0],
-  &data_77E1[0],
-  &data_77E1[0], /* dupe */
-  &data_77E7[0],
-  &data_77EC[0],
-  &data_77F1[0],
-  &data_77F3[0],
-  &data_77F5[0],
-  &data_77F1[0], /* dupe */
-  &data_77F3[0], /* dupe */
-  &data_77F5[0], /* dupe */
-  &data_77F7[0],
-  &data_77F9[0],
-  &data_77FB[0],
-  &data_77FD[0],
-  &data_7803[0],
-  &data_7805[0],
-  &data_7807[0],
-  &data_77FF[0],
-  &data_7801[0],
-  &data_7809[0],
-  &data_780B[0],
-  &data_780D[0],
-  &data_780F[0],
-  &data_7815[0],
-  &data_781A[0],
-  &data_781F[0],
-  &data_7825[0],
-  &data_782B[0],
-  &data_7831[0],
-  &data_7833[0],
-  &data_7835[0],
-  &data_7838[0]
-};
-
-const uint8_t data_7795[] = { 0x48, 0x49, 0x4A, 0xFF };
-const uint8_t data_7799[] = { 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0xFF };
-const uint8_t data_77A0[] = { 0x56, 0x1F, 0x1D, 0x20, 0x1A, 0x23, 0x99, 0x96, 0x95, 0x94, 0x97, 0x52, 0x17, 0x8A, 0x0B, 0x8B, 0x0C, 0x9B, 0x1C, 0x9D, 0x8D, 0x33, 0x5F, 0x80, 0x81, 0x64, 0x01, 0x00, 0x04, 0x10, 0x85, 0x33, 0x07, 0x91, 0x86, 0x08, 0x12, 0x89, 0x55, 0x0E, 0x22, 0xA2, 0x21, 0xA1, 0xFF };
-const uint8_t data_77CD[] = { 0x53, 0x54, 0xFF };
-const uint8_t data_77D0[] = { 0x87, 0x33, 0x34, 0xFF };
-const uint8_t data_77D4[] = { 0x89, 0x55, 0x36, 0xFF };
-const uint8_t data_77D8[] = { 0x56, 0xFF };
-const uint8_t data_77DA[] = { 0x57, 0xFF };
-const uint8_t data_77DC[] = { 0x58, 0xFF };
-const uint8_t data_77DE[] = { 0x5C, 0x5D, 0xFF };
-const uint8_t data_77E1[] = { 0x33, 0x5F, 0x80, 0x81, 0x60, 0xFF };
-const uint8_t data_77E7[] = { 0x34, 0x0A, 0x14, 0x93, 0xFF };
-const uint8_t data_77EC[] = { 0x38, 0x34, 0x0A, 0x14, 0xFF };
-const uint8_t data_77F1[] = { 0x68, 0xFF };
-const uint8_t data_77F3[] = { 0x69, 0xFF };
-const uint8_t data_77F5[] = { 0x6A, 0xFF };
-const uint8_t data_77F7[] = { 0x6C, 0xFF };
-const uint8_t data_77F9[] = { 0x6D, 0xFF };
-const uint8_t data_77FB[] = { 0x31, 0xFF };
-const uint8_t data_77FD[] = { 0x33, 0xFF };
-const uint8_t data_77FF[] = { 0x39, 0xFF };
-const uint8_t data_7801[] = { 0x59, 0xFF };
-const uint8_t data_7803[] = { 0x70, 0xFF };
-const uint8_t data_7805[] = { 0x71, 0xFF };
-const uint8_t data_7807[] = { 0x72, 0xFF };
-const uint8_t data_7809[] = { 0x73, 0xFF };
-const uint8_t data_780B[] = { 0x74, 0xFF };
-const uint8_t data_780D[] = { 0x75, 0xFF };
-const uint8_t data_780F[] = { 0x36, 0x0A, 0x97, 0x98, 0x52, 0xFF };
-const uint8_t data_7815[] = { 0x18, 0x17, 0x8A, 0x36, 0xFF };
-const uint8_t data_781A[] = { 0x34, 0x33, 0x07, 0x5C, 0xFF };
-const uint8_t data_781F[] = { 0x34, 0x33, 0x07, 0x91, 0x5D, 0xFF };
-const uint8_t data_7825[] = { 0x34, 0x33, 0x55, 0x09, 0x5C, 0xFF };
-const uint8_t data_782B[] = { 0x34, 0x33, 0x55, 0x09, 0x5D, 0xFF };
-const uint8_t data_7831[] = { 0x11, 0xFF };
-const uint8_t data_7833[] = { 0x6B, 0xFF };
-const uint8_t data_7835[] = { 0x91, 0x6E, 0xFF };
-const uint8_t data_7838[] = { 0x5A, 0xFF };
 
 /* ----------------------------------------------------------------------- */
 
@@ -9267,6 +9132,98 @@ uint16_t BC_becomes_A(uint8_t A)
  */
 const uint8_t *element_A_of_table_7738(uint8_t A)
 {
+  static const uint8_t data_7795[] = { 0x48, 0x49, 0x4A, 0xFF };
+  static const uint8_t data_7799[] = { 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0xFF };
+  static const uint8_t data_77A0[] = { 0x56, 0x1F, 0x1D, 0x20, 0x1A, 0x23, 0x99, 0x96, 0x95, 0x94, 0x97, 0x52, 0x17, 0x8A, 0x0B, 0x8B, 0x0C, 0x9B, 0x1C, 0x9D, 0x8D, 0x33, 0x5F, 0x80, 0x81, 0x64, 0x01, 0x00, 0x04, 0x10, 0x85, 0x33, 0x07, 0x91, 0x86, 0x08, 0x12, 0x89, 0x55, 0x0E, 0x22, 0xA2, 0x21, 0xA1, 0xFF };
+  static const uint8_t data_77CD[] = { 0x53, 0x54, 0xFF };
+  static const uint8_t data_77D0[] = { 0x87, 0x33, 0x34, 0xFF };
+  static const uint8_t data_77D4[] = { 0x89, 0x55, 0x36, 0xFF };
+  static const uint8_t data_77D8[] = { 0x56, 0xFF };
+  static const uint8_t data_77DA[] = { 0x57, 0xFF };
+  static const uint8_t data_77DC[] = { 0x58, 0xFF };
+  static const uint8_t data_77DE[] = { 0x5C, 0x5D, 0xFF };
+  static const uint8_t data_77E1[] = { 0x33, 0x5F, 0x80, 0x81, 0x60, 0xFF };
+  static const uint8_t data_77E7[] = { 0x34, 0x0A, 0x14, 0x93, 0xFF };
+  static const uint8_t data_77EC[] = { 0x38, 0x34, 0x0A, 0x14, 0xFF };
+  static const uint8_t data_77F1[] = { 0x68, 0xFF };
+  static const uint8_t data_77F3[] = { 0x69, 0xFF };
+  static const uint8_t data_77F5[] = { 0x6A, 0xFF };
+  static const uint8_t data_77F7[] = { 0x6C, 0xFF };
+  static const uint8_t data_77F9[] = { 0x6D, 0xFF };
+  static const uint8_t data_77FB[] = { 0x31, 0xFF };
+  static const uint8_t data_77FD[] = { 0x33, 0xFF };
+  static const uint8_t data_77FF[] = { 0x39, 0xFF };
+  static const uint8_t data_7801[] = { 0x59, 0xFF };
+  static const uint8_t data_7803[] = { 0x70, 0xFF };
+  static const uint8_t data_7805[] = { 0x71, 0xFF };
+  static const uint8_t data_7807[] = { 0x72, 0xFF };
+  static const uint8_t data_7809[] = { 0x73, 0xFF };
+  static const uint8_t data_780B[] = { 0x74, 0xFF };
+  static const uint8_t data_780D[] = { 0x75, 0xFF };
+  static const uint8_t data_780F[] = { 0x36, 0x0A, 0x97, 0x98, 0x52, 0xFF };
+  static const uint8_t data_7815[] = { 0x18, 0x17, 0x8A, 0x36, 0xFF };
+  static const uint8_t data_781A[] = { 0x34, 0x33, 0x07, 0x5C, 0xFF };
+  static const uint8_t data_781F[] = { 0x34, 0x33, 0x07, 0x91, 0x5D, 0xFF };
+  static const uint8_t data_7825[] = { 0x34, 0x33, 0x55, 0x09, 0x5C, 0xFF };
+  static const uint8_t data_782B[] = { 0x34, 0x33, 0x55, 0x09, 0x5D, 0xFF };
+  static const uint8_t data_7831[] = { 0x11, 0xFF };
+  static const uint8_t data_7833[] = { 0x6B, 0xFF };
+  static const uint8_t data_7835[] = { 0x91, 0x6E, 0xFF };
+  static const uint8_t data_7838[] = { 0x5A, 0xFF };
+  
+  /**
+   * $7738: (unknown)
+   */
+  static const uint8_t *table_7738[46] =
+  {
+    NULL, /* was zero */
+    &data_7795[0],
+    &data_7799[0],
+    &data_77A0[0],
+    &data_77CD[0],
+    &data_77D0[0],
+    &data_77D4[0],
+    &data_77D8[0],
+    &data_77DA[0],
+    &data_77DC[0],
+    &data_77D8[0], /* dupe */
+    &data_77DA[0], /* dupe */
+    &data_77DC[0], /* dupe */
+    &data_77DE[0],
+    &data_77E1[0],
+    &data_77E1[0], /* dupe */
+    &data_77E7[0],
+    &data_77EC[0],
+    &data_77F1[0],
+    &data_77F3[0],
+    &data_77F5[0],
+    &data_77F1[0], /* dupe */
+    &data_77F3[0], /* dupe */
+    &data_77F5[0], /* dupe */
+    &data_77F7[0],
+    &data_77F9[0],
+    &data_77FB[0],
+    &data_77FD[0],
+    &data_7803[0],
+    &data_7805[0],
+    &data_7807[0],
+    &data_77FF[0],
+    &data_7801[0],
+    &data_7809[0],
+    &data_780B[0],
+    &data_780D[0],
+    &data_780F[0],
+    &data_7815[0],
+    &data_781A[0],
+    &data_781F[0],
+    &data_7825[0],
+    &data_782B[0],
+    &data_7831[0],
+    &data_7833[0],
+    &data_7835[0],
+    &data_7838[0]
+  };
+  
   return table_7738[A];
 }
 
