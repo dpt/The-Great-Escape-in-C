@@ -619,8 +619,6 @@ void set_menu_item_attributes(tgestate_t *state,
 
 uint8_t input_device_select_keyscan(tgestate_t *state);
 
-extern const inputroutine_t inputroutines[inputdevice__LIMIT];
-
 void plot_statics_and_menu_text(tgestate_t *state);
 
 void plot_static_tiles_horizontal(tgestate_t    *state,
@@ -12269,19 +12267,6 @@ uint8_t input_device_select_keyscan(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F43D: Available input routines.
- */
-const inputroutine_t inputroutines[inputdevice__LIMIT] =
-{
-  &inputroutine_keyboard,
-  &inputroutine_kempston,
-  &inputroutine_sinclair,
-  &inputroutine_protek,
-};
-
-/* ----------------------------------------------------------------------- */
-
-/**
  * $F4B7: Runs the menu screen.
  *
  * Waits for user to select an input device, waves the morale flag and plays
@@ -12553,8 +12538,18 @@ input_t inputroutine_sinclair(tgestate_t *state)
  */
 input_t input_routine(tgestate_t *state)
 {
+  /**
+   * $F43D: Available input routines.
+   */
+  static const inputroutine_t inputroutines[inputdevice__LIMIT] =
+  {
+    &inputroutine_keyboard,
+    &inputroutine_kempston,
+    &inputroutine_sinclair,
+    &inputroutine_protek,
+  };
+  
   assert(state->chosen_input_device < inputdevice__LIMIT);
 
   return inputroutines[state->chosen_input_device](state);
 }
-
