@@ -2531,27 +2531,20 @@ void in_permitted_area(tgestate_t *state)
     goto set_flag_green;
 
 found:
-    DE = tab->pointer;
-    HL = DE;
-    BC &= 0x00FF;
-    HL += BC;
-    A = *HL;
-    HL = DE; // was interleaved
-    if (in_permitted_area_end_bit(state, A) == 0)
+    if (in_permitted_area_end_bit(state, tab->pointer[BC & 0xFF]) == 0) // why does this mask?
       goto set_flag_green;
 
-    A = state->vischars[0].target; // lo byte
-    if (A & vischar_BYTE2_BIT7)
+    if (state->vischars[0].target & vischar_BYTE2_BIT7) // low byte only
       HL++;
     BC = 0;
     for (;;)
     {
-      PUSH BC
+      // PUSH BC
       HL += BC;
       A = *HL;
-      if (A == 0xFF)
-        goto pop_and_set_flag_red; // hit end of list
-      POP HL, BC // was interleaved
+      if (A == 0xFF) // end of list
+        goto pop_and_set_flag_red;
+      // POP HL, BC // was interleaved
       if (in_permitted_area_end_bit(state, A) == 0)
         goto set_target_then_set_flag_green;
       BC++;
