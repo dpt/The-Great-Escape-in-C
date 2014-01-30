@@ -8195,10 +8195,9 @@ char_ge_12:
       {
         // PUSH DE
         DE = &saved_Y;
-        B = 2; // 2 iters
-        do
-          *DE++ = *HL++ >> 1;
-        while (--B);
+        // UNROLLED
+        *DE++ = *HL++ >> 1;
+        *DE++ = *HL++ >> 1;
         HL = &saved_Y;
         // POP DE
       }
@@ -11551,19 +11550,18 @@ void event_roll_call(tgestate_t *state)
   vischar_t *vischar;
 
   /* Is the player within the roll call area bounds? */
+  // UNROLLED
   /* Range checking. X in (0x72..0x7C) and Y in (0x6A..0x72). */
   DE = map_ROLL_CALL_X; // note the confused coords business
   HL = &state->player_map_position.y;
-  B = 2;
-  do
-  {
-    A = *HL++;
-    if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
-      goto not_at_roll_call;
-
-    DE = map_ROLL_CALL_Y;
-  }
-  while (--B);
+  A = *HL++;
+  if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
+    goto not_at_roll_call;
+  
+  DE = map_ROLL_CALL_Y;
+  A = *HL++; // -> state->player_map_position.x
+  if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
+    goto not_at_roll_call;
 
   /* All characters turn forward. */
   vischar = &state->vischars[0];
@@ -11602,23 +11600,21 @@ void action_papers(tgestate_t *state)
 
   uint16_t  DE;
   uint8_t  *HL;
-  uint8_t   B;
   uint8_t   A;
 
   /* Is the player within the main gate bounds? */
+  // UNROLLED
   /* Range checking. X in (0x69..0x6D) and Y in (0x49..0x4B). */
   DE = map_MAIN_GATE_X; // note the confused coords business
   HL = &state->player_map_position.y;
-  B = 2;
-  do
-  {
-    A = *HL++;
-    if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
-      return;
-
-    DE = map_MAIN_GATE_Y;
-  }
-  while (--B);
+  A = *HL++;
+  if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
+    return;
+  
+  DE = map_MAIN_GATE_Y;
+  A = *HL++; // -> state->player_map_position.x
+  if (A < ((DE >> 8) & 0xFF) || A >= ((DE >> 0) & 0xFF))
+    return;
 
   /* Using the papers at the main gate when not in uniform causes the player
    * to be sent to solitary */
