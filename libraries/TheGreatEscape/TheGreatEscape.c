@@ -1252,12 +1252,14 @@ characterstruct_t character_structs[26] =
   { character_17, room_0_outdoors,  {  68, 104,  1 }, 0xFF, 0x00 },
   { character_18, room_0_outdoors,  { 102,  68,  1 }, 0xFF, 0x18 },
   { character_19, room_0_outdoors,  {  88,  68,  1 }, 0xFF, 0x18 },
-  { character_20, room_NONE,        {  52,  60, 24 }, 0x00, 0x08 },
-  { character_21, room_NONE,        {  52,  44, 24 }, 0x00, 0x08 },
-  { character_22, room_NONE,        {  52,  28, 24 }, 0x00, 0x08 },
-  { character_23, room_NONE,        {  52,  60, 24 }, 0x00, 0x10 },
-  { character_24, room_NONE,        {  52,  44, 24 }, 0x00, 0x10 },
-  { character_25, room_NONE,        {  52,  28, 24 }, 0x00, 0x10 },
+  
+  { character_20, room_NONE,        {  52,  60, 24 }, 0x00, 0x08 }, // wake_up, breakfast_time
+  { character_21, room_NONE,        {  52,  44, 24 }, 0x00, 0x08 }, // wake_up, breakfast_time
+  { character_22, room_NONE,        {  52,  28, 24 }, 0x00, 0x08 }, // wake_up, breakfast_time
+  
+  { character_23, room_NONE,        {  52,  60, 24 }, 0x00, 0x10 }, // wake_up, breakfast_time
+  { character_24, room_NONE,        {  52,  44, 24 }, 0x00, 0x10 }, // wake_up, breakfast_time
+  { character_25, room_NONE,        {  52,  28, 24 }, 0x00, 0x10 }, // wake_up, breakfast_time
 };
 
 /* ----------------------------------------------------------------------- */
