@@ -157,15 +157,17 @@ For a code sequence where obvious delimiting EX/EXX instructions are present, va
 Many of the original functions would poke values directly into the instruction stream. These have to be recognised and each one factored out into its own variable. If the self modification is only within the routine, it can become a local. Otherwise it has to be placed into the state structure.
 
 #### Piecemeal structure access
-Much of the code points HL to a structure member, loads it, increments HL, loads more, increments HL, and so on. This resulting set of interleaved `HL++` or `HL--` ops gets in the way of 'actual work'. This is resolved by adjusting the (usually offsetinitial HL pointer to point to the base of the structure and introducing offsets or named references for each member accessed.
+Much of the code points HL to a structure member, loads it, increments HL, loads more, increments HL, and so on. This resulting set of interleaved `HL++` or `HL--` ops gets in the way of 'actual work'. This is resolved by adjusting the (often offsetted) initial HL pointer to point to the base of the structure and using normal structure references for each access.
 
 #### Code which never returns
-The original code will squash the stack and jump directly to the main game loop certain situations. The C standard library functions `longjmp` and `setjmp` are used to simulate this. In the code these are marked with `NEVER_RETURNS;`.
+The original code will squash the stack and jump directly to the main game loop certain situations. The C standard library functions `longjmp` and `setjmp` are used to simulate this. In the code these are marked with `NEVER_RETURNS;` which is an informational and safety macro.
 
 ## Coding style
+When editing the code:
+
 * Follow the existing style of the code.
 * Use spaces, not tabs. Indent by two spaces.
-* Format source lines to 80 columns wide (to allow side-by-side diffs).
+* Format source lines to 80 columns wide (to allow two or three side-by-side diffs).
 * Order functions and data by the address of the original.
 * Order #includes consistently (list in 'depth' order, C stdlib first, etc.).
 * Name `functions_like_this`.
@@ -177,14 +179,14 @@ The original code will squash the stack and jump directly to the main game loop 
 * Separate logic and data. Place large data blobs in external source files.
 
 ### Editing tips
-I usually edit the C code side-by-side in a three-pane configuration. I have `TheGreatEscape.c` open alongside `TheGreatEscape.skool` and `TheGreatEscape.ctl`. This lets me see the original Z80, the interpreted logic and the reimplemented C simultaneously.
+I usually edit the C code side-by-side in a three-pane configuration in Vim. I have `TheGreatEscape.c` open alongside `TheGreatEscape.skool` and `TheGreatEscape.ctl`. This lets me see the original Z80, the interpreted logic and the reimplemented C simultaneously.
 
 # (Major) TODOs
 * Fix coordinate order in pos structures: (y,x) -> (x,y).
 
 # Further (Planned) Changes
 ## Variable resolution
-The goal in this project, other than an understanding the original game, is to bring the compelling escapade to modern platforms. Those platforms feature various modern marvels including high resolution, high density screens and capacitive touch screens.
+The goal in this project, other than an understanding the original game, is to bring the escapade to modern platforms. Those platforms feature various modern marvels including high resolution, high density screens and capacitive touch screens.
 
 Bearing in mind the various new devices on which the game will be run we must allow for changes to screen resolution, screen density and input devices. So some hard-coded constants for the dimensions of the screen will be replaced with references to variables kept in the game state.
 
