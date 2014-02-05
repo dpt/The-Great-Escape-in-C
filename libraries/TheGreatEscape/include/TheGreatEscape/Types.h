@@ -157,7 +157,7 @@ enum input_flags
 enum vischar_flags
 {
   vischar_BYTE0_EMPTY_SLOT             = 0xFF,
-  vischar_BYTE0_MASK                   = 0x1F,
+  vischar_BYTE0_MASK                   = 0x1F, // character index? 0..31
 
   vischar_BYTE1_EMPTY_SLOT             = 0xFF,
   vischar_BYTE1_MASK                   = 0x3F,
@@ -166,7 +166,7 @@ enum vischar_flags
   vischar_BYTE1_PERSUE                 = 1 << 0, /* AI only? */
   vischar_BYTE1_BIT1                   = 1 << 1, /* AI only? */
   vischar_BYTE1_BIT2                   = 1 << 2, /* 'Gone mad' (bribe) flag */
-  vischar_BYTE1_BIT6                   = 1 << 6,
+  vischar_BYTE1_BIT6                   = 1 << 6, // affects scaling
   vischar_BYTE1_BIT7                   = 1 << 7,
 
   vischar_BYTE2_MASK                   = 0x7F,
@@ -362,6 +362,15 @@ typedef struct pos
 pos_t;
 
 /**
+ * Holds a smaller scale version of pos_t
+ */
+typedef struct tinypos
+{
+  uint8_t y, x, vo;
+}
+tinypos_t;
+
+/**
  * Defines a movable item.
  * This is a sub-struct of vischar (from 'pos' onwards).
  * Unknown as yet its intent. Just calling it a "movable item" for now.
@@ -382,32 +391,22 @@ typedef struct vischar
   uint8_t       character; /* $8000 char index */
   uint8_t       flags;     /* $8001 flags */
   location_t    target;    /* $8002 target location */
-  uint16_t      w04;       /* $8004 */
-  uint8_t       b06;       /* $8006 */
+  tinypos_t     p04;       /* $8004 position */
   uint8_t       b07;       /* $8007 more flags */
-  uint16_t      w08;       /* $8008 */
-  uint16_t      w0A;       /* $800A */
-  uint8_t       b0C;       /* $800C */
-  uint8_t       b0D;       /* $800D movement */
+  uint16_t      w08;       /* $8008 */ // only ever read in called_from_main_loop_9
+  uint16_t      w0A;       /* $800A */ // must be a pointer
+  uint8_t       b0C;       /* $800C */ // used with above?
+  uint8_t       b0D;       /* $800D movement */ // compared to flags?
   uint8_t       b0E;       /* $800E walk/crawl flag */
   movableitem_t mi;        /* $800F movable item (position, current character sprite set, b17) */
-  uint16_t      w18;       /* $8018 */
-  uint16_t      w1A;       /* $801A */
+  uint16_t      w18;       /* $8018 */ // coord
+  uint16_t      w1A;       /* $801A */ // coord
   room_t        room;      /* $801C room index */
-  uint8_t       b1D;       /* $801D */
+  uint8_t       b1D;       /* $801D */ // no references
   uint8_t       b1E;       /* $801E spotlight */
-  uint8_t       b1F;       /* $801F */
+  uint8_t       b1F;       /* $801F */ // compared to but never written? only used by sub_BAF7
 }
 vischar_t;
-
-/**
- * Holds a smaller scale version of pos_t
- */
-typedef struct tinypos
-{
-  uint8_t y, x, vo;
-}
-tinypos_t;
 
 /**
  * Holds a key definition.

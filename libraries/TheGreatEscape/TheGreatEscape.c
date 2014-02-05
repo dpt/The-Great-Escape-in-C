@@ -464,9 +464,9 @@ charevnt_handler_t charevnt_handler_8_player_sleeps;
 
 void follow_suspicious_player(tgestate_t *state);
 
-void character_behaviour_stuff(tgestate_t *state, vischar_t *IY);
-void gizzards(tgestate_t *state, vischar_t *vischar, uint8_t A);
-void bit5set(tgestate_t *state, vischar_t *vischar, uint8_t A, int log2scale);
+void character_behaviour(tgestate_t *state, vischar_t *IY);
+void character_behaviour_end_1(tgestate_t *state, vischar_t *vischar, uint8_t A);
+void character_behaviour_end_2(tgestate_t *state, vischar_t *vischar, uint8_t A, int log2scale);
 
 uint8_t move_character_y(tgestate_t *state,
                          vischar_t  *vischar,
@@ -841,16 +841,15 @@ void setup_movable_item(tgestate_t    *state,
   /* $69A0 */
   static const uint8_t movable_item_reset_data[14] =
   {
-    0x00,       /* .flags */
-    0x00, 0x00, /* .target */
-    0x00, 0x00, /* .w04 */
-    0x00,       /* .b06 */
-    0x00,       /* .b07 */
-    0xF2, 0xCD, /* .w08 */
-    0x76, 0xCF, /* .w0A */
-    0x00,       /* .b0C */
-    0x00,       /* .b0D */
-    0x00        /* .b0E */
+    0x00,             /* .flags */
+    0x00, 0x00,       /* .target */
+    0x00, 0x00, 0x00, /* .p04 */
+    0x00,             /* .b07 */
+    0xF2, 0xCD,       /* .w08 */
+    0x76, 0xCF,       /* .w0A */
+    0x00,             /* .b0C */
+    0x00,             /* .b0D */
+    0x00              /* .b0E */
   };
 
   vischar_t *vischar1;
@@ -2333,7 +2332,8 @@ void process_player_input(tgestate_t *state)
     {
       /* Player was in bed. */
       state->vischars[0].target    = 0x012C;
-      state->vischars[0].w04       = 0x2E2E;
+      state->vischars[0].p04.y     = 0x2E;
+      state->vischars[0].p04.x     = 0x2E;
       state->vischars[0].mi.pos.y  = 0x2E;
       state->vischars[0].mi.pos.x  = 0x2E;
       state->vischars[0].mi.pos.vo = 24;
@@ -8584,7 +8584,6 @@ void follow_suspicious_player(tgestate_t *state)
 {
   vischar_t *IY;
   uint8_t    B;
-  uint8_t    A;
 
   state->byte_A13E = 0;
 
@@ -8594,6 +8593,7 @@ void follow_suspicious_player(tgestate_t *state)
   if (state->food_discovered_counter != 0 &&
       --state->food_discovered_counter == 0)
   {
+    /* De-poison the food. */
     item_structs[item_FOOD].item &= ~itemstruct_ITEM_FLAG_POISONED;
     item_discovered(state, item_FOOD);
   }
@@ -8604,10 +8604,13 @@ void follow_suspicious_player(tgestate_t *state)
   {
     if (IY->flags != 0)
     {
+      uint8_t A;
+
       A = IY->character & vischar_BYTE0_MASK; // character index
       if (A < 20)
       {
         is_item_discoverable(state);
+        
         if (state->red_flag || state->automatic_player_counter > 0)
           guards_follow_suspicious_player(state, IY);
 
@@ -8615,21 +8618,18 @@ void follow_suspicious_player(tgestate_t *state)
         {
           // 16,17,18,19 // could these be the dogs?
           if (item_structs[item_FOOD].room & itemstruct_ROOM_FLAG_ITEM_NEARBY)
-            IY->flags = 3; // dead dog?
+            IY->flags = vischar_BYTE1_PERSUE | vischar_BYTE1_BIT1; // dead dog?
         }
       }
 
-      character_behaviour_stuff(state, IY);
+      character_behaviour(state, IY);
     }
     IY++;
   }
   while (--B);
 
   if (!state->red_flag && (state->morale_1 || state->automatic_player_counter == 0))
-  {
-    IY = &state->vischars[0];
-    character_behaviour_stuff(state, IY);
-  }
+    character_behaviour(state, &state->vischars[0]);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8640,11 +8640,15 @@ void follow_suspicious_player(tgestate_t *state)
  * \param[in] state Pointer to game state.
  * \param[in] IY    Pointer to visible character.
  */
-void character_behaviour_stuff(tgestate_t *state, vischar_t *IY)
+void character_behaviour(tgestate_t *state, vischar_t *IY)
 {
   uint8_t    A;
   uint8_t    B;
   vischar_t *HL;
+  //uint16_t  *DEdash;
+  //tinypos_t *HLdash;
+  uint8_t    Cdash;
+  uint8_t    log2scale;
 
   B = A = IY->b07; /* more flags */
   if (A & vischar_BYTE7_MASK)
@@ -8653,111 +8657,102 @@ void character_behaviour_stuff(tgestate_t *state, vischar_t *IY)
     return;
   }
 
-  HL = IY;
-#if 0
-  A = *++HL; // $8021 $8041 $8061 etc.
+  HL = IY; // no need for separate HL and IY now other code reduced
+  A = HL->flags;
   if (A != 0)
   {
-    if (A == 1)
+    if (A == vischar_BYTE1_PERSUE) // == 1
     {
 a_1:
-      DEdash = HL + 3; // w04
-      HLdash = &state->player_map_position;
-      *DEdash++ = *HLdash++;
-      *DEdash++ = *HLdash++;
+      HL->p04.y = state->player_map_position.y;
+      HL->p04.x = state->player_map_position.x;
       goto jump_c9c0;
     }
-    else if (A == 2)
+    else if (A == vischar_BYTE1_BIT1) // == 2
     {
       if (state->automatic_player_counter)
         goto a_1;
 
-      *HL++ = 0;
-      sub_CB23(state, HL);
+      HL->flags = 0;
+      sub_CB23(state, &HL->target);
       return;
     }
-    else if (A == 3)
+    else if (A == (vischar_BYTE1_PERSUE + vischar_BYTE1_BIT1)) // == 3
     {
-      // PUSH HL
-      // EX DE, HL
       if (item_structs[item_FOOD].room & itemstruct_ROOM_FLAG_ITEM_NEARBY)
       {
-        HL++;
-        DE += 3; // likely w04
-        *DE++ = *HL++;
-        *DE++ = *HL++;
-        // POP HL
+        HL->p04.y = item_structs[item_FOOD].pos.y;
+        HL->p04.x = item_structs[item_FOOD].pos.x;
         goto jump_c9c0;
       }
       else
       {
-        A = 0;
-        *DE = A;
-        // EX DE, HL
-        *++HL = 0xFF;
-        *++HL = 0;
-        // POP HL
-        sub_CB23(state, HL);
+        HL->flags  = 0;
+        HL->target = 0x00FF;
+        sub_CB23(state, &HL->target);
         return;
       }
     }
-    else if (A == 4)
+    else if (A == vischar_BYTE1_BIT2) // == 4 // gone mad / bribe flag
     {
-      // PUSH HL
-      A = state->bribed_character;
-      if (A != character_NONE)
+      character_t  Acharacter;
+      vischar_t   *HLfoundvischar;
+
+      Acharacter = state->bribed_character;
+      if (Acharacter != character_NONE)
       {
         B = vischars_LENGTH - 1;
-        HL = &state->vischars[1]; // iterate over non-player characters
+        HLfoundvischar = &state->vischars[1]; // iterate over non-player characters
         do
         {
-          if (*HL == A)
+          if (HLfoundvischar->character == Acharacter) /* Bug? This doesn't mask off HL->character. */
             goto found_bribed;
-          HL++;
+          HLfoundvischar++;
         }
         while (--B);
       }
-      // POP HL
-      *HL++ = 0;
-      sub_CB23(state, HL);
+      
+      /* Bribed character was not visible. */
+      HL->flags = 0;
+      sub_CB23(state, &HL->target);
       return;
 
 found_bribed:
-      HL += 15; // in
-      // POP DE;
-      // PUSH DE;
-      DE += 3; // out
-      if (state->room_index > 0)
       {
-        /* Indoors */
-        scale_pos(HL, DE);
+        pos_t     *HLpos;
+        tinypos_t *DEpos;
+        
+        HLpos = &HLfoundvischar->mi.pos;
+        DEpos = &HL->p04;
+        if (state->room_index > 0)
+        {
+          /* Indoors */
+          scale_pos(HLpos, DEpos);
+        }
+        else
+        {
+          /* Outdoors */
+          DEpos->y = HLpos->y;
+          DEpos->x = HLpos->x;
+        }
+        goto jump_c9c0;
       }
-      else
-      {
-        /* Outdoors */
-        *DE++ = *HL++;
-        HL++;
-        *DE++ = *HL++;
-      }
-      // POP HL;
-      goto jump_c9c0;
+      
     }
   }
-  A = HL[1];
+  
+  A = HL->target & 0x00FF; // byte load at $8002 $8022 $8042 $8062 $8082 $80A2
   if (A == 0)
   {
-    gizzards(state, IY, A);
-    return; // check
+    character_behaviour_end_1(state, IY, A);
+    return; // exit via
   }
 
 jump_c9c0:
-  A = *HL;
-  Cdash = A;
+  Cdash = A = HL->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-  // replace with:
-  // log2scale = 1 / 4 / 8;
-  // then pass that down
-
+#if ORIGINAL
+  /* Original code self modifies move_character_y/x routines. */
   if (state->room_index)
     HLdash = &BC_becomes_A;
   else if (Cdash & vischar_BYTE1_BIT6)
@@ -8767,34 +8762,42 @@ jump_c9c0:
 
   self_CA13 = HLdash; // self-modify move_character_y:$CA13
   self_CA4B = HLdash; // self-modify move_character_x:$CA4B
-
+#else
+  /* Replacement code passes down a log2scale factor. */
+  if (state->room_index)
+    log2scale = 1;
+  else if (Cdash & vischar_BYTE1_BIT6)
+    log2scale = 4;
+  else
+    log2scale = 8;
+#endif
+  
   if (IY->b07 & vischar_BYTE7_BIT5)
   {
-    bit5set(state, IY, A, log2scale);
+    character_behaviour_end_2(state, IY, A, log2scale);
     return;
   }
 
-  // HL += 3; // probably can go
   if (move_character_y(state, IY, log2scale) == 0 &&
       move_character_x(state, IY, log2scale) == 0)
   {
+    // something like: character couldn't move?
+    
     bribes_solitary_food(state, IY);
     return;
   }
 
-  // fallthrough into ...
-  gizzards(state, IY, A);
-#endif
+  character_behaviour_end_1(state, IY, A); /* was fallthrough */
 }
 
 /**
  * $C9F5: Unknown end part.
  *
  * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character.
- * \param[in] A       ...
+ * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] A       Flags (of another character...)
  */
-void gizzards(tgestate_t *state, vischar_t *vischar, uint8_t A)
+void character_behaviour_end_1(tgestate_t *state, vischar_t *vischar, uint8_t A)
 {
   if (A != vischar->b0D)
     vischar->b0D = A | vischar_BYTE13_BIT7;
@@ -8803,21 +8806,21 @@ void gizzards(tgestate_t *state, vischar_t *vischar, uint8_t A)
 /**
  * $C9FF: Unknown end part.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character.
- * \param[in] A       ...
+ * \param[in] state     Pointer to game state.
+ * \param[in] vischar   Pointer to visible character. (was IY)
+ * \param[in] A         Flags (of another character...)
  * \param[in] log2scale Log2Scale factor (replaces self-modifying code in original).
  */
-void bit5set(tgestate_t *state, vischar_t *vischar, uint8_t A, int log2scale)
+void character_behaviour_end_2(tgestate_t *state, vischar_t *vischar, uint8_t A, int log2scale)
 {
-  // L += 4; this can be omitted as move_character_x uses vischar, not HL
+  // is x,y the right order? or y,x?
   if (move_character_x(state, vischar, log2scale) == 0 &&
       move_character_y(state, vischar, log2scale) == 0)
   {
-    gizzards(state, vischar, A); // likely: couldn't move, so .. do something
+    character_behaviour_end_1(state, vischar, A); // likely: couldn't move, so .. do something
     return;
   }
-  // HL--; suspect this can be omitted
+  
   bribes_solitary_food(state, vischar);
 }
 
@@ -8844,7 +8847,7 @@ uint8_t move_character_y(tgestate_t *state,
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
 
-  DE = vischar->mi.pos.y - ((vischar->w04 >> 0) << log2scale);
+  DE = vischar->mi.pos.y - (vischar->p04.y << log2scale);
   if (DE)
   {
     D = (DE & 0xFF00) >> 8;
@@ -8895,7 +8898,7 @@ uint8_t move_character_x(tgestate_t *state,
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
 
-  DE = vischar->mi.pos.x - ((vischar->w04 >> 8) << log2scale);
+  DE = vischar->mi.pos.x - (vischar->p04.x << log2scale);
   if (DE)
   {
     D = (DE & 0xFF00) >> 8;
