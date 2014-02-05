@@ -699,7 +699,7 @@ void transition(tgestate_t      *state,
     {
       /* Outdoors */
 
-      vischar->b0D = 0x80; // likely a character direction
+      vischar->b0D = vischar_BYTE13_BIT7; // likely a character direction
       vischar->b0E &= 3;   // likely a sprite direction
       reset_B2FC(state);
       squash_stack_goto_main(state); // exit
@@ -765,7 +765,7 @@ void set_player_sprite_for_room(tgestate_t *state)
   vischar_t *player;
 
   player = &state->vischars[0];
-  player->b0D = 0x80; // likely a character direction
+  player->b0D = vischar_BYTE13_BIT7; // likely a character direction
 
   /* When in tunnel rooms this forces the player sprite to 'prisoner' and sets
    * the crawl flag appropriately. */
@@ -2355,7 +2355,7 @@ not_breakfast:
   if (state->vischars[0].b0D == A)
     return;
 
-  state->vischars[0].b0D = A | 0x80;
+  state->vischars[0].b0D = A | vischar_BYTE13_BIT7;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2400,7 +2400,7 @@ void snipping_wire(tgestate_t *state)
   else
   {
     state->vischars[0].b0E = A & 3; // walk/crawl flag?
-    state->vischars[0].b0D = 0x80;
+    state->vischars[0].b0D = vischar_BYTE13_BIT7;
     state->vischars[0].mi.pos.vo = 24; /* set vertical offset */
 
     /* The original code jumped to tail end of picking_a_lock to do this. */
@@ -2410,6 +2410,7 @@ void snipping_wire(tgestate_t *state)
 
 const uint8_t table_9EE0[4] =
 {
+  // suspect each is vischar_BYTE13_BIT7 + flags
   0x84, 0x87, 0x88, 0x85
 };
 
@@ -5641,7 +5642,7 @@ void sub_AFDF(tgestate_t *state)
       A = *HL ^ 2;
       if (A != IY->b0E)
       {
-        IY->b0D = 0x80;
+        IY->b0D = vischar_BYTE13_BIT7;
 
 b0d0:
         IY->b07 = (IY->b07 & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
@@ -6289,7 +6290,7 @@ set_to_7: // crawl BL
 
 action_wiresnips_tail:
   state->vischars[0].b0E          = A; // walk/crawl flag
-  state->vischars[0].b0D          = 0x80;
+  state->vischars[0].b0D          = vischar_BYTE13_BIT7;
   state->vischars[0].flags        = vischar_BYTE1_CUTTING_WIRE;
   state->vischars[0].mi.pos.vo    = 12; /* set vertical offset */
   state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4];
@@ -11571,7 +11572,7 @@ void event_roll_call(tgestate_t *state)
   B = vischars_LENGTH;
   do
   {
-    vischar->b0D = 0x80; // movement
+    vischar->b0D = vischar_BYTE13_BIT7; // movement
     vischar->b0E = 0x03; // direction (3 => face bottom left)
     vischar++;
   }
