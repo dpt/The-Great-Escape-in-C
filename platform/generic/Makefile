@@ -1,4 +1,4 @@
-TOP=../..
+TOP := $(dir $(lastword $(MAKEFILE_LIST)))/../..
 
 INCLUDES=-I$(TOP)/include -I$(TOP)/libraries/TheGreatEscape/include
 WARNINGS=-Wall -Wextra -Wno-unused-parameter
