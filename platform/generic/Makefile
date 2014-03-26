@@ -1,18 +1,44 @@
-TOP := $(dir $(lastword $(MAKEFILE_LIST)))/../..
+# Makefile for The Great Escape
+#
+
+TOP := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))../..)
+
+# Select a compiler based on TARGET
+#
+# Target is a quad consisting of:
+#   <OS>-<CPU architecture>-<compiler>
+# Where 'any' can be given as a wildcard element.
+#
+ifeq ($(TARGET),ios-arm-clang)
+	DEVROOT=/Applications/Xcode.app/Contents/Developer
+	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk
+	CLANG=$(DEVROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+	CROSSFLAGS=-isysroot $(SDK) -Os -arch armv7 -mthumb
+	CC=$(CLANG)
+	LD=$(CLANG)
+else ifeq ($(TARGET),osx-any-clang)
+	#CLANG = ~/bin/clang+llvm-3.4/bin/clang
+	#SANITIZE=-fsanitize=integer -fsanitize=address
+	CLANG = clang
+	CC=$(CLANG)
+	LD=$(CLANG)
+else ifeq ($(TARGET),linux-arm-any)
+	#CROSSFLAGS=-target arm-none-eabi -mcpu=arm7tdmi -mfloat-abi=soft
+	# armv5-none-eabi -fpu=hard
+	CC = gcc
+	LD = gcc
+else
+	CC = gcc
+	LD = gcc
+endif
 
 INCLUDES=-I$(TOP)/include -I$(TOP)/libraries/TheGreatEscape/include
 WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
-#CLANG=~/src/llvm-build/Debug+Asserts/bin/clang
-CLANG=clang
 CTAGS=/usr/local/bin/ctags
 
-CC=$(CLANG)
-LD=$(CLANG)
-CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) -ferror-limit=2
-LDFLAGS=
-
-SANITIZE=-fsanitize=integer -fsanitize=address
+CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) -ferror-limit=2 $(CROSSFLAGS) $(SANITIZE)
+LDFLAGS=$(CROSSFLAGS) $(SANITIZE)
 
 ifeq ($(MODE),release)
   CFLAGS+=-O2 -DNDEBUG
@@ -25,7 +51,7 @@ SRC=$(shell find $(TOP)/libraries $(TOP)/platform/generic -type f -name '*.c' -p
 OBJ=$(SRC:.c=.o)
 DEP=$(SRC:.c=.d)
 
-.c.o:;	$(CC) -c $(CFLAGS) $(SANITIZE) $< -o $@
+.c.o:;	$(CC) -c $(CFLAGS) $< -o $@
 
 .PHONY: usage
 usage:
@@ -42,11 +68,11 @@ usage:
 build: TheGreatEscape
 
 TheGreatEscape: $(OBJ)
-	$(LD) $(LDFLAGS) $(SANITIZE) -o $@ $^
+	$(LD) $(LDFLAGS) -o $@ $^
 
 .PHONY: analyze
 analyze:
-	clang --analyze $(CFLAGS) -pedantic $(SRC)
+	$(CLANG) --analyze $(CFLAGS) -pedantic $(SRC)
 
 .PHONY: lint
 lint:
