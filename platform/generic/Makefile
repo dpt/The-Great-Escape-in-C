@@ -14,12 +14,14 @@ ifeq ($(TARGET),ios-arm-clang)
 	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk
 	CLANG=$(DEVROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
 	CROSSFLAGS=-isysroot $(SDK) -Os -arch armv7 -mthumb
+	CLANGFLAGS = -ferror-limit=2
 	CC=$(CLANG)
 	LD=$(CLANG)
 else ifeq ($(TARGET),osx-any-clang)
 	#CLANG = ~/bin/clang+llvm-3.4/bin/clang
 	#SANITIZE=-fsanitize=integer -fsanitize=address
 	CLANG = clang
+	CLANGFLAGS = -ferror-limit=2
 	CC=$(CLANG)
 	LD=$(CLANG)
 else ifeq ($(TARGET),linux-arm-any)
@@ -37,7 +39,7 @@ WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
 CTAGS=/usr/local/bin/ctags
 
-CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) -ferror-limit=2 $(CROSSFLAGS) $(SANITIZE)
+CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) $(CLANGFLAGS) $(CROSSFLAGS) $(SANITIZE)
 LDFLAGS=$(CROSSFLAGS) $(SANITIZE)
 
 ifeq ($(MODE),release)
