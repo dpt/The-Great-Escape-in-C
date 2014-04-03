@@ -1,12 +1,11 @@
+#include "TheGreatEscape/SuperTiles.h"
+
 /**
  * $5B00: Supertiles: The game map is constructed of these.
  *
  * Each supertile is a 4x4 array of tile refs.
  */
-
-#include "TheGreatEscape/SuperTiles.h"
-
-const supertile_t map_supertiles[map_supertiles__LIMIT] =
+const supertile_t supertiles[supertileindex__LIMIT] =
 {
   {
     {

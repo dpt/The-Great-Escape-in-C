@@ -165,12 +165,12 @@ enum vischar_flags
   vischar_BYTE1_CUTTING_WIRE           = 1 << 1, /* Player only? */
   vischar_BYTE1_PERSUE                 = 1 << 0, /* AI only? */
   vischar_BYTE1_BIT1                   = 1 << 1, /* AI only? */
-  vischar_BYTE1_BIT2                   = 1 << 2, /* 'Gone mad' (bribe) flag */
+  vischar_BYTE1_BIT2                   = 1 << 2, /* 'Gone mad' (bribed) flag */
   vischar_BYTE1_BIT6                   = 1 << 6, // affects scaling
   vischar_BYTE1_BIT7                   = 1 << 7,
 
-  vischar_BYTE2_MASK                   = 0x7F,
-  vischar_BYTE2_BIT7                   = 1 << 7,
+  vischar_BYTE2_MASK                   = 0x7F,   // target mask
+  vischar_BYTE2_BIT7                   = 1 << 7, // target mask
 
   vischar_BYTE7_MASK                   = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
@@ -287,7 +287,7 @@ enum morale
 /**
  * Identifiers of map locations.
  */
-typedef enum location
+enum location
 {
   location_0E00                        = 0x0E00, /* used at exercise time (prior) */
   location_1000                        = 0x1000,
@@ -299,8 +299,12 @@ typedef enum location
   location_8502                        = 0x8502, /* used at bed time */
   location_8E04                        = 0x8E04, /* used at exercise time */
   location_9003                        = 0x9003, /* used at breakfast time */
-}
-location_t;
+};
+
+/**
+ * Holds a location.
+ */
+typedef uint16_t location_t;
 
 /**
  * Identifiers of map locations.
@@ -379,7 +383,7 @@ typedef struct movableitem
 {
   pos_t           pos;
   const sprite_t *spriteset;
-  uint8_t         b17;
+  uint8_t         b17; // flip flag? sprite set offset?
 }
 movableitem_t;
 
@@ -388,23 +392,23 @@ movableitem_t;
  */
 typedef struct vischar
 {
-  uint8_t       character; /* $8000 char index */
-  uint8_t       flags;     /* $8001 flags */
-  location_t    target;    /* $8002 target location */
-  tinypos_t     p04;       /* $8004 position */
-  uint8_t       b07;       /* $8007 more flags */
-  uint16_t      w08;       /* $8008 */ // only ever read in called_from_main_loop_9
-  uint16_t      w0A;       /* $800A */ // must be a pointer
-  uint8_t       b0C;       /* $800C */ // used with above?
-  uint8_t       b0D;       /* $800D movement */ // compared to flags?
-  uint8_t       b0E;       /* $800E walk/crawl flag */
-  movableitem_t mi;        /* $800F movable item (position, current character sprite set, b17) */
-  uint16_t      w18;       /* $8018 */ // coord
-  uint16_t      w1A;       /* $801A */ // coord
-  room_t        room;      /* $801C room index */
-  uint8_t       b1D;       /* $801D */ // no references
-  uint8_t       b1E;       /* $801E spotlight */
-  uint8_t       b1F;       /* $801F */ // compared to but never written? only used by sub_BAF7
+  uint8_t       character;    /* $8000 char index */
+  uint8_t       flags;        /* $8001 flags */
+  location_t    target;       /* $8002 target location */
+  tinypos_t     p04;          /* $8004 position */
+  uint8_t       b07;          /* $8007 more flags */
+  uint16_t      w08;          /* $8008 */ // only ever read in called_from_main_loop_9
+  uint16_t      w0A;          /* $800A */ // must be a pointer
+  uint8_t       b0C;          /* $800C */ // used with above?
+  uint8_t       b0D;          /* $800D movement */ // compared to flags?
+  uint8_t       b0E;          /* $800E walk/crawl flag */
+  movableitem_t mi;           /* $800F movable item (position, current character sprite set, b17) */
+  uint16_t      w18;          /* $8018 */ // coord
+  uint16_t      w1A;          /* $801A */ // coord
+  room_t        room;         /* $801C room index */
+  uint8_t       b1D;          /* $801D */ // can find no references. is this ever used?
+  uint8_t       width_bytes;  /* $801E copy of sprite width in bytes + 1 */
+  uint8_t       height;       /* $801F copy of sprite height in rows */
 }
 vischar_t;
 
@@ -464,7 +468,7 @@ typedef struct characterstruct
   character_t character;
   room_t      room;
   tinypos_t   pos;
-  uint8_t     t1, t2; // seems to be a copy of target
+  location_t  target;
 }
 characterstruct_t;
 
@@ -490,10 +494,10 @@ timedevent_t;
  */
 typedef struct itemstruct
 {
-  item_t    item;
-  room_t    room; // if has flags should be room_and_flags
-  tinypos_t pos;
-  uint8_t   t1, t2;
+  item_t     item;
+  room_t     room; // if has flags should be room_and_flags
+  tinypos_t  pos;
+  location_t target;
 }
 itemstruct_t;
 
@@ -519,10 +523,8 @@ typedef void (charevnt_handler_t)(tgestate_t  *state,
  */
 typedef struct doorpos
 {
-  uint8_t room_and_flags; // top 6 bits are room, bottom 2 are ?
-  // replace y,x,z with a tinypos_t?
-  uint8_t y, x;
-  uint8_t z;  // suspect: height
+  uint8_t   room_and_flags; // top 6 bits are room, bottom 2 are ?
+  tinypos_t pos;
 }
 doorpos_t;
 
@@ -551,7 +553,7 @@ byte_to_pointer_t;
  */
 typedef struct bounds
 {
-  uint8_t a, b, c, d; // TBD which of (a,b,c,d) is (x0,y0,x1,y1).
+  uint8_t a, b, c, d; // TBD which of (a,b,c,d) is (x0,x1,y0,y1).
 }
 bounds_t;
 
@@ -572,16 +574,7 @@ typedef struct default_item_location
 default_item_location_t;
 
 /**
- * Seven byte structures. Unknown yet. Likely indoor mask data.
- */
-typedef struct sevenbyte
-{
-  uint8_t a, b, c, d, e, f, g;
-}
-sevenbyte_t;
-
-/**
- * Eight byte structures. Unknown yet. Likely outdoor mask data.
+ * Eight byte structures. Unknown yet. Likely mask data.
  */
 typedef struct eightbyte
 {

@@ -40,7 +40,7 @@ extern "C"
  */
 typedef struct tgeconfig
 {
-  int width, height; // unused as yet
+  int width, height;
 }
 tgeconfig_t;
 

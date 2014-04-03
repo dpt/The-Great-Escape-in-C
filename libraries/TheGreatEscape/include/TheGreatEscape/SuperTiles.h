@@ -1,10 +1,12 @@
 #ifndef SUPERTILES_H
 #define SUPERTILES_H
 
+#include <stdint.h>
+
 #include "TheGreatEscape/Tiles.h"
 
 /**
- * A supertile is a 4x4 group of tile indices.
+ * A supertile is a 4x4 array of tile indices.
  */
 typedef struct supertile supertile_t;
 
@@ -13,14 +15,20 @@ struct supertile
   tileindex_t tiles[4 * 4];
 };
 
+/**
+ * A supertileindex is an index into supertiles[].
+ */
 typedef uint8_t supertileindex_t;
 
 enum
 {
-  map_supertiles__LIMIT = 0xDA
+  supertileindex__LIMIT = 0xDA
 };
 
-extern const supertile_t map_supertiles[map_supertiles__LIMIT];
+/**
+ * 'supertiles' defines all of the supertiles.
+ */
+extern const supertile_t supertiles[supertileindex__LIMIT];
 
 #endif /* SUPERTILES_H */
 

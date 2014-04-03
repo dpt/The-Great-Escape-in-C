@@ -5,9 +5,9 @@
 
 #include "TheGreatEscape/Rooms.h"
 
-typedef uint8_t *roomdef_t;
+typedef uint8_t roomdef_t;
 
-extern const roomdef_t rooms_and_tunnels[room__LIMIT];
+extern const roomdef_t *rooms_and_tunnels[room__LIMIT];
 
 extern uint8_t roomdef_1_hut1_right[];
 extern uint8_t roomdef_2_hut2_left[];

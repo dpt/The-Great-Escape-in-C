@@ -3,15 +3,22 @@
 
 #include <stdint.h>
 
+#include "TheGreatEscape/SuperTiles.h"
+
+/** Dimensions of the map. */
 enum
 {
   MAPX = 54,
-  MAPY = 34
+  MAPY = 34,
 };
 
-typedef uint8_t maptile_t;
+extern const supertileindex_t map[MAPX * MAPY];
 
-extern const maptile_t map_tiles[MAPX *MAPY];
+/** Dimensions of the map buffer in state. */
+enum
+{
+  MAPBUFX = 7,
+  MAPBUFY = 5,
+};
 
 #endif /* MAP_H */
-

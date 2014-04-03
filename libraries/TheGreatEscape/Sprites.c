@@ -1,15 +1,14 @@
-/**
- * $CE22: Sprites: objects which can move.
- *
- * This include STOVE, CRATE, PRISONER, CRAWL, DOG, GUARD and COMMANDANT.
- */
-
 #include <stdint.h>
 
 #include "TheGreatEscape/SpriteBitmaps.h"
 
 #include "TheGreatEscape/Sprites.h"
 
+/**
+ * $CE22: Sprites: objects which can move.
+ *
+ * This include STOVE, CRATE, PRISONER, CRAWL, DOG, GUARD and COMMANDANT.
+ */
 const sprite_t sprites[sprite__LIMIT] =
 {
   { 3, 22, bitmap_stove,                            mask_stove                         },

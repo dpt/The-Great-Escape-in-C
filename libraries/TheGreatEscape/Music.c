@@ -1,9 +1,8 @@
-/**
- * $????
- */
-
 #include "TheGreatEscape/Music.h"
 
+/**
+ * $F546
+ */
 const uint8_t music_channel0_data[] =
 {
   0x13, 0x00, 0x14, 0x00, 0x00, 0x15, 0x16, 0x00,
@@ -89,6 +88,9 @@ const uint8_t music_channel0_data[] =
   0xFF
 };
 
+/**
+ * $F7C7
+ */
 const uint8_t music_channel1_data[] =
 {
   0x0A, 0x00, 0x0C, 0x00, 0x00, 0x0E, 0x0F, 0x00,
@@ -174,6 +176,9 @@ const uint8_t music_channel1_data[] =
   0xFF
 };
 
+/**
+ * $FA48
+ */
 const uint16_t music_tuning_table[460] =
 {
   0xFEFE,

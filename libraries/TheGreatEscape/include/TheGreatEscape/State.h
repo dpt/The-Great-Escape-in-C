@@ -18,17 +18,20 @@ struct tgestate
   int             width;      /* real screen width in UDGs e.g. 32 */
   int             height;     /* real screen height in UDGs e.g. 24 */
 
-  int             columns;    /* game window width in UDGs e.g. 24 */
+  int             columns;    /* game window width in UDGs e.g. 23 */
   int             rows;       /* game window height in UDGs e.g. 16 */
-
-  tileindex_t    *tile_buf;   /* replacing direct access to $F0F8 .. $F40F? */
-  uint8_t        *window_buf; /* replacing direct access to $F290 .. $FE8F? game window buffer */
+  
+  int             tb_columns;
+  int             tb_rows;
+  
+  int             st_columns; /* supertiles columns (normally 7) */
+  int             st_rows;    /* supertiles rows (normally 5) */
 
   ZXSpectrum_t   *speccy;
 
   jmp_buf         jmpbuf_main;
 
-
+  
   /* ORIGINAL VARIABLES */
 
   /** $68A0: Index of the current room, or 0 when outside. */
@@ -36,6 +39,31 @@ struct tgestate
 
   /** $68A1: Holds current door. */
   uint8_t         current_door;
+
+  /** $69AE: Movable items.
+   *
+   * Used by setup_movable_items and reset_visible_character. 
+   */
+  movableitem_t   movable_items[movable_item__LIMIT];
+
+  /**
+   * $7612: Character structures.
+   *
+   * Used by wake_up, breakfast_time, reset_map_and_characters,
+   * called_from_main_loop_7, get_character_struct and solitary.
+   */
+  characterstruct_t character_structs[26];
+
+  /**
+   * $76C8: Item structs.
+   *
+   * Used by item_to_itemstruct, find_nearby_item, event_new_red_cross_parcel,
+   * use_bribe, action_red_cross_parcel, action_poison,
+   * follow_suspicious_player, character_behaviour, bribes_solitary_food,
+   * solitary, is_item_discoverable, is_item_discoverable_interior,
+   * mark_nearby_items and sub_DBEB.
+   */
+  itemstruct_t    item_structs[item__LIMIT];
 
   /** $7CFC: Queue of message indexes.
    * (Pairs of bytes + terminator). */
@@ -57,28 +85,31 @@ struct tgestate
   vischar_t       vischars[vischars_LENGTH];
 
   /** $8100: Mask buffer. */
-  uint8_t         mask_buffer[160];
+  uint8_t         mask_buffer[5 * 32];
 
-  /** $81A0: (unknown) */
-  uint16_t        word_81A0;
+  /** $81A0: Pointer into the mask buffer.
+   * Only used by mask_stuff (a candidate for hoisting to a local). */
+  uint8_t        *mask_buffer_pointer;
 
-  /** $81A2: Likely a screen buffer pointer. */
-  uint16_t        word_81A2;
+  /** $81A2: Output screen pointer. Used by masked sprite plotters. */
+  uint8_t        *screen_pointer;
 
   /** $81A4: Saved position.
    * Used by various places in the code. */
   pos_t           saved_pos;
 
-  /** $81AC: Used by masked sprite plotters. */
-  uint16_t        bitmap_pointer;
-  /** $81AE: Used by masked sprite plotters. */
-  uint16_t        mask_pointer;
-  /** $81B0: Used by masked sprite plotters. */
-  uint16_t        foreground_mask_pointer;
+  /** $81AC: Input bitmap pointer. Used by masked sprite plotters. */
+  const uint8_t  *bitmap_pointer;
+  /** $81AE: Input mask pointer. Used by masked sprite plotters. */
+  const uint8_t  *mask_pointer;
+  /** $81B0: Input foreground mask pointer. Used by masked sprite plotters. */
+  const uint8_t  *foreground_mask_pointer;
 
-  /** $81B2: (unknown) Used by masked sprite plotters. */
+  /** $81B2: (unknown) Used by masked sprite plotters.
+   * Written by setup_item_plotting, setup_sprite_plotting.
+   * Read by mask_stuff, guards_follow_suspicious_player. */
   tinypos_t       tinypos_81B2;
-  
+
   /** $81B5: (unknown) */
   uint8_t         map_position_related_1;
   /** $81B6: (unknown) */
@@ -99,28 +130,32 @@ struct tgestate
   /** $81BE: Index into roomdef_bounds[]. */
   uint8_t         roomdef_bounds_index;
 
-  /** $81BF: Copy of current room boundaries. */
-  uint8_t         roomdef_object_bounds[4 * 4];
+  /** $81BF: Current room bounds count. */
+  uint8_t         roomdef_object_bounds_count;
+  /** $81C0: Current room bounds. */
+  bounds_t        roomdef_object_bounds[4];
 
   /** $81CF: Length of next field. */
   uint8_t         roomdef_ntbd; // first byte probably count of TBD (6 == max bytes of TBD)
 
-  /** $81D0: Room def data nature of which T.B.D. */
+  /** $81D0: Room def data, the nature of which is T.B.D. */
   uint8_t         roomdef_tbd[6]; // (6 == max bytes of TBD)
 
-  /** $81D6: door related stuff. */
+  /** $81D6: Door related stuff. */
   uint8_t         door_related[4];
 
-  /** $81DA: indoor_mask_data. */
-  uint8_t         indoor_mask_data[1 + 8 * 7]; // first byte is count // likely partial array of eightbyte_t
+  /** $81DA: Indoor mask data count. */
+  uint8_t         indoor_mask_data_count;
+  /** $81DB: Indoor mask data values. */
+  eightbyte_t     indoor_mask_data[7];
 
   /** $8213: (unknown)
-   * This is written to by sub_DC41() but I can find no evidence that it's
-   * ever read from. */
-  uint8_t         possibly_holds_an_item;
+   * This is written to by setup_item_plotting() but I can find no evidence that
+   * it's ever read from. */
+  uint8_t         possibly_holds_an_item; // likely item_t
 
   /** $8214: Item bitmap height.
-   * Used by sub_DC41() and sub_DD02(). */
+   * Used by setup_item_plotting() and sub_DD02(). */
   uint8_t         item_height;
 
   /** $8215: Items which the player is holding. */
@@ -161,7 +196,7 @@ struct tgestate
   /** $A13D: Clock. Incremented once every 64 ticks of game_counter. */
   uint8_t         clock;
 
-  /** $A13E: (unknown) */
+  /** $A13E: (unknown) Flag? */
   uint8_t         byte_A13E;
 
   /** $A13F: Player is in bed (flag: 0 or 255). */
@@ -184,7 +219,7 @@ struct tgestate
    * e.g. when picking a lock or cutting wire. */
   uint8_t         player_locked_out_until;
 
-  /** $A146: Day or night time (flag: 0 or 255). */
+  /** $A146: Day or night time (flag: day is 0, night is 255). */
   uint8_t         day_or_night;
 
   /** $A263: Current contents of red cross parcel. */
@@ -194,7 +229,7 @@ struct tgestate
   uint8_t         used_by_move_map;
 
   /** $A7C7: (unknown) */
-  uint8_t         plot_game_screen_x;
+  uint8_t         plot_game_window_x;
 
   /** $AB66: (unknown) */
   uint8_t         zoombox_x;
@@ -206,7 +241,7 @@ struct tgestate
   uint8_t         zoombox_vertical_count;
 
   /** $AB6A: Stored copy of game screen attribute, used to draw zoombox. */
-  attribute_t     game_screen_attribute;
+  attribute_t     game_window_attribute;
 
   /** $AE75: (unknown) */
   uint8_t         searchlight_related;
@@ -222,7 +257,9 @@ struct tgestate
   /** $B838: (unknown) - Used by mask_stuff. */
   uint8_t         byte_B838;
   /** $B839: (unknown) - Used by mask_stuff. */
-  uint8_t         word_B839;
+  uint8_t         byte_B839;
+  /** $B83A: (unknown) - Used by mask_stuff. */
+  uint8_t         byte_B83A;
 
   /** $C41A: (unknown) - Indexes something. */
   uint8_t        *word_C41A;
@@ -232,6 +269,34 @@ struct tgestate
 
   /** $DD69: Item attributes. */
   attribute_t     item_attributes[item__LIMIT];
+
+  /** $E121 .. $E363: (Formerly) Self-modified locations. */
+  uint8_t         self_E121; // masked_sprite_plotter_24_wide height loop 1
+  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide height loop 2
+  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_case_1_common height loop
+  uint8_t         self_E363; // masked_sprite_plotter_16_wide_case_2 height loop
+
+  // (note overlap of these two sections is removed)
+
+  /** $E188 .. $E290: (Formerly) Self-modified disabled instructions. */
+  uint8_t         enable_E188; // 24 case
+  uint8_t         enable_E259; // 24 case
+  uint8_t         enable_E199; // 24 case
+  uint8_t         enable_E26A; // 24 case
+  uint8_t         enable_E1AA; // 24 case
+  uint8_t         enable_E27B; // 24 case
+  uint8_t         enable_E1BF; // 24 case
+  uint8_t         enable_E290; // 24 case
+
+  uint8_t         enable_E319; // 16 case masked_sprite_plotter_16_wide_left
+  uint8_t         enable_E32A; // 16 case masked_sprite_plotter_16_wide_left
+  uint8_t         enable_E340; // 16 case masked_sprite_plotter_16_wide_left
+  uint8_t         enable_E3C5; // 16 case masked_sprite_plotter_16_wide_right
+  uint8_t         enable_E3D6; // 16 case masked_sprite_plotter_16_wide_right
+  uint8_t         enable_E3EC; // 16 case masked_sprite_plotter_16_wide_right
+
+  /** $EDD3: Start addresses for game screen (usually 128). */
+  uint16_t       *game_window_start_offsets;
 
   /** $F05D: Gates and doors. */
   uint8_t         gates_and_doors[11];
@@ -247,11 +312,17 @@ struct tgestate
   /** $F541: Music channel indices. */
   uint16_t        music_channel0_index, music_channel1_index;
 
-  /** $FF58: Map tiles. */
-  maptile_t       maptiles_buf[MAPX / 4 * MAPY / 4];
 
-  /** $EDD3: Start addresses for game screen. */
-  uint16_t        game_screen_start_addresses[128];
+  /* replacing direct access to $F0F8 .. $F28F. 24 x 17. */
+  tileindex_t    *tile_buf;
+
+  /* replacing direct access to $F290 .. $FE8F. 24 x 16 x 8. */
+  uint8_t        *window_buf; // tilerow_t?
+
+  // $FE90 - 200 bytes unaccounted for
+
+  /* replacing direct access to $FF58 .. $FF7A. 7 x 5. */
+  supertileindex_t      *map_buf;
 };
 
 #endif /* STATE_H */

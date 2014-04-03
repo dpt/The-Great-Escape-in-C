@@ -1,7 +1,3 @@
-/**
- * $6BAD: Room and tunnel definitions.
- */
-
 #include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/Rooms.h"
 
@@ -9,7 +5,10 @@
 
 /* Room defintions are not const as they are updated when objects are altered. */
 
-const roomdef_t rooms_and_tunnels[room__LIMIT] =
+/**
+ * $6BAD: Room and tunnel definitions.
+ */
+const roomdef_t *rooms_and_tunnels[room__LIMIT] =
 {
   /* Array of pointers to rooms (starting with room 1). */
   &roomdef_1_hut1_right[0],
