@@ -57,6 +57,10 @@ else ifeq ($(TARGET),osx-any-clang)
 	#SANITIZE=-fsanitize=integer -fsanitize=address -fsanitize=undefined
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
 	LD=$(CLANG) $(SANITIZE)
+else ifeq ($(TARGET),linux-arm-gcc)
+	GCC=arm-linux-gnueabi-gcc-4.7
+	CC=$(GCC)
+	LD=$(GCC)
 else ifeq ($(TARGET),linux-any-clang)
 	CLANG=clang
 	CLANGFLAGS=-ferror-limit=2
@@ -84,6 +88,7 @@ WARNINGS=-Wall -Wextra -Wno-unused-parameter
 #
 CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) $(CROSSFLAGS)
 LDFLAGS=$(CROSSFLAGS) $(LIBS)
+LDLIBS=$(LIBS)
 
 ifeq ($(MODE),release)
   CFLAGS+=-O2 -DNDEBUG
@@ -113,7 +118,7 @@ usage:
 build: $(EXE)
 
 $(EXE): $(OBJ)
-	$(LD) $(LDFLAGS) -o $@ $^
+	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 .PHONY: analyze
 analyze:
