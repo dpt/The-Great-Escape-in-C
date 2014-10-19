@@ -85,7 +85,7 @@ The Makefile-based build presently links against a stub `main()` which does noth
 Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B.
 
 ## The Conversion Process
-My previous work building the SkoolKit control file, [TheGreatEscape.ctl](../reverse/TheGreatEscape.ctl), is used as the source for the conversion. It contains my interpretation of the game logic in C-style pseudocode with occasional Z80 instructions embedded. The pseudocode is copied out to `TheGreatEscape.c` where it can be marshalled into syntactically correct C (or as close as is practically possible prior to rewriting).
+My previous work building the SkoolKit control file, [TheGreatEscape.ctl](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.ctl), is used as the source for the conversion. It contains my interpretation of the game logic in C-style pseudocode with occasional Z80 instructions embedded. The pseudocode is copied out to `TheGreatEscape.c` where it can be marshalled into syntactically correct C (or as close as is practically possible prior to rewriting).
 
 Each function is reimplemented and placed in original game order in the main `TheGreatEscape.c` file. Reimplemented routines are modelled as closely as possible, given language constraints, on the original game code. For example, loops which are idiomatically written as `for` loops in regular C are typically written as `do .. while` loops here, as that most closely matches the original code.
 
@@ -129,7 +129,7 @@ In addition to being neater than having variables scattered everywhere, this all
 ### Feeding changes back into .ctl form
 At this point the .ctl disassembly is unavoidably incomplete. It’s still full of mysteries and, no doubt, mistakes. Having to reimplement the game in concrete C forces many questions which invalidate the existing interpretation of the original code.
 
-New discoveries ought to be fed back into the SkoolKit-format [TheGreatEscape.ctl](../reverse/TheGreatEscape.ctl) file. At the very least function names must kept in sync.
+New discoveries ought to be fed back into the SkoolKit-format [TheGreatEscape.ctl](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.ctl) file. At the very least function names must kept in sync.
 
 At some point a whole other pass will need to be made over the .ctl file to bring across **all** changes.
 
