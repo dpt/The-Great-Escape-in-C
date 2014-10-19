@@ -60,6 +60,61 @@
 
 /* ----------------------------------------------------------------------- */
 
+/* Z80 instruction simulator macros. */
+
+/**
+ * Shift left arithmetic.
+ */
+#define SLA(r)      \
+do {                \
+  carry = (r) >> 7; \
+  (r) <<= 1;        \
+} while (0)
+
+/** 
+ * Shift right logical.
+ */
+#define SRL(r)      \
+do {                \
+  carry = (r) & 1;  \
+  (r) >>= 1;        \
+} while (0)
+
+/** 
+ * Rotate left.
+ */
+#define RL(r)                 \
+do {                          \
+  int carry_out;              \
+                              \
+  carry_out = (r) >> 7;       \
+  (r) = ((r) << 1) | (carry); \
+  carry = carry_out;          \
+} while (0)
+
+/** 
+ * Rotate right through carry.
+ */
+#define RR(r)                       \
+do {                                \
+  int carry_out;                    \
+                                    \
+  carry_out = (r) & 1;              \
+  (r) = ((r) >> 1) | (carry << 7);  \
+  carry = carry_out;                \
+} while (0)
+
+/** 
+ * Rotate right.
+ */
+#define RRC(r)                      \
+do {                                \
+  carry = (r) & 1;                  \
+  (r) = ((r) >> 1) | (carry << 7);  \
+} while (0)
+
+/* ----------------------------------------------------------------------- */
+
 /**
  * NEVER_RETURNS is placed after calls which are not expected to return (ones
  * which ultimately invoke squash_stack_goto_main).
