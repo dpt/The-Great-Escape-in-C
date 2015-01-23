@@ -15,7 +15,7 @@ struct static_tile
 
 typedef struct static_tile static_tile_t;
 
-extern const static_tile_t static_tiles[75];
+extern const static_tile_t static_tiles[];
 
 #endif /* STATICTILES_H */
 
