@@ -8,7 +8,9 @@
 /**
  * Draw vertically.
  */
-#define statictileline_VERTICAL (1 << 7)
+#define statictileline_HORIZONTAL (0 << 7)
+#define statictileline_VERTICAL   (1 << 7)
+#define statictileline_MASK       (1 << 7)
 
 /**
  * Defines a screen location, orientation and tiles pointer, for drawing
@@ -16,8 +18,8 @@
  */
 typedef struct statictileline
 {
-  uint16_t       screenloc;        /* screen offset */
-  uint8_t        flags_and_length; /* flags include statictileline_VERTICAL */
+  uint16_t       screenloc;        /**< screen offset */
+  uint8_t        flags_and_length; /**< flags are statictileline_VERTICAL */
   const uint8_t *tiles;
 }
 statictileline_t;

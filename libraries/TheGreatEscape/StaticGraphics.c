@@ -1,5 +1,8 @@
 /**
  * $F076: static_graphic_defs.
+ *
+ * Definitions of fixed graphic elements.
+ * Only used by plot_statics_and_menu_text().
  */
 
 #include <stdint.h>
@@ -80,7 +83,7 @@ static const uint8_t statictileline_corner_br[] =
   0x0A, 0x0C
 };
 
-#define HORIZONTAL 0
+#define HORIZONTAL statictileline_HORIZONTAL
 #define VERTICAL   statictileline_VERTICAL
 
 #define ENTRY(name, screenloc, orientation) \
