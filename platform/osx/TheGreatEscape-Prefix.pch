@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'The Great Escape' target in the 'The Great Escape' project
+//
+
+#ifdef __OBJC__
+  #import <Cocoa/Cocoa.h>
+#endif

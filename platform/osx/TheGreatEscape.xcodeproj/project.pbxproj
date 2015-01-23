@@ -1,0 +1,575 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		556FD19A1A05C06D00822335 /* OCLint */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 556FD19D1A05C06D00822335 /* Build configuration list for PBXAggregateTarget "OCLint" */;
+			buildPhases = (
+				556FD19E1A05C08E00822335 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = OCLint;
+			productName = OCLint;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		554808D617E117CF00387328 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808D517E117CF00387328 /* Cocoa.framework */; };
+		554808E017E117CF00387328 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 554808DE17E117CF00387328 /* InfoPlist.strings */; };
+		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
+		554808E917E117CF00387328 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 554808E817E117CF00387328 /* AppDelegate.m */; };
+		554808EC17E117CF00387328 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 554808EA17E117CF00387328 /* MainMenu.xib */; };
+		558FC65E1A0ECC7F00A4F50F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 554808E117E117CF00387328 /* main.m */; };
+		558FC67C1A0EE13000A4F50F /* ZXScreen.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6791A0EE13000A4F50F /* ZXScreen.c */; };
+		558FC67D1A0EE13000A4F50F /* ZXSpectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC67B1A0EE13000A4F50F /* ZXSpectrum.c */; };
+		558FC6A91A0EE15B00A4F50F /* Create.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6821A0EE15B00A4F50F /* Create.c */; };
+		558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */; };
+		558FC6AB1A0EE15B00A4F50F /* Font.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6841A0EE15B00A4F50F /* Font.c */; };
+		558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */; };
+		558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */; };
+		558FC6AF1A0EE15B00A4F50F /* ItemBitmaps.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */; };
+		558FC6B01A0EE15B00A4F50F /* Map.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A01A0EE15B00A4F50F /* Map.c */; };
+		558FC6B11A0EE15B00A4F50F /* Music.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A11A0EE15B00A4F50F /* Music.c */; };
+		558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A21A0EE15B00A4F50F /* RoomDefs.c */; };
+		558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */; };
+		558FC6B41A0EE15B00A4F50F /* Sprites.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A41A0EE15B00A4F50F /* Sprites.c */; };
+		558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */; };
+		558FC6B61A0EE15B00A4F50F /* StaticTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A61A0EE15B00A4F50F /* StaticTiles.c */; };
+		558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A71A0EE15B00A4F50F /* SuperTiles.c */; };
+		558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */; };
+		55F0CA5D19E9E23C0033FC17 /* TheGreatEscapeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */; };
+		55F0CA6119E9E3640033FC17 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA5F19E9E3640033FC17 /* GLUT.framework */; };
+		55F0CA6219E9E3640033FC17 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA6019E9E3640033FC17 /* OpenGL.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		554808D517E117CF00387328 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		554808DA17E117CF00387328 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		554808DD17E117CF00387328 /* TheGreatEscape-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TheGreatEscape-Info.plist"; sourceTree = "<group>"; };
+		554808DF17E117CF00387328 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		554808E117E117CF00387328 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		554808E317E117CF00387328 /* TheGreatEscape-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TheGreatEscape-Prefix.pch"; sourceTree = "<group>"; };
+		554808E517E117CF00387328 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		554808E717E117CF00387328 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		554808E817E117CF00387328 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		554808EB17E117CF00387328 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		555C5BCA1A0D9432003A3496 /* TheGreatEscape.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = TheGreatEscape.profdata; sourceTree = "<group>"; };
+		558FC6781A0EE11F00A4F50F /* ZXSpectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZXSpectrum.h; sourceTree = "<group>"; };
+		558FC6791A0EE13000A4F50F /* ZXScreen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ZXScreen.c; path = ../../libraries/ZXSpectrum/ZXScreen.c; sourceTree = "<group>"; };
+		558FC67A1A0EE13000A4F50F /* ZXScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZXScreen.h; path = ../../libraries/ZXSpectrum/ZXScreen.h; sourceTree = "<group>"; };
+		558FC67B1A0EE13000A4F50F /* ZXSpectrum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ZXSpectrum.c; path = ../../libraries/ZXSpectrum/ZXSpectrum.c; sourceTree = "<group>"; };
+		558FC6801A0EE15B00A4F50F /* TheGreatEscape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TheGreatEscape.h; sourceTree = "<group>"; };
+		558FC6821A0EE15B00A4F50F /* Create.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Create.c; sourceTree = "<group>"; };
+		558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ExteriorTiles.c; sourceTree = "<group>"; };
+		558FC6841A0EE15B00A4F50F /* Font.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Font.c; sourceTree = "<group>"; };
+		558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExteriorTiles.h; path = TheGreatEscape/ExteriorTiles.h; sourceTree = "<group>"; };
+		558FC6891A0EE15B00A4F50F /* Font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Font.h; path = TheGreatEscape/Font.h; sourceTree = "<group>"; };
+		558FC68A1A0EE15B00A4F50F /* InteriorObjectDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorObjectDefs.h; path = TheGreatEscape/InteriorObjectDefs.h; sourceTree = "<group>"; };
+		558FC68B1A0EE15B00A4F50F /* InteriorObjects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorObjects.h; path = TheGreatEscape/InteriorObjects.h; sourceTree = "<group>"; };
+		558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorTiles.h; path = TheGreatEscape/InteriorTiles.h; sourceTree = "<group>"; };
+		558FC68D1A0EE15B00A4F50F /* ItemBitmaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ItemBitmaps.h; path = TheGreatEscape/ItemBitmaps.h; sourceTree = "<group>"; };
+		558FC68E1A0EE15B00A4F50F /* Items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Items.h; path = TheGreatEscape/Items.h; sourceTree = "<group>"; };
+		558FC68F1A0EE15B00A4F50F /* Map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Map.h; path = TheGreatEscape/Map.h; sourceTree = "<group>"; };
+		558FC6901A0EE15B00A4F50F /* Music.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Music.h; path = TheGreatEscape/Music.h; sourceTree = "<group>"; };
+		558FC6911A0EE15B00A4F50F /* RoomDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RoomDefs.h; path = TheGreatEscape/RoomDefs.h; sourceTree = "<group>"; };
+		558FC6921A0EE15B00A4F50F /* Rooms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rooms.h; path = TheGreatEscape/Rooms.h; sourceTree = "<group>"; };
+		558FC6931A0EE15B00A4F50F /* SpriteBitmaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SpriteBitmaps.h; path = TheGreatEscape/SpriteBitmaps.h; sourceTree = "<group>"; };
+		558FC6941A0EE15B00A4F50F /* Sprites.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sprites.h; path = TheGreatEscape/Sprites.h; sourceTree = "<group>"; };
+		558FC6951A0EE15B00A4F50F /* State.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = State.h; path = TheGreatEscape/State.h; sourceTree = "<group>"; };
+		558FC6961A0EE15B00A4F50F /* StaticGraphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StaticGraphics.h; path = TheGreatEscape/StaticGraphics.h; sourceTree = "<group>"; };
+		558FC6971A0EE15B00A4F50F /* StaticTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StaticTiles.h; path = TheGreatEscape/StaticTiles.h; sourceTree = "<group>"; };
+		558FC6981A0EE15B00A4F50F /* SuperTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SuperTiles.h; path = TheGreatEscape/SuperTiles.h; sourceTree = "<group>"; };
+		558FC6991A0EE15B00A4F50F /* TGEObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGEObject.h; path = TheGreatEscape/TGEObject.h; sourceTree = "<group>"; };
+		558FC69A1A0EE15B00A4F50F /* Tiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Tiles.h; path = TheGreatEscape/Tiles.h; sourceTree = "<group>"; };
+		558FC69B1A0EE15B00A4F50F /* Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Types.h; path = TheGreatEscape/Types.h; sourceTree = "<group>"; };
+		558FC69C1A0EE15B00A4F50F /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = TheGreatEscape/Utils.h; sourceTree = "<group>"; };
+		558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InteriorObjectDefs.c; sourceTree = "<group>"; };
+		558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InteriorTiles.c; sourceTree = "<group>"; };
+		558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ItemBitmaps.c; sourceTree = "<group>"; };
+		558FC6A01A0EE15B00A4F50F /* Map.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Map.c; sourceTree = "<group>"; };
+		558FC6A11A0EE15B00A4F50F /* Music.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Music.c; sourceTree = "<group>"; };
+		558FC6A21A0EE15B00A4F50F /* RoomDefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RoomDefs.c; sourceTree = "<group>"; };
+		558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SpriteBitmaps.c; sourceTree = "<group>"; };
+		558FC6A41A0EE15B00A4F50F /* Sprites.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Sprites.c; sourceTree = "<group>"; };
+		558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = StaticGraphics.c; sourceTree = "<group>"; };
+		558FC6A61A0EE15B00A4F50F /* StaticTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = StaticTiles.c; sourceTree = "<group>"; };
+		558FC6A71A0EE15B00A4F50F /* SuperTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SuperTiles.c; sourceTree = "<group>"; };
+		558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TheGreatEscape.c; sourceTree = "<group>"; };
+		55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TheGreatEscapeView.m; sourceTree = "<group>"; };
+		55F0CA5E19E9E24D0033FC17 /* TheGreatEscapeView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TheGreatEscapeView.h; sourceTree = "<group>"; };
+		55F0CA5F19E9E3640033FC17 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		55F0CA6019E9E3640033FC17 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		554808CF17E117CF00387328 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55F0CA6119E9E3640033FC17 /* GLUT.framework in Frameworks */,
+				55F0CA6219E9E3640033FC17 /* OpenGL.framework in Frameworks */,
+				554808D617E117CF00387328 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		554808C917E117CF00387328 = {
+			isa = PBXGroup;
+			children = (
+				554808DB17E117CF00387328 /* App */,
+				558FC6811A0EE15B00A4F50F /* TheGreatEscape */,
+				558FC6771A0EE11F00A4F50F /* ZXSpectrum */,
+				554808D417E117CF00387328 /* Frameworks */,
+				554808D317E117CF00387328 /* Products */,
+				555C5BC91A0D9432003A3496 /* OptimizationProfiles */,
+			);
+			indentWidth = 2;
+			sourceTree = "<group>";
+			tabWidth = 2;
+			usesTabs = 0;
+		};
+		554808D317E117CF00387328 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				554808D217E117CF00387328 /* TheGreatEscape.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		554808D417E117CF00387328 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				554808DA17E117CF00387328 /* Foundation.framework */,
+				554808D517E117CF00387328 /* Cocoa.framework */,
+				55F0CA6019E9E3640033FC17 /* OpenGL.framework */,
+				55F0CA5F19E9E3640033FC17 /* GLUT.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		554808DB17E117CF00387328 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				554808E717E117CF00387328 /* AppDelegate.h */,
+				554808E817E117CF00387328 /* AppDelegate.m */,
+				55F0CA5E19E9E24D0033FC17 /* TheGreatEscapeView.h */,
+				55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */,
+				554808EA17E117CF00387328 /* MainMenu.xib */,
+				554808DC17E117CF00387328 /* Supporting Files */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		554808DC17E117CF00387328 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				554808DD17E117CF00387328 /* TheGreatEscape-Info.plist */,
+				554808DE17E117CF00387328 /* InfoPlist.strings */,
+				554808E117E117CF00387328 /* main.m */,
+				554808E317E117CF00387328 /* TheGreatEscape-Prefix.pch */,
+				554808E417E117CF00387328 /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		555C5BC91A0D9432003A3496 /* OptimizationProfiles */ = {
+			isa = PBXGroup;
+			children = (
+				555C5BCA1A0D9432003A3496 /* TheGreatEscape.profdata */,
+			);
+			path = OptimizationProfiles;
+			sourceTree = "<group>";
+		};
+		558FC6771A0EE11F00A4F50F /* ZXSpectrum */ = {
+			isa = PBXGroup;
+			children = (
+				558FC67E1A0EE13600A4F50F /* include (public) */,
+				558FC6B91A0EE19F00A4F50F /* include (private) */,
+				558FC67B1A0EE13000A4F50F /* ZXSpectrum.c */,
+				558FC6791A0EE13000A4F50F /* ZXScreen.c */,
+			);
+			name = ZXSpectrum;
+			path = ../../include/ZXSpectrum;
+			sourceTree = "<group>";
+		};
+		558FC67E1A0EE13600A4F50F /* include (public) */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6781A0EE11F00A4F50F /* ZXSpectrum.h */,
+			);
+			name = "include (public)";
+			sourceTree = "<group>";
+		};
+		558FC67F1A0EE15B00A4F50F /* include (public) */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6801A0EE15B00A4F50F /* TheGreatEscape.h */,
+			);
+			name = "include (public)";
+			path = ../../include/TheGreatEscape;
+			sourceTree = "<group>";
+		};
+		558FC6811A0EE15B00A4F50F /* TheGreatEscape */ = {
+			isa = PBXGroup;
+			children = (
+				558FC67F1A0EE15B00A4F50F /* include (public) */,
+				558FC6851A0EE15B00A4F50F /* include (private) */,
+				558FC6821A0EE15B00A4F50F /* Create.c */,
+				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
+				558FC6841A0EE15B00A4F50F /* Font.c */,
+				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
+				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
+				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
+				558FC6A01A0EE15B00A4F50F /* Map.c */,
+				558FC6A11A0EE15B00A4F50F /* Music.c */,
+				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
+				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
+				558FC6A41A0EE15B00A4F50F /* Sprites.c */,
+				558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */,
+				558FC6A61A0EE15B00A4F50F /* StaticTiles.c */,
+				558FC6A71A0EE15B00A4F50F /* SuperTiles.c */,
+				558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */,
+			);
+			name = TheGreatEscape;
+			path = ../../libraries/TheGreatEscape;
+			sourceTree = "<group>";
+		};
+		558FC6851A0EE15B00A4F50F /* include (private) */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */,
+				558FC6891A0EE15B00A4F50F /* Font.h */,
+				558FC68A1A0EE15B00A4F50F /* InteriorObjectDefs.h */,
+				558FC68B1A0EE15B00A4F50F /* InteriorObjects.h */,
+				558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */,
+				558FC68D1A0EE15B00A4F50F /* ItemBitmaps.h */,
+				558FC68E1A0EE15B00A4F50F /* Items.h */,
+				558FC68F1A0EE15B00A4F50F /* Map.h */,
+				558FC6901A0EE15B00A4F50F /* Music.h */,
+				558FC6911A0EE15B00A4F50F /* RoomDefs.h */,
+				558FC6921A0EE15B00A4F50F /* Rooms.h */,
+				558FC6931A0EE15B00A4F50F /* SpriteBitmaps.h */,
+				558FC6941A0EE15B00A4F50F /* Sprites.h */,
+				558FC6951A0EE15B00A4F50F /* State.h */,
+				558FC6961A0EE15B00A4F50F /* StaticGraphics.h */,
+				558FC6971A0EE15B00A4F50F /* StaticTiles.h */,
+				558FC6981A0EE15B00A4F50F /* SuperTiles.h */,
+				558FC6991A0EE15B00A4F50F /* TGEObject.h */,
+				558FC69A1A0EE15B00A4F50F /* Tiles.h */,
+				558FC69B1A0EE15B00A4F50F /* Types.h */,
+				558FC69C1A0EE15B00A4F50F /* Utils.h */,
+			);
+			name = "include (private)";
+			path = include;
+			sourceTree = "<group>";
+		};
+		558FC6B91A0EE19F00A4F50F /* include (private) */ = {
+			isa = PBXGroup;
+			children = (
+				558FC67A1A0EE13000A4F50F /* ZXScreen.h */,
+			);
+			name = "include (private)";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		554808D117E117CF00387328 /* TheGreatEscape */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 554808EF17E117CF00387328 /* Build configuration list for PBXNativeTarget "TheGreatEscape" */;
+			buildPhases = (
+				554808CE17E117CF00387328 /* Sources */,
+				554808CF17E117CF00387328 /* Frameworks */,
+				554808D017E117CF00387328 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TheGreatEscape;
+			productName = TheGreatEscape;
+			productReference = 554808D217E117CF00387328 /* TheGreatEscape.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		554808CA17E117CF00387328 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = "David Thomas";
+				TargetAttributes = {
+					556FD19A1A05C06D00822335 = {
+						CreatedOnToolsVersion = 6.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 554808CD17E117CF00387328 /* Build configuration list for PBXProject "TheGreatEscape" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 554808C917E117CF00387328;
+			productRefGroup = 554808D317E117CF00387328 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				554808D117E117CF00387328 /* TheGreatEscape */,
+				556FD19A1A05C06D00822335 /* OCLint */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		554808D017E117CF00387328 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554808E017E117CF00387328 /* InfoPlist.strings in Resources */,
+				554808E617E117CF00387328 /* Credits.rtf in Resources */,
+				554808EC17E117CF00387328 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		556FD19E1A05C08E00822335 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source ~/.profile\n\nexport PATH=~/bin/oclint/bin/:$PATH\n\nhash oclint &> /dev/null\nif [ $? -eq 1 ]; then\necho >&2 \"oclint not found, analyzing stopped\"\nexit 1\nfi\n\ncd \"${TARGET_TEMP_DIR}\"\n\nif [ ! -f compile_commands.json ]; then\necho \"[*] compile_commands.json not found, possibly clean was performed\"\necho \"[*] starting xcodebuild to rebuild the project..\"\n# clean previous output\nif [ -f xcodebuild.log ]; then\nrm xcodebuild.log\nfi\n\ncd \"${SRCROOT}\"\n\nxcodebuild clean\n\n#build xcodebuild.log\nxcodebuild | tee \"${TARGET_TEMP_DIR}/xcodebuild.log\"\n#xcodebuild <options>| tee ${TARGET_TEMP_DIR}/xcodebuild.log\n\necho \"[*] transforming xcodebuild.log into compile_commands.json...\"\ncd \"${TARGET_TEMP_DIR}\"\n#transform it into compile_commands.json\noclint-xcodebuild\n\necho \"[*] copy compile_commands.json to the project root...\"\ncp \"${TARGET_TEMP_DIR}\"/compile_commands.json \"${SRCROOT}\"/compile_commands.json\n\nfi\n\necho \"[*] starting analyzing\"\ncd \"${TARGET_TEMP_DIR}\"\noclint-json-compilation-database | sed 's/\\(.*\\.\\m\\{1,2\\}:[0-9]*:[0-9]*:\\)/\\1 warning:/'";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		554808CE17E117CF00387328 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				558FC6B01A0EE15B00A4F50F /* Map.c in Sources */,
+				558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */,
+				558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */,
+				554808E917E117CF00387328 /* AppDelegate.m in Sources */,
+				558FC6B41A0EE15B00A4F50F /* Sprites.c in Sources */,
+				558FC67C1A0EE13000A4F50F /* ZXScreen.c in Sources */,
+				558FC65E1A0ECC7F00A4F50F /* main.m in Sources */,
+				558FC6B61A0EE15B00A4F50F /* StaticTiles.c in Sources */,
+				558FC6A91A0EE15B00A4F50F /* Create.c in Sources */,
+				558FC6AF1A0EE15B00A4F50F /* ItemBitmaps.c in Sources */,
+				55F0CA5D19E9E23C0033FC17 /* TheGreatEscapeView.m in Sources */,
+				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,
+				558FC6AB1A0EE15B00A4F50F /* Font.c in Sources */,
+				558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */,
+				558FC6B11A0EE15B00A4F50F /* Music.c in Sources */,
+				558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */,
+				558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */,
+				558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */,
+				558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */,
+				558FC67D1A0EE13000A4F50F /* ZXSpectrum.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		554808DE17E117CF00387328 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				554808DF17E117CF00387328 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		554808E417E117CF00387328 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				554808E517E117CF00387328 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		554808EA17E117CF00387328 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				554808EB17E117CF00387328 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		554808ED17E117CF00387328 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = c89;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../libraries/TheGreatEscape/include,
+					../../libraries/ZXSpectrum/include,
+					../../include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MF_DEBUG = YES;
+				MF_MODE = None;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				USE_HEADERMAP = NO;
+				USE_HEADERMAPS = NO;
+			};
+			name = Debug;
+		};
+		554808EE17E117CF00387328 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = c89;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../libraries/TheGreatEscape/include,
+					../../libraries/ZXSpectrum/include,
+					../../include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MF_DEBUG = YES;
+				MF_MODE = None;
+				SDKROOT = macosx;
+				USE_HEADERMAP = NO;
+				USE_HEADERMAPS = NO;
+			};
+			name = Release;
+		};
+		554808F017E117CF00387328 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PREFIX_HEADER = "$(PRODUCT_NAME)-Prefix.pch";
+				INFOPLIST_FILE = "$(PRODUCT_NAME)-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		554808F117E117CF00387328 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PREFIX_HEADER = "$(PRODUCT_NAME)-Prefix.pch";
+				INFOPLIST_FILE = "$(PRODUCT_NAME)-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		556FD19B1A05C06D00822335 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		556FD19C1A05C06D00822335 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		554808CD17E117CF00387328 /* Build configuration list for PBXProject "TheGreatEscape" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				554808ED17E117CF00387328 /* Debug */,
+				554808EE17E117CF00387328 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		554808EF17E117CF00387328 /* Build configuration list for PBXNativeTarget "TheGreatEscape" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				554808F017E117CF00387328 /* Debug */,
+				554808F117E117CF00387328 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		556FD19D1A05C06D00822335 /* Build configuration list for PBXAggregateTarget "OCLint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				556FD19B1A05C06D00822335 /* Debug */,
+				556FD19C1A05C06D00822335 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 554808CA17E117CF00387328 /* Project object */;
+}
