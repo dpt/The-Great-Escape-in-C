@@ -43,8 +43,9 @@ EXE=$(PROJECT)
 #
 ifeq ($(TARGET),ios-arm-clang)
 	DEVROOT=/Applications/Xcode.app/Contents/Developer
-	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk
-	CLANG=$(DEVROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk
+	SDKBIN=$(DEVROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin
+	CLANG=$(SDKBIN)/clang
 	CROSSFLAGS=-isysroot $(SDK) -Os -arch armv7 -mthumb
 	SANITIZE=
 	CLANGFLAGS=-ferror-limit=2
@@ -57,31 +58,39 @@ else ifeq ($(TARGET),osx-any-clang)
 	#SANITIZE=-fsanitize=integer -fsanitize=address -fsanitize=undefined
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
 	LD=$(CLANG) $(SANITIZE)
-else ifeq ($(TARGET),linux-arm-gcc)
-	GCC=arm-linux-gnueabi-gcc-4.7
-	CC=$(GCC)
-	LD=$(GCC)
+else ifeq ($(TARGET),linux-arm-clang)
+	CLANG=clang
+	CROSSFLAGS=-target arm-none-eabi -march=arm7tdmi -mthumb -mfloat-abi=soft
+	# or: armv5-none-eabi -fpu=hard
+	CLANGFLAGS=-ferror-limit=2
+	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
+	LD=$(CLANG) $(SANITIZE)
 else ifeq ($(TARGET),linux-any-clang)
 	CLANG=clang
 	CLANGFLAGS=-ferror-limit=2
 	SANITIZE=
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
 	LD=$(CLANG) $(SANITIZE)
-else ifeq ($(TARGET),linux-arm-any)
-	#CROSSFLAGS=-target arm-none-eabi -mcpu=arm7tdmi -mfloat-abi=soft
-	# armv5-none-eabi -fpu=hard
-	CC=gcc
-	LD=gcc
+else ifeq ($(TARGET),linux-arm-gcc)
+	GCC=arm-linux-gnueabi-gcc-4.7
+	CROSSFLAGS=-mcpu=arm7tdmi -mthumb -mfloat-abi=soft
+	CC=$(GCC)
+	LD=$(GCC)
 else
 	CC=gcc
 	LD=gcc
 endif
 
-CTAGS=/usr/local/bin/ctags
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	CTAGS=/usr/local/bin/ctags
+else
+	CTAGS=ctags
+endif
 
 # Tools (config)
 #
-INCLUDES=-I$(PUBLIC_INCLUDES) -I$(LIBRARIES) -I$(PRIVATE_INCLUDES)
+INCLUDES=-I$(PUBLIC_INCLUDES) -I$(LIBRARIES) -I$(PLATFORM_DIR) -I$(PRIVATE_INCLUDES)
 WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
 # Tools (generic)
@@ -91,7 +100,7 @@ LDFLAGS=$(CROSSFLAGS) $(LIBS)
 LDLIBS=$(LIBS)
 
 ifeq ($(MODE),release)
-  CFLAGS+=-O2 -DNDEBUG
+  CFLAGS+=-Os -DNDEBUG
 else
   CFLAGS+=-g
 endif
@@ -110,7 +119,9 @@ usage:
 	@echo '  analyze	Perform a clang analyze run'
 	@echo '  lint		Perform a lint run'
 	@echo '  tags		Generate tags'
+	@echo '  cscope		Generate cscope database'
 	@echo '  astyle	Run astyle on the source'
+	@echo '  docs		Generate docs'
 	@echo
 	@echo 'MODE=<release|debug>'
 
@@ -132,16 +143,26 @@ lint:
 tags:
 	$(CTAGS) -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+q -f $(ROOT)/tags $(ROOT)
 
+.PHONY: cscope
+cscope:
+	cscope -b -R
+
 .PHONY: astyle
 astyle:
 	astyle --options=$(ROOT)/.astylerc --recursive "$(ROOT)/*.h" "$(ROOT)/*.c"
 
+.PHONY: docs
+docs:
+	doxygen Doxyfile
+
 .PHONY: clean
 clean:
 	@echo 'Cleaning...'
-	-rm -f $(OBJ)
-	-rm -f $(DEP)
-	-rm -f $(EXE)
+	-@rm -vf $(OBJ)
+	-@rm -vf $(DEP)
+	-@rm -vf $(EXE)
+	-@rm -vf $(ROOT)/tags
+	-@rm -vrf $(ROOT)/doxydocs
 
 -include $(DEP)
 
