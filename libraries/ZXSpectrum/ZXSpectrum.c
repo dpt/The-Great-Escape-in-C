@@ -1,3 +1,10 @@
+/* ZXSpectrum.c
+ *
+ * Interface to a logical ZX Spectrum.
+ *
+ * Copyright (c) David Thomas, 2013-2014. <dave@davespace.co.uk>
+ */
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -5,37 +12,36 @@
 
 #include "ZXSpectrum/ZXSpectrum.h"
 
+#include "ZXScreen.h"
+
 typedef struct ZXSpectrumPrivate
 {
-  ZXSpectrum_t pub;
+  ZXSpectrum_t        pub;
+  ZXSpectrum_config_t config;
   
-  int          some_private_variable;
+  unsigned int       *screen; /* Converted screen */
 }
 ZXSpectrumPrivate_t;
 
 static uint8_t zx_in(ZXSpectrum_t *state, uint16_t address)
 {
   ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
-  
-  // call out to host keyboard routine
-  // map results to keycode
-  // return keycode
-  
+
   switch (address)
   {
-    case port_KEYBOARD_SHIFTZXCV:
-    case port_KEYBOARD_ASDFG:
-    case port_KEYBOARD_QWERT:
     case port_KEYBOARD_12345:
     case port_KEYBOARD_09876:
+    case port_KEYBOARD_QWERT:
     case port_KEYBOARD_POIUY:
+    case port_KEYBOARD_ASDFG:
     case port_KEYBOARD_ENTERLKJH:
+    case port_KEYBOARD_SHIFTZXCV:
     case port_KEYBOARD_SPACESYMSHFTMNB:
-      return 0x1F;
-      
+      return prv->config.key(address, prv->config.opaque);
+
     default:
       assert("zx_in not implemented for that port" == NULL);
-     return 0x00;
+      return 0x00;
   }
 }
 
@@ -54,26 +60,54 @@ static void zx_out(ZXSpectrum_t *state, uint16_t address, uint8_t byte)
 
 static void zx_kick(ZXSpectrum_t *state)
 {
+  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
+  
+  ZXScreen_convert(prv->pub.screen, prv->screen);
+
+  prv->config.draw(prv->screen, prv->config.opaque);
 }
 
-ZXSpectrum_t *ZXSpectrum_create(void)
+static void zx_sleep(ZXSpectrum_t *state, int duration)
 {
-  ZXSpectrumPrivate_t *zx;
+  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
+
+  prv->config.sleep(duration, prv->config.opaque);
+}
+
+ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config)
+{
+  ZXSpectrumPrivate_t *prv;
   
-  zx = malloc(sizeof(*zx));
-  if (zx == NULL)
+  prv = malloc(sizeof(*prv));
+  if (prv == NULL)
     return NULL;
 
-  zx->pub.in   = zx_in;
-  zx->pub.out  = zx_out;
-  zx->pub.kick = zx_kick;
+  prv->pub.in    = zx_in;
+  prv->pub.out   = zx_out;
+  prv->pub.kick  = zx_kick;
+  prv->pub.sleep = zx_sleep;
+
+  prv->config = *config;
   
-  zx->some_private_variable = 42; // scratch
+  /* Converted screen */
   
-  return &zx->pub;
+  prv->screen = malloc(256 * 192 * sizeof(*prv->screen));
+  if (prv->screen == NULL)
+  {
+    free(prv);
+    return NULL;
+  }
+  
+  ZXScreen_initialise();
+
+  return &prv->pub;
 }
 
-void ZXSpectrum_destroy(ZXSpectrum_t *zx)
+void ZXSpectrum_destroy(ZXSpectrum_t *doomed)
 {
-  free(zx);
+  if (doomed == NULL)
+    return;
+  
+  free(doomed->screen);
+  free(doomed);
 }

@@ -2,7 +2,7 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2014. <dave@davespace.co.uk>
  */
 
 #ifndef ZXSPECTRUM_H
@@ -41,16 +41,16 @@ typedef uint8_t attribute_t;
  */
 enum
 {
-  port_BORDER                   = 0x00FE, // border, ear, mic
+  port_BORDER                   = 0x00FE, /* Border, Ear, Mic */
 
-  port_KEYBOARD_SHIFTZXCV       = 0xFEFE, // 11111110
-  port_KEYBOARD_ASDFG           = 0xFDFE, // 11111101
-  port_KEYBOARD_QWERT           = 0xFBFE, // 11111011
-  port_KEYBOARD_12345           = 0xF7FE, // 11110111
-  port_KEYBOARD_09876           = 0xEFFE, // 11101111
-  port_KEYBOARD_POIUY           = 0xDFFE, // 11011111
-  port_KEYBOARD_ENTERLKJH       = 0xBFFE, // 10111111
-  port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE, // 01111111
+  port_KEYBOARD_SHIFTZXCV       = 0xFEFE, /* 11111110 */
+  port_KEYBOARD_ASDFG           = 0xFDFE, /* 11111101 */
+  port_KEYBOARD_QWERT           = 0xFBFE, /* 11111011 */
+  port_KEYBOARD_12345           = 0xF7FE, /* 11110111 */
+  port_KEYBOARD_09876           = 0xEFFE, /* 11101111 */
+  port_KEYBOARD_POIUY           = 0xDFFE, /* 11011111 */
+  port_KEYBOARD_ENTERLKJH       = 0xBFFE, /* 10111111 */
+  port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE, /* 01111111 */
 };
 
 /* Memory map */
@@ -85,25 +85,47 @@ struct ZXSpectrum
    * OUT
    */
   void (*out)(ZXSpectrum_t *state, uint16_t address, uint8_t byte);
-
-
-  uint8_t     screen[SCREEN_LENGTH];
-  attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
   
   /**
    * Call the implementer when screen or attributes have changed.
-   *
-   * Is this a good idea?
    */
-  void (*kick)(ZXSpectrum_t *state);
+  void (*kick)(ZXSpectrum_t *state /*, changedbox */);
+
+  /**
+   * Call the implementer when we need to sleep.
+   */
+  void (*sleep)(ZXSpectrum_t *state, int duration);
+
+
+  uint8_t     screen[SCREEN_LENGTH];
+  // if a gap appears here then ZXScreen will break!
+  attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
 };
+
+/**
+ * The configuration of the machine.
+ */
+typedef struct ZXSpectrum_config
+{
+  void *opaque;
+  
+  /** Called when there's a new frame to draw. */
+  void (*draw)(unsigned int *pixels, void *opaque);
+
+  /** Called when there's nothing to do. */
+  void (*sleep)(int duration, void *opaque);
+  
+  /** Called when a key is tested. */
+  int (*key)(uint16_t port, void *opaque);
+}
+ZXSpectrum_config_t;
 
 /**
  * Create a logical ZX Spectrum.
  *
  * \return New ZXSpectrum.
  */
-ZXSpectrum_t *ZXSpectrum_create(void);
+ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config);
  
 /**
  * Destroy a logical ZX Spectrum.
