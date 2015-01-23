@@ -21,8 +21,8 @@ struct tgestate
   int             columns;    /* game window width in UDGs e.g. 23 */
   int             rows;       /* game window height in UDGs e.g. 16 */
   
-  int             tb_columns;
-  int             tb_rows;
+  int             tb_columns; // 24
+  int             tb_rows;    // 17
   
   int             st_columns; /* supertiles columns (normally 7) */
   int             st_rows;    /* supertiles rows (normally 5) */
@@ -50,33 +50,41 @@ struct tgestate
    * $7612: Character structures.
    *
    * Used by wake_up, breakfast_time, reset_map_and_characters,
-   * called_from_main_loop_7, get_character_struct and solitary.
+   * spawn_characters, get_character_struct and solitary.
    */
-  characterstruct_t character_structs[26];
+  characterstruct_t character_structs[character_structs__LIMIT];
 
   /**
    * $76C8: Item structs.
    *
    * Used by item_to_itemstruct, find_nearby_item, event_new_red_cross_parcel,
-   * use_bribe, action_red_cross_parcel, action_poison,
-   * follow_suspicious_player, character_behaviour, bribes_solitary_food,
+   * accept_bribe, action_red_cross_parcel, action_poison,
+   * follow_suspicious_character, character_behaviour, bribes_solitary_food,
    * solitary, is_item_discoverable, is_item_discoverable_interior,
-   * mark_nearby_items and sub_DBEB.
+   * mark_nearby_items and get_greatest_itemstruct.
    */
   itemstruct_t    item_structs[item__LIMIT];
 
-  /** $7CFC: Queue of message indexes.
-   * (Pairs of bytes + terminator). */
-  uint8_t         message_queue[message_queue_LENGTH];
-  /** $7D0F: Decrementing counter which shows next message when it reaches
-   * zero. */
-  uint8_t         message_display_counter;
-  /** $7D10: Index into the message we're displaying or wiping. */
-  uint8_t         message_display_index;
-  /** $7D11: Pointer to the head of the message queue. */
-  uint8_t        *message_queue_pointer;
-  /** $7D13: Pointer to the next message character to be displayed. */
-  const char     *current_message_character;
+  struct
+  {
+    /** $7CFC: Queue of message indexes.
+     * (Pairs of bytes + terminator). */
+    uint8_t       queue[message_queue_LENGTH];
+    
+    /** $7D0F: Decrementing counter which shows next message when it reaches
+     * zero. */
+    uint8_t       display_delay;
+    
+    /** $7D10: Index into the message we're displaying or wiping. */
+    uint8_t       display_index;
+    
+    /** $7D11: Pointer to the next available slot in the message queue. */
+    uint8_t      *queue_pointer;
+    
+    /** $7D13: Pointer to the next message character to be displayed. */
+    const char   *current_character;
+  }
+  messages;
 
   /** $7F00: A table of 256 bit-reversed bytes. */
   uint8_t         reversed[256];
@@ -106,20 +114,22 @@ struct tgestate
   const uint8_t  *foreground_mask_pointer;
 
   /** $81B2: (unknown) Used by masked sprite plotters.
-   * Written by setup_item_plotting, setup_sprite_plotting.
-   * Read by mask_stuff, guards_follow_suspicious_player. */
+   * Written by setup_item_plotting, setup_vischar_plotting.
+   * Read by mask_stuff, guards_follow_suspicious_character. */
   tinypos_t       tinypos_81B2;
 
+   // these two are a location_t
   /** $81B5: (unknown) */
-  uint8_t         map_position_related_1;
+  uint8_t         map_position_related_x;
   /** $81B6: (unknown) */
-  uint8_t         map_position_related_2;
+  uint8_t         map_position_related_y;
 
   /** $81B7: Controls character left/right flipping. */
+  // only ever has its top bit tested
   uint8_t         flip_sprite;
 
-  /** $81B8: Player's map position. */
-  tinypos_t       player_map_position;
+  /** $81B8: Hero's map position. */
+  tinypos_t       hero_map_position;
 
   /** $81BB: Map position. Used when drawing tiles. */
   uint8_t         map_position[2];
@@ -129,17 +139,10 @@ struct tgestate
 
   /** $81BE: Index into roomdef_bounds[]. */
   uint8_t         roomdef_bounds_index;
-
   /** $81BF: Current room bounds count. */
   uint8_t         roomdef_object_bounds_count;
   /** $81C0: Current room bounds. */
   bounds_t        roomdef_object_bounds[4];
-
-  /** $81CF: Length of next field. */
-  uint8_t         roomdef_ntbd; // first byte probably count of TBD (6 == max bytes of TBD)
-
-  /** $81D0: Room def data, the nature of which is T.B.D. */
-  uint8_t         roomdef_tbd[6]; // (6 == max bytes of TBD)
 
   /** $81D6: Door related stuff. */
   uint8_t         door_related[4];
@@ -147,18 +150,13 @@ struct tgestate
   /** $81DA: Indoor mask data count. */
   uint8_t         indoor_mask_data_count;
   /** $81DB: Indoor mask data values. */
-  eightbyte_t     indoor_mask_data[7];
-
-  /** $8213: (unknown)
-   * This is written to by setup_item_plotting() but I can find no evidence that
-   * it's ever read from. */
-  uint8_t         possibly_holds_an_item; // likely item_t
+  mask_t          indoor_mask_data[7]; // 7 == max indoor mask refs (roomdef_30 uses this many). // hoist this number out to a define.
 
   /** $8214: Item bitmap height.
-   * Used by setup_item_plotting() and sub_DD02(). */
+   * Used by setup_item_plotting() and item_visible(). */
   uint8_t         item_height;
 
-  /** $8215: Items which the player is holding. */
+  /** $8215: Items which the hero is holding. */
   item_t          items_held[2];
 
   /** $8217: Character index. */
@@ -166,7 +164,7 @@ struct tgestate
 
   /** $A12F: Game counter.
    * Used to wave flag, time lock picking and wire snipping lockouts. */
-  uint8_t         game_counter;
+  gametime_t      game_counter;
 
   /** $A130: Bell ringing. */
   bellring_t      bell;
@@ -174,33 +172,33 @@ struct tgestate
   /** $A132: Score digits. */
   char            score_digits[5];
 
-  /** $A137: Player is in breakfast (flag: 0 or 255). */
-  uint8_t         player_in_breakfast;
+  /** $A137: The hero is in breakfast (flag: 0 or 255). */
+  uint8_t         hero_in_breakfast;
 
   /** $A138: Set by in_permitted_area.
-   * Used by follow_suspicious_player. */
+   * Used by follow_suspicious_character. */
   uint8_t         red_flag;
 
-  /** $A139: Countdown until CPU control of the player is assumed.
-   * When it becomes zero, control is assumed. It's usually set to 31 by input
-   * events. */
+  /** $A139: Countdown until CPU control of the hero is assumed.
+   * When it becomes zero, control is assumed. It's usually set to 31 by
+   * input events. */
   uint8_t         automatic_player_counter;
 
-  /** $A13A: (unknown) */
+  /** $A13A: (unknown) -- if nonzero then player control is inhibited (process_player_input, set_hero_target_location) */
   uint8_t         morale_1;
-  /** $A13B: (unknown) */
+  /** $A13B: (unknown) -- if nonzero then player control is inhibited */
   uint8_t         morale_2;
   /** $A13C: Morale 'score'. Ranges morale_MIN..morale_MAX. */
   uint8_t         morale;
 
   /** $A13D: Clock. Incremented once every 64 ticks of game_counter. */
-  uint8_t         clock;
+  eventtime_t     clock;
 
   /** $A13E: (unknown) Flag? */
   uint8_t         byte_A13E;
 
-  /** $A13F: Player is in bed (flag: 0 or 255). */
-  uint8_t         player_in_bed;
+  /** $A13F: The hero is in bed (flag: 0 or 255). */
+  uint8_t         hero_in_bed;
 
   /** $A140: Displayed morale.
    * Lags behind actual morale while the flag moves towards slowly to its
@@ -215,9 +213,9 @@ struct tgestate
    * when picked. */
   uint8_t        *ptr_to_door_being_lockpicked;
 
-  /** $A145: Game time until player control is restored.
+  /** $A145: Game time when player control is restored.
    * e.g. when picking a lock or cutting wire. */
-  uint8_t         player_locked_out_until;
+  gametime_t      player_locked_out_until;
 
   /** $A146: Day or night time (flag: day is 0, night is 255). */
   uint8_t         day_or_night;
@@ -225,20 +223,21 @@ struct tgestate
   /** $A263: Current contents of red cross parcel. */
   item_t          red_cross_parcel_current_contents;
 
-  /** $A7C6: (unknown) */
-  uint8_t         used_by_move_map;
+  /** $A7C6: An index used only by move_map(). */
+  uint8_t         move_map_index;
 
-  /** $A7C7: (unknown) */
-  uint8_t         plot_game_window_x;
+  /** $A7C7: Game window plotting x offset. */
+  uint16_t        plot_game_window_x;
 
-  /** $AB66: (unknown) */
-  uint8_t         zoombox_x;
-  /** $AB67: (unknown) */
-  uint8_t         zoombox_horizontal_count;
-  /** $AB68: (unknown) */
-  uint8_t         zoombox_y;
-  /** $AB69: (unknown) */
-  uint8_t         zoombox_vertical_count;
+  /** $AB66: Zoombox parameters. */
+  struct
+  {
+    uint8_t       x;
+    uint8_t       horizontal_count;
+    uint8_t       y;
+    uint8_t       vertical_count;
+  }
+  zoombox;
 
   /** $AB6A: Stored copy of game screen attribute, used to draw zoombox. */
   attribute_t     game_window_attribute;
@@ -252,17 +251,8 @@ struct tgestate
   /** $AF8E: Bribed character. */
   character_t     bribed_character;
 
-  /** $B837: (unknown) - Used by mask_stuff. */
-  uint8_t         byte_B837;
-  /** $B838: (unknown) - Used by mask_stuff. */
-  uint8_t         byte_B838;
-  /** $B839: (unknown) - Used by mask_stuff. */
-  uint8_t         byte_B839;
-  /** $B83A: (unknown) - Used by mask_stuff. */
-  uint8_t         byte_B83A;
-
-  /** $C41A: (unknown) - Indexes something. */
-  uint8_t        *word_C41A;
+  /** $C41A: Pseudo-random number generator index. */
+  uint8_t         prng_index;
 
   /** $C891: A countdown until any food item is discovered. */
   uint8_t         food_discovered_counter;
@@ -273,7 +263,7 @@ struct tgestate
   /** $E121 .. $E363: (Formerly) Self-modified locations. */
   uint8_t         self_E121; // masked_sprite_plotter_24_wide height loop 1
   uint8_t         self_E1E2; // masked_sprite_plotter_24_wide height loop 2
-  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_case_1_common height loop
+  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_case_1_common height loop  clipped height
   uint8_t         self_E363; // masked_sprite_plotter_16_wide_case_2 height loop
 
   // (note overlap of these two sections is removed)
@@ -299,7 +289,7 @@ struct tgestate
   uint16_t       *game_window_start_offsets;
 
   /** $F05D: Gates and doors. */
-  uint8_t         gates_and_doors[11];
+  uint8_t         gates_and_doors[11]; // need to establish this type
 
   /** $F06B: Key definitions. */
   keydefs_t       keydefs;
@@ -310,7 +300,8 @@ struct tgestate
   inputdevice_t   chosen_input_device;
 
   /** $F541: Music channel indices. */
-  uint16_t        music_channel0_index, music_channel1_index;
+  uint16_t        music_channel0_index;
+  uint16_t        music_channel1_index;
 
 
   /* replacing direct access to $F0F8 .. $F28F. 24 x 17. */

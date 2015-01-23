@@ -1,7 +1,7 @@
 /**
  * Interface of The Great Escape in C.
  *
- * Copyright (c) David Thomas, 2013.
+ * Copyright (c) David Thomas, 2013-2014.
  */
 
 #ifndef THE_GREAT_ESCAPE_H
@@ -52,7 +52,8 @@ typedef struct tgestate tgestate_t;
 /**
  * Create a game instance.
  */
-TGE_API tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config);
+TGE_API tgestate_t *tge_create(ZXSpectrum_t      *speccy,
+                               const tgeconfig_t *config);
 
 /**
  * Destroy a game instance.
@@ -60,10 +61,15 @@ TGE_API tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config);
 TGE_API void tge_destroy(tgestate_t *state);
 
 /**
+ * Prepare the game for running.
+ */
+TGE_API void tge_setup(tgestate_t *state);
+
+/**
  * Invoke the game instance.
  */
 TGE_API void tge_main(tgestate_t *state);
-
+  
 
 #ifdef __cplusplus
 }

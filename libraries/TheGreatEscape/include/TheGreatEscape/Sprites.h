@@ -10,7 +10,7 @@ typedef struct sprite
 {
   uint8_t        width; /* in bytes + 1 */
   uint8_t        height;
-  const uint8_t *data;
+  const uint8_t *bitmap;
   const uint8_t *mask;
 }
 sprite_t;

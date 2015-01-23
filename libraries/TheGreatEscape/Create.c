@@ -8,12 +8,14 @@
 #include "TheGreatEscape/TheGreatEscape.h"
 
 /**
- * Initialise the state.
+ * Initialise the game state.
+ *
+ * \param[in] state Pointer to game state.
  */
 static void tge_initialise(tgestate_t *state)
 {
   /**
-   * $69AE: Movable items.
+   * $69AE: Default movable items.
    */
   static const movableitem_t movable_items[movable_item__LIMIT] =
   {
@@ -23,42 +25,40 @@ static void tge_initialise(tgestate_t *state)
   };
 
   /**
-   * $7612: Character structures.
+   * $7612: Default character structures.
    */
-  static const characterstruct_t character_structs[26] =
+  static const characterstruct_t character_structs[character_structs__LIMIT] =
   {
-    { character_0,  room_11_PAPERS,   {  46,  46, 24 }, 0x0003 },
-    { character_1,  room_0_OUTDOORS,  { 102,  68,  3 }, 0x0001 },
-    { character_2,  room_0_OUTDOORS,  {  68, 104,  3 }, 0x0201 },
-    { character_3,  room_16_CORRIDOR, {  46,  46, 24 }, 0x1303 },
-    { character_4,  room_0_OUTDOORS,  {  61, 103,  3 }, 0x0402 },
-    { character_5,  room_0_OUTDOORS,  { 106,  56, 13 }, 0x0000 },
-    { character_6,  room_0_OUTDOORS,  {  72,  94, 13 }, 0x0000 },
-    { character_7,  room_0_OUTDOORS,  {  72,  70, 13 }, 0x0000 },
-    { character_8,  room_0_OUTDOORS,  {  80,  46, 13 }, 0x0000 },
-    { character_9,  room_0_OUTDOORS,  { 108,  71, 21 }, 0x0004 },
-    { character_10, room_0_OUTDOORS,  {  92,  52,  3 }, 0x38FF },
-    { character_11, room_0_OUTDOORS,  { 109,  69,  3 }, 0x0000 },
-    { character_12, room_3_HUT2RIGHT, {  40,  60, 24 }, 0x0800 },
-    { character_13, room_2_HUT2LEFT,  {  36,  48, 24 }, 0x0800 },
-    { character_14, room_5_HUT3RIGHT, {  40,  60, 24 }, 0x1000 },
-    { character_15, room_5_HUT3RIGHT, {  36,  34, 24 }, 0x1000 },
-    { character_16, room_0_OUTDOORS,  {  68,  84,  1 }, 0x00FF },
-    { character_17, room_0_OUTDOORS,  {  68, 104,  1 }, 0x00FF },
-    { character_18, room_0_OUTDOORS,  { 102,  68,  1 }, 0x18FF },
-    { character_19, room_0_OUTDOORS,  {  88,  68,  1 }, 0x18FF },
-
-    { character_20, room_NONE,        {  52,  60, 24 }, 0x0800 }, // wake_up, breakfast_time
-    { character_21, room_NONE,        {  52,  44, 24 }, 0x0800 }, // wake_up, breakfast_time
-    { character_22, room_NONE,        {  52,  28, 24 }, 0x0800 }, // wake_up, breakfast_time
-
-    { character_23, room_NONE,        {  52,  60, 24 }, 0x1000 }, // wake_up, breakfast_time
-    { character_24, room_NONE,        {  52,  44, 24 }, 0x1000 }, // wake_up, breakfast_time
-    { character_25, room_NONE,        {  52,  28, 24 }, 0x1000 }, // wake_up, breakfast_time
+    { character_0_COMMANDANT,   room_11_PAPERS,   {  46,  46, 24 }, 0x0003 },
+    { character_1_GUARD_1,      room_0_OUTDOORS,  { 102,  68,  3 }, 0x0001 },
+    { character_2_GUARD_2,      room_0_OUTDOORS,  {  68, 104,  3 }, 0x0201 },
+    { character_3_GUARD_3,      room_16_CORRIDOR, {  46,  46, 24 }, 0x1303 },
+    { character_4_GUARD_4,      room_0_OUTDOORS,  {  61, 103,  3 }, 0x0402 },
+    { character_5_GUARD_5,      room_0_OUTDOORS,  { 106,  56, 13 }, 0x0000 },
+    { character_6_GUARD_6,      room_0_OUTDOORS,  {  72,  94, 13 }, 0x0000 },
+    { character_7_GUARD_7,      room_0_OUTDOORS,  {  72,  70, 13 }, 0x0000 },
+    { character_8_GUARD_8,      room_0_OUTDOORS,  {  80,  46, 13 }, 0x0000 },
+    { character_9_GUARD_9,      room_0_OUTDOORS,  { 108,  71, 21 }, 0x0004 },
+    { character_10_GUARD_10,    room_0_OUTDOORS,  {  92,  52,  3 }, 0x38FF },
+    { character_11_GUARD_11,    room_0_OUTDOORS,  { 109,  69,  3 }, 0x0000 },
+    { character_12_GUARD_12,    room_3_HUT2RIGHT, {  40,  60, 24 }, 0x0800 },
+    { character_13_GUARD_13,    room_2_HUT2LEFT,  {  36,  48, 24 }, 0x0800 },
+    { character_14_GUARD_14,    room_5_HUT3RIGHT, {  40,  60, 24 }, 0x1000 },
+    { character_15_GUARD_15,    room_5_HUT3RIGHT, {  36,  34, 24 }, 0x1000 },
+    { character_16_GUARD_DOG_1, room_0_OUTDOORS,  {  68,  84,  1 }, 0x00FF },
+    { character_17_GUARD_DOG_2, room_0_OUTDOORS,  {  68, 104,  1 }, 0x00FF },
+    { character_18_GUARD_DOG_3, room_0_OUTDOORS,  { 102,  68,  1 }, 0x18FF },
+    { character_19_GUARD_DOG_4, room_0_OUTDOORS,  {  88,  68,  1 }, 0x18FF },
+    { character_20_PRISONER_1,  room_NONE,        {  52,  60, 24 }, 0x0800 }, // wake_up, breakfast_time
+    { character_21_PRISONER_2,  room_NONE,        {  52,  44, 24 }, 0x0800 }, // wake_up, breakfast_time
+    { character_22_PRISONER_3,  room_NONE,        {  52,  28, 24 }, 0x0800 }, // wake_up, breakfast_time
+    { character_23_PRISONER_4,  room_NONE,        {  52,  60, 24 }, 0x1000 }, // wake_up, breakfast_time
+    { character_24_PRISONER_5,  room_NONE,        {  52,  44, 24 }, 0x1000 }, // wake_up, breakfast_time
+    { character_25_PRISONER_6,  room_NONE,        {  52,  28, 24 }, 0x1000 }, // wake_up, breakfast_time
   };
 
   /**
-   * $76C8: Item structs.
+   * $76C8: Default item structs.
    */
   static const itemstruct_t item_structs[item__LIMIT] =
   {
@@ -225,10 +225,14 @@ static void tge_initialise(tgestate_t *state)
 
   memcpy(state->item_structs, item_structs, sizeof(item_structs));
 
-  state->message_queue[message_queue_LENGTH - 1] = message_NONE;
+  state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
+  state->messages.display_index = 0x80;
+  state->messages.queue_pointer = &state->messages.queue[2];
 
-  state->moraleflag_screen_address =
-      &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
+  /* $A13C */ state->morale = morale_MAX;
+
+  /* $A141 */ state->moraleflag_screen_address =
+  &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
 
   // future: recalculate these
   memcpy(state->game_window_start_offsets,
@@ -236,13 +240,20 @@ static void tge_initialise(tgestate_t *state)
          sizeof(game_window_start_offsets));
 }
 
-tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config)
+/**
+ * Initialise the game state.
+ *
+ * \param[in] speccy Pointer to logical ZX Spectrum.
+ * \param[in] config Pointer to game preferences structure.
+ * \return Pointer to game state.
+ */
+tgestate_t *tge_create(ZXSpectrum_t *speccy, const tgeconfig_t *config)
 {
-  tgestate_t  *state                     = NULL;
-  uint16_t    *game_window_start_offsets = NULL;
-  tileindex_t *tile_buf                  = NULL;
-  uint8_t     *window_buf                = NULL;
-  supertileindex_t   *map_buf                   = NULL;
+  tgestate_t       *state                     = NULL;
+  uint16_t         *game_window_start_offsets = NULL;
+  tileindex_t      *tile_buf                  = NULL;
+  uint8_t          *window_buf                = NULL;
+  supertileindex_t *map_buf                   = NULL;
 
   assert(config);
 
@@ -251,7 +262,7 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config)
   
   /* Allocate state structure. */
 
-  state = malloc(sizeof(*state));
+  state = calloc(1, sizeof(*state));
   if (state == NULL)
     goto failure;
   
@@ -276,7 +287,7 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config)
   
   game_window_start_offsets = malloc((size_t) (state->rows * 8) * sizeof(*game_window_start_offsets));
   tile_buf                  = malloc((size_t) (state->tb_columns * state->tb_rows));
-  window_buf                = malloc((size_t) (state->columns * state->rows * 8));
+  window_buf                = malloc((size_t) ((state->columns + 1) * state->rows * 8));
   map_buf                   = malloc((size_t) (state->st_columns * state->st_rows));
 
   if (game_window_start_offsets == NULL ||
@@ -289,6 +300,8 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, tgeconfig_t *config)
   state->tile_buf                  = tile_buf;
   state->window_buf                = window_buf;
   state->map_buf                   = map_buf;
+  
+  state->prng_index                = 0;
 
   /* Initialise additional variables. */
   

@@ -1,9 +1,10 @@
 #include "TheGreatEscape/SuperTiles.h"
 
 /**
- * $5B00: Supertiles: The game map is constructed of these.
+ * $5B00: Super tiles.
  *
- * Each supertile is a 4x4 array of tile refs.
+ * The game's exterior map is constructed of references to these.
+ * Each super tile is a 4x4 array of tileindex_t's.
  */
 const supertile_t supertiles[supertileindex__LIMIT] =
 {

@@ -41,39 +41,47 @@ enum
  */
 typedef enum character
 {
-  character_0,
-  character_1,
-  character_2,
-  character_3,
-  character_4,
-  character_5,
-  character_6,
-  character_7,
-  character_8,
-  character_9,
-  character_10,
-  character_11,
-  character_12,
-  character_13,
-  character_14,
-  character_15,
-  character_16, /* Suspect this is a guard dog. */
-  character_17, /* Suspect this is a guard dog. */
-  character_18, /* Suspect this is a guard dog. */
-  character_19, /* Suspect this is a guard dog. */
-  character_20,
-  character_21,
-  character_22,
-  character_23,
-  character_24,
-  character_25,
-  character_26, /* Stove 1. */
-  character_27, /* Stove 2. */
-  character_28, /* Crate. */
+  character_0_COMMANDANT,
+  character_1_GUARD_1,
+  character_2_GUARD_2, 
+  character_3_GUARD_3, 
+  character_4_GUARD_4, 
+  character_5_GUARD_5, 
+  character_6_GUARD_6, 
+  character_7_GUARD_7, 
+  character_8_GUARD_8, 
+  character_9_GUARD_9, 
+  character_10_GUARD_10,
+  character_11_GUARD_11,
+  character_12_GUARD_12,
+  character_13_GUARD_13,
+  character_14_GUARD_14,
+  character_15_GUARD_15,
+  character_16_GUARD_DOG_1,
+  character_17_GUARD_DOG_2,
+  character_18_GUARD_DOG_3,
+  character_19_GUARD_DOG_4,
+  character_20_PRISONER_1, 
+  character_21_PRISONER_2, 
+  character_22_PRISONER_3, 
+  character_23_PRISONER_4, 
+  character_24_PRISONER_5, 
+  character_25_PRISONER_6, 
+  character_26_STOVE_1,
+  character_27_STOVE_2,
+  character_28_CRATE,
   character__LIMIT,
   character_NONE = 255
 }
 character_t;
+
+/**
+ * Identifiers of character structs.
+ */
+enum
+{
+  character_structs__LIMIT = 26
+};
 
 /**
  * Identifiers of game messages.
@@ -101,7 +109,7 @@ typedef enum message
   message_AND_ACTS_AS_DECOY,
   message_ANOTHER_DAY_DAWNS,
   message__LIMIT,
-  message_NONE = 255
+  message_QUEUE_END = 255
 }
 message_t;
 
@@ -128,6 +136,19 @@ typedef enum inputdevice
   inputdevice__LIMIT
 }
 inputdevice_t;
+
+/**
+ * Identifiers of zoombox tiles.
+ */
+enum zoombox_tiles
+{
+  zoombox_tile_TL,
+  zoombox_tile_HZ,
+  zoombox_tile_TR,
+  zoombox_tile_VT,
+  zoombox_tile_BR,
+  zoombox_tile_BL,
+};
 
 /* ----------------------------------------------------------------------- */
 
@@ -156,32 +177,33 @@ enum input_flags
  */
 enum vischar_flags
 {
-  vischar_BYTE0_EMPTY_SLOT             = 0xFF,
-  vischar_BYTE0_MASK                   = 0x1F, // character index? 0..31
+  vischar_CHARACTER_EMPTY_SLOT         = 0xFF,
+  vischar_CHARACTER_MASK               = 0x1F, /* Character index mask. */
 
-  vischar_BYTE1_EMPTY_SLOT             = 0xFF,
-  vischar_BYTE1_MASK                   = 0x3F,
-  vischar_BYTE1_PICKING_LOCK           = 1 << 0, /* Player only? */
-  vischar_BYTE1_CUTTING_WIRE           = 1 << 1, /* Player only? */
-  vischar_BYTE1_PERSUE                 = 1 << 0, /* AI only? */
-  vischar_BYTE1_BIT1                   = 1 << 1, /* AI only? */
-  vischar_BYTE1_BIT2                   = 1 << 2, /* 'Gone mad' (bribed) flag */
-  vischar_BYTE1_BIT6                   = 1 << 6, // affects scaling
-  vischar_BYTE1_BIT7                   = 1 << 7,
+  vischar_FLAGS_EMPTY_SLOT             = 0xFF,
+  vischar_FLAGS_MASK                   = 0x3F,
+  vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only? */
+  vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only? */
+  vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPC only? */
+  vischar_FLAGS_BIT1                   = 1 << 1, /* NPC only? */ // dog+food flag
+  vischar_FLAGS_BIT2                   = 1 << 2, /* 'Gone mad' (bribed) flag */
+  vischar_FLAGS_BIT6                   = 1 << 6, // affects scaling
+  vischar_FLAGS_BIT7                   = 1 << 7,
 
   vischar_BYTE2_MASK                   = 0x7F,   // target mask
   vischar_BYTE2_BIT7                   = 1 << 7, // target mask
 
   vischar_BYTE7_MASK                   = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
-  vischar_BYTE7_BIT5                   = 1 << 5,
+  vischar_BYTE7_BIT5                   = 1 << 5, // set when can't move in X
   vischar_BYTE7_BIT6                   = 1 << 6,
-  vischar_BYTE7_BIT7                   = 1 << 7,
+  vischar_BYTE7_BIT7                   = 1 << 7, // stops locate_vischar_or_itemstruct considering a vischar
 
   vischar_BYTE12_MASK                  = 0x7F,
+  vischar_BYTE12_BIT7                  = 1 << 7,
 
   vischar_BYTE13_MASK                  = 0x7F,
-  vischar_BYTE13_BIT7                  = 1 << 7,
+  vischar_BYTE13_BIT7                  = 1 << 7, // guess: input kicking flag
 
   vischar_BYTE14_CRAWL                 = 1 << 2
 };
@@ -192,12 +214,14 @@ enum vischar_flags
 enum itemstruct_flags
 {
   itemstruct_ITEM_MASK                 = 0x0F,
+  itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4,
   itemstruct_ITEM_FLAG_POISONED        = 1 << 5,
-  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /* Set when the item is picked up (maybe). */
+  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /* Set when the item is picked up for the first time. */
 
+  itemstruct_ROOM_NONE                 = 0x3F,
   itemstruct_ROOM_MASK                 = 0x3F,
-  itemstruct_ROOM_FLAG_BIT6            = 1 << 6,
-  itemstruct_ROOM_FLAG_ITEM_NEARBY     = 1 << 7  /* Set when the item is nearby. */
+  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /* Set when the item is nearby. Cleared when? */
+  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /* Set when the item is nearby. */
 };
 
 /**
@@ -214,13 +238,13 @@ enum gates_and_doors_flags
  */
 enum characterstruct_flags
 {
-  characterstruct_BYTE0_BIT6           = 1 << 6, /* This disables the character. */
-  characterstruct_BYTE0_MASK           = 0x1F,
+  characterstruct_BYTE0_MASK           = 0x1F, /* Character index mask. */
+  characterstruct_FLAG_DISABLED        = 1 << 6, /* This disables the character. */
+  characterstruct_BYTE0_BIT7           = 1 << 7, // set in sub_A404
 
   characterstruct_BYTE5_MASK           = 0x7F,
 
-  characterstruct_BYTE6_MASK_HI        = 0xF8,
-  characterstruct_BYTE6_MASK_LO        = 0x07
+  characterstruct_BYTE6_MASK_HI        = 0xF8
 };
 
 /**
@@ -237,9 +261,8 @@ enum doorposition_flags
  */
 enum searchlight_flags
 {
-  searchlight_STATE_00                 = 0x00,
-  searchlight_STATE_1F                 = 0x1F,
-  searchlight_STATE_OFF                = 0xFF, /* Likely: Hunting for player. */
+  searchlight_STATE_1F                 = 0x1F, // seems to be set when the hero is caught in the spotlight
+  searchlight_STATE_OFF                = 0xFF, /* Likely: Hunting for the hero. */
 };
 
 /**
@@ -289,16 +312,20 @@ enum morale
  */
 enum location
 {
-  location_0E00                        = 0x0E00, /* used at exercise time (prior) */
-  location_1000                        = 0x1000,
-  location_2A00                        = 0x2A00, /* used at wake up time */
-  location_2B00                        = 0x2B00,
-  location_2C00                        = 0x2C00,
-  location_2C01                        = 0x2C01, /* used at night time */
-  location_2D00                        = 0x2D00, /* used at roll call */
-  location_8502                        = 0x8502, /* used at bed time */
-  location_8E04                        = 0x8E04, /* used at exercise time */
-  location_9003                        = 0x9003, /* used at breakfast time */
+  location_0005                        = 0x0005, /* used in wake_up */
+  location_000E                        = 0x000E, /* used at exercise time (prior) */
+  location_0010                        = 0x0010,
+  location_001A                        = 0x001A, /* used in go_to_roll_call */
+  location_0026                        = 0x0026, /* used in event_search_light */
+  location_002A                        = 0x002A, /* used at wake up time */
+  location_002B                        = 0x002B,
+  location_002C                        = 0x002C,
+  location_002D                        = 0x002D, /* used at roll call */
+  location_012C                        = 0x012C, /* used at night time */
+  location_0285                        = 0x0285, /* used at bed time */
+  location_0390                        = 0x0390, /* used at breakfast time */
+  location_03A6                        = 0x03A6, /* used in event_time_for_bed */
+  location_048E                        = 0x048E, /* used at exercise time */
 };
 
 /**
@@ -357,11 +384,21 @@ typedef uint8_t bellring_t;
  */
 
 /**
- * Holds a position and vertical offset / height (not yet fully understood).
+ * Holds a game time value.
+ */
+typedef uint8_t gametime_t;
+
+/**
+ * Holds a game event time value.
+ */
+typedef uint8_t eventtime_t;
+
+/**
+ * Holds a position and height.
  */
 typedef struct pos
 {
-  uint16_t y, x, vo;
+  uint16_t x, y, height;
 }
 pos_t;
 
@@ -370,7 +407,7 @@ pos_t;
  */
 typedef struct tinypos
 {
-  uint8_t y, x, vo;
+  uint8_t x, y, height;
 }
 tinypos_t;
 
@@ -392,23 +429,23 @@ movableitem_t;
  */
 typedef struct vischar
 {
-  uint8_t       character;    /* $8000 char index */
-  uint8_t       flags;        /* $8001 flags */
-  location_t    target;       /* $8002 target location */
-  tinypos_t     p04;          /* $8004 position */
-  uint8_t       b07;          /* $8007 more flags */
-  uint16_t      w08;          /* $8008 */ // only ever read in called_from_main_loop_9
-  uint16_t      w0A;          /* $800A */ // must be a pointer
-  uint8_t       b0C;          /* $800C */ // used with above?
-  uint8_t       b0D;          /* $800D movement */ // compared to flags?
-  uint8_t       b0E;          /* $800E walk/crawl flag */
-  movableitem_t mi;           /* $800F movable item (position, current character sprite set, b17) */
-  uint16_t      w18;          /* $8018 */ // coord
-  uint16_t      w1A;          /* $801A */ // coord
-  room_t        room;         /* $801C room index */
-  uint8_t       b1D;          /* $801D */ // can find no references. is this ever used?
-  uint8_t       width_bytes;  /* $801E copy of sprite width in bytes + 1 */
-  uint8_t       height;       /* $801F copy of sprite height in rows */
+  uint8_t         character;    /* $8000 char index */
+  uint8_t         flags;        /* $8001 flags */
+  location_t      target;       /* $8002 target location */
+  tinypos_t       p04;          /* $8004 position */
+  uint8_t         b07;          /* $8007 top nibble = flags, bottom nibble = counter? */
+  const uint8_t **w08;          /* $8008 pointer to character_related_pointers (assigned once only) */
+  const uint8_t  *w0A;          /* $800A */
+  uint8_t         b0C;          /* $800C */ // used with above?
+  uint8_t         b0D;          /* $800D movement */ // compared to flags?
+  uint8_t         b0E;          /* $800E walk/crawl flag */
+  movableitem_t   mi;           /* $800F movable item (position, current character sprite set, b17) */
+  uint16_t        w18;          /* $8018 */ // x coord // screen coord?
+  uint16_t        w1A;          /* $801A */ // y coord
+  room_t          room;         /* $801C room index */
+  uint8_t         b1D;          /* $801D */ // can find no references. is this ever used?
+  uint8_t         width_bytes;  /* $801E copy of sprite width in bytes + 1 */
+  uint8_t         height;       /* $801F copy of sprite height in rows */
 }
 vischar_t;
 
@@ -445,7 +482,7 @@ typedef unsigned int escapeitem_t;
  */
 typedef struct wall
 {
-  uint8_t a, b, c, d, e, f; // TBD
+  uint8_t a, b, c, d, e, f; // Something like (minx, maxx, miny, maxy, minh, maxh)
 }
 wall_t;
 
@@ -456,7 +493,7 @@ typedef struct screenlocstring
 {
   uint16_t  screenloc; /* screen offset (pointer in original code) */
   uint8_t   length;
-  char     *string;    /* string pointer (embedded in original code) */
+  char     *string;    /* string pointer (embedded array in original code) */
 }
 screenlocstring_t;
 
@@ -465,7 +502,7 @@ screenlocstring_t;
  */
 typedef struct characterstruct
 {
-  character_t character;
+  character_t character; // and flags
   room_t      room;
   tinypos_t   pos;
   location_t  target;
@@ -482,7 +519,7 @@ typedef void (timedevent_handler_t)(tgestate_t *state);
  */
 typedef struct timedevent
 {
-  uint8_t               time;
+  eventtime_t           time;
   timedevent_handler_t *handler;
 }
 timedevent_t;
@@ -494,8 +531,8 @@ timedevent_t;
  */
 typedef struct itemstruct
 {
-  item_t     item;
-  room_t     room; // if has flags should be room_and_flags
+  item_t     item_and_flags;
+  room_t     room_and_flags;
   tinypos_t  pos;
   location_t target;
 }
@@ -506,8 +543,8 @@ itemstruct_t;
  */
 typedef struct charactereventmap
 {
-  character_t character_and_flag;
-  uint8_t     handler;
+  uint8_t something;
+  uint8_t handler;
 }
 charactereventmap_t;
 
@@ -568,27 +605,29 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
 typedef struct default_item_location
 {
   uint8_t room_and_flags;
-  uint8_t y;
-  uint8_t x;
+  uint8_t x, y;
 }
 default_item_location_t;
 
 /**
- * Eight byte structures. Unknown yet. Likely mask data.
+ * Holds mask data.
  */
-typedef struct eightbyte
+typedef struct mask
 {
-  uint8_t eb_a, eb_b, eb_c, eb_d, eb_e, eb_f, eb_g, eb_h;
+  uint8_t index; // index into exterior_mask_pointers
+  uint8_t x0, x1, y0, y1; // perhaps a bounds_t
+  tinypos_t pos;
 }
-eightbyte_t;
+mask_t;
+// { ?, y,y, x,x, y, x, height }
 
 /**
  * Four byte structures. Unknown yet. Likely character meta data.
  */
 typedef struct character_meta_data
 {
-  const uint8_t  **character;
-  const sprite_t  *sprite;
+  const uint8_t  **data;
+  const sprite_t  *spriteset;
 }
 character_meta_data_t;
 

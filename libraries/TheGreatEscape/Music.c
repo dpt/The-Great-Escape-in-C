@@ -177,7 +177,9 @@ const uint8_t music_channel1_data[] =
 };
 
 /**
- * $FA48
+ * $FA48: Music tuning table.
+ *
+ * .. How can this be 460 entries long when it's only ever indexed by an 8-bit register?
  */
 const uint16_t music_tuning_table[460] =
 {
