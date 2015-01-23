@@ -74,8 +74,8 @@ uint8_t roomdef_1_hut1_right[] =
   54, 68, 23, 34, // boundary
   54, 68, 39, 50, // boundary
   54, 68, 55, 68, // boundary
-  4, // number of TBD bytes
-  0, 1, 3, 10, // TBD
+  4, // number of mask bytes
+  0, 1, 3, 10, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_WIDE_WINDOW,                 8,  0,
@@ -95,14 +95,14 @@ uint8_t roomdef_2_hut2_left[] =
   2, // number of boundaries
   48, 64, 43, 56, // boundary
   24, 38, 26, 40, // boundary
-  2, // number of TBD bytes
-  13, 8, // TBD
+  2, // number of mask bytes
+  13, 8, // mask
   8, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_WIDE_WINDOW,                 6,  2,
   interiorobject_DOOR_FRAME_40,              16,  5,
   interiorobject_STOVE_PIPE,                  4,  5,
-  interiorobject_OCCUPIED_BED,                8,  7, // player's bed
+  interiorobject_OCCUPIED_BED,                8,  7, /* Hero's bed. */
   interiorobject_DOOR_FRAME_16,               7,  9,
   interiorobject_TABLE_2,                    11, 12,
   interiorobject_SMALL_TUNNEL_ENTRANCE,       5,  9,
@@ -115,8 +115,8 @@ uint8_t roomdef_3_hut2_right[] =
   54, 68, 23, 34, // boundary
   54, 68, 39, 50, // boundary
   54, 68, 55, 68, // boundary
-  4, // number of TBD bytes
-  0, 1, 3, 10, // TBD
+  4, // number of mask bytes
+  0, 1, 3, 10, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_WIDE_WINDOW,                 8,  0,
@@ -136,8 +136,8 @@ uint8_t roomdef_4_hut3_left[] =
   2, // number of boundaries
   24, 40, 24, 42, // boundary
   48, 64, 43, 56, // boundary
-  3, // number of TBD bytes
-  18, 20, 8, // TBD
+  3, // number of mask bytes
+  18, 20, 8, // mask
   9, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_DOOR_FRAME_40,              16,  5,
@@ -157,8 +157,8 @@ uint8_t roomdef_5_hut3_right[] =
   54, 68, 23, 34, // boundary
   54, 68, 39, 50, // boundary
   54, 68, 55, 68, // boundary
-  4, // number of TBD bytes
-  0, 1, 3, 10, // TBD
+  4, // number of mask bytes
+  0, 1, 3, 10, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_WIDE_WINDOW,                 8,  0,
@@ -176,8 +176,8 @@ uint8_t roomdef_8_corridor[] =
 {
   2,
   0, // number of boundaries
-  1, // number of TBD bytes
-  9, // TBD
+  1, // number of mask bytes
+  9, // mask
   5, // nobjects
   interiorobject_ROOM_OUTLINE_46,             3,  6,
   interiorobject_DOOR_FRAME_38,              10,  3,
@@ -191,8 +191,8 @@ uint8_t roomdef_9_crate[] =
   1,
   1, // number of boundaries
   58, 64, 28, 42, // boundary
-  2, // number of TBD bytes
-  4, 21, // TBD
+  2, // number of mask bytes
+  4, 21, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_SMALL_WINDOW,                6,  3,
@@ -212,8 +212,8 @@ uint8_t roomdef_10_lockpick[] =
   2, // number of boundaries
   69, 75, 32, 54, // boundary
   36, 47, 48, 60, // boundary
-  3, // number of TBD bytes
-  6, 14, 22, // TBD
+  3, // number of mask bytes
+  6, 14, 22, // mask
   14, // nobjects
   interiorobject_ROOM_OUTLINE_47,             1,  4,
   interiorobject_DOOR_FRAME_15,              15, 10,
@@ -236,8 +236,8 @@ uint8_t roomdef_11_papers[] =
   4,
   1, // number of boundaries
   27, 44, 36, 48, // boundary
-  1, // number of TBD bytes
-  23, // TBD
+  1, // number of mask bytes
+  23, // mask
   9, // nobjects
   interiorobject_ROOM_OUTLINE_47,             1,  4,
   interiorobject_SMALL_SHELF,                 6,  3,
@@ -254,8 +254,8 @@ uint8_t roomdef_12_corridor[] =
 {
   1,
   0, // number of boundaries
-  2, // number of TBD bytes
-  4, 7, // TBD
+  2, // number of mask bytes
+  4, 7, // mask
   4, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_SMALL_WINDOW,                6,  3,
@@ -267,8 +267,8 @@ uint8_t roomdef_13_corridor[] =
 {
   1,
   0, // number of boundaries
-  2, // number of TBD bytes
-  4, 8, // TBD
+  2, // number of mask bytes
+  4, 8, // mask
   6, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_DOOR_FRAME_38,               6,  3,
@@ -285,8 +285,8 @@ uint8_t roomdef_14_torch[] =
   54, 68, 22, 32, // boundary
   62, 68, 48, 58, // boundary
   54, 68, 54, 68, // boundary
-  1, // number of TBD bytes
-  1, // TBD
+  1, // number of mask bytes
+  1, // mask
   9, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_DOOR_FRAME_38,               4,  3,
@@ -307,8 +307,8 @@ uint8_t roomdef_15_uniform[] =
   54, 68, 54, 68, // boundary
   62, 68, 40, 58, // boundary
   30, 40, 56, 67, // boundary
-  4, // number of TBD bytes
-  1, 5, 10, 15, // TBD
+  4, // number of mask bytes
+  1, 5, 10, 15, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_SHORT_WARDROBE,             16,  4,
@@ -326,8 +326,8 @@ uint8_t roomdef_16_corridor[] =
 {
   1,
   0, // number of boundaries
-  2, // number of TBD bytes
-  4, 7, // TBD
+  2, // number of mask bytes
+  4, 7, // mask
   4, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_DOOR_FRAME_38,               4,  4,
@@ -339,8 +339,8 @@ uint8_t roomdef_7_corridor[] =
 {
   1,
   0, // number of boundaries
-  1, // number of TBD bytes
-  4, // TBD
+  1, // number of mask bytes
+  4, // mask
   4, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_DOOR_FRAME_38,               4,  4,
@@ -355,8 +355,8 @@ uint8_t roomdef_18_radio[] =
   38, 56, 48, 60, // boundary
   38, 46, 39, 60, // boundary
   22, 32, 48, 60, // boundary
-  5, // number of TBD bytes
-  11, 17, 16, 24, 25, // TBD
+  5, // number of mask bytes
+  11, 17, 16, 24, 25, // mask
   10, // nobjects
   interiorobject_ROOM_OUTLINE_47,             1,  4,
   interiorobject_CUPBOARD,                    1,  4,
@@ -375,8 +375,8 @@ uint8_t roomdef_19_food[] =
   1,
   1, // number of boundaries
   52, 64, 47, 56, // boundary
-  1, // number of TBD bytes
-  7, // TBD
+  1, // number of mask bytes
+  7, // mask
   11, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_SMALL_WINDOW,                6,  3,
@@ -397,8 +397,8 @@ uint8_t roomdef_20_redcross[] =
   2, // number of boundaries
   58, 64, 26, 42, // boundary
   50, 64, 46, 54, // boundary
-  2, // number of TBD bytes
-  21, 4, // TBD
+  2, // number of mask bytes
+  21, 4, // mask
   11, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_DOOR_FRAME_15,              13, 10,
@@ -419,8 +419,8 @@ uint8_t roomdef_22_red_key[] =
   2, // number of boundaries
   54, 64, 46, 56, // boundary
   58, 64, 36, 44, // boundary
-  2, // number of TBD bytes
-  12, 21, // TBD
+  2, // number of mask bytes
+  12, 21, // mask
   7, // nobjects
   interiorobject_ROOM_OUTLINE_41,             5,  6,
   interiorobject_NOTICEBOARD,                 4,  4,
@@ -436,8 +436,8 @@ uint8_t roomdef_23_breakfast[] =
   0,
   1, // number of boundaries
   54, 68, 34, 68, // boundary
-  2, // number of TBD bytes
-  10, 3, // TBD
+  2, // number of mask bytes
+  10, 3, // mask
   12, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_SMALL_WINDOW,                8,  0,
@@ -458,8 +458,8 @@ uint8_t roomdef_24_solitary[] =
   3,
   1, // number of boundaries
   48, 54, 38, 46, // boundary
-  1, // number of TBD bytes
-  26, // TBD
+  1, // number of mask bytes
+  26, // mask
   3, // nobjects
   interiorobject_ROOM_OUTLINE_41,             5,  6,
   interiorobject_DOOR_FRAME_40,              14,  4,
@@ -471,7 +471,7 @@ uint8_t roomdef_25_breakfast[] =
   0,
   1, // number of boundaries
   54, 68, 34, 68, // boundary
-  0, // number of TBD bytes
+  0, // number of mask bytes
   11, // nobjects
   interiorobject_ROOM_OUTLINE_2,              1,  4,
   interiorobject_SMALL_WINDOW,                8,  0,
@@ -492,8 +492,8 @@ uint8_t roomdef_28_hut1_left[] =
   2, // number of boundaries
   28, 40, 28, 52, // boundary
   48, 63, 44, 56, // boundary
-  3, // number of TBD bytes
-  8, 13, 19, // TBD
+  3, // number of mask bytes
+  8, 13, 19, // mask
   8, // nobjects
   interiorobject_ROOM_OUTLINE_27,             3,  6,
   interiorobject_WIDE_WINDOW,                 6,  2,
@@ -509,8 +509,8 @@ uint8_t roomdef_29_second_tunnel_start[] =
 {
   5,
   0, // number of boundaries
-  6, // number of TBD bytes
-  30, 31, 32, 33, 34, 35, // TBD
+  6, // number of mask bytes
+  30, 31, 32, 33, 34, 35, // mask
   6, // nobjects
   interiorobject_TUNNEL_0,                   20,  0,
   interiorobject_TUNNEL_0,                   16,  2,
@@ -524,8 +524,8 @@ uint8_t roomdef_31[] =
 {
   6,
   0, // number of boundaries
-  6, // number of TBD bytes
-  36, 37, 38, 39, 40, 41, // TBD
+  6, // number of mask bytes
+  36, 37, 38, 39, 40, 41, // mask
   6, // nobjects
   interiorobject_TUNNEL_3,                    0,  0,
   interiorobject_TUNNEL_3,                    4,  2,
@@ -539,8 +539,8 @@ uint8_t roomdef_36[] =
 {
   7,
   0, // number of boundaries
-  6, // number of TBD bytes
-  31, 32, 33, 34, 35, 45, // TBD
+  6, // number of mask bytes
+  31, 32, 33, 34, 35, 45, // mask
   5, // nobjects
   interiorobject_TUNNEL_0,                   20,  0,
   interiorobject_TUNNEL_0,                   16,  2,
@@ -553,8 +553,8 @@ uint8_t roomdef_32[] =
 {
   8,
   0, // number of boundaries
-  6, // number of TBD bytes
-  36, 37, 38, 39, 40, 42, // TBD
+  6, // number of mask bytes
+  36, 37, 38, 39, 40, 42, // mask
   5, // nobjects
   interiorobject_TUNNEL_3,                    0,  0,
   interiorobject_TUNNEL_3,                    4,  2,
@@ -567,8 +567,8 @@ uint8_t roomdef_34[] =
 {
   6,
   0, // number of boundaries
-  6, // number of TBD bytes
-  36, 37, 38, 39, 40, 46, // TBD
+  6, // number of mask bytes
+  36, 37, 38, 39, 40, 46, // mask
   6, // nobjects
   interiorobject_TUNNEL_3,                    0,  0,
   interiorobject_TUNNEL_3,                    4,  2,
@@ -582,8 +582,8 @@ uint8_t roomdef_35[] =
 {
   6,
   0, // number of boundaries
-  6, // number of TBD bytes
-  36, 37, 38, 39, 40, 41, // TBD
+  6, // number of mask bytes
+  36, 37, 38, 39, 40, 41, // mask
   6, // nobjects
   interiorobject_TUNNEL_3,                    0,  0,
   interiorobject_TUNNEL_3,                    4,  2,
@@ -597,8 +597,8 @@ uint8_t roomdef_30[] =
 {
   5,
   0, // number of boundaries
-  7, // number of TBD bytes
-  30, 31, 32, 33, 34, 35, 44, // TBD
+  7, // number of mask bytes
+  30, 31, 32, 33, 34, 35, 44, // mask
   6, // nobjects
   interiorobject_TUNNEL_0,                   20,  0,
   interiorobject_TUNNEL_0,                   16,  2,
@@ -612,8 +612,8 @@ uint8_t roomdef_40[] =
 {
   9,
   0, // number of boundaries
-  6, // number of TBD bytes
-  30, 31, 32, 33, 34, 43, // TBD
+  6, // number of mask bytes
+  30, 31, 32, 33, 34, 43, // mask
   6, // nobjects
   interiorobject_TUNNEL_7,                   20,  0,
   interiorobject_TUNNEL_0,                   16,  2,
@@ -627,8 +627,8 @@ uint8_t roomdef_44[] =
 {
   8,
   0, // number of boundaries
-  5, // number of TBD bytes
-  36, 37, 38, 39, 40, // TBD
+  5, // number of mask bytes
+  36, 37, 38, 39, 40, // mask
   5, // nobjects
   interiorobject_TUNNEL_3,                    0,  0,
   interiorobject_TUNNEL_3,                    4,  2,
@@ -642,8 +642,8 @@ uint8_t roomdef_50_blocked_tunnel[] =
   5,
   1, // number of boundaries
   52, 58, 32, 54, // boundary
-  6, // number of TBD bytes
-  30, 31, 32, 33, 34, 43, // TBD
+  6, // number of mask bytes
+  30, 31, 32, 33, 34, 43, // mask
   6, // nobjects
   interiorobject_TUNNEL_7,                   20,  0,
   interiorobject_TUNNEL_0,                   16,  2,
