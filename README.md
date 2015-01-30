@@ -9,14 +9,18 @@ This is a _work in progress_ reimplementation of “[The Great Escape](http://ww
 
 The game’s graphics were extracted and logic was reverse engineered from a binary snapshot of the original Spectrum game. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I am now translating it into portable C with the goal of eventually making it run without an [emulator](http://fuse-emulator.sourceforge.net/) across a range of modern computers, including in-browser via [Emscripten](https://emscripten.org/).
 
-This document describes the process by which the disassembly is being converted from [SkoolKit](http://pyskool.ca/?page_id=177) format into, hopefully, functioning and portable C code.
+This document describes the process by which the disassembly is being converted from [SkoolKit](http://skoolkit.ca/) format into, hopefully, functioning and portable C code.
 
 ## Goals of the Project
 * Accurately reimplement The Great Escape in portable C code.
-* Fully disassemble and document the original game. The existing disassembly is incomplete. Attempting to reimplement the game logic forces through issues which enable a complete reimplementation to be made, and the original code fully understood.
-* Fix a few bugs in the original game.
-* Analyse the before-and-after code metrics. How much bigger is the compiled C reimplementation compared to the original game? What can we learn from the original’s tight coding techniques?
-* Provide a basis for porting the game to contemporary systems of the ZX Spectrum. Although old ports of the game exist for the [PC](http://www.abandonia.com/en/games/534/Great+Escape,+The.html), [C64](http://www.lemon64.com/?game_id=1090) and [CPC](http://www.amstradabandonware.com/en/gameitems/the-great-escape/1179), retro fans would like to see the game on other contemporary systems too.
+* Fully disassemble and document the original game.
+	* The existing disassembly is incomplete. Attempting to reimplement the game logic forces through issues which enable a complete reimplementation to be made, and the original code fully understood.
+* Fix any bugs in the original game.
+* Analyse the before-and-after code metrics.
+	* How much bigger is the compiled C reimplementation compared to the original game?
+	* What can we learn from the original’s tight coding techniques?
+* Provide a basis for porting the game to contemporary systems of the ZX Spectrum.
+	* Although old ports of the game exist for the [PC](http://www.abandonia.com/en/games/534/Great+Escape,+The.html), [C64](http://www.lemon64.com/?game_id=1090) and [CPC](http://www.amstradabandonware.com/en/gameitems/the-great-escape/1179), retro fans would like to see the game on other contemporary systems too.
 
 ## Components
 ### `TheGreatEscape`
@@ -42,36 +46,39 @@ Defines an interface to a virtual ZX Spectrum to which the game talks, replacing
 
 ## Current State of the Code
 ### Does it build?
-The build will complete but with numerous warnings. Many of the currently implemented routines have chunks of code absent, as-yet unused variables, or do not correctly ‘join up’ with others.
+Yes. The build will complete but with numerous warnings. Many of the currently implemented routines have chunks of code absent, as-yet unused variables, or do not correctly ‘join up’ with others.
 
 Code which does not build is disabled using `#if 0`. This keeps as much of the working code visible to the compiler as possible, allowing mistakes to be caught early.
 
 ### Does it run?
-Sort of! The Xcode build will run to the (very early) main menu code and then get stuck in a loop at that point waiting on keyboard input.
-
-There isn’t yet any screen, sound or input handling code hooked up to the `ZXSpectrum` library, so even if the game could run further there wouldn’t be anything to see.
+Sort of! The Xcode build will run to the main menu, animate the flag waving and allow selections to be made. You can define keys, but when you start the game for real it will crash.
 
 ## Current Builds
-Only the OS X hosted builds are currently being worked on.
+Only the OS X-hosted builds are currently being worked on.
 
 ### OS X
 There are two ways to build the code on OS X: Makefile-based or Xcode-based:
 
 #### Makefile
 The Makefile build compiles the code using clang, and offers some other handy options, like running an [analysis](http://clang-analyzer.llvm.org/) pass, generating [ctags](http://ctags.sourceforge.net/), running the source through [splint](http://www.splint.org/) and reformatting the source code through [astyle](http://astyle.sourceforge.net/).
+
 ```
 dave@macbook platform/generic $ make
 Usage:
   build		Build
+  clean		Clean a previous build
   analyze	Perform a clang analyze run
   lint		Perform a lint run
   tags		Generate tags
+  cscope	Generate cscope database
   astyle	Run astyle on the source
+  docs		Generate docs
 
 MODE=<release|debug>
 ```
 
 To build:
+
 ```
 cd platform/generic
 make build
@@ -82,7 +89,7 @@ Or `MODE=release make build` to make the release version of the code.
 The Makefile-based build presently links against a stub `main()` which does nothing, so does not provide useful runnable code yet.
 
 #### Xcode
-Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B.
+Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
 
 ## The Conversion Process
 My previous work building the SkoolKit control file, [TheGreatEscape.ctl](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.ctl), is used as the source for the conversion. It contains my interpretation of the game logic in C-style pseudocode with occasional Z80 instructions embedded. The pseudocode is copied out to `TheGreatEscape.c` where it can be marshalled into syntactically correct C (or as close as is practically possible prior to rewriting).
@@ -94,6 +101,7 @@ Sometimes it isn’t possible to closely match the original code, as it uses tec
 The pseudocode contains Z80 instructions which don’t map well onto C’s language features (rotates, register exchanges, and so on). These are left commented out until the point where they can be rewritten as C. (A possible option here is to write the Z80 instructions as macros, and have the macros expand out to equivalent C, in the same way that the [RISC OS port of Chuckie Egg](http://homepages.paradise.net.nz/mjfoot/riscos.htm) was done.)
 
 Functions are defined in the same order as in the original game code. Comments preceding the function list the hex address of the routine being implemented and a description of the routine. Javadoc-style comments are added too, to describe the arguments. For example:
+
 ```
 /**
  * $697D: Setup movable item.
@@ -180,9 +188,6 @@ When editing the code:
 
 ### Editing tips
 I usually edit the C code side-by-side in a three-pane configuration in Vim. I have `TheGreatEscape.c` open alongside `TheGreatEscape.skool` and `TheGreatEscape.ctl`. This lets me see the original Z80, the interpreted logic and the reimplemented C simultaneously.
-
-# (Major) TODOs
-* Fix coordinate order in pos structures: (y,x) -> (x,y).
 
 # Further (Planned) Changes
 ## Variable resolution
