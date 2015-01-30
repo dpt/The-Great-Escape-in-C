@@ -4,7 +4,7 @@
  * Reimplementation of the ZX Spectrum 48K game "The Great Escape" created by
  * Denton Designs and published in 1986 by Ocean Software.
  *
- * This reimplementation copyright (c) David Thomas, 2012-2014.
+ * This reimplementation copyright (c) David Thomas, 2012-2015.
  * <dave@davespace.co.uk>.
  */
 

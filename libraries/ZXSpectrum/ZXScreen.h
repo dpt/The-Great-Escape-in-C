@@ -2,7 +2,7 @@
  *
  * ZX Spectrum screen decoding.
  *
- * Copyright (c) David Thomas, 2013-2014. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2015. <dave@davespace.co.uk>
  */
 
 #ifndef ZXSPECTRUM_ZXSCREEN_H

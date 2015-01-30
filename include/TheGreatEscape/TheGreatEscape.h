@@ -1,7 +1,7 @@
 /**
  * Interface of The Great Escape in C.
  *
- * Copyright (c) David Thomas, 2013-2014.
+ * Copyright (c) David Thomas, 2013-2015.
  */
 
 #ifndef THE_GREAT_ESCAPE_H
