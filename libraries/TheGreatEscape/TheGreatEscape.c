@@ -816,7 +816,9 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
                                 itemstruct_t **pitemstr);
 
 static
-uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *itemstr, uint8_t A);
+uint8_t setup_item_plotting(tgestate_t   *state,
+                            itemstruct_t *itemstr,
+                            item_t        item);
 
 static
 uint8_t item_visible(tgestate_t *state,
@@ -10820,13 +10822,15 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
 /**
  * $DC41: Looks like it sets up item plotting.
  *
- * \param[in] state Pointer to game state.
- * \param[in] IY    Pointer to itemstruct. (was IY)
- * \param[in] A     ? suspect an item. (was A)
+ * \param[in] state   Pointer to game state.
+ * \param[in] itemstr Pointer to itemstruct. (was IY)
+ * \param[in] item    Item. (was A)
  *
  * \return Z
  */
-uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
+uint8_t setup_item_plotting(tgestate_t   *state,
+                            itemstruct_t *itemstr,
+                            item_t        item)
 {
   location_t   *HL; /* was HL */
   tinypos_t    *DE; /* was DE */
@@ -10841,14 +10845,14 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
 
   /* 0x3F looks like it ought to be (item__LIMIT - 1). The use of A later on does not re-clamp it to 0x1F. */
   // mask off mysteryflagconst874
-  A &= 0x3F;
+  item &= 0x3F;
   // This location is written to but never read from. (A memory breakpoint set in FUSE confirmed this).
   // $8213 = A;
 
-  state->tinypos_81B2           = IY->pos;
+  state->tinypos_81B2           = itemstr->pos;
   // map_position_related_x/2 could well be a location_t
-  state->map_position_related_x = IY->target & 0xFF;
-  state->map_position_related_y = IY->target >> 8;
+  state->map_position_related_x = itemstr->target & 0xFF;
+  state->map_position_related_y = itemstr->target >> 8;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->tinypos_81B2 + 5;
@@ -10859,9 +10863,9 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
 //  *DE = 0; // was B, which is always zero here
   state->flip_sprite    = 0;
   
-  state->item_height    = item_definitions[A].height;
-  state->bitmap_pointer = item_definitions[A].bitmap;
-  state->mask_pointer   = item_definitions[A].mask;
+  state->item_height    = item_definitions[item].height;
+  state->bitmap_pointer = item_definitions[item].bitmap;
+  state->mask_pointer   = item_definitions[item].mask;
   if (item_visible(state, &clipped_width, &clipped_height) != 0)
     return 1; // NZ
 
@@ -10872,12 +10876,12 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   
   if ((clipped_width >> 8) == 0)
   {
-    A = 0x77; /* LD (HL),A */
+    item = 0x77; /* LD (HL),A */
     Adash = clipped_width & 0xFF;
   }
   else
   {
-    A = 0; /* NOP */
+    item = 0; /* NOP */
     Adash = 3 - (clipped_width & 0xFF);
   }
 
@@ -10888,10 +10892,10 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   iters = 3; /* iterations */
   do
   {
-    *(uint8_t *)((char *) state + *HLdash++) = A;
-    *(uint8_t *)((char *) state + *HLdash++) = A;
+    *(uint8_t *)((char *) state + *HLdash++) = item;
+    *(uint8_t *)((char *) state + *HLdash++) = item;
     if (--Cdash == 0)
-      A ^= 0x77; /* Toggle between LD (HL),A and NOP. */
+      item ^= 0x77; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
   
@@ -10917,9 +10921,9 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   // this pop/push seems to be needless - DE already has the value
   // POP DE
   // PUSH DE
-  A = clipped_height >> 8;
-  if (A)
-    A *= 2;
+  item = clipped_height >> 8;
+  if (item)
+    item *= 2;
 
   // seemingly unncessary code which clones stuff in the vischar routine
   /*{
@@ -10934,7 +10938,7 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   
   uint16_t DE2;
 
-  DE2 = (clipped_height & 0xFF00) | A;
+  DE2 = (clipped_height & 0xFF00) | item;
   state->bitmap_pointer += DE2;
   state->mask_pointer   += DE2;
   // POP BC
