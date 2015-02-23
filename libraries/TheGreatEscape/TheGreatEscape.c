@@ -7406,7 +7406,10 @@ next:
   if ((Adash & (1 << 6)) == 0) // mysteryflagconst874 'found' flag?
   {
     found_vischar->b07 &= ~vischar_BYTE7_BIT7;
-    return 1; // Z
+
+    *pvischar = found_vischar; // Conv: Additional code.
+
+    return 1; // Z => found
   }
   else
   {
@@ -7415,8 +7418,8 @@ next:
     found_itemstruct->room_and_flags &= ~itemstruct_ROOM_FLAG_NEARBY_6;
     Z = (found_itemstruct->room_and_flags & (1 << 6)) == 0; // was BIT 6,HL[1] // this tests the bit we've just cleared
     
-    *pvischar = found_vischar; // will be needed. possibly in other paths too.
-    
+    *pitemstruct = found_itemstruct; // Conv: Additional code.
+
     return Z;
   }
 }
