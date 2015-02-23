@@ -7303,7 +7303,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     assert(vischar < &state->vischars[vischars_LENGTH]);
     assert(vischar    != NULL || itemstruct != NULL);
     
-    if ((index & (1 << 6)) == 0) // mysteryflagconst874 'found' flag
+    if ((index & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag
     {
       found = setup_vischar_plotting(state, vischar);
       if (found)
@@ -7401,7 +7401,7 @@ next:
   if (Adash & (1 << 7))
     return 0; // NZ
 
-  if ((Adash & (1 << 6)) == 0) // mysteryflagconst874 'found' flag?
+  if ((Adash & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag?
   {
     found_vischar->b07 &= ~vischar_BYTE7_BIT7;
 
