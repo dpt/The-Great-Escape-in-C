@@ -810,9 +810,9 @@ void mark_nearby_items(tgestate_t *state);
 
 static
 uint8_t get_greatest_itemstruct(tgestate_t    *state,
-                                uint8_t        Adash,
-                                uint16_t       BCdash,
-                                uint16_t       DEdash,
+                                item_t         item_and_flag,
+                                uint16_t       x,
+                                uint16_t       y,
                                 itemstruct_t **pitemstr);
 
 static
@@ -10769,21 +10769,25 @@ void mark_nearby_items(tgestate_t *state)
  * Leaf.
  *
  * \param[in]  state    Pointer to game state.
- * \param[in]  Adash    Updated and returned if item found.
- * \param[in]  BCdash   X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
- * \param[in]  DEdash   Y pos? Compared to Y. (was DE')
+ * \param[in]  x        X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
+ * \param[in]  y        Y pos? Compared to Y. (was DE')
  * \param[out] pitemstr Returned pointer to item struct. (was IY)
  *
- * \return Adash.
+ * \return item+flag. (was Adash)
  */
 uint8_t get_greatest_itemstruct(tgestate_t    *state,
-                                uint8_t        Adash,
-                                uint16_t       BCdash,
-                                uint16_t       DEdash,
+                                item_t         item_and_flag,
+                                uint16_t       x,
+                                uint16_t       y,
                                 itemstruct_t **pitemstr)
 {
-  uint8_t       iters;   /* was B */
-  itemstruct_t *itemstr; /* was HL */
+  uint8_t             iters;   /* was B */
+  const itemstruct_t *itemstr; /* was HL */
+
+  assert(state);
+  assert(pitemstr);
+
+  *pitemstr = NULL; /* Conv: Added. */
 
   iters   = item__LIMIT;
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
@@ -10795,27 +10799,28 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
     if ((itemstr->room_and_flags & FLAGS) == FLAGS)
     {
       // Conv: Original calls out to multiply by 8, HLdash is temp.
-      if (itemstr->pos.x * 8 > BCdash && itemstr->pos.y * 8 > DEdash)
+      if (itemstr->pos.x * 8 > x &&
+          itemstr->pos.y * 8 > y)
       {
-        uint8_t *p; /* was HLdash */
+        const tinypos_t *pos; /* was HLdash */
 
-        p = &itemstr->pos.y;
+        pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
         /* Get these for the next loop iteration. */
-        DEdash = *p-- * 8; // y
-        BCdash = *p * 8; // x
-        *pitemstr = itemstr;
+        y = pos->y * 8; // y
+        x = pos->x * 8; // x
+        *pitemstr = (itemstruct_t *) itemstr;
         
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
-        /* It seems that Adash is the output register, inresspective. */
-        Adash = (item__LIMIT - iters) | (1 << 6); // iteration count + 'found' flag? mysteryflagconst874
+        /* It seems that A' is the output register, irresspective. */
+        item_and_flag = (item__LIMIT - iters) | (1 << 6); // iteration count + 'item found' flag? mysteryflagconst874
       }
     }
     itemstr++;
   }
   while (--iters);
 
-  return Adash;
+  return item_and_flag;
 }
 
 /* ----------------------------------------------------------------------- */
