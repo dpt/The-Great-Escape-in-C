@@ -839,9 +839,9 @@ void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state);
 static
 void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar);
 static
-void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t A);
+void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x);
 static
-void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t A);
+void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x);
 
 static
 void flip_24_masked_pixels(tgestate_t *state,
@@ -11349,7 +11349,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
  */
 void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state)
 {
-  masked_sprite_plotter_16_wide_left(state, 0);
+  masked_sprite_plotter_16_wide_left(state, 0 /* x */);
 }
 
 /**
@@ -11360,21 +11360,21 @@ void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state)
  */
 void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t A;
+  uint8_t x;
 
-  if ((A = (vischar->scrx & 7)) < 4)
-    masked_sprite_plotter_16_wide_right(state, A);
+  if ((x = (vischar->scrx & 7)) < 4)
+    masked_sprite_plotter_16_wide_right(state, x);
   else
-    masked_sprite_plotter_16_wide_left(state, A); /* i.e. fallthrough */
+    masked_sprite_plotter_16_wide_left(state, x); /* i.e. fallthrough */
 }
 
 /**
  * $E2AC: Sprite plotter. Shifts left/right (unsure).
  *
  * \param[in] state Pointer to game state.
- * \param[in] A     Offset?
+ * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t A)
+void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters; /* was B */
   const uint8_t *maskptr;
@@ -11383,10 +11383,10 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t A)
   uint8_t       *screenptr;
   uint8_t        self_E2DC, self_E2F4;
 
-  A = (~A & 3) * 6; // jump table offset (on input, A is 0..3 => 3..0) // 6 = length of asm chunk
+  x = (~x & 3) * 6; // jump table offset (on input, A is 0..3 => 3..0) // 6 = length of asm chunk
 
-  self_E2DC = A; // self-modify: jump into mask rotate
-  self_E2F4 = A; // self-modify: jump into bitmap rotate
+  self_E2DC = x; // self-modify: jump into mask rotate
+  self_E2F4 = x; // self-modify: jump into bitmap rotate
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -11468,23 +11468,23 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t A)
 
     screenptr = state->screen_pointer; // moved relative to the 24 version
 
-    A = MASK(bm0, mask0);
+    x = MASK(bm0, mask0);
     foremaskptr++;
     if (state->enable_E319)
-      *screenptr = A;
+      *screenptr = x;
     screenptr++;
 
-    A = MASK(bm1, mask1);
+    x = MASK(bm1, mask1);
     foremaskptr++;
     if (state->enable_E32A)
-      *screenptr = A;
+      *screenptr = x;
     screenptr++;
 
-    A = MASK(bm2, mask2);
+    x = MASK(bm2, mask2);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_E340)
-      *screenptr = A;
+      *screenptr = x;
 
     screenptr += 22; // stride (24 - 2)
     state->screen_pointer = screenptr;
@@ -11498,9 +11498,9 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t A)
  * Only called by masked_sprite_plotter_16_wide.
  *
  * \param[in] state Pointer to game state.
- * \param[in] A     Offset?
+ * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t A)
+void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters; /* was B */
   const uint8_t *maskptr;
@@ -11509,10 +11509,10 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t A)
   uint8_t       *screenptr;
   uint8_t        self_E39A, self_E37D;
 
-  A = (A - 4) * 6; // jump table offset (on input, A is 4..7 => 0..3) // 6 = length of asm chunk
+  x = (x - 4) * 6; // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
 
-  self_E39A = A; // self-modify: jump into bitmap rotate
-  self_E37D = A; // self-modify: jump into mask rotate
+  self_E39A = x; // self-modify: jump into bitmap rotate
+  self_E37D = x; // self-modify: jump into mask rotate
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -11600,23 +11600,23 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t A)
 
     screenptr = state->screen_pointer; // moved relative to the 24 version
 
-    A = MASK(bm2, mask2);
+    x = MASK(bm2, mask2);
     foremaskptr++;
     if (state->enable_E3C5)
-      *screenptr = A;
+      *screenptr = x;
     screenptr++;
 
-    A = MASK(bm1, mask1);
+    x = MASK(bm1, mask1);
     foremaskptr++;
     if (state->enable_E3D6)
-      *screenptr = A;
+      *screenptr = x;
     screenptr++;
 
-    A = MASK(bm0, mask0);
+    x = MASK(bm0, mask0);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_E3EC)
-      *screenptr = A;
+      *screenptr = x;
 
     screenptr += 22; // stride (24 - 2)
     state->screen_pointer = screenptr;
