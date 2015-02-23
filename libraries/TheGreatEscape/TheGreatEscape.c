@@ -124,9 +124,9 @@ do {                                \
 /**
  * Swap two variables (replacing EX/EXX).
  */
-#define SWAP(a,b) \
+#define SWAP(T,a,b) \
 do {              \
-  int tmp = a;    \
+  T tmp = a;    \
   a = b;          \
   b = tmp;        \
 } while (0)
@@ -6944,13 +6944,13 @@ void called_from_main_loop_9(tgestate_t *state)
       HL += (A + 1) * 4 - 1; /* 4..512 + 1 */
       A = *HL++;
       
-      SWAP(A, Adash);
+      SWAP(uint8_t, A, Adash);
 
 // Conv: Simplified sign extend sequence to this. Too far?
 #define SXT_8_16(P) ((uint16_t) (*(int8_t *) (P)))
       
 resume1:
-      SWAP(DE, HL);
+      SWAP(const uint8_t *, DE, HL);
 
       // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (character_related_data)
       
@@ -6978,7 +6978,7 @@ resume1:
       HL += (A + 1) * 4;
 
 resume2:
-      SWAP(DE, HL);
+      SWAP(const uint8_t *, DE, HL);
       
       HL2 = SXT_8_16(DE);
       state->saved_pos.x = HL2 + vischar->mi.pos.x;
@@ -6992,9 +6992,9 @@ resume2:
       state->saved_pos.height = HL2 + vischar->mi.pos.height;
       DE++;
       
-      Adash = *DE;
+      A = *DE; // unsure
       
-      SWAP(A, Adash);
+      SWAP(uint8_t, A, Adash);
       
       if (touch(state, vischar, Adash))
         goto pop_next;
@@ -7032,21 +7032,23 @@ snozzle:
     DE += 2;
     vischar->b0E = *DE;
     DE += 2;
-    SWAP(DE, HL);
+    SWAP(const uint8_t *, DE, HL);
     goto resume2;
   }
   else
   {
+    const uint8_t *stacked;
+
     C = *DE;
     vischar->b0C = C | 0x80;
     vischar->b0E = *++DE;
     DE += 3;
-    // PUSH DE
-    SWAP(DE, HL);
+    stacked = DE;
+    SWAP(const uint8_t *, DE, HL);
     HL += C * 4 - 1;
     A = *HL;
-    SWAP(A, Adash);
-    // POP HL
+    SWAP(uint8_t, A, Adash);
+    HL = stacked;
     goto resume1;
   }
 }
@@ -12670,7 +12672,7 @@ for_loop:
         {
           state->speccy->sleep(state->speccy, 10000); // 10000 is arbitrary for the moment
           
-          SWAP(A, Adash);
+          SWAP(uint8_t, A, Adash);
           
           hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
           index = 0xFF;
@@ -12695,7 +12697,7 @@ key_loop:
           if (A == 0) // temps: A'
             goto key_loop; /* Key was not pressed. Move to next key. */
           
-          SWAP(A, Adash);
+          SWAP(uint8_t, A, Adash);
 
           if (A)
             goto for_loop;
@@ -12704,7 +12706,7 @@ key_loop:
           
           A = index;
           
-          SWAP(A, Adash);
+          SWAP(uint8_t, A, Adash);
 
           /* Check for an already defined key. */
           keydef = &state->keydefs.defs[0] - 1;
@@ -12728,7 +12730,7 @@ assign_keydef:
           const char          *pkeyname; /* was HL */
           int                  carry = 0;
 
-          SWAP(A, Adash);
+          SWAP(uint8_t, A, Adash);
 
           pglyph = &keycode_to_glyph[A][0] - 1; /* Off by one to compensate for pre-increment */
           /* Skip entries until 'mask' carries out. */
