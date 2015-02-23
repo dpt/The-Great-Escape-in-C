@@ -7301,13 +7301,12 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     assert(vischar    != NULL);
     assert(vischar >= &state->vischars[0]);
     assert(vischar < &state->vischars[vischars_LENGTH]);
-    assert(itemstruct != NULL);
+    assert(vischar    != NULL || itemstruct != NULL);
     
     if ((index & (1 << 6)) == 0) // mysteryflagconst874 'found' flag
     {
       found = setup_vischar_plotting(state, vischar);
-      // expecting a return code from the above
-      if (found) // seems odd - as all nonzero cases result in a return above... must be from setup_vischar_plotting
+      if (found)
       {
         mask_stuff(state);
         if (state->searchlight_state != searchlight_STATE_OFF)
@@ -7320,8 +7319,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     }
     else
     {
-      found = setup_item_plotting(state, itemstruct, index); // A must be an item
-      // expecting a return code from the above
+      found = setup_item_plotting(state, itemstruct, index);
       if (found)
       {
         mask_stuff(state);
