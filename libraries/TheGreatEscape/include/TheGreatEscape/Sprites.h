@@ -15,6 +15,7 @@ typedef struct sprite
 }
 sprite_t;
 
+// in these names could s/TOP_LEFT/AWAY/ and s/BOTTOM_RIGHT/TOWARDS/
 enum
 {
   sprite_STOVE,

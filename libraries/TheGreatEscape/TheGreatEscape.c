@@ -1091,8 +1091,7 @@ void setup_movable_items(tgestate_t *state)
 
   reset_nonplayer_visible_characters(state);
 
-  /* Changed from the original: Updated to use a switch statement rather than
-   * if-else and gotos. */
+  /* Conv: Use a switch statement rather than if-else and gotos. */
 
   switch (state->room_index)
   {
@@ -7022,7 +7021,6 @@ next:
 byte13bit7set:
   vischar->b0D &= ~vischar_BYTE13_BIT7; // sampled IY = $8020, $80A0, $8060, $80E0, $8080,
 
-  // CHECK ALL THIS OVER
 snozzle:
   C = byte_CDAA[vischar->b0E][vischar->b0D];
   DE = vischar->w08[C];
@@ -7291,7 +7289,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
 
   for (;;)
   {
-    /* This can return a vischar OR itemstruct, but not both. */
+    /* This can return a vischar OR an itemstruct, but not both. */
     found = locate_vischar_or_itemstruct(state, &index, &vischar, &itemstruct);
     if (!found)
       return;
@@ -8196,6 +8194,8 @@ void mask_against_tile(tileindex_t index, uint8_t *dst)
 
 /**
  * $BAF7: Clipping vischars to the game window.
+ *
+ * Counterpart to \ref item_visible.
  *
  * \param[in]  state   Pointer to game state.
  * \param[in]  vischar Pointer to visible character.       (was IY)
@@ -10759,7 +10759,7 @@ void mark_nearby_items(tgestate_t *state)
 /**
  * $DBEB: Iterates over all item_structs looking for nearby items.
  *
- * Returns the furthest/highest item?
+ * Returns the furthest/highest/nearest item?
  *
  * Leaf.
  *
@@ -10944,9 +10944,9 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $DD02: (unknown)
+ * $DD02: Clipping items to the game window.
  *
- * clipping related?
+ * Counterpart to \ref vischar_visible.
  *
  * Called by setup_item_plotting only.
  *
@@ -11618,7 +11618,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t A)
 
 
 /**
- * $E3FA: Reverses the 24 pixels in E,B,C and E',B',C'.
+ * $E3FA: Reverses the 24 pixels in E,C,B and E',C',B'.
  *
  * \param[in,out] state  Pointer to game state.
  * \param[in,out] pE     Pointer to pixels/mask.
@@ -12178,7 +12178,7 @@ int user_confirm(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F163: Setup.
+ * $F163: Setup the game.
  *
  * \param[in] state Pointer to game state.
  */
@@ -12190,8 +12190,8 @@ void tge_setup(tgestate_t *state)
    * The original game stores just 23 bytes of the structure, we store a
    * whole structure here.
    *
-   * This can't be a _static_ const structure as it contains non compile time
-   * constant refs.
+   * This can't be a _static_ const structure as it contains references which
+   * are not compile time constant.
    */
   const vischar_t vischar_initial =
   {

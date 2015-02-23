@@ -420,7 +420,7 @@ typedef struct movableitem
 {
   pos_t           pos;
   const sprite_t *spriteset;
-  uint8_t         b17; // flip flag? sprite set offset?
+  uint8_t         b17; // flip flag? more likely a sprite set offset
 }
 movableitem_t;
 

@@ -102,7 +102,7 @@ struct tgestate
   /** $81A2: Output screen pointer. Used by masked sprite plotters. */
   uint8_t        *screen_pointer;
 
-  /** $81A4: Saved position.
+  /** $81A4: Saved position (on map).
    * Used by various places in the code. */
   pos_t           saved_pos;
 
@@ -131,7 +131,8 @@ struct tgestate
   /** $81B8: Hero's map position. */
   tinypos_t       hero_map_position;
 
-  /** $81BB: Map position. Used when drawing tiles. */
+  /** $81BB: Map position (on screen).
+   * Used when drawing tiles. */
   uint8_t         map_position[2];
 
   /** $81BD: Searchlight state. */
