@@ -10846,19 +10846,19 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-  location_t   *HL; /* was HL */
-  tinypos_t    *DE; /* was DE */
-  uint16_t      BC; /* was BC */
-  uint16_t      clipped_width; /* was BC */
+//  location_t   *HL; /* was HL */
+//  tinypos_t    *DE; /* was DE */
+//  uint16_t      BC; /* was BC */
+  uint16_t      clipped_width;  /* was BC */
   uint16_t      clipped_height; /* was DE */
-  uint8_t       A; /* was A */
-  uint8_t       Adash; /* was A' */
-  uint8_t       iters; /* was B' */
-  uint8_t       Cdash; /* was C' */
-  uint16_t      DEdash; /* was DE' */
-  const size_t *HLdash; /* was HL' */
+  uint8_t       A;              /* was A */
+  uint8_t       Adash;          /* was A' */
+  uint8_t       iters;          /* was B' */
+  uint8_t       Cdash;          /* was C' */
+//  uint16_t      DEdash; /* was DE' */
+  const size_t *HLdash;         /* was HL' */
 
-  /* 0x3F looks like it ought to be (item__LIMIT - 1). The use of A later on does not re-clamp it to 0x1F. */
+  /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). The use of A later on does not re-clamp it to 0x1F. */
   // mask off mysteryflagconst874
   item &= 0x3F;
   // This location is written to but never read from. (A memory breakpoint set in FUSE confirmed this).
@@ -10882,7 +10882,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
   if (item_visible(state, &clipped_width, &clipped_height) != 0)
-    return 1; // NZ
+    return 1; // NZ (invisible)
 
   // PUSH clipped_width // BC
   // PUSH clipped_height // DE
@@ -10940,7 +10940,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   if (A)
     A *= 2;
 
-  // seemingly unncessary code which clones stuff in the vischar routine
+  // seemingly unncessary multiply code which duplicates stuff in the vischar routine
   /*{
     uint8_t D, E;
     
