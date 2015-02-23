@@ -10837,6 +10837,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   uint16_t      BC; /* was BC */
   uint16_t      clipped_width; /* was BC */
   uint16_t      clipped_height; /* was DE */
+  uint8_t       A; /* was A */
   uint8_t       Adash; /* was A' */
   uint8_t       iters; /* was B' */
   uint8_t       Cdash; /* was C' */
@@ -10876,12 +10877,12 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   
   if ((clipped_width >> 8) == 0)
   {
-    item = 0x77; /* LD (HL),A */
+    A = 0x77; /* LD (HL),A */
     Adash = clipped_width & 0xFF;
   }
   else
   {
-    item = 0; /* NOP */
+    A = 0; /* NOP */
     Adash = 3 - (clipped_width & 0xFF);
   }
 
@@ -10892,10 +10893,10 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   iters = 3; /* iterations */
   do
   {
-    *(uint8_t *)((char *) state + *HLdash++) = item;
-    *(uint8_t *)((char *) state + *HLdash++) = item;
+    *(uint8_t *)((char *) state + *HLdash++) = A;
+    *(uint8_t *)((char *) state + *HLdash++) = A;
     if (--Cdash == 0)
-      item ^= 0x77; /* Toggle between LD (HL),A and NOP. */
+      A ^= 0x77; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
   
@@ -10921,9 +10922,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // this pop/push seems to be needless - DE already has the value
   // POP DE
   // PUSH DE
-  item = clipped_height >> 8;
-  if (item)
-    item *= 2;
+  A = clipped_height >> 8;
+  if (A)
+    A *= 2;
 
   // seemingly unncessary code which clones stuff in the vischar routine
   /*{
@@ -10938,7 +10939,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   
   uint16_t DE2;
 
-  DE2 = (clipped_height & 0xFF00) | item;
+  DE2 = (clipped_height & 0xFF00) | A;
   state->bitmap_pointer += DE2;
   state->mask_pointer   += DE2;
   // POP BC
