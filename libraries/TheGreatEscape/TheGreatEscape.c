@@ -7341,16 +7341,16 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
  * \param[out] pvischar    Pointer to receive vischar pointer. (was IY)
  * \param[out] pitemstruct Pointer to receive itemstruct pointer. (was IY)
  *
- * \return State of Z flag: 1 if Z, 0 if NZ.
+ * \return State of Z flag: 1 if Z, 0 if NZ. // unsure which is found/notfound right now
  */
 int locate_vischar_or_itemstruct(tgestate_t    *state,
                                  uint8_t       *pindex,
                                  vischar_t    **pvischar,
                                  itemstruct_t **pitemstruct)
 {
-  uint16_t      BC;               /* was BC */
-  uint16_t      DE;               /* was DE */
-  uint8_t       Adash;            /* was A */
+  uint16_t      x;                /* was BC */
+  uint16_t      y;                /* was DE */
+  item_t        item_and_flag;    /* was A' */
   uint16_t      DEdash;           /* was DEdash */
   uint8_t       iters;            /* was Bdash */
   vischar_t    *vischar;          /* was HLdash */
@@ -7363,10 +7363,13 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   assert(pvischar    != NULL);
   assert(pitemstruct != NULL);
 
-  BC     = 0; // prev-x
-  DE     = 0; // prev-y
-  Adash  = 0xFF; // 'nothing found' marker
-  DEdash = 0;
+  *pvischar    = NULL;
+  *pitemstruct = NULL;
+
+  x             = 0;    // prev-x
+  y             = 0;    // prev-y
+  item_and_flag = 0xFF; // 'nothing found' marker // item
+  DEdash        = 0;
   
   iters   = vischars_LENGTH; /* iterations */
   vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
@@ -7375,15 +7378,16 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
     if ((vischar->b07 & vischar_BYTE7_BIT7) == 0)
       goto next;
 
-    if ((vischar->mi.pos.x + 4 < BC) || (vischar->mi.pos.y + 4 < DE))
+    if ((vischar->mi.pos.x + 4 < x) ||
+        (vischar->mi.pos.y + 4 < y))
       goto next;
 
-    BCdash = iters;
-    Adash  = vischars_LENGTH - iters;
+    BCdash = iters; // assigned but not ever used again?
+    item_and_flag = vischars_LENGTH - iters; // item
     DEdash = vischar->mi.pos.height;
 
-    DE = vischar->mi.pos.y; // y,x order is correct
-    BC = vischar->mi.pos.x;
+    y = vischar->mi.pos.y; // y,x order is correct
+    x = vischar->mi.pos.x;
     found_vischar = vischar;
  
 next:
@@ -7393,15 +7397,19 @@ next:
 
   // IY is returned from this, but is an itemstruct_t not a vischar
   // Adash only ever has a flag ORed in, nothing is cleared
-  Adash = get_greatest_itemstruct(state, Adash, BC, DE, &found_itemstruct);
+  item_and_flag = get_greatest_itemstruct(state,
+                                          item_and_flag,
+                                          x,
+                                          y,
+                                          &found_itemstruct);
   *pitemstruct = found_itemstruct;
-  *pindex = Adash;
+  *pindex = item_and_flag;
   /* If Adash's top bit remains set from initialisation, then no vischar was
    * found. (It's not affected by get_greatest_itemstruct which only ORs). */
-  if (Adash & (1 << 7))
-    return 0; // NZ
+  if (item_and_flag & (1 << 7))
+    return 0; // NZ => not found
 
-  if ((Adash & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag?
+  if ((item_and_flag & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag?
   {
     found_vischar->b07 &= ~vischar_BYTE7_BIT7;
 
@@ -8267,7 +8275,7 @@ int vischar_visible(tgestate_t *state,
         goto invisible;
       A = foo2 & 0xFF;
       if (A < vischar->height)
-        height = ((-A + vischar->height) << 8) | A;
+        height = ((vischar->height - A) << 8) | A;
       else
         height = vischar->height;
     }
@@ -8275,11 +8283,11 @@ int vischar_visible(tgestate_t *state,
     *clipped_width  = width;
     *clipped_height = height;
 
-    return 0; // return Z (Likely: vischar is visible)
+    return 0; // return Z (vischar is visible)
   }
 
 invisible:
-  return 0xFF; // return NZ (Likely: vischar is not visible)
+  return 0xFF; // return NZ (vischar is not visible)
 }
 
 /* ----------------------------------------------------------------------- */
