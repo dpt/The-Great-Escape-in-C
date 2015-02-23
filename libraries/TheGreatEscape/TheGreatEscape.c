@@ -657,8 +657,8 @@ void mask_against_tile(tileindex_t index, uint8_t *dst);
 static
 int vischar_visible(tgestate_t *state,
                     vischar_t  *vischar,
-                    uint16_t   *pBC,
-                    uint16_t   *pDE);
+                    uint16_t   *pwidth,
+                    uint16_t   *pheight);
 
 static
 void called_from_main_loop_3(tgestate_t *state);
@@ -819,7 +819,7 @@ static
 uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *itemstr, uint8_t A);
 
 static
-uint8_t item_visible(tgestate_t *state, uint16_t *pBC, uint16_t *pDE);
+uint8_t item_visible(tgestate_t *state, uint16_t *pwidth, uint16_t *pheight);
 
 extern const sprite_t item_definitions[item__LIMIT];
 
@@ -10954,7 +10954,7 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
  *
  * \return 0 if item visible, 1 if not (was Z flag)
  */
-uint8_t item_visible(tgestate_t *state, uint16_t *pBC, uint16_t *pDE)
+uint8_t item_visible(tgestate_t *state, uint16_t *pwidth, uint16_t *pheight)
 {
   uint8_t  *mpr1; /* was HL */
   uint16_t  DE; /* was DE */
@@ -11004,8 +11004,8 @@ uint8_t item_visible(tgestate_t *state, uint16_t *pBC, uint16_t *pDE)
       DE = state->item_height;
   }
   
-  *pBC = BC;
-  *pDE = DE;
+  *pwidth = BC;
+  *pheight = DE;
 
   return 0;
 
