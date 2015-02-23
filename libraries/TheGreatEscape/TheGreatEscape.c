@@ -11099,6 +11099,9 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
 
+    assert(maskptr);
+    assert(bitmapptr);
+
     iters = state->self_E121; // height?
     do
     {
@@ -11121,6 +11124,9 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       foremaskptr = state->foreground_mask_pointer;
       screenptr   = state->screen_pointer; // moved compared to the other routines
+
+      assert(foremaskptr);
+      assert(screenptr);
 
       /* Shift bitmap. */
 
@@ -11218,6 +11224,9 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
 
+    assert(maskptr);
+    assert(bitmapptr);
+
     iters = state->self_E1E2; // height?
     do
     {
@@ -11241,6 +11250,9 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       foremaskptr = state->foreground_mask_pointer;
       screenptr   = state->screen_pointer;
+
+      assert(foremaskptr);
+      assert(screenptr);
 
       /* Shift bitmap. */
 
@@ -11414,6 +11426,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     // incremented by four each step, like a supertile wide thing.
     foremaskptr = state->foreground_mask_pointer;
 
+    assert(foremaskptr);
+
     // 24 version does bitmap rotates then mask rotates.
     // This is the opposite way around to save a bank switch?
 
@@ -11469,6 +11483,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     screenptr = state->screen_pointer; // moved relative to the 24 version
 
+    assert(screenptr);
+
     x = MASK(bm0, mask0);
     foremaskptr++;
     if (state->enable_E319)
@@ -11518,6 +11534,9 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
 
+  assert(maskptr);
+  assert(bitmapptr);
+
   iters = state->self_E363; // height? // self modified
   do
   {
@@ -11537,6 +11556,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
       flip_16_masked_pixels(state, &mask1, &mask0, &bm1, &bm0);
 
     foremaskptr = state->foreground_mask_pointer;
+
+    assert(foremaskptr);
 
     /* Shift mask. */
 
@@ -11600,6 +11621,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     /* Plot, using foreground mask. */
 
     screenptr = state->screen_pointer; // moved relative to the 24 version
+
+    assert(screenptr);
 
     x = MASK(bm2, mask2);
     foremaskptr++;
