@@ -657,8 +657,8 @@ void mask_against_tile(tileindex_t index, uint8_t *dst);
 static
 int vischar_visible(tgestate_t *state,
                     vischar_t  *vischar,
-                    uint16_t   *pwidth,
-                    uint16_t   *pheight);
+                    uint16_t   *clipped_width,
+                    uint16_t   *clipped_height);
 
 static
 void called_from_main_loop_3(tgestate_t *state);
@@ -819,7 +819,9 @@ static
 uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *itemstr, uint8_t A);
 
 static
-uint8_t item_visible(tgestate_t *state, uint16_t *pwidth, uint16_t *pheight);
+uint8_t item_visible(tgestate_t *state,
+                     uint16_t   *clipped_width,
+                     uint16_t   *clipped_height);
 
 extern const sprite_t item_definitions[item__LIMIT];
 
@@ -8197,17 +8199,17 @@ void mask_against_tile(tileindex_t index, uint8_t *dst)
  *
  * Counterpart to \ref item_visible.
  *
- * \param[in]  state   Pointer to game state.
- * \param[in]  vischar Pointer to visible character.       (was IY)
- * \param[out] pwidth  Pointer to returned clipped width.  (was BC)
- * \param[out] pheight Pointer to returned ciipped height. (was DE)
+ * \param[in]  state          Pointer to game state.
+ * \param[in]  vischar        Pointer to visible character.       (was IY)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was BC)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was DE)
  *
  * \return 0 or 0xFF (suspect visible / invisible). (was A)
  */
 int vischar_visible(tgestate_t *state,
                     vischar_t  *vischar,
-                    uint16_t   *pwidth,
-                    uint16_t   *pheight)
+                    uint16_t   *clipped_width,
+                    uint16_t   *clipped_height)
 {
   const uint8_t *mpr1;    /* was HL */
   uint8_t  A;       /* was A */
@@ -8267,8 +8269,8 @@ int vischar_visible(tgestate_t *state,
         height = vischar->height;
     }
 
-    *pwidth  = width;
-    *pheight = height;
+    *clipped_width  = width;
+    *clipped_height = height;
 
     return 0; // return Z (Likely: vischar is visible)
   }
@@ -10829,8 +10831,8 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   location_t   *HL; /* was HL */
   tinypos_t    *DE; /* was DE */
   uint16_t      BC; /* was BC */
-  uint16_t      clipped0; /* was BC */
-  uint16_t      clipped1; /* was DE */
+  uint16_t      clipped_width; /* was BC */
+  uint16_t      clipped_height; /* was DE */
   uint8_t       Adash; /* was A' */
   uint8_t       iters; /* was B' */
   uint8_t       Cdash; /* was C' */
@@ -10860,23 +10862,23 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   state->item_height    = item_definitions[A].height;
   state->bitmap_pointer = item_definitions[A].bitmap;
   state->mask_pointer   = item_definitions[A].mask;
-  if (item_visible(state, &clipped0, &clipped1) != 0)
+  if (item_visible(state, &clipped_width, &clipped_height) != 0)
     return 1; // NZ
 
-  // PUSH clipped0 // BC
-  // PUSH clipped1 // DE
+  // PUSH clipped_width // BC
+  // PUSH clipped_height // DE
   
-  state->self_E2C2 = clipped1 & 0xFF; // self modify
+  state->self_E2C2 = clipped_height & 0xFF; // self modify
   
-  if ((clipped0 >> 8) == 0)
+  if ((clipped_width >> 8) == 0)
   {
     A = 0x77; /* LD (HL),A */
-    Adash = clipped0 & 0xFF;
+    Adash = clipped_width & 0xFF;
   }
   else
   {
     A = 0; /* NOP */
-    Adash = 3 - (clipped0 & 0xFF);
+    Adash = 3 - (clipped_width & 0xFF);
   }
 
   Cdash = Adash; // could assign directly to Cdash?
@@ -10897,7 +10899,7 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   uint8_t *mask_buffer; // was HL
 
   y = 0;
-  if (clipped1 >> 8) /* Conv: Moved. */
+  if (clipped_height >> 8) /* Conv: Moved. */
     y = (state->map_position_related_y - state->map_position[1]) * 192; // temp: HL // must be Y axis
 
   x = state->map_position_related_x - state->map_position[0]; // X axis
@@ -10906,16 +10908,16 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   
   mask_buffer = &state->mask_buffer[0];
 
-  // pop clipped1
+  // pop clipped_height
   // POP DE
   // PUSH DE
 
-  state->foreground_mask_pointer = &mask_buffer[(clipped1 >> 8) * 4];
+  state->foreground_mask_pointer = &mask_buffer[(clipped_height >> 8) * 4];
   
   // this pop/push seems to be needless - DE already has the value
   // POP DE
   // PUSH DE
-  A = clipped1 >> 8;
+  A = clipped_height >> 8;
   if (A)
     A *= 2;
 
@@ -10932,7 +10934,7 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
   
   uint16_t DE2;
 
-  DE2 = (clipped1 & 0xFF00) | A;
+  DE2 = (clipped_height & 0xFF00) | A;
   state->bitmap_pointer += DE2;
   state->mask_pointer   += DE2;
   // POP BC
@@ -10954,7 +10956,9 @@ uint8_t setup_item_plotting(tgestate_t *state, itemstruct_t *IY, uint8_t A)
  *
  * \return 0 if item visible, 1 if not (was Z flag)
  */
-uint8_t item_visible(tgestate_t *state, uint16_t *pwidth, uint16_t *pheight)
+uint8_t item_visible(tgestate_t *state,
+                     uint16_t   *clipped_width,
+                     uint16_t   *clipped_height)
 {
   uint8_t  *mpr1; /* was HL */
   uint16_t  DE; /* was DE */
@@ -11004,8 +11008,8 @@ uint8_t item_visible(tgestate_t *state, uint16_t *pwidth, uint16_t *pheight)
       DE = state->item_height;
   }
   
-  *pwidth = BC;
-  *pheight = DE;
+  *clipped_width = BC;
+  *clipped_height = DE;
 
   return 0;
 
@@ -11730,8 +11734,8 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   const sprite_t *sprite;    /* was BC */
   uint8_t         A;
   const sprite_t *sprite2;   /* was DE */
-  uint16_t        clipped0;  /* was BC */
-  uint16_t        clipped1;  /* was DE */
+  uint16_t        clipped_width;  /* was BC */
+  uint16_t        clipped_height; /* was DE */
   const size_t   *enables;   /* was HL */
   uint8_t         self_E4C0;
   uint8_t         Adash;
@@ -11789,13 +11793,13 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
 
-  if (vischar_visible(state, vischar, &clipped0, &clipped1)) // used A as temporary
+  if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
     return 1; // NZ
 
   // PUSH BCclipped
   // PUSH DEclipped
 
-  E = clipped1 & 0xFF; // must be no of visible rows?
+  E = clipped_height & 0xFF; // must be no of visible rows?
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
   {
@@ -11818,16 +11822,16 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   self_E4C0 = A; // self-modify
   E = A;
-  A = (clipped0 & 0xFF00) >> 8;
+  A = (clipped_width & 0xFF00) >> 8;
   if (A == 0)
   {
     A     = 0x77; // LD (HL),A
-    Adash = clipped0 & 0xFF;
+    Adash = clipped_width & 0xFF;
   }
   else
   {
     A     = 0x00; // NOP
-    Adash = E - (clipped0 & 0xFF);
+    Adash = E - (clipped_width & 0xFF);
   }
 
   // POP HLdash // entry point
@@ -11844,7 +11848,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   }
   while (--Bdash);
 
-  if ((clipped1 >> 8) == 0)
+  if ((clipped_height >> 8) == 0)
     DEsub = (vischar->scry - (state->map_position[1] * 8)) * 24;
   else
     DEsub = 0; // Conv: reordered
@@ -11857,22 +11861,22 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE  // pop DEclipped
   // PUSH DE
 
-  maskbuf += (clipped1 >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE  // pop DEclipped
 
-  A = clipped1 >> 8;
+  A = clipped_height >> 8;
   if (A)
   {
     // Conv: Replaced loop with multiply.
     A *= vischar->width_bytes - 1;
-    clipped1 &= 0x00FF; // D = 0
+    clipped_height &= 0x00FF; // D = 0
   }
 
-  clipped1 = (clipped1 & 0xFF00) | A; // check all this guff over again
-  state->bitmap_pointer += clipped1;
-  state->mask_pointer   += clipped1;
+  clipped_height = (clipped_height & 0xFF00) | A; // check all this guff over again
+  state->bitmap_pointer += clipped_height;
+  state->mask_pointer   += clipped_height;
 
   // POP BCclipped  // why save it anyway? if it's just getting popped. unless it's being returned.
   
