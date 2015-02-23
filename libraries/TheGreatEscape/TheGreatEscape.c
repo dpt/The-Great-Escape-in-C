@@ -10979,61 +10979,70 @@ uint8_t item_visible(tgestate_t *state,
                      uint16_t   *clipped_width,
                      uint16_t   *clipped_height)
 {
-  uint8_t  *mpr1; /* was HL */
-  uint16_t  DE; /* was DE */
-  uint8_t   A; /* was A */
-  uint16_t  BC; /* was BC */
+  const uint8_t *px;            /* was HL */
+  uint16_t       map_position;  /* was DE */
+  uint8_t        xoff;          /* was A */
+  uint8_t        yoff;          /* was A */
+  uint16_t       width;         /* was BC */
+  uint16_t       height;        /* was DE */
 
-  mpr1 = &state->map_position_related_x;
-  DE = state->map_position[0] | (state->map_position[1] << 8); // was fused
+  /* Width part */
 
-  A = ((DE & 0xFF) >> 0) + state->tb_columns - mpr1[0];
-  if (A <= 0)
-    goto return_1;
+  // Seems to be doing (map_position_x + state->tb_columns <= px[0])
+  px = &state->map_position_related_x;
+  map_position = state->map_position[0] | (state->map_position[1] << 8); // Conv: Was a fused load
 
-  if (A < 3)
+  xoff = (map_position & 0xFF) + state->tb_columns - px[0];
+  if (xoff > 0)
   {
-    BC = A;
-  }
-  else
-  {
-    A = mpr1[0] + 3 - (DE & 0xFF);
-    if (A <= 0)
-      goto return_1;
-
-    if (A < 3)
-      BC = ((3 - A) << 8) | A;
+#define WIDTH_BYTES 3
+    if (xoff < WIDTH_BYTES) // 3 is width
+    {
+      width = xoff;
+    }
     else
-      BC = 3;
-  }
+    {
+      xoff = px[0] + WIDTH_BYTES - (map_position & 0xFF);
+      if (xoff <= 0)
+        goto invisible; // off the left hand side?
 
-  A = ((DE & 0xFF) >> 8) + state->tb_rows - mpr1[1]; // map_position_related_y
-  if (A <= 0)
-    goto return_1;
+      if (xoff < WIDTH_BYTES)
+        width = ((WIDTH_BYTES - xoff) << 8) | xoff;
+      else
+        width = WIDTH_BYTES;
+    }
 
-  if (A < 2)
-  {
-    DE = 8;
-  }
-  else
-  {
-    A = mpr1[1] + 2 - ((DE >> 8) & 0xFF);
-    if (A <= 0)
-      goto return_1;
+    /* Height part */
 
-    if (A < 2)
-      DE = (8 << 8) | (state->item_height - 8);
-    else
-      DE = state->item_height;
+    yoff = (map_position >> 8) + state->tb_rows - px[1]; // map_position_related_y
+    if (yoff > 0)
+    {
+#define HEIGHT 2
+      if (yoff < HEIGHT)
+      {
+        height = 8;
+      }
+      else
+      {
+        yoff = px[1] + HEIGHT - (map_position >> 8);
+        if (yoff <= 0)
+          goto invisible;
+
+        if (yoff < HEIGHT)
+          height = (8 << 8) | (state->item_height - 8);
+        else
+          height = state->item_height;
+      }
+
+      *clipped_width  = width;
+      *clipped_height = height;
+
+      return 0; // return Z (item is visible)
+    }
   }
   
-  *clipped_width = BC;
-  *clipped_height = DE;
-
-  return 0;
-
-return_1:
-  return 1;
+invisible:
+  return 1; // return NZ (item is not visible)
 }
 
 /* ----------------------------------------------------------------------- */
