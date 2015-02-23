@@ -11078,23 +11078,23 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  */
 void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t        A;
+  uint8_t        x; /* was A */
   uint8_t        iters; /* was B */
   const uint8_t *maskptr;
   const uint8_t *bitmapptr;
   const uint8_t *foremaskptr;
   uint8_t       *screenptr;
 
-  if ((A = (vischar->scrx & 7)) < 4)
+  if ((x = (vischar->scrx & 7)) < 4)
   {
     uint8_t self_E161, self_E143;
 
     /* Shift right? */
 
-    A = (~A & 3) * 8; // jump table offset (on input, A is 0..3)
+    x = (~x & 3) * 8; // jump table offset (on input, A is 0..3)
 
-    self_E161 = A; // self-modify: jump into mask rotate
-    self_E143 = A; // self-modify: jump into bitmap rotate
+    self_E161 = x; // self-modify: jump into mask rotate
+    self_E143 = x; // self-modify: jump into bitmap rotate
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -11177,26 +11177,26 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       /* Plot, using foreground mask. */
 
-      A = MASK(bm0, mask0);
+      x = MASK(bm0, mask0);
       foremaskptr++;
       if (state->enable_E188)
-        *screenptr++ = A;
+        *screenptr++ = x;
 
-      A = MASK(bm0, mask1);
+      x = MASK(bm0, mask1);
       foremaskptr++;
       if (state->enable_E199)
-        *screenptr++ = A;
+        *screenptr++ = x;
 
-      A = MASK(bm0, mask2);
+      x = MASK(bm0, mask2);
       foremaskptr++;
       if (state->enable_E1AA)
-        *screenptr++ = A;
+        *screenptr++ = x;
 
-      A = MASK(bm0, mask3);
+      x = MASK(bm0, mask3);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E1BF)
-        *screenptr = A;
+        *screenptr = x;
 
       screenptr += 21; // stride (24 - 3)
       state->screen_pointer = screenptr;
@@ -11209,11 +11209,11 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
     /* Shift left? */
 
-    A -= 4; // (on input, A is 4..7)
-    A = (A << 3) | (A >> 5); // was 3 x RLCA
+    x -= 4; // (on input, A is 4..7)
+    x = (x << 3) | (x >> 5); // was 3 x RLCA
 
-    self_E22A = A; // self-modify: jump into mask rotate
-    self_E204 = A; // self-modify: jump into bitmap rotate
+    self_E22A = x; // self-modify: jump into mask rotate
+    self_E204 = x; // self-modify: jump into bitmap rotate
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -11311,29 +11311,29 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       /* Plot, using foreground mask. */
 
-      A = MASK(bm3, mask3);
+      x = MASK(bm3, mask3);
       foremaskptr++;
       if (state->enable_E259)
-        *screenptr = A;
+        *screenptr = x;
       screenptr++;
 
-      A = MASK(bm2, mask2);
+      x = MASK(bm2, mask2);
       foremaskptr++;
       if (state->enable_E26A)
-        *screenptr = A;
+        *screenptr = x;
       screenptr++;
 
-      A = MASK(bm1, mask1);
+      x = MASK(bm1, mask1);
       foremaskptr++;
       if (state->enable_E27B)
-        *screenptr = A;
+        *screenptr = x;
       screenptr++;
 
-      A = MASK(bm0, mask0);
+      x = MASK(bm0, mask0);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E290)
-        *screenptr = A;
+        *screenptr = x;
       screenptr++;
 
       screenptr += 21; // stride (24 - 3)
