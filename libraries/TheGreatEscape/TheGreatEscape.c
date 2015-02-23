@@ -2698,8 +2698,9 @@ void in_permitted_area(tgestate_t *state)
 
     pos_to_tinypos(vcpos, pos);
 
-    if (state->vischars[0].w18 >= 0x06C8 ||
-        state->vischars[0].w1A >= 0x0448)
+    /* (217 * 8, 137 * 8) */
+    if (state->vischars[0].scrx >= 0x06C8 ||
+        state->vischars[0].scry >= 0x0448)
     {
       escaped(state);
       return;
@@ -6380,10 +6381,10 @@ void reset_outdoors(tgestate_t *state)
   /* Reset hero. */
   reset_position(state, &state->vischars[0]);
 
-  /* I'm avoiding a divide_by_8 call here. If it turns out to be self
-   * modified it'll need restoring. */
-  state->map_position[0] = (state->vischars[0].w18 >> 3) - 11;
-  state->map_position[1] = (state->vischars[1].w1A >> 3) - 6;
+  /* Centre the screen on the hero. */
+  /* Conv: Removed divide_by_8 calls here. */
+  state->map_position[0] = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position[1] = (state->vischars[1].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
 
   state->room_index = room_NONE;
   get_supertiles(state);
@@ -7079,8 +7080,8 @@ void reset_position(tgestate_t *state, vischar_t *vischar)
  */
 void reset_position_end(tgestate_t *state, vischar_t *vischar)
 {
-  vischar->w18 = (state->saved_pos.y + 0x0200 - state->saved_pos.x) * 2;
-  vischar->w1A = 0x0800 - state->saved_pos.x - state->saved_pos.height - state->saved_pos.y;
+  vischar->scrx = (state->saved_pos.y + 0x0200 - state->saved_pos.x) * 2;
+  vischar->scry = 0x0800 - state->saved_pos.x - state->saved_pos.height - state->saved_pos.y;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8241,7 +8242,7 @@ int vischar_visible(tgestate_t *state,
     /* Height part */
 
     foo1 = (state->map_position[1] + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
-    height = vischar->w1A; // fused
+    height = vischar->scry; // fused
     if (foo1 < height)
       goto invisible;
     if ((foo1 >> 8) != 0)
@@ -8312,8 +8313,8 @@ void called_from_main_loop_3(tgestate_t *state)
     if (vischar->flags == 0)
       goto next; /* Likely: No character. */
 
-    state->map_position_related_y = vischar->w1A >> 3; // divide by 8
-    state->map_position_related_x = vischar->w18 >> 3; // divide by 8
+    state->map_position_related_y = vischar->scry >> 3; // divide by 8
+    state->map_position_related_x = vischar->scrx >> 3; // divide by 8
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
       goto next; // possibly the not visible case
@@ -8588,14 +8589,14 @@ void purge_visible_characters(tgestate_t *state)
     if (state->room_index != vischar->room)
       goto reset; /* this character is not in the current room */
 
-    C = vischar->w1A >> 8;
-    A = vischar->w1A & 0xFF;
+    C = vischar->scry >> 8;
+    A = vischar->scry & 0xFF;
     divide_by_8_with_rounding(&C, &A);
     if (A <= D || A > MIN(D + EDGE + 25, 255)) // Conv: C -> A
       goto reset;
 
-    C = vischar->w18 >> 8;
-    A = vischar->w18 & 0xFF;
+    C = vischar->scrx >> 8;
+    A = vischar->scrx & 0xFF;
     divide_by_8(&C, &A);
     if (A <= E || A > MIN(E + EDGE + 33, 255)) // Conv: C -> A
       goto reset;
@@ -11075,7 +11076,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
   const uint8_t *foremaskptr;
   uint8_t       *screenptr;
 
-  if ((A = ((vischar->w18 & 0xFF) & 7)) < 4)
+  if ((A = (vischar->scrx & 7)) < 4)
   {
     uint8_t self_E161, self_E143;
 
@@ -11353,7 +11354,7 @@ void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t A;
 
-  if ((A = ((vischar->w18 & 0xFF) & 7)) < 4)
+  if ((A = (vischar->scrx & 7)) < 4)
     masked_sprite_plotter_16_wide_right(state, A);
   else
     masked_sprite_plotter_16_wide_left(state, A); /* i.e. fallthrough */
@@ -11775,8 +11776,8 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // DE now points to state->map_position_related_x
 
   // unrolled over original
-  state->map_position_related_x = vischar->w18 >> 3;
-  state->map_position_related_y = vischar->w1A >> 3;
+  state->map_position_related_x = vischar->scrx >> 3;
+  state->map_position_related_y = vischar->scry >> 3;
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit
@@ -11844,7 +11845,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   while (--Bdash);
 
   if ((clipped1 >> 8) == 0)
-    DEsub = (vischar->w1A - (state->map_position[1] * 8)) * 24;
+    DEsub = (vischar->scry - (state->map_position[1] * 8)) * 24;
   else
     DEsub = 0; // Conv: reordered
 
@@ -11856,7 +11857,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE  // pop DEclipped
   // PUSH DE
 
-  maskbuf += (clipped1 >> 8) * 4 + (vischar->w1A & 7) * 4; // i *think* its DEclipped
+  maskbuf += (clipped1 >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE  // pop DEclipped
@@ -12205,8 +12206,8 @@ void tge_setup(tgestate_t *state)
     0x00,                 // b0D
     0x00,                 // b0E
     { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_TOP_LEFT_4], 0 },
-    0x0000,               // w18
-    0x0000,               // w1A
+    0x0000,               // scrx
+    0x0000,               // scry
     room_0_OUTDOORS,      // room
     0x00,                 // b1D
     0x00,                 // width_bytes
