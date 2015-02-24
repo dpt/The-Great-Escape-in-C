@@ -5261,7 +5261,7 @@ void zoombox_1(tgestate_t *state)
   offset = (state->zoombox.y >> 2) + (state->zoombox.y >> 1) + state->zoombox.x; /* 3/4*y + x */
   HL = &state->window_buf[offset + 1];
 
-  DE = screen + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Added screen base
+  DE = screen + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base hoisted from table.
 
   A = state->zoombox.horizontal_count;
   self_AC55 = A; // self modify
@@ -5304,13 +5304,13 @@ void zoombox_1(tgestate_t *state)
  */
 void zoombox_draw(tgestate_t *state)
 {
-  uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added
+  uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added var.
 
   uint8_t *addr;  /* was HL */
   uint8_t  iters; /* was B */
-  uint16_t delta; /* was DE */
+  int      delta; /* was DE */
 
-  addr = screen_base + state->game_window_start_offsets[(state->zoombox.y - 1) * 8]; // ie. * 16 // Conv: Added screen base
+  addr = screen_base + state->game_window_start_offsets[(state->zoombox.y - 1) * 8]; // Conv: Screen base hoisted from table.
 
   /* Top left */
   addr += state->zoombox.x - 1;
@@ -5324,10 +5324,9 @@ void zoombox_draw(tgestate_t *state)
 
   /* Top right */
   zoombox_draw_tile(state, zoombox_tile_TR, addr);
-  delta = 32; // move to next character row
-  if (((addr - screen_base) & 0xFF) >= 224)
-  // was: if (L >= 224) // if adding 32 would overflow
-    delta = 0x0720; //was D=7
+  delta = state->width; // move to next character row
+  if (((addr - screen_base) & 0xFF) >= 224) // was: if (L >= 224) // if adding 32 would overflow
+    delta += 0x0700; // was D=7
   addr += delta;
 
   /* Vertical, moving down */
@@ -5335,10 +5334,9 @@ void zoombox_draw(tgestate_t *state)
   do
   {
     zoombox_draw_tile(state, zoombox_tile_VT, addr);
-    delta = state->width;
-    if (((addr - screen_base) & 0xFF) >= 224)
-      // was: if (L >= 224) // if adding 32 would overflow
-      delta = (delta & 0xFF) | 0x0700; //was D=7
+    delta = state->width; // move to next character row
+    if (((addr - screen_base) & 0xFF) >= 224) // was: if (L >= 224) // if adding 32 would overflow
+      delta += 0x0700; // was D=7
     addr += delta;
   }
   while (--iters);
@@ -5354,22 +5352,23 @@ void zoombox_draw(tgestate_t *state)
 
   /* Bottom left */
   zoombox_draw_tile(state, zoombox_tile_BL, addr);
-  delta = 0xFFE0; // -32
-  if (((addr - screen_base) & 0xFF) < 32)
-  // was: if (L < 32)
-    delta = 0xF8E0; // -0x720
-  addr += delta; // wrong. won't add in a 16-bit domain as expected.
+  delta = -state->width; // move to next character row
+  if (((addr - screen_base) & 0xFF) < 32) // was: if (L < 32) // if subtracting 32 would underflow
+    delta -= 0x0700;
+  addr += delta;
+
+  assert(addr >= &state->speccy->screen[0]);
+  assert(addr < &state->speccy->screen[SCREEN_LENGTH]);
 
   /* Vertical, moving up */
   iters = state->zoombox.vertical_count;
   do
   {
     zoombox_draw_tile(state, zoombox_tile_VT, addr);
-    delta = 0xFFE0; // -32
-    if (((addr - screen_base) & 0xFF) < 32)
-      // was: if (L < 32)
-      delta = 0xF8E0; // -0x720
-    addr += delta; // wrong. won't add in a 16-bit domain as expected.
+    delta = -state->width; // move to next character row
+    if (((addr - screen_base) & 0xFF) < 32) // was: if (L < 32) // if subtracting 32 would underflow
+      delta -= 0x0700;
+    addr += delta;
   }
   while (--iters);
 }
@@ -5401,6 +5400,9 @@ void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr)
   uint8_t          iters; /* was B */
   ptrdiff_t        off;   /* was ? */
   attribute_t     *attrp; /* was ? */
+
+  assert(addr >= &state->speccy->screen[0]);
+  assert(addr < &state->speccy->screen[SCREEN_LENGTH]);
 
   DE = addr; // was EX DE,HL
   row = &zoombox_tiles[index].row[0];
