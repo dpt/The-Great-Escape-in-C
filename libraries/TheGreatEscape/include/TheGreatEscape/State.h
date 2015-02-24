@@ -124,8 +124,9 @@ struct tgestate
   /** $81B6: (unknown) */
   uint8_t         map_position_related_y;
 
-  /** $81B7: Controls character left/right flipping. */
-  // only ever has its top bit tested
+  /** $81B7: Used by masked sprite plotters to flip characters left/right.
+   * Seems to be a field: bit 7 is for flipping, the remainder is an index,
+   * but the index is never read. */
   uint8_t         flip_sprite;
 
   /** $81B8: Hero's map position. */

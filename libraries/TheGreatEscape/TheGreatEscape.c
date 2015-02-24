@@ -10876,7 +10876,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  // EX DE, HL
 //  
 //  *DE = 0; // was B, which is always zero here
-  state->flip_sprite    = 0;
+  state->flip_sprite    = 0; /* Items are never flipped. */
   
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
@@ -11780,21 +11780,22 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     //masked_sprite_plotter_24_wide
   };
 
-  pos_t          *pos;       /* was HL */
-  tinypos_t      *tinypos;   /* was DE */
-  const sprite_t *sprite;    /* was BC */
-  uint8_t         A;
-  const sprite_t *sprite2;   /* was DE */
+  pos_t          *pos;            /* was HL */
+  tinypos_t      *tinypos;        /* was DE */
+  const sprite_t *sprite;         /* was BC */
+  uint8_t         flip_sprite;    /* was A */
+  const sprite_t *sprite2;        /* was DE */
   uint16_t        clipped_width;  /* was BC */
   uint16_t        clipped_height; /* was DE */
-  const size_t   *enables;   /* was HL */
+  const size_t   *enables;        /* was HL */
   uint8_t         self_E4C0;
   uint8_t         Adash;
   uint8_t         Cdash;
   uint8_t         Bdash;
   uint8_t         E;
+  uint8_t         A;
   uint16_t        HL;
-  uint8_t        *maskbuf;   /* was HL */
+  uint8_t        *maskbuf;        /* was HL */
   uint16_t        DEsub;
   
   assert(state   != NULL);
@@ -11825,7 +11826,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   sprite = vischar->mi.spriteset;
 
-  state->flip_sprite = A = vischar->mi.b17; // set left/right flip flag / sprite offset
+  state->flip_sprite = flip_sprite = vischar->mi.b17; // set left/right flip flag / sprite offset
 
   // HL now points after b17
   // DE now points to state->map_position_related_x
@@ -11836,7 +11837,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit
-  sprite2 = &sprite[A & 0x7F]; // spriteset pointer // A takes what values?
+  sprite2 = &sprite[flip_sprite & 0x7F]; // spriteset pointer // A takes what values?
 
   vischar->width_bytes = sprite2->width;  // width in bytes
   vischar->height      = sprite2->height; // height in rows
