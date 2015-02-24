@@ -41,6 +41,8 @@ typedef uint8_t attribute_t;
  */
 enum
 {
+  port_KEMPSTON_JOYSTICK        = 0x001F, /* 000FUDLR / active bits high */
+
   port_BORDER                   = 0x00FE, /* Border, Ear, Mic */
 
   port_KEYBOARD_SHIFTZXCV       = 0xFEFE, /* 11111110 */
