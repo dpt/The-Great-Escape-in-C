@@ -11542,11 +11542,11 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
  */
 void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 {
-  uint8_t        iters; /* was B */
-  const uint8_t *maskptr;
-  const uint8_t *bitmapptr;
-  const uint8_t *foremaskptr;
-  uint8_t       *screenptr;
+  uint8_t        iters;       /* was B */
+  const uint8_t *maskptr;     /* was ? */
+  const uint8_t *bitmapptr;   /* was ? */
+  const uint8_t *foremaskptr; /* was ? */
+  uint8_t       *screenptr;   /* was ? */
   uint8_t        self_E39A, self_E37D;
 
   x = (x - 4) * 6; // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
@@ -11563,6 +11563,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   iters = state->self_E363; // height? // self modified
   do
   {
+    /* Note the different variable order to the 'left' case above. */
     uint8_t bm0, bm1, bm2;       // was E, D, C
     uint8_t mask0, mask1, mask2; // was E', D', C'
     int     carry;
@@ -11643,7 +11644,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->screen_pointer; // moved relative to the 24 version
+    screenptr = state->screen_pointer; // this line is moved relative to the 24 version
 
     assert(screenptr);
 
@@ -11820,7 +11821,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
     /* Conv: Unrolled, removed divide-by-8 calls. */
     tinypos->x      = (pos->x + 4 ) >> 3; /* with rounding */
-    tinypos->y      = (pos->y     ) >> 3; // but this one doesn't round?
+    tinypos->y      = (pos->y     ) >> 3; /* without rounding */
     tinypos->height = (pos->height) >> 3;
   }
 
@@ -11848,8 +11849,8 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
     return 1; // NZ
 
-  // PUSH BCclipped
-  // PUSH DEclipped
+  // PUSH clipped_width
+  // PUSH clipped_height
 
   E = clipped_height & 0xFF; // must be no of visible rows?
 
@@ -11910,13 +11911,13 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   maskbuf = &state->mask_buffer[0];
 
-  // POP DE  // pop DEclipped
+  // POP DE  // pop clipped_height
   // PUSH DE
 
   maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
   state->foreground_mask_pointer = maskbuf;
 
-  // POP DE  // pop DEclipped
+  // POP DE  // pop clipped_height
 
   A = clipped_height >> 8;
   if (A)
