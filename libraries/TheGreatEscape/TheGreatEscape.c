@@ -538,7 +538,7 @@ attribute_t choose_game_window_attributes(tgestate_t *state);
 static
 void zoombox(tgestate_t *state);
 static
-void zoombox_1(tgestate_t *state);
+void zoombox_fill(tgestate_t *state);
 static
 void zoombox_draw(tgestate_t *state);
 static
@@ -5230,7 +5230,7 @@ void zoombox(tgestate_t *state)
     if (var < 15)
       (*pvar)++;
 
-    zoombox_1(state);
+    zoombox_fill(state);
     zoombox_draw(state);
   }
   while (state->zoombox.vertical_count + state->zoombox.horizontal_count < 35);
@@ -5241,7 +5241,7 @@ void zoombox(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void zoombox_1(tgestate_t *state)
+void zoombox_fill(tgestate_t *state)
 {
   uint8_t *const screen = &state->speccy->screen[0]; // Conv: Added
 
