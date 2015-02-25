@@ -12589,9 +12589,9 @@ void wipe_game_window(tgestate_t *state)
   uint8_t         iters;    /* was A */
 
   poffsets = &state->game_window_start_offsets[0]; /* points to offsets */
-  iters = 128; /* rows */
+  iters = state->rows * 8;
   do
-    memset(screen + *poffsets++, 0, 23);
+    memset(screen + *poffsets++, 0, state->columns);
   while (--iters);
 }
 
