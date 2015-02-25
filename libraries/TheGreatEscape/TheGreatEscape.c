@@ -5232,6 +5232,8 @@ void zoombox(tgestate_t *state)
 
     zoombox_fill(state);
     zoombox_draw(state);
+
+    state->speccy->kick(state->speccy);
   }
   while (state->zoombox.vertical_count + state->zoombox.horizontal_count < 35);
 }
