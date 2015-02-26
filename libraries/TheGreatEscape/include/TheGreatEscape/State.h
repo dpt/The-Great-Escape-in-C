@@ -235,9 +235,9 @@ struct tgestate
   struct
   {
     uint8_t       x;
-    uint8_t       horizontal_count;
+    uint8_t       width;
     uint8_t       y;
-    uint8_t       vertical_count;
+    uint8_t       height;
   }
   zoombox;
 

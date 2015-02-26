@@ -5197,8 +5197,8 @@ void zoombox(tgestate_t *state)
   state->speccy->attributes[10 * state->width + 18] = attrs;
   state->speccy->attributes[10 * state->width + 19] = attrs;
 
-  state->zoombox.horizontal_count = 0;
-  state->zoombox.vertical_count   = 0;
+  state->zoombox.width  = 0;
+  state->zoombox.height = 0;
 
   do
   {
@@ -5211,7 +5211,7 @@ void zoombox(tgestate_t *state)
       pvar[1]++;
     }
 
-    pvar++; // &state->horizontal_count;
+    pvar++; // &state->width;
     var += *pvar;
     if (var < 22)
       (*pvar)++;
@@ -5225,7 +5225,7 @@ void zoombox(tgestate_t *state)
       pvar[1]++;
     }
 
-    pvar++; // &state->vertical_count;
+    pvar++; // &state->height;
     var += *pvar;
     if (var < 15)
       (*pvar)++;
@@ -5235,7 +5235,7 @@ void zoombox(tgestate_t *state)
 
     state->speccy->kick(state->speccy);
   }
-  while (state->zoombox.vertical_count + state->zoombox.horizontal_count < 35);
+  while (state->zoombox.height + state->zoombox.width < 35);
 }
 
 #define ASSERT_SCREEN_PTR_VALID(p) \
@@ -5272,11 +5272,11 @@ void zoombox_fill(tgestate_t *state)
 
   ASSERT_SCREEN_PTR_VALID(dst);
 
-  hz_count  = state->zoombox.horizontal_count;
+  hz_count  = state->zoombox.width;
   hz_count1 = hz_count;
   src_skip  = state->tb_columns - hz_count;
 
-  iters = state->zoombox.vertical_count; /* iterations */
+  iters = state->zoombox.height; /* iterations */
   do
   {
     prev_dst = dst;
@@ -5284,7 +5284,7 @@ void zoombox_fill(tgestate_t *state)
     iters2 = 8; // one row
     do
     {
-      hz_count2 = state->zoombox.horizontal_count; /* TODO: This duplicates the read above. */
+      hz_count2 = state->zoombox.width; /* TODO: This duplicates the read above. */
       memcpy(dst, src, hz_count2);
 
       // these computations might take the values out of range on the final iteration (but never be used)
@@ -5329,7 +5329,7 @@ void zoombox_draw(tgestate_t *state)
   zoombox_draw_tile(state, zoombox_tile_TL, addr++);
 
   /* Horizontal, moving right */
-  iters = state->zoombox.horizontal_count;
+  iters = state->zoombox.width;
   do
     zoombox_draw_tile(state, zoombox_tile_HZ, addr++);
   while (--iters);
@@ -5342,7 +5342,7 @@ void zoombox_draw(tgestate_t *state)
   addr += delta;
 
   /* Vertical, moving down */
-  iters = state->zoombox.vertical_count;
+  iters = state->zoombox.height;
   do
   {
     zoombox_draw_tile(state, zoombox_tile_VT, addr);
@@ -5357,7 +5357,7 @@ void zoombox_draw(tgestate_t *state)
   zoombox_draw_tile(state, zoombox_tile_BR, addr--);
 
   /* Horizontal, moving left */
-  iters = state->zoombox.horizontal_count;
+  iters = state->zoombox.width;
   do
     zoombox_draw_tile(state, zoombox_tile_HZ, addr--);
   while (--iters);
@@ -5370,7 +5370,7 @@ void zoombox_draw(tgestate_t *state)
   addr += delta;
 
   /* Vertical, moving up */
-  iters = state->zoombox.vertical_count;
+  iters = state->zoombox.height;
   do
   {
     zoombox_draw_tile(state, zoombox_tile_VT, addr);
