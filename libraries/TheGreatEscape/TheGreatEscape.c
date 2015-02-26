@@ -540,7 +540,7 @@ void zoombox(tgestate_t *state);
 static
 void zoombox_fill(tgestate_t *state);
 static
-void zoombox_draw(tgestate_t *state);
+void zoombox_draw_border(tgestate_t *state);
 static
 void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr);
 
@@ -5231,7 +5231,7 @@ void zoombox(tgestate_t *state)
       (*pvar)++;
 
     zoombox_fill(state);
-    zoombox_draw(state);
+    zoombox_draw_border(state);
 
     state->speccy->kick(state->speccy);
   }
@@ -5310,11 +5310,11 @@ void zoombox_fill(tgestate_t *state)
 }
 
 /**
- * $AC6F: zoombox_draw
+ * $AC6F: zoombox_draw_border
  *
  * \param[in] state Pointer to game state.
  */
-void zoombox_draw(tgestate_t *state)
+void zoombox_draw_border(tgestate_t *state)
 {
   uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added var.
 
