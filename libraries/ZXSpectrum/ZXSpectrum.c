@@ -111,6 +111,8 @@ void ZXSpectrum_destroy(ZXSpectrum_t *doomed)
   if (doomed == NULL)
     return;
   
-  free(doomed->screen);
-  free(doomed);
+  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) doomed;
+
+  free(prv->screen);
+  free(prv);
 }
