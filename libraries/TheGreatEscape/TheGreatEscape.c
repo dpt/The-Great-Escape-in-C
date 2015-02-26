@@ -5183,9 +5183,9 @@ attribute_t choose_game_window_attributes(tgestate_t *state)
  */
 void zoombox(tgestate_t *state)
 {
-  attribute_t  attrs; /* was A */
-  uint8_t     *pvar;  /* was HL */
-  uint8_t      var;   /* was A */
+  attribute_t attrs; /* was A */
+  uint8_t    *pvar;  /* was HL */
+  uint8_t     var;   /* was A */
 
   state->zoombox.x = 12;
   state->zoombox.y = 8;
@@ -5238,6 +5238,12 @@ void zoombox(tgestate_t *state)
   while (state->zoombox.vertical_count + state->zoombox.horizontal_count < 35);
 }
 
+#define ASSERT_SCREEN_PTR_VALID(p) \
+  do { \
+    assert(p >= &state->speccy->screen[0]); \
+    assert(p < &state->speccy->screen[SCREEN_LENGTH]); \
+  } while (0)
+
 /**
  * $ABF9: Zoombox. partial copy of window buffer contents?
  *
@@ -5245,56 +5251,60 @@ void zoombox(tgestate_t *state)
  */
 void zoombox_fill(tgestate_t *state)
 {
-  uint8_t *const screen = &state->speccy->screen[0]; // Conv: Added
+  uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added
 
-  uint8_t   iters; /* was B */
-  uint8_t   A;
-  uint8_t   iters2; /* was A */
-  uint8_t   E;
-  uint8_t   D;
-  uint8_t   self_AC55;
-  uint8_t   self_AC4D;
-  uint16_t  BC;
-  uint8_t  *DE;
-  uint16_t  offset; /* was HL */
-  uint8_t  *HL;
+  uint8_t   iters;      /* was B */
+  uint8_t   hz_count;   /* was A */
+  uint8_t   iters2;     /* was A */
+  uint8_t   hz_count1;  /* was $AC55 */
+  uint8_t   src_skip;   /* was $AC4D */
+  uint16_t  hz_count2;  /* was BC */
+  uint8_t  *dst;        /* was DE */
+  uint16_t  offset;     /* was HL */
+  uint8_t  *src;        /* was HL */
+  uint16_t  dst_stride; /* was BC */
+  uint8_t  *prev_dst;   /* was stack */
 
-  // Conv: Simplified.
-  offset = (state->zoombox.y >> 2) + (state->zoombox.y >> 1) + state->zoombox.x; /* 3/4*y + x */
-  HL = &state->window_buf[offset + 1];
+  /* Conv: Simplified calculation to use a single multiply. */
+  offset = state->zoombox.y * state->tb_columns * 8 + state->zoombox.x;
+  src = &state->window_buf[offset + 1];
+  dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
 
-  DE = screen + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base hoisted from table.
+  ASSERT_SCREEN_PTR_VALID(dst);
 
-  A = state->zoombox.horizontal_count;
-  self_AC55 = A; // self modify
-  self_AC4D = -A + 24; // self modify
+  hz_count  = state->zoombox.horizontal_count;
+  hz_count1 = hz_count;
+  src_skip  = state->tb_columns - hz_count;
 
   iters = state->zoombox.vertical_count; /* iterations */
   do
   {
-    // PUSH DE
-    iters2 = 8;
+    prev_dst = dst;
+
+    iters2 = 8; // one row
     do
     {
-      BC = state->zoombox.horizontal_count;
-      memcpy(DE, HL, BC);
-      // Equivalent to?
-      // DE = DE + BC + -A + 24;
-      // HL = HL + BC - A + 256;
-      DE += BC;
-      HL += BC;
-      HL += self_AC4D; // self modified
-      // FIXME
-      E -= self_AC55; // self modified
-      D++;
+      hz_count2 = state->zoombox.horizontal_count; /* TODO: This duplicates the read above. */
+      memcpy(dst, src, hz_count2);
+
+      // these computations might take the values out of range on the final iteration (but never be used)
+      dst += hz_count2; // this is LDIR post-increment. it can be removed along with the line below.
+      src += hz_count2 + src_skip; // move to next source line
+      dst -= hz_count1; // was E -= self_AC55; // undo LDIR postinc
+      dst += state->width * 8; // was D++; // move to next scanline
+
+      if (iters2 > 1 || iters > 1)
+        ASSERT_SCREEN_PTR_VALID(dst);
     }
     while (--iters2);
-    // POP DE
 
-    BC = 32; // scanline-to-scanline stride
-    if (E >= 224) // 224+32 == 256, so do skip to next band
-      BC = (7 << 8) | 32; // was B = 7
-    DE += BC;
+    dst = prev_dst;
+
+    dst_stride = state->width; // scanline-to-scanline stride (32)
+    if (((dst - screen_base) & 0xFF) >= 224) // 224+32 == 256, so do skip to next band // TODO: 224 should be (256 - state->width)
+      dst_stride += 7 << 8; // was B = 7
+
+    dst += dst_stride;
   }
   while (--iters);
 }
@@ -5358,9 +5368,6 @@ void zoombox_draw(tgestate_t *state)
   if (((addr - screen_base) & 0xFF) < 32) // was: if (L < 32) // if subtracting 32 would underflow
     delta -= 0x0700;
   addr += delta;
-
-  assert(addr >= &state->speccy->screen[0]);
-  assert(addr < &state->speccy->screen[SCREEN_LENGTH]);
 
   /* Vertical, moving up */
   iters = state->zoombox.vertical_count;
