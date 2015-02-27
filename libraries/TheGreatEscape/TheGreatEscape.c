@@ -79,7 +79,7 @@ do {                \
   (r) <<= 1;        \
 } while (0)
 
-/** 
+/**
  * Shift right logical.
  */
 #define SRL(r)      \
@@ -88,7 +88,7 @@ do {                \
   (r) >>= 1;        \
 } while (0)
 
-/** 
+/**
  * Rotate left.
  */
 #define RL(r)                 \
@@ -100,7 +100,7 @@ do {                          \
   carry = carry_out;          \
 } while (0)
 
-/** 
+/**
  * Rotate right through carry.
  */
 #define RR(r)                       \
@@ -112,7 +112,7 @@ do {                                \
   carry = carry_out;                \
 } while (0)
 
-/** 
+/**
  * Rotate right.
  */
 #define RRC(r)                      \
@@ -1440,13 +1440,13 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
 
   assert(width  > 0);
   assert(height > 0);
-  
+
   do
   {
     do
     {
 expand:
-      
+
       assert(width  > 0);
       assert(height > 0);
 
@@ -1492,7 +1492,7 @@ run:
     {
       width = self_width;
       output += columns - width; /* move to next row */
-      
+
       // val = *data; // needless reload
 
       if (--height == 0)
@@ -1517,7 +1517,7 @@ range:
     {
       width = self_width;
       output += columns - self_width; /* move to next row */
-      
+
       if (--height == 0)
         return;
     }
@@ -1567,12 +1567,12 @@ void plot_interior_tiles(tgestate_t *state)
 
       assert(tiles_buf >= &state->tile_buf[0]);
       assert(tiles_buf < &state->tile_buf[24*17]);
-      
+
       tile_data = &interior_tiles[*tiles_buf++].row[0];
-      
+
       assert(tile_data >= &interior_tiles[0].row[0]);
       assert(tile_data < &interior_tiles[interiorobjecttile_MAX].row[0]);
-      
+
       window_buf2 = window_buf;
 
       iters  = 8;
@@ -1581,7 +1581,7 @@ void plot_interior_tiles(tgestate_t *state)
       {
         assert(window_buf2 >= &state->window_buf[0]);
         assert(window_buf2 < &state->window_buf[24*16*8]);
-        
+
         *window_buf2 = *tile_data++;
         window_buf2 += stride;
       }
@@ -2066,7 +2066,7 @@ itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item)
 {
   assert(state != NULL);
   assert(item >= 0 && item < item__LIMIT);
-  
+
   return &state->item_structs[item];
 }
 
@@ -2360,7 +2360,7 @@ uint8_t *plot_single_glyph(int character, uint8_t *output)
   glyph        = &bitmap_font[ascii_to_font[character]];
   row          = &glyph->row[0];
   saved_output = output;
-  
+
   iters = 8;
   do
   {
@@ -3105,7 +3105,7 @@ uint8_t *get_prev_scanline(tgestate_t *state, uint8_t *addr)
 {
   assert(state != NULL);
   assert(addr  != NULL);
-  
+
   uint8_t *const screen = &state->speccy->screen[0];
   uint16_t       raddr = addr - screen;
 
@@ -3216,7 +3216,7 @@ void plot_ringer(tgestate_t *state, const uint8_t *src)
 {
   assert(state != NULL);
   assert(src   != NULL);
-  
+
   plot_bitmap(state,
               1, 12, /* dimensions: 8 x 12 */
               src,
@@ -3896,7 +3896,7 @@ void go_to_time_for_bed(tgestate_t *state)
  *
  * Called by go_to_roll_call.
  *
- * This increments loc_low and returns it, but it's unclear why it does that. 
+ * This increments loc_low and returns it, but it's unclear why it does that.
  * None of the calls seem to make use of it.
  *
  * \param[in]     state     Pointer to game state.
@@ -3962,13 +3962,13 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
   do
   {
     set_character_location(state, *pchars, loc_low | (loc_high << 8));
-	
+
     /* When this is 6, the character being processed is
      * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
      * start of the second half of the list. */
     if (iters == 6)
-      loc_low++; 
-  
+      loc_low++;
+
     pchars++;
   }
   while (--iters);
@@ -4134,7 +4134,7 @@ void sub_A404(tgestate_t        *state,
   assert(state   != NULL);
   assert(charstr != NULL);
   assert(character >= 0 && character < character__LIMIT);
-  
+
   charstr->room = room_NONE;
 
   if (character >= character_20_PRISONER_1)
@@ -4269,7 +4269,7 @@ void character_sit_sleep_common(tgestate_t *state,
     /* Room is visible - force a refresh. */
 
     vischar_t *vc;
-    
+
     /* This is only ever hit when location is in vischar @ $8020. */
 
     /* Retrieve the parent structure pointer. */
@@ -4494,7 +4494,7 @@ void go_to_roll_call(tgestate_t *state)
 {
   uint8_t loc_low;  /* was A' */
   uint8_t loc_high; /* was C */
-  
+
   assert(state != NULL);
 
   loc_low  = location_001A & 0xFF;
@@ -5125,7 +5125,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
   assert(tile_index < 220); // ideally the constant should be elsewhere
   assert(psupertileindex != NULL);
   assert(scr             != NULL);
-  
+
   return plot_tile(state, tile_index, psupertileindex, scr) + (state->columns * 8 - 1); // -1 compensates the +1 in plot_tile
 }
 
@@ -5498,7 +5498,7 @@ attribute_t choose_game_window_attributes(tgestate_t *state)
         state->items_held[1] == item_TORCH)
     {
       /* The hero holds a torch - draw the room. */
-      
+
       attr = attribute_RED_OVER_BLACK;
     }
     else
@@ -5919,7 +5919,7 @@ void nighttime(tgestate_t *state)
   }
 
   /* The hero is outdoors. */
-  
+
   /* If the searchlight previously caught the hero, then track him. */
 
   if (state->searchlight_state == searchlight_STATE_1F)
@@ -5952,9 +5952,9 @@ void nighttime(tgestate_t *state)
     state->searchlight_coords[0] = L; // Conv: Fused store split apart.
     state->searchlight_coords[1] = H;
   }
-  
+
   uint8_t *HL;
-  
+
   E = state->map_position[0];
   D = state->map_position[1];
   HL = &state->searchlight_coords[1]; // offset of 1 compensates for the HL-- ahead
@@ -5970,15 +5970,15 @@ not_tracking:
   do
   {
     // PUSH BC
-    
+
     // PUSH HL
     searchlight_AD59(state, HL);
     // POP HL
-    
+
     // PUSH HL
     searchlight_caught(state, HL);
     // POP HL
-    
+
     // PUSH HL
     E = state->map_position[0];
     D = state->map_position[1];
@@ -6103,7 +6103,7 @@ void searchlight_plot(tgestate_t *state)
   uint8_t        iters;   /* was C */
   uint8_t        A;       /* was A */
   attribute_t   *pattrs;  /* was HL */
-  
+
   uint8_t         D, E;
   uint8_t         L;
   uint8_t         iters2; /* was B' */
@@ -6120,17 +6120,17 @@ void searchlight_plot(tgestate_t *state)
     // Conv: Was E & 31 => 4th to last row, or later
 //    if (A != 0 && (shape & 31) >= 22)
 //      pattrs = (pattrs & ~0xFF) | 32; // Conv: was L = 32; // FIXME. Needs pointer subtraction.
-    
+
     // SBC HL,DE
     // RET C  // if (HL < DE) return; // what about carry?
     if (pattrs < shape) // does this even make sense?
       return;
-    
+
     // PUSH DE
     pattrs = &attrs[0x20]; // screen attribute address (column 0 + top of game screen)
     if (A != 0 && (E & 31) >= 7)
       L = 32;
-    
+
     // SBC HL,DE
     // JR C,aef0  // if (HL < DE) goto aef0;
     if (pattrs >= shape)
@@ -6152,7 +6152,7 @@ void searchlight_plot(tgestate_t *state)
       do
       {
         uint8_t oldA;
-        
+
         oldA = state->searchlight_related;
         A = L; // Conv: was interleaved
         if (oldA != 0)
@@ -6224,7 +6224,7 @@ int touch(tgestate_t *state, vischar_t *vischar, uint8_t Adash)
   vischar->b07 |= vischar_BYTE7_BIT6 | vischar_BYTE7_BIT7;  // wild guess: clamp character in position?
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
-  
+
   /* If hero is player controlled, then check for door transitions. */
   if (vischar == &state->vischars[0] && state->automatic_player_counter > 0)
     door_handling(state, vischar);
@@ -6243,7 +6243,7 @@ int touch(tgestate_t *state, vischar_t *vischar, uint8_t Adash)
   vischar->b07 &= ~vischar_BYTE7_BIT6;
   vischar->mi.pos = state->saved_pos;
   vischar->mi.b17 = stashed_A; // left/right flip flag / sprite offset
-  
+
   // A = 0; likely just to set flags
   return 0; // Z
 }
@@ -6260,7 +6260,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
 {
   /** $B0F8: */
   static const uint8_t four_bytes[] = { 0x85, 0x84, 0x87, 0x88 };
-   
+
   vischar_t  *vischar; /* was HL */
   uint8_t     iters;   /* was B */
   uint16_t    BC;      /* was BC */
@@ -6292,7 +6292,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
     if (x != BC)
       if (x > BC || state->saved_pos.x < BC - 8)
         goto pop_next;
-    
+
     BC = vischar->mi.pos.y + 4;
     y = state->saved_pos.y;
     if (y != BC)
@@ -6319,7 +6319,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
         else
         {
           /* A hostile catches the hero! */
-          
+
           // POP HL
           // POP BC
           vischar = input_vischar + 1; // 1 byte == 2 bytes into struct => vischar->target
@@ -6386,7 +6386,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
 
     uint8_t b0D;
     uint8_t b0E;
-    
+
     b0D = vischar->b0D & vischar_BYTE13_MASK; // sampled HL = $806D, $804D, $802D, $808D, $800D
     if (b0D)
     {
@@ -6418,7 +6418,7 @@ next:
     vischar++;
   }
   while (--iters);
-  
+
   return 0; // return with Z set?
 }
 
@@ -6624,7 +6624,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
 
 found:
   state->current_door = 16 - iters;
-  
+
   if (is_door_open(state))
     return; // door was locked - return nonzero?
 
@@ -6833,7 +6833,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     tinypos = &door->pos;
     // registers renamed here
     pos = &state->saved_pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
-    
+
     // Conv: Unrolled.
     coord = tinypos->x;
     if (((coord - 3) >= pos->x) || (coord + 3) < pos->x)
@@ -6843,12 +6843,12 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
       goto next; // -3 .. +2
 
     door++; // Conv: Original just incremented HL'.
-    
+
     if (is_door_open(state) == 0)
       return; /* the door was closed */
 
     vischar->room = (room_and_flags & doorposition_BYTE0_MASK_HI) >> 2;
-    
+
     tinypos = &door->pos;
     if (state->current_door & (1 << 7))
       tinypos = &door[-2].pos;
@@ -7374,17 +7374,17 @@ void called_from_main_loop_9(tgestate_t *state)
 
       HL += (A + 1) * 4 - 1; /* 4..512 + 1 */
       A = *HL++;
-      
+
       SWAP(uint8_t, A, Adash);
 
 // Conv: Simplified sign extend sequence to this. Too far?
 #define SXT_8_16(P) ((uint16_t) (*(int8_t *) (P)))
-      
+
 resume1:
       SWAP(const uint8_t *, DE, HL);
 
       // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (character_related_data)
-      
+
       BC = SXT_8_16(DE);
       state->saved_pos.x = vischar->mi.pos.x - BC;
       DE++;
@@ -7405,12 +7405,12 @@ resume1:
     {
       if (A == *HL)
         goto snozzle;
-      
+
       HL += (A + 1) * 4;
 
 resume2:
       SWAP(const uint8_t *, DE, HL);
-      
+
       HL2 = SXT_8_16(DE);
       state->saved_pos.x = HL2 + vischar->mi.pos.x;
       DE++;
@@ -7422,19 +7422,19 @@ resume2:
       HL2 = SXT_8_16(DE);
       state->saved_pos.height = HL2 + vischar->mi.pos.height;
       DE++;
-      
+
       A = *DE; // unsure
-      
+
       SWAP(uint8_t, A, Adash);
-      
+
       if (touch(state, vischar, Adash))
         goto pop_next;
 
       vischar->b0C++;
     }
-    
+
     // HL = vischar;
-    
+
     reset_position_end(state, vischar);
 
 pop_next:
@@ -7445,9 +7445,9 @@ next:
     vischar++;
   }
   while (--iters);
-  
+
   return;
-  
+
 
 byte13bit7set:
   vischar->b0D &= ~vischar_BYTE13_BIT7; // sampled IY = $8020, $80A0, $8060, $80E0, $8080,
@@ -7717,7 +7717,7 @@ set_state_1f: // caught?
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B866: Seems to locate things to plot, then invoke masked sprite plotter 
+ * $B866: Seems to locate things to plot, then invoke masked sprite plotter
  * on those things.
  *
  * \param[in] state Pointer to game state.
@@ -7737,12 +7737,12 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     found = locate_vischar_or_itemstruct(state, &index, &vischar, &itemstruct);
     if (!found)
       return;
-    
+
     assert(vischar    != NULL);
     assert(vischar >= &state->vischars[0]);
     assert(vischar < &state->vischars[vischars_LENGTH]);
     assert(vischar    != NULL || itemstruct != NULL);
-    
+
     if ((index & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag
     {
       found = setup_vischar_plotting(state, vischar);
@@ -7810,7 +7810,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   y             = 0;    // prev-y
   item_and_flag = 0xFF; // 'nothing found' marker // item
   DEdash        = 0;
-  
+
   iters   = vischars_LENGTH; /* iterations */
   vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
   do
@@ -7829,7 +7829,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
     y = vischar->mi.pos.y; // y,x order is correct
     x = vischar->mi.pos.x;
     found_vischar = vischar;
- 
+
 next:
     vischar++;
   }
@@ -7860,10 +7860,10 @@ next:
   else
   {
     int Z;
-    
+
     found_itemstruct->room_and_flags &= ~itemstruct_ROOM_FLAG_NEARBY_6;
     Z = (found_itemstruct->room_and_flags & (1 << 6)) == 0; // was BIT 6,HL[1] // this tests the bit we've just cleared
-    
+
     *pitemstruct = found_itemstruct; // Conv: Additional code.
 
     return Z;
@@ -8310,7 +8310,7 @@ void mask_stuff(tgestate_t *state)
     { 0x0D, 0x2C, 0x2F, 0x51, 0x5A, { 0x3E, 0x3E, 0x08 } },
     { 0x0D, 0x3C, 0x3F, 0x49, 0x52, { 0x46, 0x46, 0x08 } },
   };
-  
+
   uint8_t       iters;      /* was B */
   const mask_t *peightbyte; /* was HL */
 
@@ -8338,7 +8338,7 @@ void mask_stuff(tgestate_t *state)
     iters = 59; // Bug? This count doesn't match NELEMS(exterior_mask_data); which is 58.
     peightbyte = &exterior_mask_data[0]; // off by - 2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
-  
+
   uint8_t            A;           /* was A */
   const uint8_t     *DE;          /* was DE */
   uint16_t           HL;          /* was HL */
@@ -8349,9 +8349,9 @@ void mask_stuff(tgestate_t *state)
   {
     uint8_t x, y, height; /* was A/A/A */
     uint8_t mpr1, mpr2;   /* was C/A */
-    
+
     // moved from state
-    
+
     /** $B837: (unknown) - Used by mask_stuff. */
     uint8_t         byte_B837;
     /** $B838: (unknown) - Used by mask_stuff. */
@@ -8365,7 +8365,7 @@ void mask_stuff(tgestate_t *state)
     uint8_t self_BA72;
     uint8_t self_BA90;
     uint8_t self_BABA;
-    
+
 
     // PUSH BC
     // PUSH HLeb
@@ -8377,7 +8377,7 @@ void mask_stuff(tgestate_t *state)
     y = state->map_position_related_y;
     if (y - 1 >= peightbyte->y1 || y + 3 <= peightbyte->y0) // $EC05, $EC04
       goto pop_next;
-    
+
     if (state->tinypos_81B2.x <= peightbyte->pos.x) // $EC06
       goto pop_next;
 
@@ -8391,7 +8391,7 @@ void mask_stuff(tgestate_t *state)
       goto pop_next;
 
     // redundant: HLeb -= 6;
-    
+
     mpr1 = state->map_position_related_x;
     if (mpr1 >= peightbyte->x0) // must be $EC02
     {
@@ -8423,28 +8423,28 @@ void mask_stuff(tgestate_t *state)
     }
 
     // In the original code, HLeb is here decremented to point at member y0.
-    
+
     {
       uint8_t x, y; /* was B, C */ // x,y are the correct way around here i think!
       uint8_t index; /* was A */
-      
+
       x = y = 0;
       if (byte_B838 == 0)
         y = -state->map_position_related_y + peightbyte->y0;
       if (byte_B837 == 0)
         x = -state->map_position_related_x + peightbyte->x0;
-      
+
       index = peightbyte->index;
       assert(index < NELEMS(exterior_mask_pointers));
-      
+
       state->mask_buffer_pointer = &state->mask_buffer[y * 32 + x];
-      
+
       // If I break this bit then the character gets drawn on top of
       // *indoors* objects. Which seems wrong.
-      
+
       DE = exterior_mask_pointers[index];
       HL = byte_B839 | (byte_B83A << 8); // vertical bits // split apart again immediately below
-      
+
       self_BA70 = (HL >> 0) & 0xFF; // self modify
       self_BA72 = (HL >> 8) & 0xFF; // self modify
       self_BA90 = *DE - self_BA72; // self modify // *DE looks like a count
@@ -8491,41 +8491,41 @@ void mask_stuff(tgestate_t *state)
       {
         uint8_t iters3; /* was B */
         uint8_t Adash; /* was A' */
-        
+
         iters3 = self_BA72; // self modified
         do
         {
           Adash = *DE;
-          
+
           if (Adash >= 128) // signed byte < 0
           {
             Adash &= 0x7F;
-            
+
             DE++;
             A = *DE;
           }
-          
+
           if (A != 0)
             mask_against_tile(A, maskbufptr); // tile index, dst
-          
+
           maskbufptr++;
-          
+
           // EX AF,AF' // unpaired?
-          
+
           if (A != 0 && --A != 0)
             DE--;
           DE++;
         }
         while (--iters3);
-        
+
         // PUSH BC
-        
+
         iters3 = self_BA90; // self modified
         if (iters3)
         {
           if (A)
             goto baa3;
-          
+
         ba9b:
           do
           {
@@ -8534,34 +8534,34 @@ void mask_stuff(tgestate_t *state)
             {
               A &= 0x7F;
               DE++;
-              
+
             baa3:
               iters3 -= A;
               if (iters3 < 0)
                 goto bab6;
-              
+
               DE++;
               //if (!Z)
               goto ba9b;
-              
+
               // EX AF,AF' // why not just jump instr earlier? // bank
               goto bab9;
             }
-            
+
             DE++;
           }
           while (--iters3);
-          
+
           A = 0;
           // EX AF,AF' // why not just jump instr earlier? // bank
-          
+
           goto bab9;
-          
+
         bab6:
           A = -A;
           // EX AF,AF' // bank
         }
-        
+
       bab9:
         maskbufptr += self_BABA; // self modified
         // EX AF,AF'  // unbank
@@ -8699,7 +8699,7 @@ int vischar_visible(tgestate_t *state,
       A = *mpr1 + vischar->width_bytes - state->map_position[0]; // width_bytes == width in bytes
       if (A <= 0)
         goto invisible;
-      
+
       if (A < vischar->width_bytes)
         width = ((-A + vischar->width_bytes) << 8) | A; // to grok // packed offset + width?
       else
@@ -9045,7 +9045,7 @@ skip:
 void purge_visible_characters(tgestate_t *state)
 {
   enum { EDGE = 9 };
-  
+
   uint8_t    D, E;    /* was D, E */
   uint8_t    iters;   /* was B */
   vischar_t *vischar; /* was HL */
@@ -9175,10 +9175,10 @@ found_empty_slot:
 
   // POP DE (charstr2)
   // POP HL (vischar)
-  
+
   if (Z == 1) // if collision or bounds_check is nonzero, then return
     return 0; // check
-  
+
   character = charstr2->character | characterstruct_FLAG_DISABLED; /* Disable character */
   charstr2->character = character;
 
@@ -9207,7 +9207,7 @@ found_empty_slot:
   vischar->w08          = metadata->data;
   vischar->mi.spriteset = metadata->spriteset;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
-  
+
   // POP HL
 
   //HL += 5; // -> charstr->target
@@ -9480,7 +9480,7 @@ uint8_t sub_C651(tgestate_t *state, vischar_t *vischar, location_t *location)
     // PUSH HL
     C = (*location & 0xFF00) >> 8;
     DE = element_A_of_table_7738(A);
-    
+
     HL2 = 0; // was HL = 0;
     A = C;
     if (A == 0xFF) // if high byte is 0xFF
@@ -9492,7 +9492,7 @@ uint8_t sub_C651(tgestate_t *state, vischar_t *vischar, location_t *location)
     // POP HL // was interleaved
     if (A == 0xFF)
       goto return_255;
-    
+
     if ((A & 0x7F) < 40)
     {
       A = *DE;
@@ -9564,10 +9564,10 @@ void move_characters(tgestate_t *state)
     if (A3 != character_0_COMMANDANT)
     {
       // Not the commandant.
-      
+
       if (A3 >= character_12_GUARD_12)
         goto char_ge_12;
-      
+
       // Characters 1..11.
 #if 0
 back:
@@ -9587,7 +9587,7 @@ back:
     if (A != 36)
       goto back;
 #endif
-    
+
 char_ge_12:
     // POP DE
     character_event(state, NULL/*HL*/);
@@ -9808,7 +9808,7 @@ void character_event(tgestate_t *state, location_t *location)
   uint8_t                    A;         /* was A */
   const charactereventmap_t *peventmap; /* was HL */
   uint8_t                    iters;     /* was B */
-  
+
   assert(state    != NULL);
   assert(location != NULL);
 
@@ -10082,7 +10082,7 @@ void follow_suspicious_character(tgestate_t *state)
       if (character <= character_19_GUARD_DOG_4) /* Hostile characters only. */
       {
         /* Characters 0..19. */
-        
+
         is_item_discoverable(state);
 
         if (state->red_flag || state->automatic_player_counter > 0)
@@ -10091,7 +10091,7 @@ void follow_suspicious_character(tgestate_t *state)
         if (character >= character_16_GUARD_DOG_1)
         {
           /* Guard dogs 1..4 (characters 16..19). */
-          
+
           /* Is the food nearby? */
           if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
             vischar->flags = vischar_FLAGS_BRIBE_PENDING | vischar_FLAGS_BIT1; // dead dog? or just baited?
@@ -10771,10 +10771,10 @@ uint8_t random_nibble(tgestate_t *state)
 {
 #if 0
   // Impractical code which mimics the original game.
-  
+
   uint8_t *HL;
   uint8_t  A;
-  
+
   // word_C41A starts as $9000
 
   HL = state->word_C41A + 1; // ought to wrap at 256
@@ -10828,18 +10828,18 @@ uint8_t random_nibble(tgestate_t *state)
     0xC0477643,
     0x2C34002C,
   };
-  
+
   int prng_index;
   int row, column;
 
   assert(state != NULL);
-  
+
   prng_index = ++state->prng_index; /* Wraps around at 256 */
   row    = prng_index >> 3;
   column = prng_index & 7;
-  
+
   assert(row < NELEMS(packed_nibbles));
-  
+
   return (packed_nibbles[row] >> (column * 4)) & 0x0F;
 }
 #endif
@@ -11017,7 +11017,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
     // range check (uses A as temporary)
     if (tinypos->x - 1 >= hero_map_pos->x || tinypos->x + 1 < hero_map_pos->x)
       return;
-    
+
     dir = tinypos->height < hero_map_pos->height;
     if ((b0E & 2) == 0)
       dir = !dir;
@@ -11113,7 +11113,7 @@ nearby:
       goto next;
 
     /* Suspected bug in original game appears here: itemstruct pointer is decremented to access item_and_flags but is not re-adjusted afterwards. */
-    
+
     hostiles_persue(state);
   }
 }
@@ -11415,7 +11415,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         y = pos->y * 8; // y
         x = pos->x * 8; // x
         *pitemstr = (itemstruct_t *) itemstr;
-        
+
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
         /* It seems that A' is the output register, irresspective. */
@@ -11476,10 +11476,10 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  BC = 0;
 //
 //  // EX DE, HL
-//  
+//
 //  *DE = 0; // was B, which is always zero here
   state->flip_sprite    = 0; /* Items are never flipped. */
-  
+
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
@@ -11488,9 +11488,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   // PUSH clipped_width // BC
   // PUSH clipped_height // DE
-  
+
   state->self_E2C2 = clipped_height & 0xFF; // self modify
-  
+
   if ((clipped_width >> 8) == 0)
   {
     A = 0x77; /* LD (HL),A */
@@ -11515,7 +11515,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
       A ^= 0x77; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
-  
+
   int16_t x, y; // was HL, DE // signed needed for X calc
   uint8_t *mask_buffer; // was HL
 
@@ -11524,9 +11524,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
     y = (state->map_position_related_y - state->map_position[1]) * 192; // temp: HL // must be Y axis
 
   x = state->map_position_related_x - state->map_position[0]; // X axis
-  
+
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
-  
+
   mask_buffer = &state->mask_buffer[0];
 
   // pop clipped_height
@@ -11534,7 +11534,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // PUSH DE
 
   state->foreground_mask_pointer = &mask_buffer[(clipped_height >> 8) * 4];
-  
+
   // this pop/push seems to be needless - DE already has the value
   // POP DE
   // PUSH DE
@@ -11545,14 +11545,14 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // seemingly unncessary multiply code which duplicates stuff in the vischar routine
   /*{
     uint8_t D, E;
-    
+
     D = A;
     A = 0;
     do
       A += 2;
     while (--D);
   }*/
-  
+
   uint16_t DE2;
 
   DE2 = (clipped_height & 0xFF00) | A;
@@ -11560,7 +11560,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->mask_pointer   += DE2;
   // POP BC
   // POP DE
-  
+
   return 0; // Z
 }
 
@@ -11646,7 +11646,7 @@ uint8_t item_visible(tgestate_t *state,
       return 0; // return Z (item is visible)
     }
   }
-  
+
 invisible:
   return 1; // return NZ (item is not visible)
 }
@@ -12292,7 +12292,6 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   while (--iters);
 }
 
-
 /**
  * $E3FA: Reverses the 24 pixels in E,C,B and E',C',B'.
  *
@@ -12432,7 +12431,7 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint16_t        HL;
   uint8_t        *maskbuf;        /* was HL */
   uint16_t        DEsub;
-  
+
   assert(state   != NULL);
   assert(vischar != NULL);
   assert(vischar >= &state->vischars[0]);
@@ -12986,17 +12985,17 @@ void tge_setup(tgestate_t *state)
     vischar++;
   }
   while (--iters);
-  
-  
+
+
   // Conv: Set up a jmpbuf so the game will return here.
   if (setjmp(state->jmpbuf_main) == 0)
   {
     /* In the original code this wiped all state from $8100 up until the
      * start of tiles ($8218). We'll assume for now that tgestate_t is
      * calloc'd and so zeroed by default. */
-    
+
     reset_game(state);
-    
+
     // i reckon this never gets this far, as reset_game jumps to enter_room itself
     //enter_room(state); // returns by goto main_loop
     NEVER_RETURNS;
@@ -13049,10 +13048,10 @@ void plot_statics_and_menu_text(tgestate_t *state)
   do
   {
     screenptr = &state->speccy->screen[stline->screenloc]; /* Fetch screen address offset. */
-    
+
     assert(screenptr >= &state->speccy->screen[0]);
     assert(screenptr < &state->speccy->screen[SCREEN_LENGTH]);
-    
+
     if (stline->flags_and_length & statictileline_VERTICAL)
       plot_static_tiles_vertical(state, screenptr, stline);
     else
@@ -13120,7 +13119,7 @@ void plot_static_tiles(tgestate_t             *state,
 {
   int            tiles_remaining; /* was A/B */
   const uint8_t *tiles;           /* was HL */
-  
+
   assert(state  != NULL);
   assert(out    != NULL);
   assert(stline != NULL);
@@ -13211,7 +13210,7 @@ int check_menu_keys(tgestate_t *state)
   keycode = menu_keyscan(state);
   if (keycode == 0xFF)
     return 0; /* no keypress */
-    
+
   if (keycode)
   {
     /* 1..4 -> 0..3 */
@@ -13227,7 +13226,7 @@ int check_menu_keys(tgestate_t *state)
     set_menu_item_attributes(state,
                              keycode,
                              attribute_BRIGHT_YELLOW_OVER_BLACK);
-    
+
     return 1;
   }
   else
@@ -13239,7 +13238,7 @@ int check_menu_keys(tgestate_t *state)
 
     if (state->chosen_input_device == inputdevice_KEYBOARD)
       choose_keys(state); /* Keyboard was selected. */
-    
+
     return -1; /* Start the game */
   }
 }
@@ -13318,7 +13317,7 @@ void choose_keys(tgestate_t *state)
     { O(6),  'Z',   'X',   'C',   'V', }, /* table_SHIFTZXCV */
     { O(18), O(11), 'M',   'N',   'B', }, /* table_SPACESYMSHFTMNB */
   };
-  
+
 #undef O
 
   /** $F32B: Screen offsets where to plot key names.
@@ -13368,14 +13367,14 @@ void choose_keys(tgestate_t *state)
       prompt++; /* Conv: Original has all data contiguous, but we need this in addition. */
     }
     while (--prompt_iters);
-    
-    
+
+
     state->speccy->kick(state->speccy);
 
-    
+
     /* Wipe keydefs. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
-    
+
     uint8_t   Adash = 0;  /* was A; */ // initialised to zero
     {
       const uint16_t *poffset; /* was HL */
@@ -13401,14 +13400,14 @@ void choose_keys(tgestate_t *state)
 //        uint8_t        hi_byte;     /* was A' */
 //        uint8_t        storedport;  /* was A' */
         uint8_t        keyflags;    /* was E */
-        
+
 for_loop:
         for (;;)
         {
           state->speccy->sleep(state->speccy, 10000); // 10000 is arbitrary for the moment
-          
+
           SWAP(uint8_t, A, Adash);
-          
+
           hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
           index = 0xFF;
 try_next_port:
@@ -13417,7 +13416,7 @@ try_next_port:
           A = *hi_bytes;
           if (A == 0) /* Hit end of keyboard_port_hi_bytes. */
             goto for_loop;
-          
+
           port = A; // saved so it can be stored later
           A = ~state->speccy->in(state->speccy, (port << 8) | 0xFE);
           keyflags = A;
@@ -13426,21 +13425,21 @@ key_loop:
           SRL(mask);
           if (carry)
             goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
-          
+
           A = mask;
           A = A & keyflags;
           if (A == 0) // temps: A'
             goto key_loop; /* Key was not pressed. Move to next key. */
-          
+
           SWAP(uint8_t, A, Adash);
 
           if (A)
             goto for_loop;
-          
+
           /* Draw the pressed key. */
-          
+
           A = index;
-          
+
           SWAP(uint8_t, A, Adash);
 
           /* Check for an already defined key. */
@@ -13448,7 +13447,7 @@ key_loop:
           do
           {
             keydef++;
-            
+
             A = keydef->port;
             if (A == 0) /* If an empty slot, assign */
               goto assign_keydef;
@@ -13675,7 +13674,7 @@ void menu_screen(tgestate_t *state)
       do
       {
         // B,C are a pair of counters?
-        
+
         B = BC >> 8;
         C = BC & 0xFF;
         if (--B == 0 && --C == 0)
@@ -13685,7 +13684,7 @@ void menu_screen(tgestate_t *state)
           BC = DE;
         }
         // otherwise needs B & C writing back
-        
+
         Bdash = BCdash >> 8;
         Cdash = BCdash & 0xFF;
         if (--Bdash == 0 && --Cdash == 0)
@@ -13847,7 +13846,7 @@ input_t inputroutine_protek(tgestate_t *state)
   }
 
   left_right_up_down = left_right + up_down;
-  
+
   /* Fire */
   fire = input_FIRE;
   if (keybits_others & (1 << 0))
@@ -13876,30 +13875,30 @@ input_t inputroutine_kempston(tgestate_t *state)
   assert(state != NULL);
 
   keybits = state->speccy->in(state->speccy, 0x001F);
-  
+
   left_right = up_down = 0;
-  
+
   RR(keybits);
   if (carry)
     left_right = input_RIGHT;
-  
+
   RR(keybits);
   if (carry)
     left_right = input_LEFT;
-  
+
   RR(keybits);
   if (carry)
     up_down = input_DOWN;
-  
+
   RR(keybits);
   if (carry)
     up_down = input_UP;
-  
+
   RR(keybits);
   fire = input_FIRE;
   if (!carry)
     fire = 0;
-  
+
   return fire + left_right + up_down; /* Combine axis */
 }
 
@@ -13925,33 +13924,33 @@ input_t inputroutine_fuller(tgestate_t *state)
   assert(state != NULL);
 
   keybits = state->speccy->in(state->speccy, 0x007F);
-  
+
   left_right = up_down = 0;
-  
+
   if (keybits & (1<<4))
     keybits = ~keybits;
-  
+
   RR(keybits);
   if (carry)
     up_down = input_UP;
-  
+
   RR(keybits);
   if (carry)
     up_down = input_DOWN;
-  
+
   RR(keybits);
   if (carry)
     left_right = input_LEFT;
-  
+
   RR(keybits);
   if (carry)
     left_right = input_RIGHT;
-  
+
   if (keybits & (1<<3))
     fire = input_FIRE;
   else
     fire = 0;
-  
+
   return fire + left_right + up_down;
 }
 
@@ -13975,32 +13974,32 @@ input_t inputroutine_sinclair(tgestate_t *state)
   assert(state != NULL);
 
   keybits = ~state->speccy->in(state->speccy, port_KEYBOARD_09876); /* xxx67890 */
-  
+
   left_right = up_down = 0;
-  
+
   RRC(keybits); /* 0xxx6789 */
   RRC(keybits); /* 90xxx678 */
   if (carry)
     up_down = input_UP;
-  
+
   RRC(keybits); /* 890xxx67 */
   if (carry)
     up_down = input_DOWN;
-  
+
   RRC(keybits); /* 7890xxx6 */
   if (carry)
     left_right = input_RIGHT;
-  
+
   RRC(keybits); /* 67890xxx */
   if (carry)
     left_right = input_LEFT;
-  
+
   keybits &= 1 << 3; /* Set A to 8 or 0 */
   if (keybits == 0)
     fire = input_FIRE;
   else
     fire = 0;
-  
+
   return fire + left_right + up_down;
 }
 
