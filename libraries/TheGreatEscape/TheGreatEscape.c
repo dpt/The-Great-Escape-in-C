@@ -1113,23 +1113,24 @@ void setup_movable_items(tgestate_t *state)
     case room_2_HUT2LEFT:
       movableitem = &state->movable_items[movable_item_STOVE1];
       character   = character_26_STOVE_1;
+      setup_movable_item(state, movableitem, character);
       break;
 
     case room_4_HUT3LEFT:
       movableitem = &state->movable_items[movable_item_STOVE2];
       character   = character_27_STOVE_2;
+      setup_movable_item(state, movableitem, character);
       break;
 
     case room_9_CRATE:
       movableitem = &state->movable_items[movable_item_CRATE];
       character   = character_28_CRATE;
+      setup_movable_item(state, movableitem, character);
       break;
 
     default:
-      assert("Unexpected room" == NULL);
+      break;
   }
-
-  setup_movable_item(state, movableitem, character);
 
   spawn_characters(state);
   mark_nearby_items(state);
