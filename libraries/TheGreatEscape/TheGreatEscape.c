@@ -1390,7 +1390,7 @@ void setup_room(tgestate_t *state)
   {
     expand_object(state,
                   proomdef[0], /* object index */
-                  &state->tile_buf[0] + proomdef[2] * state->columns + proomdef[1]); /* HL[2] = row, HL[1] = column */
+                  &state->tile_buf[proomdef[2] * state->tb_columns + proomdef[1]]); /* HL[2] = row, HL[1] = column */
     proomdef += 3;
   }
 }
