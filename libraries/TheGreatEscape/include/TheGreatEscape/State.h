@@ -31,7 +31,11 @@ struct tgestate
 
   jmp_buf         jmpbuf_main;
 
-  
+
+  /* REGISTER VARIABLES */
+  vischar_t      *IY;
+
+
   /* ORIGINAL VARIABLES */
 
   /** $68A0: Index of the current room, or 0 when outside. */

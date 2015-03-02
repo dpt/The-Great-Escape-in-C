@@ -151,7 +151,6 @@ do {              \
 
 static
 void transition(tgestate_t      *state,
-                vischar_t       *vischar,
                 const tinypos_t *pos);
 static
 void enter_room(tgestate_t *state);
@@ -684,7 +683,6 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 static
 uint8_t sub_C651(tgestate_t *state,
-                 vischar_t  *vischar,
                  location_t *location);
 
 static
@@ -948,20 +946,21 @@ input_t input_routine(tgestate_t *state);
  * The hero or a non-player character changes room.
  *
  * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] pos     Pointer to pos.               (was HL)
  *
  * \return Nothing (non-player), or doesn't return (hero).
  */
 void transition(tgestate_t      *state,
-                vischar_t       *vischar,
                 const tinypos_t *pos)
 {
-  room_t room_index; /* was A */
+  vischar_t *vischar;    /* was IY */
+  room_t     room_index; /* was A */
 
   assert(state   != NULL);
-  assert(vischar != NULL);
   assert(pos     != NULL);
+
+  vischar = state->IY;
+  assert(vischar != NULL);
 
   if (vischar->room == room_0_OUTDOORS)
   {
@@ -4049,16 +4048,21 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  A = sub_C651(state, vischar, &vischar->target);
+  A = sub_C651(state, &vischar->target);
 
   pos = &vischar->p04;
   pos->x = vischar->target & 0xFF;
   pos->y = vischar->target >> 8;
 
   if (A == 255)
+  {
+    state->IY = vischar; // TODO: Work out all the other places which assign IY.
     sub_CB23(state, vischar, &vischar->target);
+  }
   else if (A == 128)
+  {
     vischar->flags |= vischar_FLAGS_BIT6;
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6632,12 +6636,12 @@ found:
   if ((doorpos->room_and_flags & doorposition_BYTE0_MASK_LO) >= 2)
   {
     // point at the next door's pos
-    transition(state, vischar, &doorpos[1].pos);
+    transition(state, &doorpos[1].pos);
   }
   else
   {
     // point at the previous door's pos
-    transition(state, vischar, &doorpos[-1].pos);
+    transition(state, &doorpos[-1].pos);
   }
   NEVER_RETURNS; // highly likely if this is only tiggered by the hero
 }
@@ -6853,7 +6857,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if (state->current_door & (1 << 7))
       tinypos = &door[-2].pos;
 
-    transition(state, vischar, tinypos);
+    transition(state, tinypos);
 
     return; // exit via // with banked registers...
 
@@ -7354,6 +7358,7 @@ void called_from_main_loop_9(tgestate_t *state)
 
   iters   = vischars_LENGTH;
   vischar = &state->vischars[0];
+  state->IY = &state->vischars[0];
   do
   {
     if (vischar->flags == vischar_FLAGS_EMPTY_SLOT)
@@ -7828,7 +7833,9 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
 
     y = vischar->mi.pos.y; // y,x order is correct
     x = vischar->mi.pos.x;
-    found_vischar = vischar;
+    found_vischar = vischar; // needs looking at again
+
+    state->IY = vischar; // TODO: Work out all the other places which assign IY.
 
 next:
     vischar++;
@@ -8772,6 +8779,7 @@ void called_from_main_loop_3(tgestate_t *state)
 
   iters   = vischars_LENGTH;
   vischar = &state->vischars[0];
+  state->IY = &state->vischars[0];
   do
   {
     uint16_t clipped_width;  /* was BC */
@@ -9147,6 +9155,7 @@ found_empty_slot:
   // POP DE  (DE = charstr)
   // PUSH HL (vischar)
   // POP IY  (IY_vischar = HL_vischar)
+  state->IY = vischar; // TODO: Work out all the other places which assign IY.
   // PUSH HL (vischar)
   // PUSH DE (charstr)
 
@@ -9361,12 +9370,11 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * $C651: (unknown)
  *
  * \param[in] state    Pointer to game state.
- * \param[in] vischar  Pointer to visible character. (was IY)
  * \param[in] location Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
  *
  * \return 0/128/255. // FIXME: HL must be returned too
  */
-uint8_t sub_C651(tgestate_t *state, vischar_t *vischar, location_t *location)
+uint8_t sub_C651(tgestate_t *state, location_t *location)
 {
   /**
    * $783A: Map locations. (0xYYXX)
@@ -9456,7 +9464,6 @@ uint8_t sub_C651(tgestate_t *state, vischar_t *vischar, location_t *location)
   uint8_t A;
 
   assert(state    != NULL);
-  assert(vischar  != NULL);
   assert(location != NULL);
 
   A = *location & 0xFF; // read low byte only
@@ -9498,7 +9505,7 @@ uint8_t sub_C651(tgestate_t *state, vischar_t *vischar, location_t *location)
       A = *DE;
       if (*location & (1 << 7))
         A ^= 0x80; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
-      transition(state, vischar, location);
+      transition(state, location);
       location++;
       return 0x80; // CHECK
     }
@@ -9557,7 +9564,7 @@ void move_characters(tgestate_t *state)
     return;
   }
 
-  A2 = sub_C651(state, NULL/*vischar*/, &charstr->target); // vischar needs to come from somewhere
+  A2 = sub_C651(state, &charstr->target); // vischar needs to come from somewhere, but we don't know where!
   if (A2 == 0xFF)
   {
     A3 = state->character_index;
@@ -10071,6 +10078,7 @@ void follow_suspicious_character(tgestate_t *state)
   /* Make supporting characters react. */
 
   vischar = &state->vischars[1];
+  state->IY = &state->vischars[0];
   iters   = vischars_LENGTH - 1;
   do
   {
@@ -10109,7 +10117,10 @@ void follow_suspicious_character(tgestate_t *state)
 
   if (!state->red_flag &&
       (state->morale_1 || state->automatic_player_counter == 0))
+  {
+    state->IY = &state->vischars[0];
     character_behaviour(state, &state->vischars[0]);
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10545,7 +10556,7 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location)
   assert(vischar != NULL);
   assert(location);
 
-  A = sub_C651(state, vischar, location);
+  A = sub_C651(state, location);
   if (A != 0xFF)
     sub_CB61(state, vischar, location, location, A); // double HL pass is an adjustment for push-pop
   else
@@ -10944,9 +10955,10 @@ next:
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
   state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4]; // $8015 = sprite_prisoner_tl_4;
   vischar = &state->vischars[0];
+  state->IY = &state->vischars[0];
   vischar->b0E = 3; // character faces bottom left
   state->vischars[0].target &= 0xFF00; // ($8002) = 0; // target location - why is this storing a byte and not a word?
-  transition(state, vischar, &solitary_pos);
+  transition(state, &solitary_pos);
 
   NEVER_RETURNS;
 }
@@ -11415,6 +11427,8 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         y = pos->y * 8; // y
         x = pos->x * 8; // x
         *pitemstr = (itemstruct_t *) itemstr;
+
+//        state->IY = itemstr; // TODO: Work out all the other places which assign IY.
 
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
@@ -12838,7 +12852,8 @@ void action_papers(tgestate_t *state)
   state->vischars[0].room = room_0_OUTDOORS;
 
   /* Transition to outside the main gate. */
-  transition(state, &state->vischars[0], &outside_main_gate);
+  state->IY = &state->vischars[0];
+  transition(state, &outside_main_gate);
   NEVER_RETURNS;
 }
 
