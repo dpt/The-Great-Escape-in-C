@@ -2443,7 +2443,13 @@ void wipe_message(tgestate_t *state)
   assert(state != NULL);
 
   index = state->messages.display_index;
+
   state->messages.display_index = --index;
+
+  /* Conv: Must remove message_NEXT from index to keep screen address sane. */
+  index -= message_NEXT;
+  assert(index < 128);
+
   scr = &state->speccy->screen[screen_text_start_address + index];
 
   /* Plot a SPACE character. */
