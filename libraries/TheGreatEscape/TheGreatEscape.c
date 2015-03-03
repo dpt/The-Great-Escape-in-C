@@ -2280,7 +2280,7 @@ uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp)
   else
     delta = 0xF820;
 
-  offset += delta; /* needs to be a 16-bit add! */
+  offset += delta;
 
   return screen + offset;
 }
