@@ -1003,7 +1003,7 @@ void transition(tgestate_t      *state,
       /* Outdoors */
 
       vischar->b0D = vischar_BYTE13_BIT7; // likely a character direction
-      vischar->b0E &= 3;   // likely a sprite direction
+      vischar->b0E &= 3;  // likely a sprite direction
       reset_outdoors(state);
       squash_stack_goto_main(state); // exit
     }
@@ -1433,7 +1433,7 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
   width       = obj->width;
   height      = obj->height;
 
-  self_width = width;
+  self_width  = width;
 
   data        = &obj->data[0];
 
@@ -2634,7 +2634,7 @@ void process_player_input(tgestate_t *state)
   {
     /* Picking a lock, or cutting through a wire fence. */
 
-     /* Hold off on automatic control. */
+    /* Hold off on automatic control. */
     state->automatic_player_counter = 31;
 
     if (state->vischars[0].flags == vischar_FLAGS_PICKING_LOCK)
