@@ -270,7 +270,11 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, const tgeconfig_t *config)
   
   state->width      = config->width;
   state->height     = config->height;
-  
+
+  // Until we can resize...
+  assert(state->width  == 32);
+  assert(state->height == 24);
+
   /* This is the size of the game window only. */
   state->columns    = 23;
   state->rows       = 16;

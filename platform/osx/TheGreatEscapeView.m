@@ -25,6 +25,10 @@
 
 // -----------------------------------------------------------------------------
 
+#define SCALE 2.5f
+
+// -----------------------------------------------------------------------------
+
 #pragma mark Spectrum keys utility
 
 /**
@@ -312,12 +316,26 @@ static void *tge_thread(void *arg)
     &sleep_handler,
     &key_handler,
   };
-  
+
   static const tgeconfig_t tgeconfig =
   {
-    32, 16,
+    256 / 8, 192 / 8
   };
-  
+
+
+  NSWindow *w = [self window];
+
+  NSRect contentRect;
+  contentRect.origin.x    = 0.0;
+  contentRect.origin.y    = 0.0;
+  contentRect.size.width  = tgeconfig.width  * 8 * SCALE;
+  contentRect.size.height = tgeconfig.height * 8 * SCALE;
+
+  [w setFrame:[w frameRectForContentRect:contentRect] display:YES];
+
+  [self setFrame:NSMakeRect(0, 0, contentRect.size.width, contentRect.size.height)];
+
+
   zx     = NULL;
   game   = NULL;
   pixels = NULL;
@@ -356,7 +374,7 @@ failure:
 - (void)prepare
 {
   NSLog(@"prepare");
-  
+
   // The GL context must be active for these functions to have an effect
   [[self openGLContext] makeCurrentContext];
   
@@ -412,6 +430,9 @@ failure:
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+  static float zx =  SCALE;
+  static float zy = -SCALE;
+
   (void) dirtyRect;
   
   // Clear the background
@@ -422,7 +443,7 @@ failure:
   {
     // Draw the image
     glRasterPos2f(-1.0f, 1.0f);
-    glPixelZoom(1.0f, -1.0f);
+    glPixelZoom(zx, zy);
     glDrawPixels(256, 192, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   }
   
