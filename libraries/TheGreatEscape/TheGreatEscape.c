@@ -284,8 +284,7 @@ void in_permitted_area(tgestate_t *state);
 static
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
 static
-int within_camp_bounds(tgestate_t      *state,
-                       uint8_t          index,
+int within_camp_bounds(uint8_t          index,
                        const tinypos_t *pos);
 
 /* $A000 onwards */
@@ -2957,9 +2956,9 @@ set_flag_red:
  * $A007: In permitted area (end bit).
  *
  * \param[in] state          Pointer to game state.
- * \param[in] room_and_flags Room index + flag in bit 7?
+ * \param[in] room_and_flags Room index + flag in bit 7
  *
- * \return 0 if in permitted? area, 1 otherwise.
+ * \return 0 if the position is within the area bounds, 1 otherwise.
  */
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 {
@@ -2968,37 +2967,33 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   assert(state != NULL);
   // assert(room_and_flags); // FIXME devise precondition
 
-  // FUTURE: Just dereference room_index once.
+  // FUTURE: Just dereference proom once.
 
   proom = &state->room_index;
 
-  if (room_and_flags & (1 << 7))
-    return *proom == (room_and_flags & 0x7F); // return with flags
+  if (room_and_flags & (1 << 7)) // flag is?
+    return *proom == (room_and_flags & 0x7F); /* Return room only. */
 
-  if (*proom)
+  if (*proom != room_0_OUTDOORS)
     return 0; /* Indoors. */
 
-  return within_camp_bounds(state, 0, &state->hero_map_position);
+  return within_camp_bounds(0 /* area: corridor to yard */,
+                            &state->hero_map_position);
 }
 
 /**
- * $A01A: Is the specified position within the numbered area?
+ * $A01A: Is the specified position within the bounds of the indexed area?
  *
- * I suspect this detects objects which lie within in the main body of the
- * camp, but not outside its boundaries.
+ * \param[in] area Index (0..2) into permitted_bounds[] table. (was A)
+ * \param[in] pos  Pointer to position. (was HL)
  *
- * \param[in] state Pointer to game state.
- * \param[in] index Index (0..2) into bounds[] table. (was A)
- * \param[in] pos   Pointer to position.              (was HL)
- *
- * \return 0 if in permitted? area, 1 otherwise.
+ * \return 0 if the position is within the area bounds, 1 otherwise.
  */
-int within_camp_bounds(tgestate_t      *state,
-                       uint8_t          index, // ought to be an enum
+int within_camp_bounds(uint8_t          area, // ought to be an enum
                        const tinypos_t *pos)
 {
   /**
-   * $9F15: Pairs of low-high bounds.
+   * $9F15: Boundings of the three main exterior areas.
    */
   static const bounds_t permitted_bounds[3] =
   {
@@ -3007,15 +3002,14 @@ int within_camp_bounds(tgestate_t      *state,
     { 0x4F,0x69, 0x2F,0x3F }, /* yard area */
   };
 
-  const bounds_t *bound; /* was HL */
+  const bounds_t *bounds; /* was HL */
 
-  assert(state != NULL);
-  assert(index < NELEMS(permitted_bounds));
+  assert(area < NELEMS(permitted_bounds));
   assert(pos != NULL);
 
-  bound = &permitted_bounds[index];
-  return pos->x < bound->a || pos->x >= bound->b ||
-         pos->y < bound->c || pos->y >= bound->d;
+  bounds = &permitted_bounds[area];
+  return pos->x < bounds->a || pos->x >= bounds->b ||
+         pos->y < bounds->c || pos->y >= bounds->d;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10929,7 +10923,7 @@ void solitary(tgestate_t *state)
       do
         /* If the item is within the camp bounds then it will be discovered.
          */
-        if (within_camp_bounds(state, area, tinypos) == 0)
+        if (within_camp_bounds(area, tinypos) == 0)
           goto discovered;
       while (++area != 3);
 
