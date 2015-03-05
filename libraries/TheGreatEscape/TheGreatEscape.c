@@ -857,7 +857,7 @@ void flip_16_masked_pixels(tgestate_t *state,
                            uint8_t    *pEdash);
 
 static
-uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar);
+int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar);
 
 static
 void pos_to_tinypos(const pos_t *in, tinypos_t *out);
@@ -8672,7 +8672,7 @@ void mask_against_tile(tileindex_t index, uint8_t *dst)
  * \param[out] clipped_width  Pointer to returned clipped width.  (was BC)
  * \param[out] clipped_height Pointer to returned ciipped height. (was DE)
  *
- * \return 0 or 0xFF (suspect visible / invisible). (was A)
+ * \return 0 => visible, 0xFF => invisible. (was A)
  */
 int vischar_visible(tgestate_t *state,
                     vischar_t  *vischar,
@@ -8795,7 +8795,7 @@ void called_from_main_loop_3(tgestate_t *state)
     state->map_position_related_x = vischar->scrx >> 3; // divide by 8
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
-      goto next; // possibly the not visible case
+      goto next; /* invisible */
 
     A = (((clipped_height & 0xFF) >> 3) & 31) + 2;
     saved_A = A;
@@ -11590,7 +11590,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
  *
  * \param[in] state Pointer to game state.
  *
- * \return 0 if item visible, 1 if not (was Z flag)
+ * \return 0 => visible, 1 => invisible (was A)
  */
 uint8_t item_visible(tgestate_t *state,
                      uint16_t   *clipped_width,
@@ -11658,12 +11658,12 @@ uint8_t item_visible(tgestate_t *state,
       *clipped_width  = width;
       *clipped_height = height;
 
-      return 0; // return Z (item is visible)
+      return 0; /* item is visible */
     }
   }
 
 invisible:
-  return 1; // return NZ (item is not visible)
+  return 1; /* item is not visible */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12403,11 +12403,11 @@ void flip_16_masked_pixels(tgestate_t *state,
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  *
- * \return Z
+ * \return 0 => vischar is invisible, 1 => vischar is visible (was Z?)
  *
  * HL is passed in too (but disassembly says it's always the same as IY).
  */
-uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
+int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 {
   /**
    * $E0EC: Locations which in the original game are changed between NOPs and
@@ -12494,8 +12494,8 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
 
-  if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
-    return 1; // NZ
+  if (vischar_visible(state, vischar, &clipped_width, &clipped_height) != 0) // used A as temporary
+    return 0; /* invisible */
 
   // PUSH clipped_width
   // PUSH clipped_height
@@ -12580,8 +12580,8 @@ uint8_t setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->mask_pointer   += clipped_height;
 
   // POP BCclipped  // why save it anyway? if it's just getting popped. unless it's being returned.
-  
-  return 0; // Conv: Added.
+
+  return 1; /* visible */ // Conv: Added.
 }
 
 /* ----------------------------------------------------------------------- */
