@@ -1375,12 +1375,13 @@ void setup_room(tgestate_t *state)
 
   /* Copy indoor mask into state->indoor_mask_data. */
   state->indoor_mask_data_count = iters = *proomdef++; /* count of indoor mask */
+  assert(iters < 8);
   pmask = &state->indoor_mask_data[0]; /* Conv: Moved */
   while (iters--)
   {
     /* Conv: Structures changed from 7 to 8 bytes wide. */
     memcpy(pmask, &maskdata[*proomdef++], 8);
-    pmask += 8;
+    pmask++;
   }
 
   /* Plot all objects (as tiles). */
