@@ -3311,6 +3311,12 @@ void increase_score(tgestate_t *state, uint8_t delta)
 
   /* Increment the score digit-wise until delta is zero. */
 
+  assert(state->score_digits[0] <= 9);
+  assert(state->score_digits[1] <= 9);
+  assert(state->score_digits[2] <= 9);
+  assert(state->score_digits[3] <= 9);
+  assert(state->score_digits[4] <= 9);
+
   pdigit = &state->score_digits[4];
   do
   {
