@@ -590,7 +590,7 @@ byte_to_pointer_t;
  */
 typedef struct bounds
 {
-  uint8_t a, b, c, d; // TBD which of (a,b,c,d) is (x0,x1,y0,y1).
+  uint8_t x0, x1, y0, y1;
 }
 bounds_t;
 
@@ -614,12 +614,11 @@ default_item_location_t;
  */
 typedef struct mask
 {
-  uint8_t index; // index into exterior_mask_pointers
-  uint8_t x0, x1, y0, y1; // perhaps a bounds_t
+  uint8_t   index;  // index into exterior_mask_pointers
+  bounds_t  bounds;
   tinypos_t pos;
 }
 mask_t;
-// { ?, y,y, x,x, y, x, height }
 
 /**
  * Four byte structures. Unknown yet. Likely character meta data.

@@ -3009,8 +3009,8 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
   assert(pos != NULL);
 
   bounds = &permitted_bounds[area];
-  return pos->x < bounds->a || pos->x >= bounds->b ||
-         pos->y < bounds->c || pos->y >= bounds->d;
+  return pos->x < bounds->x0 || pos->x >= bounds->x1 ||
+         pos->y < bounds->y0 || pos->y >= bounds->y1;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6746,8 +6746,8 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   room_bounds = &roomdef_bounds[state->roomdef_bounds_index];
   saved_pos = &state->saved_pos;
   /* Conv: Merged conditions. */
-  if (room_bounds->a     < saved_pos->x || room_bounds->b + 4 >= saved_pos->x ||
-      room_bounds->c - 4 < saved_pos->y || room_bounds->d     >= saved_pos->y)
+  if (room_bounds->x0     < saved_pos->x || room_bounds->x1 + 4 >= saved_pos->x ||
+      room_bounds->y0 - 4 < saved_pos->y || room_bounds->y1     >= saved_pos->y)
     goto stop;
 
   object_bounds = &state->roomdef_object_bounds[0]; /* Conv: Moved around. */
@@ -6761,10 +6761,10 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 
     /* Conv: Two-iteration loop unrolled. */
     x = pos->x; // narrowing // saved_pos must be 8-bit
-    if (x < object_bounds->a || x >= object_bounds->b)
+    if (x < object_bounds->x0 || x >= object_bounds->x1)
       goto next;
     y = pos->y;
-    if (y < object_bounds->c || y >= object_bounds->d)
+    if (y < object_bounds->y0 || y >= object_bounds->y1)
       goto next;
 
 stop:
@@ -8389,11 +8389,11 @@ void mask_stuff(tgestate_t *state)
     // PUSH HLeb
 
     x = state->map_position_related_x;
-    if (x - 1 >= peightbyte->x1 || x + 2 <= peightbyte->x0) // $EC03, $EC02
+    if (x - 1 >= peightbyte->bounds.x1 || x + 2 <= peightbyte->bounds.x0) // $EC03, $EC02
       goto pop_next;
 
     y = state->map_position_related_y;
-    if (y - 1 >= peightbyte->y1 || y + 3 <= peightbyte->y0) // $EC05, $EC04
+    if (y - 1 >= peightbyte->bounds.y1 || y + 3 <= peightbyte->bounds.y0) // $EC05, $EC04
       goto pop_next;
 
     if (state->tinypos_81B2.x <= peightbyte->pos.x) // $EC06
@@ -8411,33 +8411,33 @@ void mask_stuff(tgestate_t *state)
     // redundant: HLeb -= 6;
 
     mpr1 = state->map_position_related_x;
-    if (mpr1 >= peightbyte->x0) // must be $EC02
+    if (mpr1 >= peightbyte->bounds.x0) // must be $EC02
     {
-      byte_B837 = mpr1 - peightbyte->x0;
-      byte_B83A = MIN(peightbyte->x1 - mpr1, 3) + 1;
+      byte_B837 = mpr1 - peightbyte->bounds.x0;
+      byte_B83A = MIN(peightbyte->bounds.x1 - mpr1, 3) + 1;
     }
     else
     {
       uint8_t x0;
 
-      x0 = peightbyte->x0; // must be $EC02
+      x0 = peightbyte->bounds.x0; // must be $EC02
       byte_B837 = 0;
-      byte_B83A = MIN((peightbyte->x1 - x0) + 1, 4 - (x0 - mpr1));
+      byte_B83A = MIN((peightbyte->bounds.x1 - x0) + 1, 4 - (x0 - mpr1));
     }
 
     mpr2 = state->map_position_related_y;
-    if (mpr2 >= peightbyte->y0)
+    if (mpr2 >= peightbyte->bounds.y0)
     {
-      byte_B838 = mpr2 - peightbyte->y0;
-      byte_B839 = MIN(peightbyte->y1 - mpr2, 4) + 1;
+      byte_B838 = mpr2 - peightbyte->bounds.y0;
+      byte_B839 = MIN(peightbyte->bounds.y1 - mpr2, 4) + 1;
     }
     else
     {
       uint8_t y0;
 
-      y0 = peightbyte->y0;
+      y0 = peightbyte->bounds.y0;
       byte_B838 = 0;
-      byte_B839 = MIN((peightbyte->y1 - y0) + 1, 5 - (y0 - mpr2));
+      byte_B839 = MIN((peightbyte->bounds.y1 - y0) + 1, 5 - (y0 - mpr2));
     }
 
     // In the original code, HLeb is here decremented to point at member y0.
@@ -8448,9 +8448,9 @@ void mask_stuff(tgestate_t *state)
 
       x = y = 0;
       if (byte_B838 == 0)
-        y = -state->map_position_related_y + peightbyte->y0;
+        y = -state->map_position_related_y + peightbyte->bounds.y0;
       if (byte_B837 == 0)
-        x = -state->map_position_related_x + peightbyte->x0;
+        x = -state->map_position_related_x + peightbyte->bounds.x0;
 
       index = peightbyte->index;
       assert(index < NELEMS(exterior_mask_pointers));
