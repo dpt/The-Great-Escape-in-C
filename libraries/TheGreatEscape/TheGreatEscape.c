@@ -9537,8 +9537,8 @@ return_255:
 void move_characters(tgestate_t *state)
 {
   characterstruct_t *charstr; /* was HL */
-  item_t             C;       /* was C */
-  room_t             A;       /* was A */
+  item_t             item;    /* was C */
+  room_t             room;    /* was A */
   uint8_t            A2;      /* was A */
   character_t        A3;      /* was A */
 
@@ -9554,11 +9554,10 @@ void move_characters(tgestate_t *state)
     return; /* Disabled character. */
 
   // PUSH HL
-  // HL++;
-  A = charstr->room;
-  if (A != room_0_OUTDOORS)
-    if (is_item_discoverable_interior(state, A, &C) == 0)
-      item_discovered(state, C);
+  room = charstr->room;
+  if (room != room_0_OUTDOORS)
+    if (is_item_discoverable_interior(state, room, &item) == 0)
+      item_discovered(state, item);
   // POP HL
   //HL += 2; // point at characterstruct x,y coords
   // PUSH HL
