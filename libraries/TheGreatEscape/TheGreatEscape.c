@@ -4866,6 +4866,7 @@ void supertile_plot_horizontal_common(tgestate_t       *state,
 
   /* Initial edge. */
 
+  assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + pos_1;
   A = tiles - &supertiles[0].tiles[0]; // Conv: Original code could simply use L.
 
@@ -4892,6 +4893,7 @@ void supertile_plot_horizontal_common(tgestate_t       *state,
   iters2 = 5;
   do
   {
+    assert(*maptiles < supertileindex__LIMIT);
     tiles = &supertiles[*maptiles].tiles[0] + offset; // self modified by $A82A
 
     iters = 4;
@@ -4912,6 +4914,7 @@ void supertile_plot_horizontal_common(tgestate_t       *state,
 
   //A = pos_copy; // an apparently unused assignment
 
+  assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + offset; // read of self modified instruction
   // Conv: A was A'.
   A = state->map_position[0] & 3; // map_position lo (repeats earlier work)
@@ -5055,6 +5058,7 @@ void supertile_plot_vertical_common(tgestate_t       *state,
 
   /* Initial edge. */
 
+  assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + pos_1;
 
   // 0,1,2,3 => 4,3,2,1
@@ -5081,6 +5085,7 @@ void supertile_plot_vertical_common(tgestate_t       *state,
   iters2 = 3;
   do
   {
+    assert(*maptiles < supertileindex__LIMIT);
     tiles = &supertiles[*maptiles].tiles[0] + offset; // self modified by $A8F6
 
     iters = 4;
@@ -5101,6 +5106,7 @@ void supertile_plot_vertical_common(tgestate_t       *state,
 
   /* Trailing edge. */
 
+  assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + offset; // read self modified instruction
   iters = (state->map_position[1] & 3) + 1;
   do
