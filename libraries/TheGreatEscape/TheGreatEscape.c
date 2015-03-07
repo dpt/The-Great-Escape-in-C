@@ -5133,10 +5133,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
                                 const supertileindex_t *psupertileindex,
                                 uint8_t                *scr)
 {
-  assert(state           != NULL);
-  assert(tile_index < 220); // ideally the constant should be elsewhere
-  assert(psupertileindex != NULL);
-  assert(scr             != NULL);
+  assert(state != NULL);
 
   return plot_tile(state, tile_index, psupertileindex, scr) + (state->columns * 8 - 1); // -1 compensates the +1 in plot_tile
 }
