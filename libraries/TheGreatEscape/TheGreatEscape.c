@@ -9250,7 +9250,7 @@ c592:
   {
     state->byte_A13E = 0;
     // PUSH DE // -> vischar->p04
-    A = sub_C651(state, vischar, &charstr->target); // is A being set by sub_C651?
+    A = sub_C651(state, &charstr->target); // is A being set by sub_C651?
     if (A == 255)
     {
       // POP HL // HL = DE
