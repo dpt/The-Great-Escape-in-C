@@ -9543,6 +9543,7 @@ void move_characters(tgestate_t *state)
 
   state->byte_A13E = 0xFF;
 
+  /* Conv: Test replaced with modulus. */
   state->character_index = (state->character_index + 1) % character_26_STOVE_1; // 26 = highest + 1 character
 
   charstr = get_character_struct(state, state->character_index);
