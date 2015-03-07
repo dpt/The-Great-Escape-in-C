@@ -7553,7 +7553,7 @@ void reset_game(tgestate_t *state)
   state->vischars[0].flags = 0;
 
   /* Reset score. */
-  memset(&state->score_digits[0], 0, 10);
+  memset(&state->score_digits[0], 0, 5);
 
   /* Reset morale. */
   state->morale = morale_MAX;
