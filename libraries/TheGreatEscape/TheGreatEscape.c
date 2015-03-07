@@ -6511,21 +6511,21 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
   wall  = &walls[0];
   do
   {
-    uint16_t min0, max0, min1, max1, min2, max2;
+    uint16_t minx, maxx, miny, maxy, minheight, maxheight;
 
-    min0 = wall->a * 8;
-    max0 = wall->b * 8;
-    min1 = wall->c * 8;
-    max1 = wall->d * 8;
-    min2 = wall->e * 8;
-    max2 = wall->f * 8;
+    minx      = wall->minx      * 8;
+    maxx      = wall->maxx      * 8;
+    miny      = wall->miny      * 8;
+    maxy      = wall->maxy      * 8;
+    minheight = wall->minheight * 8;
+    maxheight = wall->maxheight * 8;
 
-    if (state->saved_pos.x      >= min0 + 2 &&
-        state->saved_pos.x      <  max0 + 4 &&
-        state->saved_pos.y      >= min1     &&
-        state->saved_pos.y      <  max1 + 4 &&
-        state->saved_pos.height >= min2     &&
-        state->saved_pos.height <  max2 + 2)
+    if (state->saved_pos.x      >= minx + 2   &&
+        state->saved_pos.x      <  maxx + 4   &&
+        state->saved_pos.y      >= miny       &&
+        state->saved_pos.y      <  maxy + 4   &&
+        state->saved_pos.height >= minheight  &&
+        state->saved_pos.height <  maxheight + 2)
     {
       vischar->b07 ^= vischar_BYTE7_BIT5;
       return 1; // NZ
@@ -7047,12 +7047,12 @@ void action_wiresnips(tgestate_t *state)
 
     // check: this is using x then y which is the wrong order, isn't it?
     coord = pos->y;
-    if (coord >= wall->c && coord < wall->d) /* Conv: Reversed test order. */
+    if (coord >= wall->miny && coord < wall->maxy) /* Conv: Reversed test order. */
     {
       coord = pos->x;
-      if (coord == wall->b)
+      if (coord == wall->maxx)
         goto set_to_4;
-      if (coord - 1 == wall->b)
+      if (coord - 1 == wall->maxx)
         goto set_to_6;
     }
 
@@ -7068,12 +7068,12 @@ void action_wiresnips(tgestate_t *state)
     uint8_t coord; /* was A */
 
     coord = pos->x;
-    if (coord >= wall->a && coord < wall->b)
+    if (coord >= wall->minx && coord < wall->maxx)
     {
       coord = pos->y;
-      if (coord == wall->c)
+      if (coord == wall->miny)
         goto set_to_5;
-      if (coord - 1 == wall->c)
+      if (coord - 1 == wall->miny)
         goto set_to_7;
     }
 

@@ -482,7 +482,9 @@ typedef unsigned int escapeitem_t;
  */
 typedef struct wall
 {
-  uint8_t a, b, c, d, e, f; // Something like (minx, maxx, miny, maxy, minh, maxh)
+  uint8_t minx, maxx;
+  uint8_t miny, maxy;
+  uint8_t minheight, maxheight;
 }
 wall_t;
 
