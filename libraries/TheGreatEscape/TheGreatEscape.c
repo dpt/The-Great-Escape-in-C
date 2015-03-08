@@ -141,6 +141,45 @@ do {              \
 
 /* ----------------------------------------------------------------------- */
 
+#define ASSERT_SCREEN_PTR_VALID(p)                    \
+do {                                                  \
+  assert(p >= &state->speccy->screen[0]);             \
+  assert(p < &state->speccy->screen[SCREEN_LENGTH]);  \
+} while (0)
+
+#define ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(p)         \
+do {                                                  \
+  assert(p >= &state->speccy->attributes[0]);          \
+  assert(p < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
+} while (0)
+
+#define ASSERT_TILE_BUF_PTR_VALID(p)                  \
+do {                                                  \
+  assert(p >= state->tile_buf);                       \
+  assert(p < state->tile_buf + (state->tb_columns * state->tb_rows)); \
+} while (0)
+
+#define ASSERT_WINDOW_BUF_PTR_VALID(p)                \
+do {                                                  \
+assert(p >= state->window_buf);                       \
+assert(p < state->window_buf + ((state->columns + 1) * state->rows * 8)); \
+} while (0)
+
+#define ASSERT_MAP_BUF_PTR_VALID(p)                   \
+do {                                                  \
+  assert(p >= state->map_buf);                        \
+  assert(p < state->map_buf + (state->st_columns * state->st_rows)); \
+} while (0)
+
+#define ASSERT_VISCHAR_VALID(p)                       \
+do {                                                  \
+  assert(p >= &state->vischars[0]);                   \
+  assert(p < &state->vischars[vischars_LENGTH]);      \
+} while (0)
+
+
+/* ----------------------------------------------------------------------- */
+
 // FORWARD REFERENCES
 //
 // (in original file order)
@@ -5597,12 +5636,6 @@ void zoombox(tgestate_t *state)
   while (state->zoombox.height + state->zoombox.width < 35);
 }
 
-#define ASSERT_SCREEN_PTR_VALID(p) \
-  do { \
-    assert(p >= &state->speccy->screen[0]); \
-    assert(p < &state->speccy->screen[SCREEN_LENGTH]); \
-  } while (0)
-
 /**
  * $ABF9: Zoombox. partial copy of window buffer contents?
  *
@@ -5629,8 +5662,8 @@ void zoombox_fill(tgestate_t *state)
   /* Conv: Simplified calculation to use a single multiply. */
   offset = state->zoombox.y * state->tb_columns * 8 + state->zoombox.x;
   src = &state->window_buf[offset + 1];
+  ASSERT_WINDOW_BUF_PTR_VALID(src);
   dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
-
   ASSERT_SCREEN_PTR_VALID(dst);
 
   hz_count  = state->zoombox.width;
@@ -5686,6 +5719,7 @@ void zoombox_draw_border(tgestate_t *state)
   int      delta; /* was DE */
 
   addr = screen_base + state->game_window_start_offsets[(state->zoombox.y - 1) * 8]; // Conv: Screen base hoisted from table.
+  ASSERT_SCREEN_PTR_VALID(addr);
 
   /* Top left */
   addr += state->zoombox.x - 1;
@@ -5775,8 +5809,7 @@ void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr)
 
   assert(state != NULL);
   assert(index < NELEMS(zoombox_tiles));
-  assert(addr >= &state->speccy->screen[0]);
-  assert(addr < &state->speccy->screen[SCREEN_LENGTH]);
+  ASSERT_SCREEN_PTR_VALID(addr);
 
   DE = addr; // was EX DE,HL
   row = &zoombox_tiles[index].row[0];
@@ -6112,7 +6145,8 @@ void searchlight_plot(tgestate_t *state)
 
   assert(state != NULL);
 
-  attribute_t *const  attrs = &state->speccy->attributes[0];
+  attribute_t *const attrs = &state->speccy->attributes[0];
+  ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs);
 
   const uint8_t *shape;   /* was DE */
   uint8_t        iters;   /* was C */
@@ -7754,10 +7788,9 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     if (!found)
       return;
 
-    assert(vischar    != NULL);
-    assert(vischar >= &state->vischars[0]);
-    assert(vischar < &state->vischars[vischars_LENGTH]);
-    assert(vischar    != NULL || itemstruct != NULL);
+    // if (vischar) ... ?
+    ASSERT_VISCHAR_VALID(vischar);
+    assert(vischar != NULL || itemstruct != NULL);
 
     if ((index & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag
     {
@@ -12459,8 +12492,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   assert(state   != NULL);
   assert(vischar != NULL);
-  assert(vischar >= &state->vischars[0]);
-  assert(vischar < &state->vischars[vischars_LENGTH]);
+  ASSERT_VISCHAR_VALID(vischar);
 
   pos     = &vischar->mi.pos;
   tinypos = &state->tinypos_81B2;
@@ -12699,6 +12731,8 @@ void plot_game_window(tgestate_t *state)
     do
     {
       DE = screen + *SP++;
+      ASSERT_SCREEN_PTR_VALID(DE);
+
       *DE++ = *HL++; /* unrolled: 23 copies */
       *DE++ = *HL++;
       *DE++ = *HL++;
@@ -12735,6 +12769,7 @@ void plot_game_window(tgestate_t *state)
     do
     {
       DE = screen + *SP++;
+      ASSERT_SCREEN_PTR_VALID(DE);
 
 /* RRD is equivalent to: */
 #define RRD(A, HL, tmp)          \
@@ -13074,9 +13109,7 @@ void plot_statics_and_menu_text(tgestate_t *state)
   do
   {
     screenptr = &state->speccy->screen[stline->screenloc]; /* Fetch screen address offset. */
-
-    assert(screenptr >= &state->speccy->screen[0]);
-    assert(screenptr < &state->speccy->screen[SCREEN_LENGTH]);
+    ASSERT_SCREEN_PTR_VALID(screenptr);
 
     if (stline->flags_and_length & statictileline_VERTICAL)
       plot_static_tiles_vertical(state, screenptr, stline);
@@ -13105,10 +13138,6 @@ void plot_static_tiles_horizontal(tgestate_t             *state,
                                   uint8_t                *out,
                                   const statictileline_t *stline)
 {
-  assert(state  != NULL);
-  assert(out    != NULL);
-  assert(stline != NULL);
-
   plot_static_tiles(state, out, stline, 0);
 }
 
@@ -13123,10 +13152,6 @@ void plot_static_tiles_vertical(tgestate_t             *state,
                                 uint8_t                *out,
                                 const statictileline_t *stline)
 {
-  assert(state  != NULL);
-  assert(out    != NULL);
-  assert(stline != NULL);
-
   plot_static_tiles(state, out, stline, 255);
 }
 
@@ -13147,7 +13172,7 @@ void plot_static_tiles(tgestate_t             *state,
   const uint8_t *tiles;           /* was HL */
 
   assert(state  != NULL);
-  assert(out    != NULL);
+  ASSERT_SCREEN_PTR_VALID(out);
   assert(stline != NULL);
   assert(orientation == 0x00 || orientation == 0xFF);
 
@@ -13190,6 +13215,8 @@ void plot_static_tiles(tgestate_t             *state,
       out = out - 7 * 256 + 1;
     else /* Vertical */
       out = (uint8_t *) get_next_scanline(state, out); // must cast away constness
+
+    ASSERT_SCREEN_PTR_VALID(out);
   }
   while (--tiles_remaining);
 }
@@ -13287,7 +13314,12 @@ void wipe_game_window(tgestate_t *state)
   poffsets = &state->game_window_start_offsets[0]; /* points to offsets */
   iters = state->rows * 8;
   do
-    memset(screen + *poffsets++, 0, state->columns);
+  {
+    uint8_t *const p = screen + *poffsets++;
+
+    ASSERT_SCREEN_PTR_VALID(p);
+    memset(p, 0, state->columns);
+  }
   while (--iters);
 }
 
@@ -13386,6 +13418,7 @@ void choose_keys(tgestate_t *state)
       do
       {
         // A = *HLstring; /* Conv: Present in original code but this is redundant when calling plot_glyph(). */
+        ASSERT_SCREEN_PTR_VALID(screenptr);
         screenptr = plot_glyph(string, screenptr);
         string++;
       }
@@ -13523,6 +13556,7 @@ assign_keydef:
           do
           {
             // glyph_and_flags = *pkeyname; // Conv: dead code? similar to other instances of calls to plot_glyph
+            ASSERT_SCREEN_PTR_VALID(screenoff);
             screenoff = plot_glyph(pkeyname, screenoff);
             pkeyname++;
           }
@@ -13576,6 +13610,7 @@ void set_menu_item_attributes(tgestate_t *state,
   pattr += index * 2 * state->width; /* two rows */
 
   /* Draw */
+  ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(pattr);
   memset(pattr, attrs, 10);
 }
 
