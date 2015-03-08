@@ -12713,63 +12713,67 @@ void plot_game_window(tgestate_t *state)
 
   uint8_t *const  screen = &state->speccy->screen[0];
 
-  uint8_t         A;
-  uint8_t        *HL;
-  const uint16_t *SP;
-  uint8_t        *DE;
-  uint8_t         Bdash;
-  uint8_t         B;
-  uint8_t         C;
-  uint8_t         tmp;
+  uint8_t         x_hi;      /* was A */
+  uint8_t        *src;       /* was HL */
+  const uint16_t *offsets;   /* was SP */
+  uint8_t         y_iters_A; /* was A */
+  uint8_t        *dst;       /* was DE */
+  uint8_t         data;      /* was A */
+  uint8_t         y_iters_B; /* was B' */
+  uint8_t         iters;     /* was B */
+  uint8_t         copy;      /* was C */
+  uint8_t         tmp;       /* added for RRD macro */
 
-  A = (state->plot_game_window_x & 0xFF00) >> 8;
-  if (A == 0)
+  x_hi = (state->plot_game_window_x & 0xFF00) >> 8;
+  if (x_hi == 0)
   {
-    HL = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
-    SP = &state->game_window_start_offsets[0];
-    A  = 128; /* iterations */
+    src = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
+    ASSERT_WINDOW_BUF_PTR_VALID(src);
+    offsets = &state->game_window_start_offsets[0];
+    y_iters_A = 128; /* iterations */
     do
     {
-      DE = screen + *SP++;
-      ASSERT_SCREEN_PTR_VALID(DE);
+      dst = screen + *offsets++;
+      ASSERT_SCREEN_PTR_VALID(dst);
 
-      *DE++ = *HL++; /* unrolled: 23 copies */
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      *DE++ = *HL++;
-      HL++; // skip 24th
+      *dst++ = *src++; /* unrolled: 23 copies */
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      *dst++ = *src++;
+      src++; // skip 24th
     }
-    while (--A);
+    while (--y_iters_A);
   }
   else
   {
-    HL = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
-    A  = *HL++;
-    SP = &state->game_window_start_offsets[0];
-    Bdash = 128; /* iterations */
+    src = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
+    ASSERT_WINDOW_BUF_PTR_VALID(src);
+    data = *src++;
+    offsets = &state->game_window_start_offsets[0];
+    y_iters_B = 128; /* iterations */
     do
     {
-      DE = screen + *SP++;
-      ASSERT_SCREEN_PTR_VALID(DE);
+      dst = screen + *offsets++;
+      ASSERT_SCREEN_PTR_VALID(dst);
 
 /* RRD is equivalent to: */
 #define RRD(A, HL, tmp)          \
@@ -12777,26 +12781,26 @@ void plot_game_window(tgestate_t *state)
   A = (*HL & 0x0F) | (A & 0xF0); \
   *HL = (*HL >> 4) | (tmp << 4);
 
-      /* The original code was unrolled into 4 groups of 5 ops, then a final 3. */
-      B = 4 * 5 + 3; /* iterations */
+      /* Conv: Unrolling removed compared to original code which did 4 groups of 5 ops, then a final 3. */
+      iters = 4 * 5 + 3; /* iterations */
       do
       {
-        C = *HL; // safe copy of source data
-        RRD(A, HL, tmp);
-        A = *HL; // rotated result
-        *DE++ = A;
-        *HL++ = C; // restore safe copy
+        copy = *src; // safe copy of source data
+        RRD(data, src, tmp);
+        data = *src; // rotated result
+        *dst++ = data;
+        *src++ = copy; // restore safe copy
 
         // A simplified form would be:
         // next_A = *HL;
         // *HL++ = (*HL >> 4) | (Adash << 4);
         // Adash = next_A;
       }
-      while (--B);
+      while (--iters);
 
-      A = *HL++;
+      data = *src++;
     }
-    while (--Bdash);
+    while (--y_iters_B);
   }
 }
 
