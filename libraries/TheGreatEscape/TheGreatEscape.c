@@ -139,6 +139,8 @@ do {              \
  */
 #define NEVER_RETURNS assert("Unexpected return." == NULL); return
 
+#define UNFINISHED assert("Unfinished conversion here!" == NULL)
+
 /* ----------------------------------------------------------------------- */
 
 #define ASSERT_SCREEN_PTR_VALID(p)                    \
@@ -8918,6 +8920,7 @@ void called_from_main_loop_3(tgestate_t *state)
     RR(A); // was RRA, but same effect
     L = A;
 
+    UNFINISHED;
 #if 0
     DE = (D << 8) | E;
     HL = (H << 8) | L;
@@ -9629,6 +9632,7 @@ void move_characters(tgestate_t *state)
         goto char_ge_12;
 
       // Characters 1..11.
+      UNFINISHED;
 #if 0
 back:
       *HL++ ^= 0x80;
@@ -9642,6 +9646,7 @@ back:
 
     // Hero character.
 //char_is_zero:
+    UNFINISHED;
 #if 0
     A = *HL & characterstruct_BYTE5_MASK; // fetching a character index? // sampled = HL = $7617 (characterstruct + 5) // location
     if (A != 36)
@@ -9655,6 +9660,7 @@ char_ge_12:
   }
   else // CHECK THIS IS RIGHT
   {
+    UNFINISHED;
 #if 0
     if (A == 0x80)
     {
@@ -10533,6 +10539,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 
   if (C & vischar_FLAGS_BIT6)
   {
+    UNFINISHED;
 #if 0
     //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target location
     //orig:A = *--HL; // 80a2 etc
@@ -10573,6 +10580,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
+  UNFINISHED;
 #if 0
   HL -= 2;
   A = *HL; // $8002 etc. // likely target location
