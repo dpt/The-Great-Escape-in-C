@@ -13910,7 +13910,7 @@ input_t inputroutine_protek(tgestate_t *state)
       up_down = input_NONE;
   }
 
-  left_right_up_down = left_right + up_down;
+  left_right_up_down = left_right + up_down; /* Combine axis */
 
   /* Fire */
   fire = input_FIRE;
@@ -14016,7 +14016,7 @@ input_t inputroutine_fuller(tgestate_t *state)
   else
     fire = 0;
 
-  return fire + left_right + up_down;
+  return fire + left_right + up_down; /* Combine axis */
 }
 
 /**
@@ -14065,7 +14065,7 @@ input_t inputroutine_sinclair(tgestate_t *state)
   else
     fire = 0;
 
-  return fire + left_right + up_down;
+  return fire + left_right + up_down; /* Combine axis */
 }
 
 /* ----------------------------------------------------------------------- */
