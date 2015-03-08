@@ -1004,7 +1004,7 @@ void transition(tgestate_t      *state,
   assert(pos     != NULL);
 
   vischar = state->IY;
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if (vischar->room == room_0_OUTDOORS)
   {
@@ -4095,7 +4095,7 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
   tinypos_t *pos; /* was DE */
 
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   state->byte_A13E = 0;
 
@@ -4168,7 +4168,7 @@ void byte_A13E_is_zero(tgestate_t        *state,
 
   assert(state   != NULL);
   assert(charstr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   character = vischar->character;
   if (character == character_0_COMMANDANT)
@@ -4476,7 +4476,7 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t        *state,
                                      characterstruct_t *charstr)
 {
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(charstr != NULL);
 
   byte_A13E_anotherone_common(state, charstr, state->character_index);
@@ -4496,7 +4496,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t        *state,
   character_t character;
 
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(charstr != NULL);
 
   character = vischar->character;
@@ -6272,7 +6272,7 @@ int touch(tgestate_t *state, vischar_t *vischar, uint8_t Adash)
   uint8_t stashed_A; /* was $81AA */ // FUTURE: Can be removed.
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   // assert(Adash);
 
   stashed_A = Adash;
@@ -6492,7 +6492,7 @@ void accept_bribe(tgestate_t *state, vischar_t *vischar)
   vischar_t *vischar2; /* was HL */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   increase_morale_by_10_score_by_50(state);
 
@@ -6542,7 +6542,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
   const wall_t *wall;  /* was DE */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if (state->room_index > room_0_OUTDOORS)
     return interior_bounds_check(state, vischar);
@@ -6652,7 +6652,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   uint8_t          iters;   /* was B */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if (state->room_index > room_0_OUTDOORS)
   {
@@ -6781,7 +6781,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   uint8_t         nbounds;       /* was B */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   room_bounds = &roomdef_bounds[state->roomdef_bounds_index];
   saved_pos = &state->saved_pos;
@@ -6867,7 +6867,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   uint8_t          coord;           /* was A */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   pdoor_related = &state->door_related[0];
   for (;;)
@@ -7550,7 +7550,7 @@ snozzle:
 void reset_position(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   /* Save a copy of the vischar's position + offset. */
   memcpy(&state->saved_pos, &vischar->mi.pos, sizeof(pos_t));
@@ -7569,7 +7569,7 @@ void reset_position(tgestate_t *state, vischar_t *vischar)
 void reset_position_end(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   vischar->scrx = (state->saved_pos.y + 0x0200 - state->saved_pos.x) * 2;
   vischar->scry = 0x0800 - state->saved_pos.x - state->saved_pos.height - state->saved_pos.y;
@@ -7742,7 +7742,7 @@ void searchlight_sub(tgestate_t *state, vischar_t *vischar)
   //uint8_t      C;     /* was C */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if (vischar > &state->vischars[0])
     return; /* Skip non-hero characters. */
@@ -7794,9 +7794,12 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
     if (!found)
       return;
 
-    // if (vischar) ... ?
-    ASSERT_VISCHAR_VALID(vischar);
-    assert(vischar != NULL || itemstruct != NULL);
+#ifndef NDEBUG
+    if (vischar)
+      ASSERT_VISCHAR_VALID(vischar);
+    else
+      assert(itemstruct != NULL);
+#endif
 
     if ((index & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag
     {
@@ -8736,7 +8739,7 @@ int vischar_visible(tgestate_t *state,
   uint16_t foo2;    /* was HL */
 
   assert(state          != NULL);
-  assert(vischar        != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
@@ -9341,7 +9344,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
   room_t             room;      /* was A */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   character = vischar->character;
   if (character == character_NONE)
@@ -9906,7 +9909,7 @@ void charevnt_handler_4_zeroes_morale_1(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   state->morale_1 = 0; /* Enable player control */
   charevnt_handler_0(state, charptr, vischar);
@@ -9921,7 +9924,7 @@ void charevnt_handler_6(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP charptr // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
   *charptr++ = 0x03;
@@ -9937,7 +9940,7 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP charptr
   *charptr++ = 0xA4;
@@ -9957,7 +9960,7 @@ void charevnt_handler_1(tgestate_t  *state,
 
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   C = 0x10; // 0xFF10
   localexit(state, charptr, C);
@@ -9974,7 +9977,7 @@ void charevnt_handler_2(tgestate_t  *state,
 
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   C = 0x38; // 0xFF38
   localexit(state, charptr, C);
@@ -9991,7 +9994,7 @@ void charevnt_handler_0(tgestate_t  *state,
 
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   C = 0x08; // 0xFF08 // sampled HL=$8022,$8042,$8002,$8062
   localexit(state, charptr, C);
@@ -10017,7 +10020,7 @@ void charevnt_handler_3_check_var_A13E(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
   if (state->byte_A13E == 0)
@@ -10035,7 +10038,7 @@ void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t   *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
   if (state->byte_A13E == 0)
@@ -10053,7 +10056,7 @@ void charevnt_handler_7(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP charptr
   *charptr++ = 0x05;
@@ -10069,7 +10072,7 @@ void charevnt_handler_9_hero_sits(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
   hero_sits(state);
@@ -10084,7 +10087,7 @@ void charevnt_handler_8_hero_sleeps(tgestate_t  *state,
 {
   assert(state   != NULL);
   assert(charptr != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
   hero_sleeps(state);
@@ -10192,7 +10195,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   uint8_t    log2scale;
 
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   b07 = vischar->b07; /* more flags */ // Conv: Use of A dropped.
   if (b07 & vischar_BYTE7_MASK) // if bottom nibble set...
@@ -10340,7 +10343,7 @@ void character_behaviour_end_1(tgestate_t *state,
                                uint8_t     flags)
 {
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   // assert(flags);
 
   if (flags != vischar->b0D)
@@ -10361,7 +10364,7 @@ void character_behaviour_end_2(tgestate_t *state,
                                int         log2scale)
 {
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   // assert(flags);
   // assert(log2scale);
 
@@ -10397,7 +10400,7 @@ uint8_t move_character_x(tgestate_t *state,
   uint8_t  E;
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   // assert(log2scale);
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
@@ -10449,7 +10452,7 @@ uint8_t move_character_y(tgestate_t *state,
   uint8_t  E;
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   // assert(log2scale);
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
@@ -10493,7 +10496,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   uint8_t counter;      /* was A */
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   // In the original code HL is IY + 4 on entry.
   // In this version we replace HL references with IY ones.
@@ -10603,7 +10606,7 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location)
   uint8_t A;
 
   assert(state != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(location);
 
   A = sub_C651(state, location);
@@ -10626,7 +10629,7 @@ void sub_CB2D(tgestate_t *state, vischar_t *vischar, location_t *location)
   uint8_t     A;         /* was A */
 
   assert(state    != NULL);
-  assert(vischar  != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(location != NULL);
 
   /* If not the hero's vischar ... */
@@ -10686,7 +10689,7 @@ void sub_CB61(tgestate_t *state,
               uint8_t     A)
 {
   assert(state     != NULL);
-  assert(vischar   != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
   assert(pushed_HL != NULL);
   assert(location  != NULL);
   // assert(A);
@@ -11029,7 +11032,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   pos_t       *pos;       /* was HL */
 
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Copy of vischar in HL factored out. */
 
@@ -11781,7 +11784,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
   uint8_t       *screenptr;
 
   assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if ((x = (vischar->scrx & 7)) < 4)
   {
@@ -12075,8 +12078,7 @@ void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t x;
 
-  assert(state   != NULL);
-  assert(vischar != NULL);
+  ASSERT_VISCHAR_VALID(vischar);
 
   if ((x = (vischar->scrx & 7)) < 4)
     masked_sprite_plotter_16_wide_right(state, x);
