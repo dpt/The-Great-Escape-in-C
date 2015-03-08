@@ -153,6 +153,12 @@ do {                                                  \
   assert(p < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
 } while (0)
 
+#define ASSERT_MASK_BUF_PTR_VALID(p)                  \
+do {                                                  \
+  assert(p >= &state->mask_buffer[0]);                \
+  assert(p < &state->mask_buffer[5 * 32]);            \
+} while (0)
+
 #define ASSERT_TILE_BUF_PTR_VALID(p)                  \
 do {                                                  \
   assert(p >= state->tile_buf);                       \
@@ -11584,6 +11590,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   x = state->map_position_related_x - state->map_position[0]; // X axis
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
+  ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
 
   mask_buffer = &state->mask_buffer[0];
 
@@ -11592,6 +11599,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // PUSH DE
 
   state->foreground_mask_pointer = &mask_buffer[(clipped_height >> 8) * 4];
+  ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   // this pop/push seems to be needless - DE already has the value
   // POP DE
@@ -11815,8 +11823,8 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       foremaskptr = state->foreground_mask_pointer;
       screenptr   = state->screen_pointer; // moved compared to the other routines
 
-      assert(foremaskptr != NULL);
-      assert(screenptr   != NULL);
+      ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
+      ASSERT_SCREEN_PTR_VALID(screenptr);
 
       /* Shift bitmap. */
 
@@ -11941,8 +11949,8 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       foremaskptr = state->foreground_mask_pointer;
       screenptr   = state->screen_pointer;
 
-      assert(foremaskptr != NULL);
-      assert(screenptr   != NULL);
+      ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
+      ASSERT_SCREEN_PTR_VALID(screenptr);
 
       /* Shift bitmap. */
 
@@ -12102,6 +12110,9 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
 
+  assert(maskptr   != NULL);
+  assert(bitmapptr != NULL);
+
   iters = state->self_E2C2; // clipped height? // self modified by $E49D (setup_vischar_plotting)
   do
   {
@@ -12123,8 +12134,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     // I'm assuming foremaskptr to be a foreground mask pointer based on it being
     // incremented by four each step, like a supertile wide thing.
     foremaskptr = state->foreground_mask_pointer;
-
-    assert(foremaskptr != NULL);
+    ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
     // 24 version does bitmap rotates then mask rotates.
     // This is the opposite way around to save a bank switch?
@@ -12180,8 +12190,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     /* Plot, using foreground mask. */
 
     screenptr = state->screen_pointer; // moved relative to the 24 version
-
-    assert(screenptr != NULL);
+    ASSERT_SCREEN_PTR_VALID(screenptr);
 
     x = MASK(bm0, mask0);
     foremaskptr++;
@@ -12258,8 +12267,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
       flip_16_masked_pixels(state, &mask1, &mask0, &bm1, &bm0);
 
     foremaskptr = state->foreground_mask_pointer;
-
-    assert(foremaskptr != NULL);
+    ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
     /* Shift mask. */
 
@@ -12323,8 +12331,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     /* Plot, using foreground mask. */
 
     screenptr = state->screen_pointer; // this line is moved relative to the 24 version
-
-    assert(screenptr != NULL);
+    ASSERT_SCREEN_PTR_VALID(screenptr);
 
     x = MASK(bm2, mask2);
     foremaskptr++;
@@ -12490,8 +12497,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint8_t        *maskbuf;        /* was HL */
   uint16_t        DEsub;
 
-  assert(state   != NULL);
-  assert(vischar != NULL);
+  assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   pos     = &vischar->mi.pos;
@@ -12598,6 +12604,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   HL = state->map_position_related_x - state->map_position[0]; // signed subtract + extend to 16-bit
   state->screen_pointer = HL + DEsub + &state->window_buf[0]; // screen buffer start address
+  ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
 
   maskbuf = &state->mask_buffer[0];
 
@@ -12605,6 +12612,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // PUSH DE
 
   maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
+  ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE  // pop clipped_height
