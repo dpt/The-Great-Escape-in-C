@@ -154,7 +154,7 @@ Perhaps the most ubiquitous of the structures is the `vischar`: a *visible chara
 #### Making sense of registers (“register de-allocation” or “variable creation”)
 The register HL, for example, might be used multiple times within a routine with distinct meanings. These uses have to be identified and turned into individual variables. You might see multiple declarations of HL: e.g. `uint8_t *HL`, `uint16_t HLfoo` and `const uint8_t *HLbar`, within the same routine, identifying the separate uses to which the original register was put.
 
-When a register's use is determinted and its holding variable is renamed (or split) we suffix a `/* was XX */` comment to remember the register to which it was originally assigned.
+When a register's use is determined and its holding variable is renamed (or split) we suffix a `/* was XX */` comment to remember the register to which it was originally assigned.
 
 This happens in conjunction with PUSH and POP-ing of registers to stack, which is resolved by renaming nested variables and deleting the PUSH/POP ops.
 
