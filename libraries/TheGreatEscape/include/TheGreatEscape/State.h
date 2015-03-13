@@ -96,8 +96,9 @@ struct tgestate
   /** $8000: Array of visible characters. */
   vischar_t       vischars[vischars_LENGTH];
 
+#define MASK_BUFFER_WIDTH 32
   /** $8100: Mask buffer. */
-  uint8_t         mask_buffer[5 * 32];
+  uint8_t         mask_buffer[5 * MASK_BUFFER_WIDTH];
 
   /** $81A0: Pointer into the mask buffer.
    * Only used by mask_stuff (a candidate for hoisting to a local). */

@@ -616,7 +616,7 @@ default_item_location_t;
  */
 typedef struct mask
 {
-  uint8_t   index;  // index into exterior_mask_pointers
+  uint8_t   index;  /**< Index into mask_pointers. */
   bounds_t  bounds;
   tinypos_t pos;
 }
