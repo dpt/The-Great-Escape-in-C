@@ -242,7 +242,7 @@ enum characterstruct_flags
   characterstruct_FLAG_DISABLED        = 1 << 6, /* This disables the character. */
   characterstruct_BYTE0_BIT7           = 1 << 7, // set in sub_A404
 
-  characterstruct_BYTE5_MASK           = 0x7F,
+  characterstruct_BYTE5_MASK           = 0x7F, // target low byte
 
   characterstruct_BYTE6_MASK_HI        = 0xF8
 };
@@ -623,7 +623,7 @@ typedef struct mask
 mask_t;
 
 /**
- * Four byte structures. Unknown yet. Likely character meta data.
+ * Holds character meta data.
  */
 typedef struct character_meta_data
 {

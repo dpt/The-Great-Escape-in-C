@@ -148,7 +148,8 @@ struct tgestate
   uint8_t         roomdef_bounds_index;
   /** $81BF: Current room bounds count. */
   uint8_t         roomdef_object_bounds_count;
-  /** $81C0: Current room bounds. */
+  /** $81C0: Copy of current room def's additional bounds (allows for four
+   * room objects). */
   bounds_t        roomdef_object_bounds[4];
 
   /** $81D6: Door related stuff. */
@@ -201,15 +202,14 @@ struct tgestate
   /** $A13D: Clock. Incremented once every 64 ticks of game_counter. */
   eventtime_t     clock;
 
-  /** $A13E: (unknown) Flag? */
+  /** $A13E: (unknown) (flag: 0 or 255). */
   uint8_t         byte_A13E;
 
   /** $A13F: The hero is in bed (flag: 0 or 255). */
   uint8_t         hero_in_bed;
 
   /** $A140: Displayed morale.
-   * Lags behind actual morale while the flag moves towards slowly to its
-   * target. */
+   * Lags behind actual morale while the flag moves towards to its target. */
   uint8_t         displayed_morale;
 
   /** $A141: Pointer to the screen address where the morale flag was last

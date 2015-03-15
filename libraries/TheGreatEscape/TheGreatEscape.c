@@ -14,6 +14,8 @@
  *
  * - Some enums might be wider than expected (int vs uint8_t).
  * - Target member -- this could be a screen location, or an index.
+ * - Decode table_7738.
+ * - Decode foreground masks.
  */
 
 /* LATER
@@ -184,7 +186,6 @@ do {                                                  \
   assert(p >= &state->vischars[0]);                   \
   assert(p < &state->vischars[vischars_LENGTH]);      \
 } while (0)
-
 
 /* ----------------------------------------------------------------------- */
 
@@ -8705,7 +8706,7 @@ void mask_against_tile(tileindex_t index, uint8_t *dst)
   do
   {
     *dst &= *row++;
-    dst += 4; /* stride */
+    dst += 4; /* supertile stride */
   }
   while (--iters);
 }
@@ -8729,12 +8730,12 @@ int vischar_visible(tgestate_t *state,
                     uint16_t   *clipped_width,
                     uint16_t   *clipped_height)
 {
-  const uint8_t *mpr1;    /* was HL */
-  uint8_t  A;       /* was A */
-  uint16_t width;   /* was BC */
-  uint16_t height;  /* was DE */
-  uint16_t foo1;    /* was HL */
-  uint16_t foo2;    /* was HL */
+  const uint8_t *mpr1;   /* was HL */
+  uint8_t        A;      /* was A */
+  uint16_t       width;  /* was BC */
+  uint16_t       height; /* was DE */
+  uint16_t       foo1;   /* was HL */
+  uint16_t       foo2;   /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9185,7 +9186,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   assert(state   != NULL);
   assert(charstr != NULL);
 
-  if (charstr->character & characterstruct_FLAG_DISABLED) // character disabled
+  if (charstr->character & characterstruct_FLAG_DISABLED) /* character disabled */
     return 1; // NZ
 
   /* Find an empty slot. */
@@ -9801,6 +9802,7 @@ int change_by_delta(int8_t         max,
 /**
  * $C7B9: Get character struct.
  *
+ * \param[in] state Pointer to game state.
  * \param[in] index Character index. (was A)
  *
  * \return Pointer to characterstruct. (was HL)
@@ -9868,8 +9870,8 @@ void character_event(tgestate_t *state, location_t *location)
   };
 
   uint8_t                    A;         /* was A */
-  const charactereventmap_t *peventmap; /* was HL */
-  uint8_t                    iters;     /* was B */
+  const charactereventmap_t *peventmap;   /* was HL */
+  uint8_t                    iters;       /* was B */
 
   assert(state    != NULL);
   assert(location != NULL);
@@ -10112,16 +10114,13 @@ void follow_suspicious_character(tgestate_t *state)
   assert(state != NULL);
 
   /* (I've still no idea what this flag means). */
-
   state->byte_A13E = 0;
 
   /* If the bell is ringing, hostiles persue. */
-
   if (state->bell)
     hostiles_persue(state);
 
   /* If food was dropped then count down until it is discovered. */
-
   if (state->food_discovered_counter != 0 &&
       --state->food_discovered_counter == 0)
   {
@@ -10131,7 +10130,6 @@ void follow_suspicious_character(tgestate_t *state)
   }
 
   /* Make supporting characters react. */
-
   vischar = &state->vischars[1];
   state->IY = &state->vischars[0];
   iters   = vischars_LENGTH - 1;
@@ -10169,7 +10167,6 @@ void follow_suspicious_character(tgestate_t *state)
 
   /* Inhibit hero automatic behaviour when the flag is red, or otherwise
    * inhibited. */
-
   if (!state->red_flag &&
       (state->morale_1 || state->automatic_player_counter == 0))
   {
@@ -10785,20 +10782,20 @@ const uint8_t *element_A_of_table_7738(uint8_t A)
     &data_77D8[0],
     &data_77DA[0],
     &data_77DC[0],
-    &data_77D8[0], /* dupe */
-    &data_77DA[0], /* dupe */
-    &data_77DC[0], /* dupe */
+    &data_77D8[0], /* dupes index 7 */
+    &data_77DA[0], /* dupes index 8 */
+    &data_77DC[0], /* dupes index 9 */
     &data_77DE[0],
     &data_77E1[0],
-    &data_77E1[0], /* dupe */
+    &data_77E1[0], /* dupes index 14 */
     &data_77E7[0],
     &data_77EC[0],
     &data_77F1[0],
     &data_77F3[0],
     &data_77F5[0],
-    &data_77F1[0], /* dupe */
-    &data_77F3[0], /* dupe */
-    &data_77F5[0], /* dupe */
+    &data_77F1[0], /* dupes index 18 */
+    &data_77F3[0], /* dupes index 19 */
+    &data_77F5[0], /* dupes index 20 */
     &data_77F7[0],
     &data_77F9[0],
     &data_77FB[0],
@@ -11111,7 +11108,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
 /**
  * $CCAB: Guards persue prisoners.
  *
- * For all visible, hostile characters, at height < 32, set the bribed/persue flag.
+ * For all visible, hostile characters, at height < 32, set the bribed/persue
+ * flag.
  *
  * \param[in] state Pointer to game state.
  */
@@ -11181,7 +11179,9 @@ nearby:
     if (item == item_GREEN_KEY || item == item_FOOD) /* Ignore these items */
       goto next;
 
-    /* Suspected bug in original game appears here: itemstruct pointer is decremented to access item_and_flags but is not re-adjusted afterwards. */
+    /* Suspected bug in original game appears here: itemstruct pointer is
+     * decremented to access item_and_flags but is not re-adjusted
+     * afterwards. */
 
     hostiles_persue(state);
   }
@@ -11462,7 +11462,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
   // assert(y);
   assert(pitemstr != NULL);
 
-  *pitemstr = NULL; /* Conv: Added. */
+  *pitemstr = NULL; /* Conv: Added safety initialisation. */
 
   iters   = item__LIMIT;
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
@@ -11675,7 +11675,7 @@ uint8_t item_visible(tgestate_t *state,
   if (xoff > 0)
   {
 #define WIDTH_BYTES 3
-    if (xoff < WIDTH_BYTES) // 3 is width
+    if (xoff < WIDTH_BYTES)
     {
       width = xoff;
     }
@@ -11780,12 +11780,12 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  */
 void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t        x; /* was A */
-  uint8_t        iters; /* was B */
-  const uint8_t *maskptr;
-  const uint8_t *bitmapptr;
-  const uint8_t *foremaskptr;
-  uint8_t       *screenptr;
+  uint8_t        x;           /* was A */
+  uint8_t        iters;       /* was B */
+  const uint8_t *maskptr;     /* was ? */
+  const uint8_t *bitmapptr;   /* was ? */
+  const uint8_t *foremaskptr; /* was ? */
+  uint8_t       *screenptr;   /* was ? */
 
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -12098,11 +12098,11 @@ void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
  */
 void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 {
-  uint8_t        iters; /* was B */
-  const uint8_t *maskptr;
-  const uint8_t *bitmapptr;
-  const uint8_t *foremaskptr;
-  uint8_t       *screenptr;
+  uint8_t        iters;       /* was B */
+  const uint8_t *maskptr;     /* was ? */
+  const uint8_t *bitmapptr;   /* was ? */
+  const uint8_t *foremaskptr; /* was ? */
+  uint8_t       *screenptr;   /* was ? */
   uint8_t        self_E2DC, self_E2F4;
 
   assert(state != NULL);
@@ -12393,7 +12393,7 @@ void flip_24_masked_pixels(tgestate_t *state,
   assert(pCdash != NULL);
   assert(pBdash != NULL);
 
-  // Conv: Much simplified over the original code.
+  /* Conv: Routine was much simplified over the original code. */
 
   HL = &state->reversed[0];
 
@@ -12686,12 +12686,12 @@ void pos_to_tinypos(const pos_t *in, tinypos_t *out)
  */
 void divide_by_8_with_rounding(uint8_t *plow, uint8_t *phigh)
 {
-  int t;
+  int t; /* Conv: Added. */
 
   assert(plow  != NULL);
   assert(phigh != NULL);
 
-  t = *plow + 4;
+  t = *plow + 4; /* Like adding 0.5. */
   *plow = (uint8_t) t; /* Store modulo 256. */
   if (t >= 0x100)
     (*phigh)++;
