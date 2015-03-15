@@ -10837,7 +10837,7 @@ const uint8_t *element_A_of_table_7738(uint8_t A)
  */
 uint8_t random_nibble(tgestate_t *state)
 {
-#if 0
+#if IMPRACTICAL_VERSION
   // Impractical code which mimics the original game.
 
   uint8_t *HL;
