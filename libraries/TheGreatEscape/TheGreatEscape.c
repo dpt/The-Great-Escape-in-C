@@ -695,7 +695,7 @@ static
 void mask_stuff(tgestate_t *state);
 
 static
-uint16_t scale_val(tgestate_t *state, uint8_t value, uint8_t shift);
+uint16_t multiply(uint8_t value, uint8_t shift);
 
 static
 void mask_against_tile(tileindex_t index, uint8_t *dst);
@@ -8641,7 +8641,7 @@ void mask_stuff(tgestate_t *state)
 }
 
 /**
- * $BACD: Given a bitmask in A, produce a widened and shifted 16-bit bitmask.
+ * $BACD: Multiply the two input values returning a widened result.
  *
  * Leaf.
  *
@@ -8650,20 +8650,17 @@ void mask_stuff(tgestate_t *state)
  * If value is 00001111 and shift is 8 => 00000000 01111000
  * If value is 01010101 and shift is 8 => 00000010 10101000
  *
- * \param[in] state Pointer to game state.
- * \param[in] value Value. (was A)
- * \param[in] shift Shift. Observed: 4, 8. (was E)
+ * \param[in] left  Left hand value. (was A)
+ * \param[in] right Right hand value. (was E)
  *
- * \return Widened value.
+ * \return Widened value. (was HL)
  */
-uint16_t scale_val(tgestate_t *state, uint8_t value, uint8_t shift)
+uint16_t multiply(uint8_t left, uint8_t right)
 {
   uint8_t  iters;  /* was B */
   uint16_t result; /* was HL */
 
-  assert(state != NULL);
-  // assert(value);
-  // assert(shift);
+  /* sampled val,shift = $1A,$4 / $42,$8 / $1A,$2A */
 
   iters  = 8;
   result = 0;
@@ -8671,13 +8668,15 @@ uint16_t scale_val(tgestate_t *state, uint8_t value, uint8_t shift)
   {
     int carry;
 
-    result <<= 1; // double, or shift, what's the intent here? make space
-    carry = value >> 7; // shift out of high end
-    value <<= 1; // was RRA
+    result <<= 1;
+    carry = left >> 7; /* shift out of high end */
+    left <<= 1; /* was RRA */
     if (carry)
-      result += shift; // shift into low end
+      result += right; /* shift into low end */
   }
   while (--iters);
+
+  assert(result == left * right);
 
   return result;
 }
