@@ -609,7 +609,5 @@ const tgeobject_t *interior_object_defs[interiorobject__LIMIT] =
   (const tgeobject_t *) &intobjdef_51,
   (const tgeobject_t *) &intobjdef_52,
   (const tgeobject_t *) &intobjdef_53,
-
-  // absent: _21 _29 _40
 };
 
