@@ -1336,11 +1336,11 @@ void wipe_visible_tiles(tgestate_t *state)
 void setup_room(tgestate_t *state)
 {
   /**
-   * $EA7C: Indoor masking data.
+   * $EA7C: Interior masking data.
    *
    * Conv: Constant final (pos.height) byte added into this data.
    */
-  static const mask_t maskdata[47] =
+  static const mask_t interior_mask_data[47] =
   {
     { 0x1B, { 0x7B, 0x7F, 0xF1, 0xF3 }, { 0x36, 0x28, 0x20 } },
     { 0x1B, { 0x77, 0x7B, 0xF3, 0xF5 }, { 0x36, 0x18, 0x20 } },
@@ -1412,23 +1412,23 @@ void setup_room(tgestate_t *state)
   pbounds = &state->roomdef_object_bounds[0]; /* Conv: Moved */
   if (count == 0) /* no boundaries */
   {
-    proomdef++; /* skip to indoor mask */
+    proomdef++; /* skip to interior mask */
   }
   else
   {
     proomdef++; /* Conv: Don't re-copy already copied count byte. */
     memcpy(pbounds, proomdef, count * 4);
-    proomdef += count * 4; /* skip to indoor mask */
+    proomdef += count * 4; /* skip to interior mask */
   }
 
-  /* Copy indoor mask into state->indoor_mask_data. */
-  state->indoor_mask_data_count = iters = *proomdef++; /* count of indoor mask */
+  /* Copy interior mask into state->interior_mask_data. */
+  state->interior_mask_data_count = iters = *proomdef++; /* count of interior mask */
   assert(iters < 8);
-  pmask = &state->indoor_mask_data[0]; /* Conv: Moved */
+  pmask = &state->interior_mask_data[0]; /* Conv: Moved */
   while (iters--)
   {
     /* Conv: Structures changed from 7 to 8 bytes wide. */
-    memcpy(pmask, &maskdata[*proomdef++], sizeof(*pmask));
+    memcpy(pmask, &interior_mask_data[*proomdef++], sizeof(*pmask));
     pmask++;
   }
 
@@ -7949,7 +7949,7 @@ void mask_stuff(tgestate_t *state)
 #define _____ /* A spacer for laying out tables. */
 
   /* $E55F */
-  static const uint8_t outdoors_mask_0[] =
+  static const uint8_t exterior_mask_0[] =
   {
     0x2A,
     0xA0, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x07, 0x08, 0x09, 0x01, 0x0A, 0xA2, 0x00, _____ _____
@@ -7981,7 +7981,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E5FF */
-  static const uint8_t outdoors_mask_1[] =
+  static const uint8_t exterior_mask_1[] =
   {
     0x12,
     0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
@@ -7997,7 +7997,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E61E */
-  static const uint8_t outdoors_mask_2[] =
+  static const uint8_t exterior_mask_2[] =
   {
     0x10,
     0x13, 0x14, 0x15, 0x8D, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
@@ -8019,7 +8019,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E6CA */
-  static const uint8_t outdoors_mask_3[] =
+  static const uint8_t exterior_mask_3[] =
   {
     0x1A,
     0x88, 0x00, _____ _____ _____ _____ _____ _____ 0x05, 0x4C, 0x90, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
@@ -8046,7 +8046,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E74B */
-  static const uint8_t outdoors_mask_4[] =
+  static const uint8_t exterior_mask_4[] =
   {
     0x0D,
     0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
@@ -8056,7 +8056,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E758 */
-  static const uint8_t outdoors_mask_5[] =
+  static const uint8_t exterior_mask_5[] =
   {
     0x0E,
     0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
@@ -8072,7 +8072,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E77F */
-  static const uint8_t outdoors_mask_6[] =
+  static const uint8_t exterior_mask_6[] =
   {
     0x08,
     0x5B, 0x5A, 0x86, 0x00, _____ _____ _____ _____ 
@@ -8083,7 +8083,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E796 */
-  static const uint8_t outdoors_mask_7[] =
+  static const uint8_t exterior_mask_7[] =
   {
     0x09,
     0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
@@ -8097,7 +8097,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E7AF */
-  static const uint8_t outdoors_mask_8[] =
+  static const uint8_t exterior_mask_8[] =
   {
     0x10,
     0x8D, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x23, 0x24, 0x25,
@@ -8119,7 +8119,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E85C */
-  static const uint8_t outdoors_mask_9[] =
+  static const uint8_t exterior_mask_9[] =
   {
     0x0A,
     0x83, 0x00, _____ 0x05, 0x06, 0x30, 0x4C, 0x83, 0x00, _____
@@ -8133,7 +8133,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E8A3 */
-  static const uint8_t outdoors_mask_10[] =
+  static const uint8_t exterior_mask_10[] =
   {
     0x08,
     0x35, 0x86, 0x01, _____ _____ _____ _____ 0x36,
@@ -8152,7 +8152,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E8F0 */
-  static const uint8_t outdoors_mask_11[] =
+  static const uint8_t exterior_mask_11[] =
   {
     0x08,
     0x01, 0x4F, 0x86, 0x00, _____ _____ _____ _____
@@ -8167,7 +8167,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E92F */
-  static const uint8_t outdoors_mask_12[] =
+  static const uint8_t exterior_mask_12[] =
   {
     0x02,
     0x56, 0x57,
@@ -8181,7 +8181,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E940 */
-  static const uint8_t outdoors_mask_13[] =
+  static const uint8_t exterior_mask_13[] =
   {
     0x05,
     0x00, 0x00, 0x23, 0x24, 0x25,
@@ -8197,7 +8197,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E972 */
-  static const uint8_t outdoors_mask_14[] =
+  static const uint8_t exterior_mask_14[] =
   {
     0x04,
     0x19, 0x83, 0x00, _____
@@ -8213,7 +8213,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E99A */
-  static const uint8_t indoors_mask_15[] =
+  static const uint8_t interior_mask_15[] =
   {
     0x02,
     0x04, 0x32,
@@ -8221,7 +8221,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E99F */
-  static const uint8_t indoors_mask_16[] =
+  static const uint8_t interior_mask_16[] =
   {
     0x09,
     0x86, 0x00, _____ _____ _____ _____ 0x5D, 0x5C, 0x54,
@@ -8232,7 +8232,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E9B9 */
-  static const uint8_t indoors_mask_17[] =
+  static const uint8_t interior_mask_17[] =
   {
     0x05,
     0x00, 0x00, 0x5D, 0x5C, 0x67,
@@ -8241,7 +8241,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E9C6 */
-  static const uint8_t indoors_mask_18[] =
+  static const uint8_t interior_mask_18[] =
   {
     0x02,
     0x5D, 0x68,
@@ -8249,7 +8249,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E9CB */
-  static const uint8_t indoors_mask_19[] =
+  static const uint8_t interior_mask_19[] =
   {
     0x0A,
     0x86, 0x00, _____ _____ _____ _____ 0x5D, 0x5C, 0x46, 0x47,
@@ -8260,7 +8260,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E9E6 */
-  static const uint8_t indoors_mask_20[] =
+  static const uint8_t interior_mask_20[] =
   {
     0x06,
     0x5D, 0x5C, 0x01, 0x47, 0x6A, 0x00,
@@ -8269,7 +8269,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $E9F5 */
-  static const uint8_t indoors_mask_21[] =
+  static const uint8_t interior_mask_21[] =
   {
     0x04,
     0x05, 0x4C, 0x00, 0x00,
@@ -8281,7 +8281,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA0E */
-  static const uint8_t indoors_mask_22[] =
+  static const uint8_t interior_mask_22[] =
   {
     0x04,
     0x00, 0x00, 0x05, 0x4C,
@@ -8294,7 +8294,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA2B */
-  static const uint8_t indoors_mask_23[] =
+  static const uint8_t interior_mask_23[] =
   {
     0x03,
     0x00, 0x6C, 0x00,
@@ -8303,7 +8303,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA35 */
-  static const uint8_t indoors_mask_24[] =
+  static const uint8_t interior_mask_24[] =
   {
     0x05,
     0x01, 0x5E, 0x4C, 0x00, 0x00,
@@ -8312,7 +8312,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA43 */
-  static const uint8_t indoors_mask_25[] =
+  static const uint8_t interior_mask_25[] =
   {
     0x02,
     0x6E, 0x5A,
@@ -8321,7 +8321,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA4A */
-  static const uint8_t indoors_mask_26[] =
+  static const uint8_t interior_mask_26[] =
   {
     0x04,
     0x5D, 0x5C, 0x46, 0x47,
@@ -8329,7 +8329,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA53 */
-  static const uint8_t indoors_mask_27[] =
+  static const uint8_t interior_mask_27[] =
   {
     0x03,
     0x2C, 0x47, 0x00,
@@ -8338,7 +8338,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA5D */
-  static const uint8_t indoors_mask_28[] =
+  static const uint8_t interior_mask_28[] =
   {
     0x03,
     0x00, 0x45, 0x1E,
@@ -8347,7 +8347,7 @@ void mask_stuff(tgestate_t *state)
   };
 
   /* $EA67 */
-  static const uint8_t indoors_mask_29[] =
+  static const uint8_t interior_mask_29[] =
   {
     0x05,
     0x45, 0x1E, 0x2C, 0x47, 0x00,
@@ -8357,45 +8357,47 @@ void mask_stuff(tgestate_t *state)
   };
 
   /**
-   * $EBC5: Probably mask data pointers.
+   * $EBC5: Pointers to run-length encoded mask data.
+   *
+   * The first half is outdoor masks, the second is indoor masks.
    */
   static const uint8_t *mask_pointers[30] =
   {
-    &outdoors_mask_0[0],  /* $E55F */
-    &outdoors_mask_1[0],  /* $E5FF */
-    &outdoors_mask_2[0],  /* $E61E */
-    &outdoors_mask_3[0],  /* $E6CA */
-    &outdoors_mask_4[0],  /* $E74B */
-    &outdoors_mask_5[0],  /* $E758 */
-    &outdoors_mask_6[0],  /* $E77F */
-    &outdoors_mask_7[0],  /* $E796 */
-    &outdoors_mask_8[0],  /* $E7AF */
-    &outdoors_mask_9[0],  /* $E85C */
-    &outdoors_mask_10[0], /* $E8A3 */
-    &outdoors_mask_11[0], /* $E8F0 */
-    &outdoors_mask_13[0], /* $E940 */
-    &outdoors_mask_14[0], /* $E972 */
-    &outdoors_mask_12[0], /* $E92F */
+    &exterior_mask_0[0],  /* $E55F */
+    &exterior_mask_1[0],  /* $E5FF */
+    &exterior_mask_2[0],  /* $E61E */
+    &exterior_mask_3[0],  /* $E6CA */
+    &exterior_mask_4[0],  /* $E74B */
+    &exterior_mask_5[0],  /* $E758 */
+    &exterior_mask_6[0],  /* $E77F */
+    &exterior_mask_7[0],  /* $E796 */
+    &exterior_mask_8[0],  /* $E7AF */
+    &exterior_mask_9[0],  /* $E85C */
+    &exterior_mask_10[0], /* $E8A3 */
+    &exterior_mask_11[0], /* $E8F0 */
+    &exterior_mask_13[0], /* $E940 */
+    &exterior_mask_14[0], /* $E972 */
+    &exterior_mask_12[0], /* $E92F */
 
-    &indoors_mask_29[0], /* $EA67 */
-    &indoors_mask_27[0], /* $EA53 */
-    &indoors_mask_28[0], /* $EA5D */
-    &indoors_mask_15[0], /* $E99A */
-    &indoors_mask_16[0], /* $E99F */
-    &indoors_mask_17[0], /* $E9B9 */
-    &indoors_mask_18[0], /* $E9C6 */
-    &indoors_mask_19[0], /* $E9CB */
-    &indoors_mask_20[0], /* $E9E6 */
-    &indoors_mask_21[0], /* $E9F5 */
-    &indoors_mask_22[0], /* $EA0E */
-    &indoors_mask_23[0], /* $EA2B */
-    &indoors_mask_24[0], /* $EA35 */
-    &indoors_mask_25[0], /* $EA43 */
-    &indoors_mask_26[0]  /* $EA4A */
+    &interior_mask_29[0], /* $EA67 */
+    &interior_mask_27[0], /* $EA53 */
+    &interior_mask_28[0], /* $EA5D */
+    &interior_mask_15[0], /* $E99A */
+    &interior_mask_16[0], /* $E99F */
+    &interior_mask_17[0], /* $E9B9 */
+    &interior_mask_18[0], /* $E9C6 */
+    &interior_mask_19[0], /* $E9CB */
+    &interior_mask_20[0], /* $E9E6 */
+    &interior_mask_21[0], /* $E9F5 */
+    &interior_mask_22[0], /* $EA0E */
+    &interior_mask_23[0], /* $EA2B */
+    &interior_mask_24[0], /* $EA35 */
+    &interior_mask_25[0], /* $EA43 */
+    &interior_mask_26[0]  /* $EA4A */
   };
 
   /**
-   * $EC01: 58 x 8-byte structs.
+   * $EC01: mask_t structs for the exterior scene.
    */
   static const mask_t exterior_mask_data[58] =
   {
@@ -8472,11 +8474,11 @@ void mask_stuff(tgestate_t *state)
     /* Indoors */
 
     /* Conv: Merged use of A and B. */
-    iters = state->indoor_mask_data_count; /* count byte */
+    iters = state->interior_mask_data_count; /* count byte */
     if (iters == 0)
       return; /* no masks */
 
-    pmask = &state->indoor_mask_data[0];
+    pmask = &state->interior_mask_data[0];
     //peightbyte += 2; // skip count byte, then off by 2 bytes
   }
   else

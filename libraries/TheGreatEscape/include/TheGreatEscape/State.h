@@ -155,10 +155,12 @@ struct tgestate
   /** $81D6: Door related stuff. */
   uint8_t         door_related[4];
 
-  /** $81DA: Indoor mask data count. */
-  uint8_t         indoor_mask_data_count;
-  /** $81DB: Indoor mask data values. */
-  mask_t          indoor_mask_data[7]; // 7 == max indoor mask refs (roomdef_30 uses this many). // hoist this number out to a define.
+   // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
+#define MAX_INTERIOR_MASK_REFS 7
+  /** $81DA: Interior mask data count. */
+  uint8_t         interior_mask_data_count;
+  /** $81DB: Interior mask data values. */
+  mask_t          interior_mask_data[MAX_INTERIOR_MASK_REFS];
 
   /** $8214: Item bitmap height.
    * Used by setup_item_plotting() and item_visible(). */
