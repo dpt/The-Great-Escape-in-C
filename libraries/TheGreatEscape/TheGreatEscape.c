@@ -153,14 +153,14 @@ do {                                                  \
 
 #define ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(p)         \
 do {                                                  \
-  assert(p >= &state->speccy->attributes[0]);          \
+  assert(p >= &state->speccy->attributes[0]);         \
   assert(p < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
 } while (0)
 
 #define ASSERT_MASK_BUF_PTR_VALID(p)                  \
 do {                                                  \
   assert(p >= &state->mask_buffer[0]);                \
-  assert(p < &state->mask_buffer[5 * 32]);            \
+  assert(p < &state->mask_buffer[5 * MASK_BUFFER_WIDTH]); \
 } while (0)
 
 #define ASSERT_TILE_BUF_PTR_VALID(p)                  \
@@ -171,8 +171,8 @@ do {                                                  \
 
 #define ASSERT_WINDOW_BUF_PTR_VALID(p)                \
 do {                                                  \
-assert(p >= state->window_buf);                       \
-assert(p < state->window_buf + ((state->columns + 1) * state->rows * 8)); \
+  assert(p >= state->window_buf);                     \
+  assert(p < state->window_buf + ((state->columns + 1) * state->rows * 8)); \
 } while (0)
 
 #define ASSERT_MAP_BUF_PTR_VALID(p)                   \
