@@ -90,7 +90,8 @@ struct tgestate
   }
   messages;
 
-  /** $7F00: A table of 256 bit-reversed bytes. */
+  /** $7F00: A table of 256 bit-reversed bytes.
+   * Read by flip_16_masked_pixels and flip_24_masked_pixels only. */
   uint8_t         reversed[256];
 
   /** $8000: Array of visible characters. */
@@ -98,10 +99,11 @@ struct tgestate
 
 #define MASK_BUFFER_WIDTH 32
   /** $8100: Mask buffer. */
+  // TODO: Dynamically allocate.
   uint8_t         mask_buffer[5 * MASK_BUFFER_WIDTH];
 
   /** $81A0: Pointer into the mask buffer.
-   * Only used by mask_stuff (a candidate for hoisting to a local). */
+   * Only used by mask_stuff (TODO: Hoist to a local in mask_stuff). */
   uint8_t        *mask_buffer_pointer;
 
   /** $81A2: Output screen pointer. Used by masked sprite plotters. */
@@ -131,7 +133,8 @@ struct tgestate
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    * Seems to be a field: bit 7 is for flipping, the remainder is an index,
-   * but the index is never read. */
+   * but the index is never read.
+   * Assigned from vischar->mi.b17, but only used to test the flip flag. */
   uint8_t         flip_sprite;
 
   /** $81B8: Hero's map position. */
