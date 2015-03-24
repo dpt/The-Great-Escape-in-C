@@ -12156,8 +12156,6 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
  */
 void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state)
 {
-  assert(state != NULL);
-
   masked_sprite_plotter_16_wide_left(state, 0 /* x */);
 }
 
