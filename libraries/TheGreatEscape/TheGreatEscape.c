@@ -680,7 +680,7 @@ static
 void reset_map_and_characters(tgestate_t *state);
 
 static
-void searchlight_sub(tgestate_t *state, vischar_t *vischar);
+void searchlight_mask_test(tgestate_t *state, vischar_t *vischar);
 
 static
 void locate_vischar_or_itemstruct_then_plot(tgestate_t *state);
@@ -5979,7 +5979,7 @@ void nighttime(tgestate_t *state)
 
   /* If the searchlight previously caught the hero, then track him. */
 
-  if (state->searchlight_state == searchlight_STATE_1F)
+  if (state->searchlight_state == searchlight_STATE_CAUGHT)
   {
     E = state->map_position[0] + 4;
     D = state->map_position[1];
@@ -6085,7 +6085,7 @@ next:
 }
 
 /**
- * $AE78: Suspect this is when the hero is caught in the spotlight.
+ * $AE78: Is the hero is caught in the spotlight?
  *
  * \param[in] state Pointer to game state.
  * \param[in] HL    Pointer to spotlight_movement_data_maybe.
@@ -6109,10 +6109,10 @@ void searchlight_caught(tgestate_t *state, uint8_t *HL)
   //  return;
   // But that needs checking for edge cases.
 
-  if (state->searchlight_state == searchlight_STATE_1F)
-    return;
+  if (state->searchlight_state == searchlight_STATE_CAUGHT)
+    return; /* already caught */ // seems odd to not do this test before the earlier one
 
-  state->searchlight_state = searchlight_STATE_1F;
+  state->searchlight_state = searchlight_STATE_CAUGHT;
 
   state->searchlight_coords[0] = HL[1];
   state->searchlight_coords[1] = HL[0];
@@ -7730,14 +7730,15 @@ void reset_map_and_characters(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B83B searchlight_sub
+ * $B83B searchlight_mask_test
  *
- * Looks like it's testing mask_buffer to find the hero?
+ * Looks like it's testing mask_buffer to find the hero.
+ * Perhaps this lets the hero hide in masked areas.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void searchlight_sub(tgestate_t *state, vischar_t *vischar)
+void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t     *buf;   /* was HL */
   attribute_t  attrs; /* was A */
@@ -7750,27 +7751,28 @@ void searchlight_sub(tgestate_t *state, vischar_t *vischar)
   if (vischar > &state->vischars[0])
     return; /* Skip non-hero characters. */
 
-  buf = &state->mask_buffer[0x31];
+  buf = &state->mask_buffer[0x31]; // 0x31 = 32 + 17 ... but unsure if 32 is the right rowsize // could be 12*4+1
   iters = 8;
-  // C = 4; // i don't see this used
+  // C = 4; /* Conv/Bug: Original code does a fused load of BC, but doesn't seem to use C here. Probably a leftover stride constant. */
   do
   {
     if (*buf != 0)
-      goto set_state_1f;
-    buf += 4;
+      goto still_in_spotlight;
+    buf += 4; // stride is 4?
   }
   while (--iters);
 
-  if (--state->searchlight_state != searchlight_STATE_OFF)
-    return;
-
-  attrs = choose_game_window_attributes(state);
-  set_game_window_attributes(state, attrs);
+  /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
+  if (--state->searchlight_state == searchlight_STATE_OFF)
+  {
+    attrs = choose_game_window_attributes(state);
+    set_game_window_attributes(state, attrs);
+  }
 
   return;
 
-set_state_1f: // caught?
-  state->searchlight_state = searchlight_STATE_1F;
+still_in_spotlight:
+  state->searchlight_state = searchlight_STATE_CAUGHT;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7811,7 +7813,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       {
         mask_stuff(state);
         if (state->searchlight_state != searchlight_STATE_OFF)
-          searchlight_sub(state, vischar);
+          searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
           masked_sprite_plotter_24_wide(state, vischar);
         else
