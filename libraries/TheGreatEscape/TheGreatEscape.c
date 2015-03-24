@@ -9860,7 +9860,7 @@ int change_by_delta(int8_t         max,
   int delta; /* was A */
 
   // assert(max);
-  // assert(rc);
+  assert(rc < 2); /* Should not be called with otherwise. */
   assert(second != NULL);
   assert(first  != NULL);
 
