@@ -11609,18 +11609,19 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  uint16_t      BC; /* was BC */
   uint16_t      clipped_width;  /* was BC */
   uint16_t      clipped_height; /* was DE */
+  uint8_t       instr;          /* was A */
   uint8_t       A;              /* was A */
   uint8_t       Adash;          /* was A' */
   uint8_t       iters;          /* was B' */
-  uint8_t       Cdash;          /* was C' */
+  uint8_t       offset;         /* was C' */
 //  uint16_t      DEdash; /* was DE' */
-  const size_t *HLdash;         /* was HL' */
+  const size_t *enables;        /* was HL' */
 
   assert(state   != NULL);
   assert(itemstr != NULL);
   assert(item >= 0 && item < item__LIMIT);
 
-  /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). The use of A later on does not re-clamp it to 0x1F. */
+  /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
   // mask off mysteryflagconst874
   item &= 0x3F;
   // This location is written to but never read from. (A memory breakpoint set in FUSE confirmed this).
@@ -11653,26 +11654,26 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   if ((clipped_width >> 8) == 0)
   {
-    A = 0x77; /* LD (HL),A */
+    instr = 0x77; /* opcode of 'LD (HL),A' */
     Adash = clipped_width & 0xFF;
   }
   else
   {
-    A = 0; /* NOP */
+    instr = 0; /* opcode of 'NOP' */
     Adash = 3 - (clipped_width & 0xFF);
   }
 
-  Cdash = Adash; // could assign directly to Cdash?
+  offset = Adash; // could assign directly to Cdash?
 
   /* Set the addresses in the jump table to NOP or LD (HL),A */
-  HLdash = &masked_sprite_plotter_16_enables[0];
+  enables = &masked_sprite_plotter_16_enables[0];
   iters = 3; /* iterations */
   do
   {
-    *(uint8_t *)((char *) state + *HLdash++) = A;
-    *(uint8_t *)((char *) state + *HLdash++) = A;
-    if (--Cdash == 0)
-      A ^= 0x77; /* Toggle between LD (HL),A and NOP. */
+    *(uint8_t *)((char *) state + *enables++) = instr;
+    *(uint8_t *)((char *) state + *enables++) = instr;
+    if (--offset == 0)
+      instr ^= 0x77; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
 
@@ -12581,10 +12582,11 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint16_t        clipped_height; /* was DE */
   const size_t   *enables;        /* was HL */
   uint8_t         self_E4C0;
-  uint8_t         Adash;
+  uint8_t         offset;         /* was A' */
   uint8_t         Cdash;
   uint8_t         Bdash;
   uint8_t         E;
+  uint8_t         instr;          /* was A */
   uint8_t         A;
   uint16_t        HL;
   uint8_t        *maskbuf;        /* was HL */
@@ -12667,26 +12669,26 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   A = (clipped_width & 0xFF00) >> 8;
   if (A == 0)
   {
-    A     = 0x77; // LD (HL),A
-    Adash = clipped_width & 0xFF;
+    instr = 0x77; // opcode of 'LD (HL),A'
+    offset = clipped_width & 0xFF;
   }
   else
   {
-    A     = 0x00; // NOP
-    Adash = E - (clipped_width & 0xFF);
+    instr = 0x00; // opcode of 'NOP'
+    offset = E - (clipped_width & 0xFF);
   }
 
   // POP HLdash // entry point
 
   // set the addresses in the jump table to NOP or LD (HL),A
-  Cdash = Adash; // must be no of columns?
+  Cdash = offset; // must be no of columns?
   Bdash = self_E4C0; /* iterations */ // 3 or 4
   do
   {
-    *(((uint8_t *) state) + *enables++) = A;
-    *(((uint8_t *) state) + *enables++) = A;
-    if (--Cdash == 0)
-      A ^= 0x77; /* Toggle between LD and NOP. */
+    *(((uint8_t *) state) + *enables++) = instr;
+    *(((uint8_t *) state) + *enables++) = instr;
+    if (--offset == 0)
+      instr ^= 0x77; /* Toggle between LD and NOP. */
   }
   while (--Bdash);
 
