@@ -11998,7 +11998,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       if (state->enable_E1BF)
         *screenptr = x;
 
-      screenptr += 21; // stride (24 - 3)
+      screenptr += state->tb_columns - 3;
       state->screen_pointer = screenptr;
     }
     while (--iters);
@@ -12142,7 +12142,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         *screenptr = x;
       screenptr++;
 
-      screenptr += 21; // stride (24 - 3)
+      screenptr += state->tb_columns - 3;
       state->screen_pointer = screenptr;
     }
     while (--iters);
@@ -12305,7 +12305,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     if (state->enable_E340)
       *screenptr = x;
 
-    screenptr += 22; // stride (24 - 2)
+    screenptr += state->tb_columns - 2;
     state->screen_pointer = screenptr;
   }
   while (--iters);
