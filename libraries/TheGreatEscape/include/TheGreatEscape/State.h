@@ -134,7 +134,7 @@ struct tgestate
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    * Seems to be a field: bit 7 is for flipping, the remainder is an index,
    * but the index is never read.
-   * Assigned from vischar->mi.b17, but only used to test the flip flag. */
+   * Assigned from vischar->mi.flip_sprite, but only used to test the flip flag. */
   uint8_t         flip_sprite;
 
   /** $81B8: Hero's map position. */

@@ -420,7 +420,7 @@ typedef struct movableitem
 {
   pos_t           pos;
   const sprite_t *spriteset;
-  uint8_t         b17; // flip flag? more likely a sprite set offset
+  uint8_t         flip_sprite; // sprite set offset / flip flag
 }
 movableitem_t;
 
@@ -439,9 +439,9 @@ typedef struct vischar
   uint8_t         b0C;          /* $800C */ // used with above?
   uint8_t         b0D;          /* $800D movement */ // compared to flags?
   uint8_t         b0E;          /* $800E walk/crawl flag */
-  movableitem_t   mi;           /* $800F movable item (position, current character sprite set, b17) */
   uint16_t        scrx;         /* $8018 screen x coord */
   uint16_t        scry;         /* $801A screen y coord */
+  movableitem_t   mi;           /* $800F movable item (position, current character sprite set, flip_sprite) */
   room_t          room;         /* $801C room index */
   uint8_t         b1D;          /* $801D */ // can find no references. is this ever used?
   uint8_t         width_bytes;  /* $801E copy of sprite width in bytes + 1 */

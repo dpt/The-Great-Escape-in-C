@@ -6303,7 +6303,7 @@ int touch(tgestate_t *state, vischar_t *vischar, uint8_t Adash)
 
   vischar->b07 &= ~vischar_BYTE7_BIT6;
   vischar->mi.pos = state->saved_pos;
-  vischar->mi.b17 = stashed_A; // left/right flip flag / sprite offset
+  vischar->mi.flip_sprite = stashed_A; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
   return 0; // Z
@@ -12635,9 +12635,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   sprite = vischar->mi.spriteset;
 
-  state->flip_sprite = flip_sprite = vischar->mi.b17; // set left/right flip flag / sprite offset
+  state->flip_sprite = flip_sprite = vischar->mi.flip_sprite; // set left/right flip flag / sprite offset
 
-  // HL now points after b17
+  // HL now points after flip_sprite
   // DE now points to state->map_position_related_x
 
   // unrolled over original
