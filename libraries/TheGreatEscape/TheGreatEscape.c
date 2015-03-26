@@ -2597,6 +2597,9 @@ void main_loop(tgestate_t *state)
   wave_morale_flag(state);
   if ((state->game_counter & 63) == 0)
     dispatch_timed_event(state);
+
+//  // safety kick
+//  state->speccy->kick(state->speccy);
 }
 
 /* ----------------------------------------------------------------------- */
