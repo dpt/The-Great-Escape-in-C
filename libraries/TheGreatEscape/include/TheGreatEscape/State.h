@@ -273,12 +273,13 @@ struct tgestate
   attribute_t     item_attributes[item__LIMIT];
 
   /** $E121 .. $E363: (Formerly) Self-modified locations. */
-  uint8_t         self_E121; // masked_sprite_plotter_24_wide height loop 1
-  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide height loop 2
-  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_case_1_common height loop  clipped height
-  uint8_t         self_E363; // masked_sprite_plotter_16_wide_case_2 height loop
+  uint8_t         self_E121; // masked_sprite_plotter_24_wide: height loop in right shift case = clipped_height & 0xFF
+  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide: height loop in left shift case = clipped_height & 0xFF
+  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left: height loop = clipped height & 0xFF
+  uint8_t         self_E363; // masked_sprite_plotter_16_wide_right: height loop = clipped height & 0xFF
 
-  // (note overlap of these two sections is removed)
+  /* Note that these adjacent chunks actually overlap in the original game 
+   * but I've divided them here for clarity. */
 
   /** $E188 .. $E290: (Formerly) Self-modified disabled instructions. */
   uint8_t         enable_E188; // 24 case

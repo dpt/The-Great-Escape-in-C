@@ -11611,24 +11611,29 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   uint16_t      clipped_height; /* was DE */
   uint8_t       instr;          /* was A */
   uint8_t       A;              /* was A */
-  uint8_t       Adash;          /* was A' */
+  uint8_t       offset_tmp;     /* was A' */
   uint8_t       iters;          /* was B' */
   uint8_t       offset;         /* was C' */
 //  uint16_t      DEdash; /* was DE' */
   const size_t *enables;        /* was HL' */
+  int16_t       x, y;           // was HL, DE // signed needed for X calc
+  uint8_t      *maskbuf;        /* was HL */
+  uint16_t      skip;           /* was DE */
 
   assert(state   != NULL);
-  assert(itemstr != NULL);
+  assert(itemstr != NULL); // will need ASSERT_ITEMSTRUCT_VALID
   assert(item >= 0 && item < item__LIMIT);
 
   /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
-  // mask off mysteryflagconst874
-  item &= 0x3F;
-  // This location is written to but never read from. (A memory breakpoint set in FUSE confirmed this).
-  // $8213 = A;
+  item &= 0x3F; // mask off mysteryflagconst874
+
+  /* Bug: The original game writes to this location but it's never
+   * subsequently read from (a memory breakpoint set in FUSE confirmed this).
+   */
+  /* $8213 = A; */
 
   state->tinypos_81B2           = itemstr->pos;
-  // map_position_related_x/2 could well be a location_t
+  // map_position_related_x/y could well be a location_t
   state->map_position_related_x = itemstr->target & 0xFF;
   state->map_position_related_y = itemstr->target >> 8;
 // after LDIR we have:
@@ -11639,88 +11644,95 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  // EX DE, HL
 //
 //  *DE = 0; // was B, which is always zero here
-  state->flip_sprite    = 0; /* Items are never flipped. */
+  state->flip_sprite    = 0; /* Items are never drawn flipped. */
 
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
   if (item_visible(state, &clipped_width, &clipped_height) != 0)
-    return 1; // NZ (invisible)
+    return 1; /* invisible */ // NZ
 
-  // PUSH clipped_width // BC
-  // PUSH clipped_height // DE
+  // PUSH clipped_width
+  // PUSH clipped_height
 
-  state->self_E2C2 = clipped_height & 0xFF; // self modify
+  state->self_E2C2 = clipped_height & 0xFF; // self modify masked_sprite_plotter_16_wide_left
 
   if ((clipped_width >> 8) == 0)
   {
     instr = 0x77; /* opcode of 'LD (HL),A' */
-    Adash = clipped_width & 0xFF;
+    offset_tmp = clipped_width & 0xFF;
   }
   else
   {
-    instr = 0; /* opcode of 'NOP' */
-    Adash = 3 - (clipped_width & 0xFF);
+    instr = 0; /* opcode of 'LD (HL),A' */
+    offset_tmp = 3 - (clipped_width & 0xFF);
   }
 
-  offset = Adash; // could assign directly to Cdash?
+  offset = offset_tmp; /* Future: Could assign directly to offset instead. */
 
   /* Set the addresses in the jump table to NOP or LD (HL),A */
   enables = &masked_sprite_plotter_16_enables[0];
   iters = 3; /* iterations */
   do
   {
-    *(uint8_t *)((char *) state + *enables++) = instr;
-    *(uint8_t *)((char *) state + *enables++) = instr;
+    *(((uint8_t *) state) + *enables++) = instr;
+    *(((uint8_t *) state) + *enables++) = instr;
     if (--offset == 0)
       instr ^= 0x77; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
 
-  int16_t x, y; // was HL, DE // signed needed for X calc
-  uint8_t *mask_buffer; // was HL
-
-  y = 0;
-  if (clipped_height >> 8) /* Conv: Moved. */
-    y = (state->map_position_related_y - state->map_position[1]) * 192; // temp: HL // must be Y axis
+  y = 0; /* Conv: Moved. */
+  if ((clipped_height >> 8) == 0)
+    y = (state->map_position_related_y - state->map_position[1]) * 192; // temp: HL
 
   x = state->map_position_related_x - state->map_position[0]; // X axis
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
 
-  mask_buffer = &state->mask_buffer[0];
+  maskbuf = &state->mask_buffer[0];
 
-  // pop clipped_height
-  // POP DE
+  // POP DE  // get clipped_height
   // PUSH DE
 
-  state->foreground_mask_pointer = &mask_buffer[(clipped_height >> 8) * 4];
+  state->foreground_mask_pointer = &maskbuf[(clipped_height >> 8) * 4];
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
-  // this pop/push seems to be needless - DE already has the value
-  // POP DE
+  // POP DE  // this pop/push seems to be needless - DE already has the value
   // PUSH DE
-  A = clipped_height >> 8;
+
+  A = clipped_height >> 8; // A = D // sign?
   if (A)
+  {
+    /* The original game has a generic multiply loop here which is setup to
+     * only ever multiply by two. A duplicate of the equivalent portion in
+     * setup_vischar_plotting. In this version instead we'll just multiply by
+     * two.
+     *
+     * {
+     *   uint8_t D, E;
+     *
+     *   D = A;
+     *   A = 0;
+     *   E = 3; // width_bytes
+     *   E--;   // width_bytes - 1
+     *   do
+     *     A += E;
+     *   while (--D);
+     * }
+     */
+
     A *= 2;
+    // clipped_height &= 0x00FF; // D = 0
+  }
 
-  // seemingly unncessary multiply code which duplicates stuff in the vischar routine
-  /*{
-    uint8_t D, E;
+  /* D ends up as zero either way. */
 
-    D = A;
-    A = 0;
-    do
-      A += 2;
-    while (--D);
-  }*/
+  skip = A;
+  state->bitmap_pointer += skip;
+  state->mask_pointer   += skip;
 
-  uint16_t DE2;
-
-  DE2 = (clipped_height & 0xFF00) | A;
-  state->bitmap_pointer += DE2;
-  state->mask_pointer   += DE2;
   // POP BC
   // POP DE
 
@@ -11897,7 +11909,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
     assert(maskptr   != NULL);
     assert(bitmapptr != NULL);
 
-    iters = state->self_E121; // height?
+    iters = state->self_E121; // clipped_height & 0xFF
     do
     {
       uint8_t bm0, bm1, bm2, bm3;         // was B, C, E, D
@@ -12022,7 +12034,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
     assert(maskptr   != NULL);
     assert(bitmapptr != NULL);
 
-    iters = state->self_E1E2; // height?
+    iters = state->self_E1E2; // clipped_height & 0xFF
     do
     {
       /* Note the different variable order to the case above. */
@@ -12207,7 +12219,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(maskptr   != NULL);
   assert(bitmapptr != NULL);
 
-  iters = state->self_E2C2; // clipped height? // self modified by $E49D (setup_vischar_plotting)
+  iters = state->self_E2C2; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
   do
   {
     uint8_t bm0, bm1, bm2;       // was D, E, C
@@ -12341,7 +12353,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   assert(maskptr   != NULL);
   assert(bitmapptr != NULL);
 
-  iters = state->self_E363; // height? // self modified
+  iters = state->self_E363; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
   do
   {
     /* Note the different variable order to the 'left' case above. */
@@ -12554,10 +12566,10 @@ void flip_16_masked_pixels(tgestate_t *state,
 int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 {
   /**
-   * $E0EC: Locations which in the original game are changed between NOPs and
-   * LD (HL),A.
+   * $E0EC: Addresses of self-modified locations which in the original game
+   * are changed between NOPs and LD (HL),A.
    */
-  static const size_t masked_sprite_plotter_24_enables[5 * 2] =
+  static const size_t masked_sprite_plotter_24_enables[4 * 2] =
   {
     offsetof(tgestate_t, enable_E188),
     offsetof(tgestate_t, enable_E259),
@@ -12568,9 +12580,10 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     offsetof(tgestate_t, enable_E1BF),
     offsetof(tgestate_t, enable_E290),
 
-    // suspect these are unused
-    //masked_sprite_plotter_16_wide
-    //masked_sprite_plotter_24_wide
+    /* These two addresses are present here in the original game but are
+     * unreferenced. */
+    // masked_sprite_plotter_16_wide
+    // masked_sprite_plotter_24_wide
   };
 
   pos_t          *pos;            /* was HL */
@@ -12581,16 +12594,17 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint16_t        clipped_width;  /* was BC */
   uint16_t        clipped_height; /* was DE */
   const size_t   *enables;        /* was HL */
-  uint8_t         self_E4C0;
+  uint8_t         self_E4C0;      /* was $E4C0 */
   uint8_t         offset;         /* was A' */
-  uint8_t         Cdash;
-  uint8_t         Bdash;
-  uint8_t         E;
+  uint8_t         Cdash;          /* was C' */
+  uint8_t         iters;          /* was B' */
+  uint8_t         E;              /* was E */
   uint8_t         instr;          /* was A */
-  uint8_t         A;
-  uint16_t        HL;
+  uint8_t         A;              /* was A */
+  uint16_t        x;              /* was HL */
   uint8_t        *maskbuf;        /* was HL */
-  uint16_t        DEsub;
+  uint16_t        y;              /* was DE */
+  uint16_t        skip;           /* was DE */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -12647,16 +12661,16 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
   {
-    state->self_E2C2 = E; // self-modify  clipped height
-    state->self_E363 = E; // self-modify
+    state->self_E2C2 = E; // self modify masked_sprite_plotter_16_wide_left
+    state->self_E363 = E; // self-modify masked_sprite_plotter_16_wide_right
 
     A = 3;
     enables = &masked_sprite_plotter_16_enables[0];
   }
   else
   {
-    state->self_E121 = E; // self-modify
-    state->self_E1E2 = E; // self-modify
+    state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide (shift right case)
+    state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide (shift left case)
 
     A = 4;
     enables = &masked_sprite_plotter_24_enables[0];
@@ -12669,20 +12683,20 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   A = (clipped_width & 0xFF00) >> 8;
   if (A == 0)
   {
-    instr = 0x77; // opcode of 'LD (HL),A'
+    instr = 0x77; /* opcode of 'LD (HL),A' */
     offset = clipped_width & 0xFF;
   }
   else
   {
-    instr = 0x00; // opcode of 'NOP'
+    instr = 0x00; /* opcode of 'LD (HL),A' */
     offset = E - (clipped_width & 0xFF);
   }
 
   // POP HLdash // entry point
 
-  // set the addresses in the jump table to NOP or LD (HL),A
+  /* Set the addresses in the jump table to NOP or LD (HL),A */
   Cdash = offset; // must be no of columns?
-  Bdash = self_E4C0; /* iterations */ // 3 or 4
+  iters = self_E4C0; /* 3 or 4 iterations */
   do
   {
     *(((uint8_t *) state) + *enables++) = instr;
@@ -12690,41 +12704,45 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     if (--offset == 0)
       instr ^= 0x77; /* Toggle between LD and NOP. */
   }
-  while (--Bdash);
+  while (--iters);
 
+  y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    DEsub = (vischar->scry - (state->map_position[1] * 8)) * 24;
-  else
-    DEsub = 0; // Conv: reordered
+    y = (vischar->scry - (state->map_position[1] * 8)) * 24;
 
-  HL = state->map_position_related_x - state->map_position[0]; // signed subtract + extend to 16-bit
-  state->screen_pointer = HL + DEsub + &state->window_buf[0]; // screen buffer start address
+  x = state->map_position_related_x - state->map_position[0]; // signed subtract + extend to 16-bit
+
+  state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
 
   maskbuf = &state->mask_buffer[0];
 
-  // POP DE  // pop clipped_height
+  // POP DE  // get clipped_height
   // PUSH DE
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its DEclipped
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its clipped_height -- check
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE  // pop clipped_height
 
-  A = clipped_height >> 8;
+  A = clipped_height >> 8; // sign?
   if (A)
   {
-    // Conv: Replaced loop with multiply.
+    /* Conv: The original game has a generic multiply loop here. In this
+     * version instead we'll just multiply. */
+
     A *= vischar->width_bytes - 1;
-    clipped_height &= 0x00FF; // D = 0
+    // clipped_height &= 0x00FF; // D = 0
   }
 
-  clipped_height = (clipped_height & 0xFF00) | A; // check all this guff over again
-  state->bitmap_pointer += clipped_height;
-  state->mask_pointer   += clipped_height;
+  /* D ends up as zero either way. */
 
-  // POP BCclipped  // why save it anyway? if it's just getting popped. unless it's being returned.
+  skip = A;
+  state->bitmap_pointer += skip;
+  state->mask_pointer   += skip;
+
+  // POP clipped_width  // why save it anyway? if it's just getting popped. unless it's being returned.
 
   return 1; /* visible */ // Conv: Added.
 }
