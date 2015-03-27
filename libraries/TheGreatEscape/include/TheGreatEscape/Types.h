@@ -443,7 +443,7 @@ typedef struct vischar
   uint16_t        scry;         /* $801A screen y coord */
   movableitem_t   mi;           /* $800F movable item (position, current character sprite set, flip_sprite) */
   room_t          room;         /* $801C room index */
-  uint8_t         b1D;          /* $801D */ // can find no references. is this ever used?
+  uint8_t         unused;       /* $801D unused */
   uint8_t         width_bytes;  /* $801E copy of sprite width in bytes + 1 */
   uint8_t         height;       /* $801F copy of sprite height in rows */
 }

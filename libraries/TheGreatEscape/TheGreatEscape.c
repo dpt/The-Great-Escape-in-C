@@ -13106,7 +13106,7 @@ void tge_setup(tgestate_t *state)
     0x0000,               // scrx
     0x0000,               // scry
     room_0_OUTDOORS,      // room
-    0x00,                 // b1D
+    0x00,                 // unused
     0x00,                 // width_bytes
     0x00,                 // height
   };
