@@ -9844,11 +9844,13 @@ exit:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C79A: Increments 'first' by ('first' - 'second'). Used by move_characters().
+ * $C79A: Increments 'first' by ('first' - 'second').
+ *
+ * Used only by move_characters().
  *
  * Leaf.
  *
- * \param[in] max    A maximum value. (was A')  usually 2 or 6
+ * \param[in] max    A maximum value, usually 2 or 6. (was A')
  * \param[in] rc     Return code. Incremented if delta is zero. (was B)
  * \param[in] second Pointer to second value. (was HL)
  * \param[in] first  Pointer to first value. (was DE)
@@ -9862,7 +9864,7 @@ int change_by_delta(int8_t         max,
 {
   int delta; /* was A */
 
-  // assert(max);
+  assert(max == 2 || max == 6);
   assert(rc < 2); /* Should not be called with otherwise. */
   assert(second != NULL);
   assert(first  != NULL);
@@ -9872,18 +9874,18 @@ int change_by_delta(int8_t         max,
   {
     rc++;
   }
-  else if (delta < 0)
+  else if (delta < 0) // delta -ve => second > first
   {
-    delta = -delta;
+    delta = -delta; /* absolute value */
     if (delta >= max)
       delta = max;
-    *first += delta;
+    *first += delta; // move first towards second
   }
-  else
+  else // delta +ve => first > second
   {
     if (delta >= max)
       delta = max;
-    *first -= delta;
+    *first -= delta; // move first towards second
   }
 
   return rc;
