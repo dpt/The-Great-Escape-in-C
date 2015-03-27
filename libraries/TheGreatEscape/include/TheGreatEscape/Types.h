@@ -261,8 +261,8 @@ enum doorposition_flags
  */
 enum searchlight_flags
 {
-  searchlight_STATE_1F                 = 0x1F, // seems to be set when the hero is caught in the spotlight
-  searchlight_STATE_OFF                = 0xFF, /* Likely: Hunting for the hero. */
+  searchlight_STATE_CAUGHT             = 0x1F, /**< Number of turns before the spotlight gives up looking when the hero hides behind something. */
+  searchlight_STATE_SEARCHING                = 0xFF, /**< Likely: Hunting for the hero. */
 };
 
 /**

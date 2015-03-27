@@ -5968,13 +5968,13 @@ void nighttime(tgestate_t *state)
 
   assert(state != NULL);
 
-  if (state->searchlight_state == searchlight_STATE_OFF)
+  if (state->searchlight_state == searchlight_STATE_SEARCHING)
     goto not_tracking;
 
   if (state->room_index > room_0_OUTDOORS)
   {
     /* If the hero goes indoors then the searchlight loses track. */
-    state->searchlight_state = searchlight_STATE_OFF;
+    state->searchlight_state = searchlight_STATE_SEARCHING;
     return;
   }
 
@@ -7766,7 +7766,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   while (--iters);
 
   /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
-  if (--state->searchlight_state == searchlight_STATE_OFF)
+  if (--state->searchlight_state == searchlight_STATE_SEARCHING) // state went 0xFF
   {
     attrs = choose_game_window_attributes(state);
     set_game_window_attributes(state, attrs);
@@ -7815,7 +7815,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       if (found)
       {
         mask_stuff(state);
-        if (state->searchlight_state != searchlight_STATE_OFF)
+        if (state->searchlight_state != searchlight_STATE_SEARCHING)
           searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
           masked_sprite_plotter_24_wide(state, vischar);
