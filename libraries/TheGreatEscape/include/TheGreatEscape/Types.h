@@ -439,9 +439,8 @@ typedef struct vischar
   uint8_t         b0C;          /* $800C */ // used with above?
   uint8_t         b0D;          /* $800D movement */ // compared to flags?
   uint8_t         b0E;          /* $800E walk/crawl flag */
-  uint16_t        scrx;         /* $8018 screen x coord */
-  uint16_t        scry;         /* $801A screen y coord */
   movableitem_t   mi;           /* $800F movable item (position, current character sprite set, flip_sprite) */
+  uint16_t        scrx, scry;   /* $8018,$801A screen x,y coord */
   room_t          room;         /* $801C room index */
   uint8_t         unused;       /* $801D unused */
   uint8_t         width_bytes;  /* $801E copy of sprite width in bytes + 1 */
