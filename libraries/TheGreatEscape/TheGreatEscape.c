@@ -4115,7 +4115,7 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 
   if (A == 255)
   {
-    state->IY = vischar; // TODO: Work out all the other places which assign IY.
+    state->IY = vischar;
     sub_CB23(state, vischar, &vischar->target);
   }
   else if (A == 128)
@@ -7896,7 +7896,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
     x = vischar->mi.pos.x;
     found_vischar = vischar; // needs looking at again
 
-    state->IY = vischar; // TODO: Work out all the other places which assign IY.
+    state->IY = vischar;
 
 next:
     vischar++;
@@ -9300,7 +9300,7 @@ found_empty_slot:
   // POP DE  (DE = charstr)
   // PUSH HL (vischar)
   // POP IY  (IY_vischar = HL_vischar)
-  state->IY = vischar; // TODO: Work out all the other places which assign IY.
+  state->IY = vischar;
   // PUSH HL (vischar)
   // PUSH DE (charstr)
 
@@ -11577,7 +11577,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         x = pos->x * 8; // x
         *pitemstr = (itemstruct_t *) itemstr;
 
-//        state->IY = itemstr; // TODO: Work out all the other places which assign IY.
+        state->IY = (vischar_t *) itemstr; // FIXME: Cast is a bodge.
 
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
