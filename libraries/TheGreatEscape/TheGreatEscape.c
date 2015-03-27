@@ -7857,10 +7857,10 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   uint16_t      x;                /* was BC */
   uint16_t      y;                /* was DE */
   item_t        item_and_flag;    /* was A' */
-  uint16_t      DEdash;           /* was DEdash */
-  uint8_t       iters;            /* was Bdash */
-  vischar_t    *vischar;          /* was HLdash */
-  uint16_t      BCdash;           /* was BCdash */
+  uint16_t      DEdash;           /* was DE' */
+  uint8_t       iters;            /* was B' */
+  vischar_t    *vischar;          /* was HL' */
+  // uint16_t      BCdash;           /* was BC' */
   vischar_t    *found_vischar;    /* was IY */
   itemstruct_t *found_itemstruct; /* was IY */
 
@@ -7872,9 +7872,9 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   *pvischar    = NULL;
   *pitemstruct = NULL;
 
-  x             = 0;    // prev-x
-  y             = 0;    // prev-y
-  item_and_flag = 0xFF; // 'nothing found' marker // item
+  x             = 0; // prev-x
+  y             = 0; // prev-y
+  item_and_flag = item_NONE; // 'nothing found' marker 0xFF
   DEdash        = 0;
 
   iters   = vischars_LENGTH; /* iterations */
@@ -7888,11 +7888,11 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
         (vischar->mi.pos.y + 4 < y))
       goto next;
 
-    BCdash = iters; // assigned but not ever used again?
-    item_and_flag = vischars_LENGTH - iters; // item
+    // BCdash = iters; // Bug? BC is assigned then never used again.
+    item_and_flag = vischars_LENGTH - iters; /* Item index. */
     DEdash = vischar->mi.pos.height;
 
-    y = vischar->mi.pos.y; // y,x order is correct
+    y = vischar->mi.pos.y; /* Note: The y,x order here is correct. */
     x = vischar->mi.pos.x;
     found_vischar = vischar; // needs looking at again
 
@@ -7904,7 +7904,7 @@ next:
   while (--iters);
 
   // IY is returned from this, but is an itemstruct_t not a vischar
-  // Adash only ever has a flag ORed in, nothing is cleared
+  // item_and_flag is passed through if no itemstruct is found.
   item_and_flag = get_greatest_itemstruct(state,
                                           item_and_flag,
                                           x,
@@ -11532,12 +11532,13 @@ void mark_nearby_items(tgestate_t *state)
  *
  * Leaf.
  *
- * \param[in]  state    Pointer to game state.
- * \param[in]  x        X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
- * \param[in]  y        Y pos? Compared to Y. (was DE')
- * \param[out] pitemstr Returned pointer to item struct. (was IY)
+ * \param[in]  state         Pointer to game state.
+ * \param[in]  item_and_flag Initial item_and_flag, passed through if no itemstruct is found. (was A')
+ * \param[in]  x             X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
+ * \param[in]  y             Y pos? Compared to Y. (was DE')
+ * \param[out] pitemstr      Returned pointer to item struct. (was IY)
  *
- * \return item+flag. (was Adash)
+ * \return item+flag. (was A')
  */
 uint8_t get_greatest_itemstruct(tgestate_t    *state,
                                 item_t         item_and_flag,
@@ -11545,8 +11546,8 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
                                 uint16_t       y,
                                 itemstruct_t **pitemstr)
 {
-  uint8_t             iters;   /* was B */
-  const itemstruct_t *itemstr; /* was HL */
+  uint8_t             iters;          /* was B */
+  const itemstruct_t *itemstr;        /* was HL */
 
   assert(state    != NULL);
   // assert(item_and_flag);
@@ -11565,7 +11566,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
 
     if ((itemstr->room_and_flags & FLAGS) == FLAGS)
     {
-      // Conv: Original calls out to multiply by 8, HLdash is temp.
+      /* Conv: Original calls out to multiply by 8, HLdash is temp. */
       if (itemstr->pos.x * 8 > x &&
           itemstr->pos.y * 8 > y)
       {
@@ -11573,15 +11574,15 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
 
         pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
         /* Get these for the next loop iteration. */
-        y = pos->y * 8; // y
-        x = pos->x * 8; // x
+        y = pos->y * 8;
+        x = pos->x * 8;
         *pitemstr = (itemstruct_t *) itemstr;
 
         state->IY = (vischar_t *) itemstr; // FIXME: Cast is a bodge.
 
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
-        /* It seems that A' is the output register, irresspective. */
+        /* It seems that A' is the output register, irrespective. */
         item_and_flag = (item__LIMIT - iters) | (1 << 6); // iteration count + 'item found' flag? mysteryflagconst874
       }
     }
