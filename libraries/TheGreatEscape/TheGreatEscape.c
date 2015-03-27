@@ -591,7 +591,7 @@ static
 void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr);
 
 static
-void searchlight_AD59(tgestate_t *state, uint8_t *HL);
+void searchlight_AD59(uint8_t *HL);
 static
 void nighttime(tgestate_t *state);
 static
@@ -5857,10 +5857,11 @@ void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr)
 /**
  * $AD59: (unknown)
  *
- * \param[in] state Pointer to game state.
- * \param[in] HL    Pointer to spotlight_movement_data_maybe.
+ * Leaf.
+ *
+ * \param[in] HL Pointer to spotlight_movement_data_maybe.
  */
-void searchlight_AD59(tgestate_t *state, uint8_t *HL)
+void searchlight_AD59(uint8_t *HL)
 {
   uint8_t   D;  /* was D */
   uint8_t   E;  /* was E */
@@ -5869,7 +5870,6 @@ void searchlight_AD59(tgestate_t *state, uint8_t *HL)
   uint8_t   C;  /* was C */
   uint16_t *BC; /* was BC */
 
-  assert(state != NULL);
   assert(HL != NULL);
 
   E = *HL++;
@@ -6032,7 +6032,7 @@ not_tracking:
     // PUSH BC
 
     // PUSH HL
-    searchlight_AD59(state, HL);
+    searchlight_AD59(HL);
     // POP HL
 
     // PUSH HL
