@@ -10927,28 +10927,30 @@ const uint8_t *element_A_of_table_7738(uint8_t A)
 uint8_t random_nibble(tgestate_t *state)
 {
 #if IMPRACTICAL_VERSION
-  // Impractical code which mimics the original game.
+  /* Impractical code which mimics the original game.
+   * This is here as an illustration only. */
 
   uint8_t *HL;
   uint8_t  A;
 
-  // word_C41A starts as $9000
+  /* prng_index is initialised to point at $9000. */
 
-  HL = state->word_C41A + 1; // ought to wrap at 256
+  HL = state->prng_index + 1; /* Increments L only, so wraps at 256. */
   A = *HL & 0x0F;
-  state->word_C41A = HL;
+  state->prng_index = HL;
 
   return A;
 #else
-  // Conv: The original code treats $C41A as a pointer. This points to bytes
-  // at $9000..$90FF in the exterior tiles data. This routine fetches a byte
-  // from this location and returns it to the caller as a nibble, giving a
-  // simple random number source.
-  //
-  // Poking around in our own innards is likely to be too fragile for the
-  // portable C version, but we still want to emulate the game precisely, so
-  // we capture all possible values from the original game into the following
-  // array and use it as our random data source.
+  /* Conv: The original code treats $C41A as a pointer. This points to bytes
+   * at $9000..$90FF in the exterior tiles data. This routine fetches a byte
+   * from this location and returns it to the caller as a nibble, giving a
+   * simple pseudo-random number source.
+   *
+   * Poking around in our own innards is likely to be too fragile for the
+   * portable C version, but we still want to emulate the game precisely, so
+   * we capture all possible values from the original game into the following
+   * array and use it as our random data source.
+   */
 
   static const uint32_t packed_nibbles[] =
   {
