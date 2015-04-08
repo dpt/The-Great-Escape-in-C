@@ -6741,7 +6741,7 @@ int door_in_range(tgestate_t *state, const doorpos_t *doorpos)
  *
  * Leaf.
  *
- * \param[in] 'A' to be multiplied and widened.
+ * \param[in] A to be multiplied and widened.
  *
  * \return 'A' * 4 widened to a uint16_t.
  */
