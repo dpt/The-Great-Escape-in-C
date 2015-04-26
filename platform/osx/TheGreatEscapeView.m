@@ -430,8 +430,8 @@ failure:
 
 - (void)drawRect:(NSRect)dirtyRect
 {
-  static float zx =  SCALE;
-  static float zy = -SCALE;
+  static float zsx =  SCALE;
+  static float zsy = -SCALE;
 
   (void) dirtyRect;
   
@@ -443,7 +443,7 @@ failure:
   {
     // Draw the image
     glRasterPos2f(-1.0f, 1.0f);
-    glPixelZoom(zx, zy);
+    glPixelZoom(zsx, zsy);
     glDrawPixels(256, 192, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   }
   
