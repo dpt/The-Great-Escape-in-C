@@ -46,6 +46,7 @@
 
 #include "ZXSpectrum/ZXSpectrum.h"
 
+#include "TheGreatEscape/Doors.h"
 #include "TheGreatEscape/ExteriorTiles.h"
 #include "TheGreatEscape/Font.h"
 #include "TheGreatEscape/InteriorObjectDefs.h"
@@ -240,7 +241,7 @@ extern uint8_t *const beds[beds_LENGTH];
 
 /* $7000 onwards */
 
-extern const doorpos_t door_positions[124];
+extern const doorpos_t door_positions[door_MAX * 2];
 
 static
 void process_player_input_fire(tgestate_t *state, input_t input);
@@ -1671,7 +1672,7 @@ uint8_t *const beds[beds_LENGTH] =
  * Used by setup_doors, get_door_position, door_handling and
  * bribes_solitary_food.
  */
-const doorpos_t door_positions[124] =
+const doorpos_t door_positions[door_MAX * 2] =
 {
 #define BYTE0(room, other) ((room << 2) | other)
   { BYTE0(room_0_OUTDOORS,           1), { 0xB2, 0x8A,  6 } }, // 0
