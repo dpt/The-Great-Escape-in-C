@@ -995,7 +995,7 @@ input_t input_routine(tgestate_t *state);
  * \param[in] state   Pointer to game state.
  * \param[in] pos     Pointer to pos.               (was HL)
  *
- * \return Nothing (non-player), or doesn't return (hero).
+ * \remarks Exits using longjmp in the hero case.
  */
 void transition(tgestate_t      *state,
                 const tinypos_t *pos)
@@ -1072,7 +1072,7 @@ void transition(tgestate_t      *state,
  *
  * \param[in] state Pointer to game state.
  *
- * \return Doesn't return.
+ * \remarks Exits using longjmp.
  */
 void enter_room(tgestate_t *state)
 {
@@ -1096,7 +1096,7 @@ void enter_room(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  *
- * \return Doesn't return.
+ * \remarks Exits using longjmp.
  */
 void squash_stack_goto_main(tgestate_t *state)
 {
@@ -1449,12 +1449,14 @@ void setup_room(tgestate_t *state)
  * $6AB5: Expands RLE-encoded objects to a full set of tile references.
  *
  * Format:
+ * @code
  * <w> <h>: width, height
  * Repeat:
  *   <t>:                   emit tile <t>
  *   <0xFF> <64..127> <t>:  emit tiles <t> <t+1> <t+2> .. up to 63 times
  *   <0xFF> <128..254> <t>: emit tile <t> up to 126 times
  *   <0xFF> <0xFF>:         emit <0xFF>
+ * @endcode
  *
  * \param[in]  state  Pointer to game state.
  * \param[in]  index  Object index to expand.       (was A)
@@ -2636,7 +2638,7 @@ void check_morale(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  *
- * \return Returns only if game not canceled.
+ * \remarks Exits using longjmp if the game is canceled, or indoors.
  */
 void keyscan_break(tgestate_t *state)
 {
@@ -6650,6 +6652,8 @@ int is_door_open(tgestate_t *state)
  * \param[in] vischar Pointer to visible character. (was IY)
  *
  * \return Nothing. // suspect A is returned
+ *
+ * \remarks Exits using longjmp.
  */
 void door_handling(tgestate_t *state, vischar_t *vischar)
 {
@@ -12990,7 +12994,7 @@ not_at_roll_call:
  *
  * \param[in] state Pointer to game state.
  *
- * \return Nothing. (May not return at all).
+ * \remarks Exits using longjmp if the action takes place.
  */
 void action_papers(tgestate_t *state)
 {
