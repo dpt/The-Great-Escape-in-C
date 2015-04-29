@@ -150,6 +150,24 @@ enum zoombox_tiles
   zoombox_tile_BL,
 };
 
+/**
+ * Identifiers of character facing direction.
+ *
+ * Used by vischar->direction.
+ */
+enum direction
+{
+  direction_TOP_LEFT,
+  direction_TOP_RIGHT,
+  direction_BOTTOM_RIGHT,
+  direction_BOTTOM_LEFT
+};
+
+/**
+ * Holds a direction.
+ */
+typedef uint8_t direction_t;
+
 /* ----------------------------------------------------------------------- */
 
 /* FLAGS
@@ -186,18 +204,18 @@ enum vischar_flags
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only? */
   vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPC only? */
   vischar_FLAGS_BIT1                   = 1 << 1, /* NPC only? */ // dog+food flag
-  vischar_FLAGS_BIT2                   = 1 << 2, /* 'Gone mad' (bribed) flag */
+  vischar_FLAGS_SAW_BRIBE              = 1 << 2, // set when a hostile 'saw' a bribe being used (was nearby) // perhaps distracted
   vischar_FLAGS_BIT6                   = 1 << 6, // affects scaling
-  vischar_FLAGS_BIT7                   = 1 << 7,
+  vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
   vischar_BYTE2_MASK                   = 0x7F,   // target mask
   vischar_BYTE2_BIT7                   = 1 << 7, // target mask
 
-  vischar_BYTE7_MASK                   = 0x0F,
+  vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
-  vischar_BYTE7_BIT5                   = 1 << 5, // set when can't move in X
-  vischar_BYTE7_BIT6                   = 1 << 6,
-  vischar_BYTE7_BIT7                   = 1 << 7, // stops locate_vischar_or_itemstruct considering a vischar
+  vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero hits an obstacle
+  vischar_BYTE7_TOUCH                  = 1 << 6, // set while touch() entered
+  vischar_BYTE7_LOCATABLE              = 1 << 7, // stops locate_vischar_or_itemstruct considering a vischar
 
   vischar_BYTE12_MASK                  = 0x7F,
   vischar_BYTE12_BIT7                  = 1 << 7,
@@ -205,7 +223,9 @@ enum vischar_flags
   vischar_BYTE13_MASK                  = 0x7F,
   vischar_BYTE13_BIT7                  = 1 << 7, // guess: input kicking flag
 
-  vischar_BYTE14_CRAWL                 = 1 << 2
+  // byte 14
+  vischar_DIRECTION_MASK               = 0x03,
+  vischar_DIRECTION_CRAWL              = 1 << 2
 };
 
 /**
@@ -225,12 +245,13 @@ enum itemstruct_flags
 };
 
 /**
- * Identifiers of gates and doors flags and masks.
+ * Identifiers of doors (and gates) flags and masks.
  */
-enum gates_and_doors_flags
+enum door_flags
 {
-  gates_and_doors_MASK                 = 0x7F,
-  gates_and_doors_LOCKED               = 1 << 7
+  door_LOCKED                          = 1 << 7,
+
+  door_NONE                            = 0xFF
 };
 
 /**
@@ -250,10 +271,10 @@ enum characterstruct_flags
 /**
  * Identifiers of door position masks.
  */
-enum doorposition_flags
+enum doorpos_flags
 {
-  doorposition_BYTE0_MASK_LO           = 0x03,
-  doorposition_BYTE0_MASK_HI           = 0xFC
+  doorpos_FLAGS_MASK_LO                = 0x03,
+  doorpos_FLAGS_MASK_ROOM              = 0xFC
 };
 
 /**
@@ -287,16 +308,6 @@ enum escapeitem_flags
 
 /* These are offsets from the start of the attributes bank. */
 #define morale_flag_attributes_offset ((uint16_t) 0x0042)
-
-/* These are absolute addresses. Here for reference. */
-#define visible_tiles_start_address   ((uint16_t) 0xF0F8)
-#define visible_tiles_end_address     ((uint16_t) 0xF28F) /* inclusive */
-#define visible_tiles_length          (24 * 17)
-
-/* These are absolute addresses. Here for reference. */
-#define screen_buffer_start_address   ((uint16_t) 0xF290)
-#define screen_buffer_end_address     ((uint16_t) 0xFF4F) /* inclusive */
-#define screen_buffer_length          (24 * 8 * 17)
 
 /**
  * Identifiers of morale.
@@ -429,22 +440,58 @@ movableitem_t;
  */
 typedef struct vischar
 {
-  uint8_t         character;    /* $8000 char index */
-  uint8_t         flags;        /* $8001 flags */
-  location_t      target;       /* $8002 target location */
-  tinypos_t       p04;          /* $8004 position */
-  uint8_t         b07;          /* $8007 top nibble = flags, bottom nibble = counter? */
-  const uint8_t **w08;          /* $8008 pointer to character_related_pointers (assigned once only) */
-  const uint8_t  *w0A;          /* $800A */
-  uint8_t         b0C;          /* $800C */ // used with above?
-  uint8_t         b0D;          /* $800D movement */ // compared to flags?
-  uint8_t         b0E;          /* $800E walk/crawl flag */
-  movableitem_t   mi;           /* $800F movable item (position, current character sprite set, flip_sprite) */
-  uint16_t        scrx, scry;   /* $8018,$801A screen x,y coord */
-  room_t          room;         /* $801C room index */
-  uint8_t         unused;       /* $801D unused */
-  uint8_t         width_bytes;  /* $801E copy of sprite width in bytes + 1 */
-  uint8_t         height;       /* $801F copy of sprite height in rows */
+  /** $8000 character index */
+  uint8_t         character;
+
+  /** $8001 flags */
+  uint8_t         flags;
+
+  /** $8002 target location */
+  location_t      target;
+
+  /** $8004 position */
+  tinypos_t       p04;
+
+  /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
+  uint8_t         counter_and_flags;
+
+  /** $8008 pointer to character_related_pointers (assigned once only) */
+  const uint8_t **w08;
+
+  /** $800A value in character_related_pointers */
+  const uint8_t  *w0A;
+
+  /** $800C */
+  // used with above?
+  uint8_t         b0C;
+
+  /** $800D movement */
+  // compared to flags?
+  // bottom two bits are a direction field
+  // likely a prev/next version of the 'direction' field
+  uint8_t         b0D;
+
+  /** $800E direction and walk/crawl flag */
+  // a direction_t?
+  uint8_t         direction;
+
+  /** $800F movable item (position, current character sprite set, flip_sprite) */
+  movableitem_t   mi;
+
+  /** $8018,$801A screen x,y coord */
+  uint16_t        scrx, scry;
+
+  /** $801C current room index */
+  room_t          room;
+
+  /** $801D unused */
+  uint8_t         unused;
+
+  /** $801E copy of sprite width in bytes + 1 */
+  uint8_t         width_bytes;
+
+  /** $801F copy of sprite height in rows */
+  uint8_t         height;
 }
 vischar_t;
 
@@ -532,8 +579,8 @@ timedevent_t;
  */
 typedef struct itemstruct
 {
-  item_t     item_and_flags;
-  room_t     room_and_flags;
+  item_t     item_and_flags; // flags are which bits?
+  room_t     room_and_flags; // flags are which bits?
   tinypos_t  pos;
   location_t target;
 }
@@ -557,19 +604,20 @@ typedef void (charevnt_handler_t)(tgestate_t  *state,
                                   vischar_t   *vischar);
 
 /**
- * Defines a door's position.
+ * Defines a door's room, direction and position.
  */
 typedef struct doorpos
 {
-  uint8_t   room_and_flags; // top 6 bits are room, bottom 2 are ?
+  uint8_t   room_and_flags; // top 6 bits are a room_t, bottom 2 are a direction_t
   tinypos_t pos;
 }
 doorpos_t;
 
 /**
  * Holds a door index.
+ * The top bit may be door_LOCKED, the rest is a door index.
  */
-typedef uint8_t doorindex_t;
+typedef uint8_t door_t;
 
 /**
  * Handles item actions.

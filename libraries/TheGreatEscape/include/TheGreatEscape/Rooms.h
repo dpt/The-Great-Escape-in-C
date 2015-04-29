@@ -78,7 +78,7 @@ enum room
   room_3_HUT2RIGHT,
   room_4_HUT3LEFT,
   room_5_HUT3RIGHT,
-  room_6,             // unused
+  room_6,             // unused as a room, but used numerically
   room_7_CORRIDOR,
   room_8_CORRIDOR,
   room_9_CRATE,

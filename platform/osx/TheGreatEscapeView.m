@@ -287,8 +287,9 @@ static void *tge_thread(void *arg)
   tgestate_t *game = arg;
   
   tge_setup(game);
-  
-  //tge_main(game);
+
+  for (;;) // while (!quit)
+    tge_main(game);
   
   //tge_destroy(game);
   

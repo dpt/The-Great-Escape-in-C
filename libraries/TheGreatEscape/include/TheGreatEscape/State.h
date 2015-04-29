@@ -42,7 +42,7 @@ struct tgestate
   room_t          room_index;
 
   /** $68A1: Holds current door. */
-  uint8_t         current_door;
+  door_t          current_door;
 
   /** $69AE: Movable items.
    *
@@ -97,7 +97,7 @@ struct tgestate
   /** $8000: Array of visible characters. */
   vischar_t       vischars[vischars_LENGTH];
 
-#define MASK_BUFFER_WIDTH 32
+#define MASK_BUFFER_WIDTH 32 // BUT is the buffer 32 wide? The draw buffer is only 24 wide!
   /** $8100: Mask buffer. */
   // TODO: Dynamically allocate.
   uint8_t         mask_buffer[5 * MASK_BUFFER_WIDTH];
@@ -144,7 +144,7 @@ struct tgestate
    * Used when drawing tiles. */
   uint8_t         map_position[2];
 
-  /** $81BD: Searchlight state. */
+  /** $81BD: Searchlight state. Might be a counter in fact. */
   uint8_t         searchlight_state;
 
   /** $81BE: Index into roomdef_bounds[]. */
@@ -155,8 +155,8 @@ struct tgestate
    * room objects). */
   bounds_t        roomdef_object_bounds[4];
 
-  /** $81D6: Door related stuff. */
-  uint8_t         door_related[4];
+  /** $81D6: Doors. */
+  door_t          doors[4];
 
    // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
 #define MAX_INTERIOR_MASK_REFS 7
@@ -221,9 +221,9 @@ struct tgestate
    * plotted. */
   uint8_t        *moraleflag_screen_address;
 
-  /** $A143: Pointer to door (in gates_and_doors[]) in which bit 7 is cleared
+  /** $A143: Pointer to a door in gates_and_doors[] in which bit 7 is cleared
    * when picked. */
-  uint8_t        *ptr_to_door_being_lockpicked;
+  door_t         *ptr_to_door_being_lockpicked;
 
   /** $A145: Game time when player control is restored.
    * e.g. when picking a lock or cutting wire. */
@@ -302,7 +302,7 @@ struct tgestate
   uint16_t       *game_window_start_offsets;
 
   /** $F05D: Gates and doors. */
-  uint8_t         gates_and_doors[11]; // need to establish this type
+  door_t          gates_and_doors[11];
 
   /** $F06B: Key definitions. */
   keydefs_t       keydefs;
