@@ -236,7 +236,7 @@ struct tgestate
   item_t          red_cross_parcel_current_contents;
 
   /** $A7C6: An index used only by move_map(). */
-  uint8_t         move_map_index;
+  uint8_t         move_map_y;
 
   /** $A7C7: Game window plotting x offset. */
   uint16_t        plot_game_window_x;

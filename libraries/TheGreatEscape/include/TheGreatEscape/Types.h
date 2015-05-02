@@ -154,6 +154,8 @@ enum zoombox_tiles
  * Identifiers of character facing direction.
  *
  * Used by vischar->direction.
+ *
+ * Parts of the code (e.g. move_map) may use up/down instead of top/bottom.
  */
 enum direction
 {

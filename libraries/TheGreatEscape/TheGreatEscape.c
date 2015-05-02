@@ -572,13 +572,13 @@ static
 void move_map(tgestate_t *state);
 
 static
-void map_move_up_left(tgestate_t *state, uint8_t *DE);
+void move_map_up_left(tgestate_t *state, uint8_t *pmove_map_y);
 static
-void map_move_up_right(tgestate_t *state, uint8_t *DE);
+void move_map_up_right(tgestate_t *state, uint8_t *pmove_map_y);
 static
-void map_move_down_right(tgestate_t *state, uint8_t *DE);
+void move_map_down_right(tgestate_t *state, uint8_t *pmove_map_y);
 static
-void map_move_down_left(tgestate_t *state, uint8_t *DE);
+void move_map_down_left(tgestate_t *state, uint8_t *pmove_map_y);
 
 static
 attribute_t choose_game_window_attributes(tgestate_t *state);
@@ -5490,26 +5490,27 @@ void shunt_map_down_left(tgestate_t *state)
  */
 void move_map(tgestate_t *state)
 {
-  typedef void (movefn_t)(tgestate_t *, uint8_t *);
+  typedef void (movemapfn_t)(tgestate_t *, uint8_t *);
 
-  static movefn_t *const map_move[] =
+  static movemapfn_t *const movemapfns[] =
   {
-    &map_move_up_left,
-    &map_move_up_right,
-    &map_move_down_right,
-    &map_move_down_left,
+    &move_map_up_left,
+    &move_map_up_right,
+    &move_map_down_right,
+    &move_map_down_left,
   };
 
-  const uint8_t *char_related;  /* was DE */
-  uint8_t        b0C;           /* was C */
-  uint8_t        A;             /* was A */
-  movefn_t      *pmovefn;       /* was HL */
-  uint8_t        B;             /* was B */
-  uint8_t        C;             /* was C */
-  uint8_t       *HL;            /* was HL */
-  uint8_t       *DE;            /* was DE */
-  uint16_t       game_window_x; /* was HL */
-  // uint16_t       HLpos;         /* was HL */
+  const uint8_t *char_related;          /* was DE */
+  uint8_t        b0C;                   /* was C */
+  direction_t    direction;             /* was A */
+  uint8_t        move_map_y;        /* was A */
+  movemapfn_t   *pmovefn;               /* was HL */
+  uint8_t        B;                     /* was B */
+  uint8_t        C;                     /* was C */
+  uint8_t       *pmove_map_y;       /* was HL */
+  uint8_t       *pmove_map_y_copy;  /* was DE */
+  uint16_t       game_window_x;         /* was HL */
+  // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
 
@@ -5521,32 +5522,38 @@ void move_map(tgestate_t *state)
 
   char_related = state->vischars[0].w0A;
   b0C = state->vischars[0].b0C;
-  A = char_related[3]; // FF, 0, 1, 2, or 3 // data seems to be in groups of four
-  // is A a direction_t?
-  if (A == 0xFF)
+  direction = char_related[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
+  if (direction == 0xFF)
     return; /* Don't move. */
 
   if (b0C & vischar_BYTE12_BIT7)
-    A ^= 2; // flip up-down
+    direction ^= 2; /* Exchange up and down. */
 
-  pmovefn = map_move[A];
-  // PUSH HL // pushes map_move routine to stack
+  pmovefn = movemapfns[direction];
+  // PUSH HL // pushes move_map routine to stack
   // PUSH AF
 
   /* Map clamping stuff. */
-
-  // Equivalent:
-  // if (A == 0) BC = 0x7CC0;
-  // if (A == 1) BC = 0x7C00;
-  // if (A == 2) BC = 0x0000;
-  // if (A == 3) BC = 0x00C0;
-
-  B = 0x7C;
-  C = 0x00;
-  if (A >= 2) // 2 or 3 // direction_BOTTOM_* // bottom of the map clamp
-    B = 0x00;
-  if (A != 1 && A != 2) // 0 or 3 // direction_*_LEFT // left of the map clamp
-    C = 0xC0;
+  if (0)
+  {
+    // Equivalent
+         if (direction == direction_TOP_LEFT)     { B = 0x7C; C = 0xC0; }
+    else if (direction == direction_TOP_RIGHT)    { B = 0x7C; C = 0x00; }
+    else if (direction == direction_BOTTOM_RIGHT) { B = 0x00; C = 0x00; }
+    else if (direction == direction_BOTTOM_LEFT)  { B = 0x00; C = 0xC0; }
+  }
+  else
+  {
+    B = 0x7C;
+    C = 0x00;
+    /* direction_BOTTOM_* - bottom of the map clamp */
+    if (direction >= direction_BOTTOM_RIGHT)
+      B = 0x00;
+    /* direction_*_LEFT - left of the map clamp */
+    if (direction != direction_TOP_RIGHT &&
+        direction != direction_BOTTOM_RIGHT)
+      C = 0xC0;
+  }
 
   /* Note: This looks like it ought to be an AND but it's definitely an OR in
    * the original game. */
@@ -5555,36 +5562,46 @@ void move_map(tgestate_t *state)
 
   // POP AF
 
-  HL = &state->move_map_index; // a screen offset of some sort? gets passed into the move functions
-  if (A >= 2) // 2 or 3 // direction_BOTTOM_*
-    A = *HL + 1;
-  else // 0 or 1 // direction_TOP_*
-    A = *HL - 1;
-  A &= 3;
-  *HL = A;
+  // Is this a screen offset of some sort?
+  // It gets passed into the move functions.
+  // Is this a vertical index/offset only?
+  pmove_map_y = &state->move_map_y;
+  if (direction >= direction_BOTTOM_RIGHT)
+    /* direction_BOTTOM_* */
+    move_map_y = *pmove_map_y + 1;
+  else
+    /* direction_TOP_* */
+    move_map_y = *pmove_map_y - 1;
+  move_map_y &= 3;
+  *pmove_map_y = move_map_y;
 
-  DE = HL; // was EX DE,HL
+  // FUTURE: Drop this copy.
+  pmove_map_y_copy = pmove_map_y; // was EX DE,HL
 
-  assert(A <= 3);
+  assert(move_map_y <= 3);
 
   // used by plot_game_window (which masks off top and bottom separately)
-  //
-  // Equivalent:
-  // if (A == 0) game_window_x = 0x0000;
-  // if (A == 1) game_window_x = 0xFF30;
-  // if (A == 2) game_window_x = 0x0060;
-  // if (A == 3) game_window_x = 0xFF90;
-
-  game_window_x = 0x0000;
-  if (A != 0)
+  if (0)
   {
-    game_window_x = 0x0060;
-    if (A != 2)
+    // Equivalent:
+         if (move_map_y == 0) game_window_x = 0x0000;
+    else if (move_map_y == 1) game_window_x = 0xFF30;
+    else if (move_map_y == 2) game_window_x = 0x0060;
+    else if (move_map_y == 3) game_window_x = 0xFF90;
+  }
+  else
+  {
+    game_window_x = 0x0000;
+    if (move_map_y != 0)
     {
-      game_window_x = 0xFF30;
-      if (A != 1)
+      game_window_x = 0x0060;
+      if (move_map_y != 2)
       {
-        game_window_x = 0xFF90;
+        game_window_x = 0xFF30;
+        if (move_map_y != 1)
+        {
+          game_window_x = 0xFF90;
+        }
       }
     }
   }
@@ -5592,68 +5609,87 @@ void move_map(tgestate_t *state)
   state->plot_game_window_x = game_window_x;
   // HLpos = state->map_position; // passing map_position in HL omitted in this version
 
-  // pops and calls map_move_* routine pushed at $AAE0
-  pmovefn(state, DE);
+  // pops and calls move_map_* routine pushed at $AAE0
+  pmovefn(state, pmove_map_y_copy);
 }
 
+// FUTURE: Pass move_map_y directly instead of fetching it from state.
+// FUTURE: And fold these functions in to the parent above. (e.g. in a switch).
+
 // called when player moves down-right (map is shifted up-left)
-void map_move_up_left(tgestate_t *state, uint8_t *DE)
+void move_map_up_left(tgestate_t *state, uint8_t *pmove_map_y)
 {
-  uint8_t A;
+  uint8_t move_map_y; /* was A */
 
   assert(state != NULL);
-  assert(DE != NULL);
+  assert(pmove_map_y == &state->move_map_y);
+  assert(*pmove_map_y <= 3);
 
-  A = *DE;
-  if (A == 0)
+  // 0..3 => up/left/none/left
+
+  move_map_y = *pmove_map_y;
+  if (move_map_y == 0)
     shunt_map_up(state);
-  else if (A & 1)
+  else if (move_map_y & 1) // 1 or 3
     shunt_map_left(state);
+  // else 2
 }
 
 // called when player moves down-left (map is shifted up-right)
-void map_move_up_right(tgestate_t *state, uint8_t *DE)
+void move_map_up_right(tgestate_t *state, uint8_t *pmove_map_y)
 {
-  uint8_t A;
+  uint8_t move_map_y; /* was A */
 
   assert(state != NULL);
-  assert(DE != NULL);
+  assert(pmove_map_y == &state->move_map_y);
+  assert(*pmove_map_y <= 3);
 
-  A = *DE;
-  if (A == 0)
+  // 0..3 => up-right/none/right/none
+
+  move_map_y = *pmove_map_y;
+  if (move_map_y == 0)
     shunt_map_up_right(state);
-  else if (A == 2)
+  else if (move_map_y == 2)
     shunt_map_right(state);
+  // else 1 or 3
 }
 
 // called when player moves up-left (map is shifted down-right)
-void map_move_down_right(tgestate_t *state, uint8_t *DE)
+void move_map_down_right(tgestate_t *state, uint8_t *pmove_map_y)
 {
-  uint8_t A;
+  uint8_t move_map_y; /* was A */
 
   assert(state != NULL);
-  assert(DE != NULL);
+  assert(pmove_map_y == &state->move_map_y);
+  assert(*pmove_map_y <= 3);
 
-  A = *DE;
-  if (A == 3)
+  // 0..3 => right/none/right/down
+
+  move_map_y = *pmove_map_y;
+  if (move_map_y == 3)
     shunt_map_down(state);
-  else if ((A & 1) == 0)
+  else if ((move_map_y & 1) == 0) // 0 or 2
     shunt_map_right(state);
+  // else 1
 }
 
 // called when player moves up-right (map is shifted down-left)
-void map_move_down_left(tgestate_t *state, uint8_t *DE)
+void move_map_down_left(tgestate_t *state, uint8_t *pmove_map_y)
 {
-  uint8_t A;
+  uint8_t move_map_y; /* was A */
 
   assert(state != NULL);
-  assert(DE != NULL);
+  assert(pmove_map_y == &state->move_map_y);
+  assert(*pmove_map_y <= 3);
 
-  A = *DE;
-  if (A == 1)
+  // 0..3 => none/left/none/down-left
+
+  move_map_y = *pmove_map_y;
+  if (move_map_y == 1)
     shunt_map_left(state);
-  else if (A == 3)
+  else if (move_map_y == 3)
     shunt_map_down_left(state);
+  // else 0 or 2
 }
 
 /* ----------------------------------------------------------------------- */
