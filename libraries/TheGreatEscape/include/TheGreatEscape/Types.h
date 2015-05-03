@@ -140,7 +140,7 @@ inputdevice_t;
 /**
  * Identifiers of zoombox tiles.
  */
-enum zoombox_tiles
+enum zoombox_tile
 {
   zoombox_tile_TL,
   zoombox_tile_HZ,
@@ -148,7 +148,13 @@ enum zoombox_tiles
   zoombox_tile_VT,
   zoombox_tile_BR,
   zoombox_tile_BL,
+  zoombox_tile__LIMIT
 };
+
+/**
+ * Holds a zoombox tile.
+ */
+typedef uint8_t zoombox_tile_t;
 
 /**
  * Identifiers of character facing direction.

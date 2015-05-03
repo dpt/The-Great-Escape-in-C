@@ -590,7 +590,9 @@ void zoombox_fill(tgestate_t *state);
 static
 void zoombox_draw_border(tgestate_t *state);
 static
-void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr);
+void zoombox_draw_tile(tgestate_t     *state,
+                       zoombox_tile_t  index,
+                       uint8_t        *addr);
 
 static
 void searchlight_AD59(uint8_t *HL);
@@ -5954,64 +5956,66 @@ void zoombox_draw_border(tgestate_t *state)
 }
 
 /**
- * $ACFC: Draw a zoombox border tile.
+ * $ACFC: Draw a single zoombox border tile.
  *
- * \param[in] state Pointer to game state.
- * \param[in] index Tile index into zoombox_tiles. (was A)
- * \param[in] addr  Screen address.                (was HL)
+ * \param[in] state   Pointer to game state.
+ * \param[in] tile    Tile to draw.   (was A)
+ * \param[in] addr_in Screen address. (was HL)
  */
-void zoombox_draw_tile(tgestate_t *state, uint8_t index, uint8_t *addr)
+void zoombox_draw_tile(tgestate_t     *state,
+                       zoombox_tile_t  tile,
+                       uint8_t        *addr_in)
 {
   /**
    * $AF5E: Zoombox tiles.
    */
-  static const tile_t zoombox_tiles[6] =
+  static const tile_t zoombox_tiles[zoombox_tile__LIMIT] =
   {
-    { { 0x00, 0x00, 0x00, 0x03, 0x04, 0x08, 0x08, 0x08 } }, /* tl */
-    { { 0x00, 0x20, 0x18, 0xF4, 0x2F, 0x18, 0x04, 0x00 } }, /* hz */
-    { { 0x00, 0x00, 0x00, 0x00, 0xE0, 0x10, 0x08, 0x08 } }, /* tr */
-    { { 0x08, 0x08, 0x1A, 0x2C, 0x34, 0x58, 0x10, 0x10 } }, /* vt */
-    { { 0x10, 0x10, 0x10, 0x20, 0xC0, 0x00, 0x00, 0x00 } }, /* br */
-    { { 0x10, 0x10, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00 } }, /* bl */
+    { { 0x00, 0x00, 0x00, 0x03, 0x04, 0x08, 0x08, 0x08 } }, /* TL */
+    { { 0x00, 0x20, 0x18, 0xF4, 0x2F, 0x18, 0x04, 0x00 } }, /* HZ */
+    { { 0x00, 0x00, 0x00, 0x00, 0xE0, 0x10, 0x08, 0x08 } }, /* TR */
+    { { 0x08, 0x08, 0x1A, 0x2C, 0x34, 0x58, 0x10, 0x10 } }, /* VT */
+    { { 0x10, 0x10, 0x10, 0x20, 0xC0, 0x00, 0x00, 0x00 } }, /* BR */
+    { { 0x10, 0x10, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00 } }, /* BL */
   };
 
-  uint8_t         *DE;    /* was DE */
-  const tilerow_t *row;   /* was ? */
+  uint8_t         *addr;  /* was DE */
+  const tilerow_t *row;   /* was HL */
   uint8_t          iters; /* was B */
-  ptrdiff_t        off;   /* was ? */
-  attribute_t     *attrp; /* was ? */
+  ptrdiff_t        off;   /* Conv: new */
+  attribute_t     *attrs; /* was HL */
 
   assert(state != NULL);
-  assert(index < NELEMS(zoombox_tiles));
-  ASSERT_SCREEN_PTR_VALID(addr);
+  assert(tile < NELEMS(zoombox_tiles));
+  ASSERT_SCREEN_PTR_VALID(addr_in);
 
-  DE = addr; // was EX DE,HL
-  row = &zoombox_tiles[index].row[0];
+  addr = addr_in; // was EX DE,HL
+  row = &zoombox_tiles[tile].row[0];
   iters = 8;
   do
   {
-    *DE = *row++;
-    DE += 256;
+    *addr = *row++;
+    addr += 256;
   }
   while (--iters);
 
-  /* Original game can munge bytes directly here, assuming screen addresses,
-   * but I can't... */
+  /* Conv: The original game can munge bytes directly here, assuming screen
+   * addresses, but I can't... */
 
-  DE -= 256; /* Compensate for overshoot */
-  off = DE - &state->speccy->screen[0];
+  addr -= 256; /* Compensate for overshoot */
+  off = addr - &state->speccy->screen[0];
 
-  attrp = &state->speccy->attributes[off & 0xFF]; // to within a third
+  attrs = &state->speccy->attributes[off & 0xFF]; // to within a third
 
-  // can i ((off >> 11) << 8) ?
+  // can i do ((off >> 11) << 8) ?
   if (off >= 0x0800)
   {
-    attrp += 256;
+    attrs += 256;
     if (off >= 0x1000)
-      attrp += 256;
+      attrs += 256;
   }
 
-  *attrp = state->game_window_attribute;
+  *attrs = state->game_window_attribute;
 }
 
 /* ----------------------------------------------------------------------- */
