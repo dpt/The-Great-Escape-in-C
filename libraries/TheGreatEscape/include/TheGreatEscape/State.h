@@ -36,7 +36,7 @@ struct tgestate
   vischar_t      *IY;
 
 
-  /* ORIGINAL VARIABLES */
+  /* ORIGINAL VARIABLES (ordered by original game memory location) */
 
   /** $68A0: Index of the current room, or 0 when outside. */
   room_t          room_index;
@@ -254,14 +254,18 @@ struct tgestate
   /** $AB6A: Stored copy of game screen attribute, used to draw zoombox. */
   attribute_t     game_window_attribute;
 
-  /** $AD29: Searchlight movement data. */
-  searchlight_state_t searchlight_states[3];
+  struct
+  {
+    /** $AD29: Searchlight movement data. */
+    searchlight_state_t states[3];
 
-  /** $AE75: (unknown) */
-  uint8_t         searchlight_related;
+    /** $AE75: (unknown) */
+    uint8_t             related;
 
-  /** $AE76: (unknown) */
-  uint8_t         searchlight_coords[2];
+    /** $AE76: Coordinates of searchlight when hero is caught. */
+    uint8_t             coords[2];
+  }
+  searchlight;
 
   /** $AF8E: Bribed character. */
   character_t     bribed_character;

@@ -6137,8 +6137,8 @@ void nighttime(tgestate_t *state)
   {
     map_x = state->map_position[0] + 4;
     map_y = state->map_position[1];
-    L = state->searchlight_coords[0]; /* Conv: Fused load split apart. */
-    H = state->searchlight_coords[1];
+    L = state->searchlight.coords[0]; /* Conv: Fused load split apart. */
+    H = state->searchlight.coords[1];
 
     /* If the highlight doesn't need to move, quit. */
     if (L == map_x && H == map_y)
@@ -6160,13 +6160,13 @@ void nighttime(tgestate_t *state)
         H--;
     }
 
-    state->searchlight_coords[0] = L; // Conv: Fused store split apart.
-    state->searchlight_coords[1] = H;
+    state->searchlight.coords[0] = L; // Conv: Fused store split apart.
+    state->searchlight.coords[1] = H;
   }
 
   map_x = state->map_position[0];
   map_y = state->map_position[1];
-  HL = &state->searchlight_coords[1]; // offset of 1 compensates for the HL-- ahead
+  HL = &state->searchlight.coords[1]; // offset of 1 compensates for the HL-- ahead
   iters = 1; // 1 iteration
   // PUSH BC
   // PUSH HL
@@ -6174,7 +6174,7 @@ void nighttime(tgestate_t *state)
 
 not_tracking:
 
-  slstate = &state->searchlight_states[0];
+  slstate = &state->searchlight.states[0];
   iters = 3; // 3 iterations == three searchlights
   do
   {
@@ -6202,9 +6202,9 @@ not_tracking:
 ae3f:
     A = 0;
     //Adash = A;
-    //HL--; // -> slstate->x OR -> state->searchlight_coords[0]
+    //HL--; // -> slstate->x OR -> state->searchlight.coords[0]
     iters = 0x00;
-    Adash = *HL; // -> slstate->x OR -> state->searchlight_coords[0]
+    Adash = *HL; // -> slstate->x OR -> state->searchlight.coords[0]
     if (Adash < map_x)
     {
       iters = 0xFF;
@@ -6224,7 +6224,7 @@ ae3f:
     attrs = &state->speccy->attributes[0x46 + y * state->width + x]; // 0x46 = address of top-left game window attribute
     // EX DE,HL
 
-    state->searchlight_related = A;
+    state->searchlight.related = A;
     searchlight_plot(state, attrs); // was DE
 
 next:
@@ -6269,8 +6269,8 @@ void searchlight_caught(tgestate_t                *state,
 
   state->searchlight_state = searchlight_STATE_CAUGHT;
 
-  state->searchlight_coords[0] = slstate->y;
-  state->searchlight_coords[1] = slstate->x;
+  state->searchlight.coords[0] = slstate->y;
+  state->searchlight.coords[1] = slstate->x;
 
   state->bell = bell_RING_PERPETUAL;
 
@@ -6281,8 +6281,9 @@ void searchlight_caught(tgestate_t                *state,
  * $AEB8: Searchlight plotter.
  *
  * \param[in] state Pointer to game state.
+ * \param[in] DE    Screen attrs ptr. (was DE)
  */
-void searchlight_plot(tgestate_t *state, attribute_t *DE) // DE must be passed in
+void searchlight_plot(tgestate_t *state, attribute_t *DE)
 {
   /**
    * $AF3E: Searchlight circle shape.
@@ -6327,7 +6328,7 @@ void searchlight_plot(tgestate_t *state, attribute_t *DE) // DE must be passed i
   iters = 16; /* height */
   do
   {
-    A = state->searchlight_related;
+    A = state->searchlight.related;
     pattrs = &attrs[0x240]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
 
     // Conv: Was E & 31 => 4th to last row, or later
@@ -6366,7 +6367,7 @@ void searchlight_plot(tgestate_t *state, attribute_t *DE) // DE must be passed i
       {
         uint8_t oldA;
 
-        oldA = state->searchlight_related;
+        oldA = state->searchlight.related;
         A = L; // Conv: was interleaved
         if (oldA != 0)
           goto af0c;

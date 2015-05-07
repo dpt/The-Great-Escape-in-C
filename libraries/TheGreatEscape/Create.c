@@ -265,7 +265,7 @@ static void tge_initialise(tgestate_t *state)
 
   memcpy(state->item_structs, item_structs, sizeof(item_structs));
 
-  memcpy(state->searchlight_states,
+  memcpy(state->searchlight.states,
          searchlight_states,
          sizeof(searchlight_states));
 
