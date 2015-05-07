@@ -125,11 +125,8 @@ struct tgestate
    * Read by mask_stuff, guards_follow_suspicious_character. */
   tinypos_t       tinypos_81B2;
 
-   // these two are a location_t
   /** $81B5: (unknown) */
-  uint8_t         map_position_related_x;
-  /** $81B6: (unknown) */
-  uint8_t         map_position_related_y;
+  xy_t            map_position_related;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    * Seems to be a field: bit 7 is for flipping, the remainder is an index,
@@ -142,7 +139,7 @@ struct tgestate
 
   /** $81BB: Map position (on screen).
    * Used when drawing tiles. */
-  uint8_t         map_position[2];
+  xy_t            map_position;
 
   /** $81BD: Searchlight state. Might be a counter in fact. */
   uint8_t         searchlight_state;
@@ -263,7 +260,7 @@ struct tgestate
     uint8_t             related;
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    uint8_t             caught_coords[2];
+    xy_t                caught_coord;
   }
   searchlight;
 

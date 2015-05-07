@@ -4913,13 +4913,13 @@ void get_supertiles(tgestate_t *state)
   assert(state != NULL);
 
   /* Get vertical offset. */
-  v = state->map_position[1] & ~3; /* = 0, 4, 8, 12, ... */
+  v = state->map_position.y & ~3; /* = 0, 4, 8, 12, ... */
 
   /* Multiply A by 13.5. (v is a multiple of 4, so this goes 0, 54, 108, 162, ...) */
   tiles = &map[0] - MAPX + (v + (v >> 1)) * 9; // Subtract MAPX so it skips the first row.
 
   /* Add horizontal offset. */
-  tiles += state->map_position[0] >> 2;
+  tiles += state->map_position.x >> 2;
 
   /* Populate map_buf with 7x5 array of supertile refs. */
   iters = state->st_rows;
@@ -4953,7 +4953,7 @@ void plot_bottommost_tiles(tgestate_t *state)
 
   vistiles = &state->tile_buf[24 * 16];       // $F278 = visible tiles array + 24 * 16
   maptiles = &state->map_buf[28];             // $FF74
-  pos      = state->map_position[1];          // map_position hi
+  pos      = state->map_position.y;           // map_position hi
   window   = &state->window_buf[24 * 16 * 8]; // $FE90
 
   plot_horizontal_tiles_common(state, vistiles, maptiles, pos, window);
@@ -4977,7 +4977,7 @@ void plot_topmost_tiles(tgestate_t *state)
 
   vistiles = &state->tile_buf[0];    // $F0F8 = visible tiles array + 0
   maptiles = &state->map_buf[8];     // $FF58
-  pos      = state->map_position[1]; // map_position hi
+  pos      = state->map_position.y;  // map_position hi
   window   = &state->window_buf[0];  // $F290
 
   plot_horizontal_tiles_common(state, vistiles, maptiles, pos, window);
@@ -5014,7 +5014,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   assert(window   != NULL);
 
   offset = (pos & 3) * 4;
-  pos_1 = (state->map_position[0] & 3) + offset;
+  pos_1 = (state->map_position.x & 3) + offset;
 
   /* Initial edge. */
 
@@ -5069,7 +5069,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + offset; // read of self modified instruction
   // Conv: A was A'.
-  A = state->map_position[0] & 3; // map_position lo (repeats earlier work)
+  A = state->map_position.x & 3; // map_position lo (repeats earlier work)
   if (A == 0)
     return;
 
@@ -5106,7 +5106,7 @@ void plot_all_tiles(tgestate_t *state)
   vistiles = &state->tile_buf[0];    /* visible tiles array */
   maptiles = &state->map_buf[0];     /* 7x5 supertile refs */
   window   = &state->window_buf[0];  /* screen buffer start address */
-  pos      = state->map_position[0]; /* map_position lo */
+  pos      = state->map_position.x;  /* map_position lo */
 
   iters = state->columns; /* Conv: was 24 */
   do
@@ -5144,12 +5144,12 @@ void plot_rightmost_tiles(tgestate_t *state)
   vistiles = &state->tile_buf[23];   /* visible tiles array */
   maptiles = &state->map_buf[6];     /* 7x5 supertile refs */
   window   = &state->window_buf[23]; /* screen buffer start address */
-  pos      = state->map_position[0]; /* map_position lo */
+  pos      = state->map_position.x;  /* map_position lo */
 
   pos &= 3;
   if (pos == 0)
     maptiles--;
-  pos = state->map_position[0] - 1; /* map_position lo */
+  pos = state->map_position.x - 1; /* map_position lo */
 
   plot_vertical_tiles_common(state, vistiles, maptiles, pos, window);
 }
@@ -5173,7 +5173,7 @@ void plot_leftmost_tiles(tgestate_t *state)
   vistiles = &state->tile_buf[0];    /* visible tiles array */
   maptiles = &state->map_buf[0];     /* 7x5 supertile refs */
   window   = &state->window_buf[0];  /* screen buffer start address */
-  pos      = state->map_position[0]; /* map_position lo */
+  pos      = state->map_position.x;  /* map_position lo */
 
   plot_vertical_tiles_common(state, vistiles, maptiles, pos, window);
 }
@@ -5209,7 +5209,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   assert(window   != NULL);
 
   offset = pos & 3; // self modify (local)
-  pos_1 = (state->map_position[1] & 3) * 4 + offset;
+  pos_1 = (state->map_position.y & 3) * 4 + offset;
 
   /* Initial edge. */
 
@@ -5263,7 +5263,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
 
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[0] + offset; // read self modified instruction
-  iters = (state->map_position[1] & 3) + 1;
+  iters = (state->map_position.y & 3) + 1;
   do
   {
     tileindex_t t; /* was A */
@@ -5370,7 +5370,7 @@ void shunt_map_left(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->map_position[0]++;
+  state->map_position.x++;
 
   get_supertiles(state);
 
@@ -5391,7 +5391,7 @@ void shunt_map_right(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->map_position[0]--;
+  state->map_position.x--;
 
   get_supertiles(state);
 
@@ -5412,8 +5412,8 @@ void shunt_map_up_right(tgestate_t *state)
 
   /* Conv: The original code has a copy of map_position in HL on entry. In
    * this version we read it from source. */
-  state->map_position[0]--;
-  state->map_position[1]++;
+  state->map_position.x--;
+  state->map_position.y++;
 
   get_supertiles(state);
 
@@ -5433,7 +5433,7 @@ void shunt_map_up(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->map_position[1]++;
+  state->map_position.y++;
 
   get_supertiles(state);
 
@@ -5452,7 +5452,7 @@ void shunt_map_down(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->map_position[1]--;
+  state->map_position.y--;
 
   get_supertiles(state);
 
@@ -5471,8 +5471,8 @@ void shunt_map_down_left(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->map_position[0]++;
-  state->map_position[1]--;
+  state->map_position.x++;
+  state->map_position.y--;
 
   get_supertiles(state);
 
@@ -5561,7 +5561,7 @@ void move_map(tgestate_t *state)
 
   /* Note: This looks like it ought to be an AND but it's definitely an OR in
    * the original game. */
-  if (state->map_position[0] == C || state->map_position[1] == B)
+  if (state->map_position.x == C || state->map_position.y == B)
     return; /* Don't move. */
 
   // POP AF
@@ -6038,8 +6038,8 @@ void searchlight_movement(searchlight_state_t *slstate)
 
   assert(slstate != NULL);
 
-  x = slstate->x;
-  y = slstate->y;
+  x = slstate->xy.x;
+  y = slstate->xy.y;
   if (--slstate->step == 0)
   {
     counter = slstate->counter; // sampled HL = $AD3B, $AD34, $AD2D
@@ -6090,8 +6090,8 @@ void searchlight_movement(searchlight_state_t *slstate)
     else
       x -= 2; // direction_*_LEFT
 
-    slstate->y = y;
-    slstate->x = x;
+    slstate->xy.y = y;
+    slstate->xy.x = x;
   }
 }
 
@@ -6135,10 +6135,10 @@ void nighttime(tgestate_t *state)
 
   if (state->searchlight_state == searchlight_STATE_CAUGHT)
   {
-    map_x = state->map_position[0] + 4;
-    map_y = state->map_position[1];
-    L = state->searchlight.caught_coords[0]; /* Conv: Fused load split apart. */
-    H = state->searchlight.caught_coords[1];
+    map_x = state->map_position.x + 4;
+    map_y = state->map_position.y;
+    L = state->searchlight.caught_coord.x; /* Conv: Fused load split apart. */
+    H = state->searchlight.caught_coord.y;
 
     /* If the highlight doesn't need to move, quit. */
     if (L == map_x && H == map_y)
@@ -6160,13 +6160,13 @@ void nighttime(tgestate_t *state)
         H--;
     }
 
-    state->searchlight.caught_coords[0] = L; // Conv: Fused store split apart.
-    state->searchlight.caught_coords[1] = H;
+    state->searchlight.caught_coord.x = L; // Conv: Fused store split apart.
+    state->searchlight.caught_coord.y = H;
   }
 
-  map_x = state->map_position[0];
-  map_y = state->map_position[1];
-  HL = &state->searchlight.caught_coords[1]; // offset of 1 compensates for the HL-- ahead
+  map_x = state->map_position.x;
+  map_y = state->map_position.y;
+  HL = &state->searchlight.caught_coord.y; // offset of 1 compensates for the HL-- ahead
   iters = 1; // 1 iteration
   // PUSH BC
   // PUSH HL
@@ -6189,22 +6189,22 @@ not_tracking:
     // POP HL
 
     // PUSH HL
-    map_x = state->map_position[0];
-    map_y = state->map_position[1];
+    map_x = state->map_position.x;
+    map_y = state->map_position.y;
     // Original: if (E + 23 < slstate->x || slstate->x + 16 < E)
-    if (map_x < slstate->x - 23 || map_x >= slstate->x + 16) // E-22 .. E+15
+    if (map_x < slstate->xy.x - 23 || map_x >= slstate->xy.x + 16) // E-22 .. E+15
       goto next;
     // Original: if (D + 16 < slstate->y || slstate->y + 16 < D)
-    if (map_y < slstate->y - 16 || map_y >= slstate->y + 16) // D-16 .. D+15
+    if (map_y < slstate->xy.y - 16 || map_y >= slstate->xy.y + 16) // D-16 .. D+15
       goto next;
     //HL++;
 
 ae3f:
     A = 0;
     //Adash = A;
-    //HL--; // -> slstate->x OR -> state->searchlight.caught_coords[0]
+    //HL--; // -> slstate->x OR -> state->searchlight.caught_coord.x
     iters = 0x00;
-    Adash = *HL; // -> slstate->x OR -> state->searchlight.caught_coords[0]
+    Adash = *HL; // -> slstate->x OR -> state->searchlight.caught_coord.x
     if (Adash < map_x)
     {
       iters = 0xFF;
@@ -6250,11 +6250,11 @@ void searchlight_caught(tgestate_t                *state,
   assert(state   != NULL);
   assert(slstate != NULL);
 
-  map_y = state->map_position[1];
-  map_x = state->map_position[0];
+  map_y = state->map_position.y;
+  map_x = state->map_position.x;
 
-  if ((slstate->x + 5 >= map_x + 12 || slstate->x + 10 < map_x + 10) ||
-      (slstate->y + 5 >= map_y + 10 || slstate->y + 12 < map_y +  6))
+  if ((slstate->xy.x + 5 >= map_x + 12 || slstate->xy.x + 10 < map_x + 10) ||
+      (slstate->xy.y + 5 >= map_y + 10 || slstate->xy.y + 12 < map_y +  6))
     return;
 
   // FUTURE: We could rearrange the above like this:
@@ -6263,14 +6263,16 @@ void searchlight_caught(tgestate_t                *state,
   //  return;
   // But that needs checking for edge cases.
 
-  // seems odd to not do this (cheaper) test before the earlier one
+  /* It seems odd to not do this (cheaper) test sooner. */
   if (state->searchlight_state == searchlight_STATE_CAUGHT)
     return; /* already caught */
 
   state->searchlight_state = searchlight_STATE_CAUGHT;
 
-  state->searchlight.caught_coords[0] = slstate->y;
-  state->searchlight.caught_coords[1] = slstate->x;
+  // CHECK: this x/y transpose looks dodgy
+  // FUTURE: is a struct copy doable?
+  state->searchlight.caught_coord.x = slstate->xy.y;
+  state->searchlight.caught_coord.y = slstate->xy.x;
 
   state->bell = bell_RING_PERPETUAL;
 
@@ -6998,8 +7000,8 @@ void reset_outdoors(tgestate_t *state)
 
   /* Centre the screen on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position[0] = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position[1] = (state->vischars[1].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.x = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[1].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
 
   state->room_index = room_NONE;
   get_supertiles(state);
@@ -8660,11 +8662,11 @@ void mask_stuff(tgestate_t *state)
     // PUSH BC
     // PUSH HLeb
 
-    x = state->map_position_related_x;
+    x = state->map_position_related.x;
     if (x - 1 >= pmask->bounds.x1 || x + 2 <= pmask->bounds.x0) // $EC03, $EC02
       goto pop_next;
 
-    y = state->map_position_related_y;
+    y = state->map_position_related.y;
     if (y - 1 >= pmask->bounds.y1 || y + 3 <= pmask->bounds.y0) // $EC05, $EC04
       goto pop_next;
 
@@ -8684,7 +8686,7 @@ void mask_stuff(tgestate_t *state)
 
     // clipping
     // likely clip_x1 is a width and clip_y1 is a height
-    mpr1 = state->map_position_related_x;
+    mpr1 = state->map_position_related.x;
     if (mpr1 >= pmask->bounds.x0) // must be $EC02
     {
       clip_x0 = mpr1 - pmask->bounds.x0;
@@ -8699,7 +8701,7 @@ void mask_stuff(tgestate_t *state)
       clip_x1 = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - mpr1));
     }
 
-    mpr2 = state->map_position_related_y;
+    mpr2 = state->map_position_related.y;
     if (mpr2 >= pmask->bounds.y0)
     {
       clip_y0 = mpr2 - pmask->bounds.y0;
@@ -8722,9 +8724,9 @@ void mask_stuff(tgestate_t *state)
 
       x = y = 0;
       if (clip_y0 == 0)
-        y = -state->map_position_related_y + pmask->bounds.y0;
+        y = -state->map_position_related.y + pmask->bounds.y0;
       if (clip_x0 == 0)
-        x = -state->map_position_related_x + pmask->bounds.x0;
+        x = -state->map_position_related.x + pmask->bounds.x0;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
@@ -8976,8 +8978,8 @@ int vischar_visible(tgestate_t *state,
 
   /* Width part */
 
-  mpr1 = &state->map_position_related_x;
-  A = state->map_position[0] + state->tb_columns - *mpr1;
+  mpr1 = &state->map_position_related.x;
+  A = state->map_position.x + state->tb_columns - *mpr1;
   if (A > 0)
   {
     if (A < vischar->width_bytes)
@@ -8987,7 +8989,7 @@ int vischar_visible(tgestate_t *state,
     else
     {
       // FIXME. Signed calc will break here.
-      A = *mpr1 + vischar->width_bytes - state->map_position[0]; // width_bytes == width in bytes
+      A = *mpr1 + vischar->width_bytes - state->map_position.x; // width_bytes == width in bytes
       if (A <= 0)
         goto invisible;
 
@@ -8999,7 +9001,7 @@ int vischar_visible(tgestate_t *state,
 
     /* Height part */
 
-    foo1 = (state->map_position[1] + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
+    foo1 = (state->map_position.y + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
     height = vischar->scry; // fused
     if (foo1 < height)
       goto invisible;
@@ -9013,7 +9015,7 @@ int vischar_visible(tgestate_t *state,
     else
     {
       foo2 = vischar->height + height; // height == height in rows
-      height = state->map_position[1] * 8;
+      height = state->map_position.y * 8;
       if (foo2 < height)
         goto invisible;
       if ((foo2 >> 8) != 0)
@@ -9074,15 +9076,15 @@ void called_from_main_loop_3(tgestate_t *state)
     if (vischar->flags == 0)
       goto next; /* Likely: No character. */
 
-    state->map_position_related_y = vischar->scry >> 3; // divide by 8
-    state->map_position_related_x = vischar->scrx >> 3; // divide by 8
+    state->map_position_related.y = vischar->scry >> 3; // divide by 8
+    state->map_position_related.x = vischar->scrx >> 3; // divide by 8
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
       goto next; /* invisible */
 
     A = (((clipped_height & 0xFF) >> 3) & 31) + 2;
     saved_A = A;
-    A += state->map_position_related_y - state->map_position[1];
+    A += state->map_position_related.y - state->map_position.y;
     if (A >= 0)
     {
       A -= 17;
@@ -9123,17 +9125,17 @@ void called_from_main_loop_3(tgestate_t *state)
     uint8_t *HL;
     int carry;
 
-    HL = &state->map_position[0];
+    HL = &state->map_position.x;
 
     C = clipped_width & 0xFF;
 
     if (B == 0)
-      B = state->map_position_related_x - HL[0];
+      B = state->map_position_related.x - HL[0];
     else
       B = 0; // was interleaved
 
     if (D == 0) // (yes, D)
-      C = state->map_position_related_y - HL[1];
+      C = state->map_position_related.y - HL[1];
     else
       C = 0; // was interleaved
 
@@ -9242,8 +9244,8 @@ const tile_t *select_tile_set(tgestate_t *state,
     supertileindex_t tile; /* was Adash */
 
     /* Convert map position to an index into 7x5 supertile refs array. */
-    temp = ((((state->map_position[1] & 3) + y_shift) >> 2) & 0x3F) * state->st_columns; // vertical // Conv: constant columns 7 made variable
-    pos  = ((((state->map_position[0] & 3) + x_shift) >> 2) & 0x3F) + temp; // horizontal + vertical
+    temp = ((((state->map_position.y & 3) + y_shift) >> 2) & 0x3F) * state->st_columns; // vertical // Conv: constant columns 7 made variable
+    pos  = ((((state->map_position.x & 3) + x_shift) >> 2) & 0x3F) + temp; // horizontal + vertical
 
     tile = state->map_buf[pos]; /* (7x5) supertile refs */
     tileset = &exterior_tiles_1[0];
@@ -9279,8 +9281,8 @@ void spawn_characters(tgestate_t *state)
   assert(state != NULL);
 
   /* Form a map position in DE. */
-  map_y = state->map_position[1];
-  map_x = state->map_position[0];
+  map_y = state->map_position.y;
+  map_x = state->map_position.x;
   map_x_clamped = (map_x < 8) ? 0 : map_x;
   map_y_clamped = (map_y < 8) ? 0 : map_y;
 
@@ -9343,8 +9345,8 @@ void purge_visible_characters(tgestate_t *state)
 
   assert(state != NULL);
 
-  E = MAX(state->map_position[0] - EDGE, 0);
-  D = MAX(state->map_position[1] - EDGE, 0);
+  E = MAX(state->map_position.x - EDGE, 0);
+  D = MAX(state->map_position.y - EDGE, 0);
 
   iters   = vischars_LENGTH - 1;
   vischar = &state->vischars[1]; /* iterate over non-player characters */
@@ -11596,8 +11598,8 @@ void item_discovered(tgestate_t *state, item_t item)
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
 
   itemstruct->room_and_flags = default_item_location->room_and_flags;
-  itemstruct->pos.x = default_item_location->x;
-  itemstruct->pos.y = default_item_location->y;
+  itemstruct->pos.x = default_item_location->pos.x;
+  itemstruct->pos.y = default_item_location->pos.y;
 
   if (room == room_0_OUTDOORS) /* Only gets hit for the green key. */
   {
@@ -11732,8 +11734,8 @@ void mark_nearby_items(tgestate_t *state)
   if (room == room_NONE)
     room = room_0_OUTDOORS;
 
-  map_x = state->map_position[0];
-  map_y = state->map_position[1];
+  map_x = state->map_position.x;
+  map_y = state->map_position.y;
 
   iters      = item__LIMIT;
   itemstruct = &state->item_structs[0];
@@ -11871,9 +11873,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   /* $8213 = A; */
 
   state->tinypos_81B2           = itemstr->pos;
-  // map_position_related_x/y could well be a location_t
-  state->map_position_related_x = itemstr->target & 0xFF;
-  state->map_position_related_y = itemstr->target >> 8;
+  // map_position_related.x/y could well be a location_t
+  state->map_position_related.x = itemstr->target & 0xFF;
+  state->map_position_related.y = itemstr->target >> 8;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->tinypos_81B2 + 5;
@@ -11922,9 +11924,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (state->map_position_related_y - state->map_position[1]) * 192; // temp: HL
+    y = (state->map_position_related.y - state->map_position.y) * 192; // temp: HL
 
-  x = state->map_position_related_x - state->map_position[0]; // X axis
+  x = state->map_position_related.x - state->map_position.x; // X axis
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
@@ -12008,8 +12010,8 @@ uint8_t item_visible(tgestate_t *state,
   /* Width part */
 
   // Seems to be doing (map_position_x + state->tb_columns <= px[0])
-  px = &state->map_position_related_x;
-  map_position = state->map_position[0] | (state->map_position[1] << 8); // Conv: Was a fused load
+  px = &state->map_position_related.x;
+  map_position = state->map_position.x | (state->map_position.y << 8); // Conv: Was a fused load
 
   xoff = (map_position & 0xFF) + state->tb_columns - px[0];
   if (xoff > 0)
@@ -12033,7 +12035,7 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Height part */
 
-    yoff = (map_position >> 8) + state->tb_rows - px[1]; // map_position_related_y
+    yoff = (map_position >> 8) + state->tb_rows - px[1]; // map_position_related.y
     if (yoff > 0)
     {
 #define HEIGHT 2
@@ -12873,11 +12875,11 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->flip_sprite = flip_sprite = vischar->mi.flip_sprite; // set left/right flip flag / sprite offset
 
   // HL now points after flip_sprite
-  // DE now points to state->map_position_related_x
+  // DE now points to state->map_position_related.x
 
   // unrolled over original
-  state->map_position_related_x = vischar->scrx >> 3;
-  state->map_position_related_y = vischar->scry >> 3;
+  state->map_position_related.x = vischar->scrx >> 3;
+  state->map_position_related.y = vischar->scry >> 3;
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit
@@ -12946,9 +12948,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (vischar->scry - (state->map_position[1] * 8)) * 24;
+    y = (vischar->scry - (state->map_position.y * 8)) * 24;
 
-  x = state->map_position_related_x - state->map_position[0]; // signed subtract + extend to 16-bit
+  x = state->map_position_related.x - state->map_position.x; // signed subtract + extend to 16-bit
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);

@@ -413,7 +413,16 @@ typedef uint8_t gametime_t;
 typedef uint8_t eventtime_t;
 
 /**
- * Holds a position and height.
+ * Holds an X,Y position.
+ */
+typedef struct xy
+{
+  uint8_t x, y;
+}
+xy_t;
+
+/**
+ * Holds an X,Y position and height.
  */
 typedef struct pos
 {
@@ -662,7 +671,7 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
 typedef struct default_item_location
 {
   uint8_t room_and_flags;
-  uint8_t x, y;
+  xy_t    pos;
 }
 default_item_location_t;
 
@@ -692,7 +701,7 @@ character_meta_data_t;
  */
 typedef struct searchlight_movement
 {
-  uint8_t        x,y;
+  xy_t           xy;
   uint8_t        step;     // step counter thing
   direction_t    direction;
   uint8_t        counter;  // sign magnitude counter
