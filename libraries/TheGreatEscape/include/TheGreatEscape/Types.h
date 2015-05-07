@@ -687,6 +687,19 @@ typedef struct character_meta_data
 }
 character_meta_data_t;
 
+/**
+ * Holds searchlight movement data.
+ */
+typedef struct searchlight_movement
+{
+  uint8_t        x,y;
+  uint8_t        step;     // step counter thing
+  direction_t    direction;
+  uint8_t        counter;  // sign magnitude counter
+  const uint8_t *ptr;
+}
+searchlight_state_t;
+
 /* ----------------------------------------------------------------------- */
 
 #endif /* TYPES_H */

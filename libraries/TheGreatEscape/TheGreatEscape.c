@@ -595,13 +595,14 @@ void zoombox_draw_tile(tgestate_t     *state,
                        uint8_t        *addr);
 
 static
-void searchlight_AD59(uint8_t *HL);
+void searchlight_movement(searchlight_state_t *slstate);
 static
 void nighttime(tgestate_t *state);
 static
-void searchlight_caught(tgestate_t *state, const uint8_t *HL);
+void searchlight_caught(tgestate_t                *state,
+                        const searchlight_state_t *slstate);
 static
-void searchlight_plot(tgestate_t *state);
+void searchlight_plot(tgestate_t *state, attribute_t *DE);
 
 static
 int touch(tgestate_t *state, vischar_t *vischar, uint8_t flip_sprite);
@@ -5354,6 +5355,7 @@ uint8_t *plot_tile(tgestate_t             *state,
 
 /* ----------------------------------------------------------------------- */
 
+// Fixed constants for now.
 #define tile_buf_length      (24 * 17)
 #define screen_buffer_length (24 * 8 * 17)
 
@@ -5408,8 +5410,8 @@ void shunt_map_up_right(tgestate_t *state)
 {
   assert(state != NULL);
 
-  // Conv: The original code has a copy of map_position in HL on entry. In
-  // this version we read it from source.
+  /* Conv: The original code has a copy of map_position in HL on entry. In
+   * this version we read it from source. */
   state->map_position[0]--;
   state->map_position[1]++;
 
@@ -5486,7 +5488,7 @@ void shunt_map_down_left(tgestate_t *state)
 /**
  * $AAB2: Move map.
  *
- * Moves the map when the character walks.
+ * Moves the map when the hero walks.
  *
  * \param[in] state Pointer to game state.
  */
@@ -5502,16 +5504,16 @@ void move_map(tgestate_t *state)
     &move_map_down_left,
   };
 
-  const uint8_t *char_related;          /* was DE */
-  uint8_t        b0C;                   /* was C */
-  direction_t    direction;             /* was A */
+  const uint8_t *char_related;      /* was DE */
+  uint8_t        b0C;               /* was C */
+  direction_t    direction;         /* was A */
   uint8_t        move_map_y;        /* was A */
-  movemapfn_t   *pmovefn;               /* was HL */
-  uint8_t        B;                     /* was B */
-  uint8_t        C;                     /* was C */
+  movemapfn_t   *pmovefn;           /* was HL */
+  uint8_t        B;                 /* was B */
+  uint8_t        C;                 /* was C */
   uint8_t       *pmove_map_y;       /* was HL */
   uint8_t       *pmove_map_y_copy;  /* was DE */
-  uint16_t       game_window_x;         /* was HL */
+  uint16_t       game_window_x;     /* was HL */
   // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
@@ -6021,78 +6023,75 @@ void zoombox_draw_tile(tgestate_t     *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AD59: (unknown)
+ * $AD59: Decides searchlight movement.
  *
  * Leaf.
  *
- * \param[in] HL Pointer to spotlight_movement_data_maybe.
+ * \param[in] slstate Pointer to a searchlight movement data. (was HL)
  */
-void searchlight_AD59(uint8_t *HL)
+void searchlight_movement(searchlight_state_t *slstate)
 {
-  uint8_t   D;  /* was D */
-  uint8_t   E;  /* was E */
-  uint8_t   A;  /* was A */
-  uint8_t   B;  /* was B */
-  uint8_t   C;  /* was C */
-  uint16_t *BC; /* was BC */
+  uint8_t        x,y;       /* was E,D */
+  uint8_t        counter;   /* was A */
+  const uint8_t *ptr;       /* was BC */
+  direction_t    direction; /* was A */
 
-  assert(HL != NULL);
+  assert(slstate != NULL);
 
-  E = *HL++;
-  D = *HL++;
-  (*HL)--;
-  if (*HL == 0)
+  x = slstate->x;
+  y = slstate->y;
+  if (--slstate->step == 0)
   {
-    HL += 2;
-    A = *HL; // sampled HL = $AD3B, $AD34, $AD2D
-    if (A & (1 << 7))
+    counter = slstate->counter; // sampled HL = $AD3B, $AD34, $AD2D
+    if (counter & (1 << 7)) // sign
     {
-      A &= 0x7F;
-      if (A == 0)
+      counter &= 0x7F;
+      if (counter == 0)
       {
-        *HL &= ~(1 << 7);
+        slstate->counter &= ~(1 << 7); // clear sign bit when magnitude hits zero
       }
       else
       {
-        (*HL)--;
-        A--;
+        slstate->counter--; // count down
+        counter--; // just a copy
       }
     }
     else
     {
-      A++;
-      *HL = A;
+      slstate->counter = ++counter; // count up
     }
-    BC = HL[1] | (HL[2] << 8);
-    // sampled BC $AD49, AD47, AD40, AD54, AD45, AD43, AD42, AD43, AD56, AD3E, AD45, AD47, AD58, AD3E
-    A = BC[A * 2];
-    if (A == 0xFF) // end of list?
+    ptr = slstate->ptr;
+    if (ptr[counter * 2] == 0xFF) // end of list?
     {
-      (*HL)--;
-      *HL |= 1 << 7;
-      BC -= 2;
-      A = *BC;
+      slstate->counter--; // overshot? count down counter byte
+      slstate->counter |= 1 << 7; // go negative
+      ptr -= 2;
+      // A = *ptr; /* This is a flaw in original code: A is fetched but never used again. */
     }
-    HL -= 2;
-    *HL++ = *BC++;
-    *HL = *BC;
+    // copy counter + direction_t
+    slstate->step = ptr[0];
+    slstate->direction = ptr[1];
   }
   else
   {
-    HL++;
-    A = *HL++;
-    if (*HL & (1 << 7))
-      A ^= 2;
-    if (A < 2)
-      D -= 2;
-    D++;
-    if (A != 0 && A != 3)
-      E += 2; // if A is 1 or 2
+    direction = slstate->direction;
+    if (slstate->counter & (1 << 7)) // if -ve
+      direction ^= 2; // up-down direction toggle
+
+    // Conv: This is the [-2]+1 pattern which works out -1/+1.
+    if (direction <= direction_TOP_RIGHT) // direction_TOP_*
+      y--;
     else
-      E -= 2; // if A is 0 or 3
-    HL -= 3;
-    *HL-- = D;
-    *HL = E;
+      y++;
+
+    if (direction != direction_TOP_LEFT &&
+        direction != direction_BOTTOM_LEFT)
+      x += 2; // direction_*_RIGHT
+    else
+      x -= 2; // direction_*_LEFT
+
+    slstate->y = y;
+    slstate->x = x;
   }
 }
 
@@ -6104,26 +6103,8 @@ void searchlight_AD59(uint8_t *HL)
  */
 void nighttime(tgestate_t *state)
 {
-  /**
-   * $AD29: Likely: spotlight movement data.
-   */
-  static const uint8_t spotlight_movement_data_maybe[] =
-  {
-    0x24, 0x52, 0x2C, 0x02, 0x00, 0x54, 0xAD,
-    0x78, 0x52, 0x18, 0x01, 0x00, 0x43, 0xAD,
-    0x3C, 0x4C, 0x20, 0x02, 0x00, 0x3E, 0xAD,
-
-    0x20, 0x02, 0x20, 0x01, 0xFF,
-
-    0x18, 0x01, 0x0C, 0x00, 0x18, 0x03, 0x0C,
-    0x00, 0x20, 0x01, 0x14, 0x00, 0x20, 0x03,
-    0x2C, 0x02, 0xFF,
-
-    0x2C, 0x02, 0x2A, 0x01, 0xFF,
-  };
-
-  uint8_t  D;         /* was D */
-  uint8_t  E;         /* was E */
+  uint8_t  map_y;         /* was D */
+  uint8_t  map_x;         /* was E */
   uint8_t  H;         /* was H */
   uint8_t  L;         /* was L */
   uint8_t  iters;     /* was B */
@@ -6132,7 +6113,9 @@ void nighttime(tgestate_t *state)
   uint8_t  C;         /* was C */
   uint16_t y;         /* was HL */
   uint16_t x;         /* was BC */
-  uint8_t *HL;        /* was HL */
+  uint8_t *HL;               /* was HL */
+  attribute_t *attrs;               /* was HL */
+  searchlight_state_t *slstate; /* was HL */
 
   assert(state != NULL);
 
@@ -6152,26 +6135,26 @@ void nighttime(tgestate_t *state)
 
   if (state->searchlight_state == searchlight_STATE_CAUGHT)
   {
-    E = state->map_position[0] + 4;
-    D = state->map_position[1];
+    map_x = state->map_position[0] + 4;
+    map_y = state->map_position[1];
     L = state->searchlight_coords[0]; /* Conv: Fused load split apart. */
     H = state->searchlight_coords[1];
 
     /* If the highlight doesn't need to move, quit. */
-    if (L == E && H == D)
+    if (L == map_x && H == map_y)
       return;
 
     /* Move searchlight left/right to focus on the hero. */
     // Bug? Possibly missing L != E test surrounding the block.
-    if (L < E)
+    if (L < map_x)
       L++;
     else
       L--;
 
     /* Move searchlight up/down to focus on the hero. */
-    if (H != D)
+    if (H != map_y)
     {
-      if (H < D)
+      if (H < map_y)
         H++;
       else
         H--;
@@ -6181,8 +6164,8 @@ void nighttime(tgestate_t *state)
     state->searchlight_coords[1] = H;
   }
 
-  E = state->map_position[0];
-  D = state->map_position[1];
+  map_x = state->map_position[0];
+  map_y = state->map_position[1];
   HL = &state->searchlight_coords[1]; // offset of 1 compensates for the HL-- ahead
   iters = 1; // 1 iteration
   // PUSH BC
@@ -6191,64 +6174,64 @@ void nighttime(tgestate_t *state)
 
 not_tracking:
 
-  HL = &spotlight_movement_data_maybe[0];
-  iters = 3; // 3 iterations
+  slstate = &state->searchlight_states[0];
+  iters = 3; // 3 iterations == three searchlights
   do
   {
     // PUSH BC
 
     // PUSH HL
-    searchlight_AD59(HL);
+    searchlight_movement(slstate);
     // POP HL
 
     // PUSH HL
-    searchlight_caught(state, HL);
+    searchlight_caught(state, slstate);
     // POP HL
 
     // PUSH HL
-    E = state->map_position[0];
-    D = state->map_position[1];
-    // Original: if (E + 23 < HL[0] || HL[0] + 16 < E)
-    if (E < HL[0] - 23 || E >= HL[0] + 16) // E-22 .. E+15
+    map_x = state->map_position[0];
+    map_y = state->map_position[1];
+    // Original: if (E + 23 < slstate->x || slstate->x + 16 < E)
+    if (map_x < slstate->x - 23 || map_x >= slstate->x + 16) // E-22 .. E+15
       goto next;
-    // Original: if (D + 16 < HL[1] || HL[1] + 16 < D)
-    if (D < HL[1] - 16 || D >= HL[1] + 16) // D-16 .. D+15
+    // Original: if (D + 16 < slstate->y || slstate->y + 16 < D)
+    if (map_y < slstate->y - 16 || map_y >= slstate->y + 16) // D-16 .. D+15
       goto next;
-    HL++;
+    //HL++;
 
 ae3f:
     A = 0;
     //Adash = A;
-    HL--;
+    //HL--; // -> slstate->x OR -> state->searchlight_coords[0]
     iters = 0x00;
-    Adash = *HL;
-    if (Adash < E)
+    Adash = *HL; // -> slstate->x OR -> state->searchlight_coords[0]
+    if (Adash < map_x)
     {
       iters = 0xFF;
       A = ~A; // this looks like it's always ~0
     }
 
     C = A;
-    A = *++HL;
+    A = *++HL; // -> slstate->y
     H = 0x00;
-    A -= D;
+    A -= map_y;
     if (A < 0)
       H = 0xFF; // -ve
     L = A;
     // HL must be row, BC must be column
     y = (H << 8) | L;
     x = (iters << 8) | C;
-    HL = &state->speccy->attributes[0x46 + y * state->width + x]; // 0x46 = address of top-left game window attribute
+    attrs = &state->speccy->attributes[0x46 + y * state->width + x]; // 0x46 = address of top-left game window attribute
     // EX DE,HL
 
     state->searchlight_related = A;
-    searchlight_plot(state);
+    searchlight_plot(state, attrs); // was DE
 
 next:
     // POP HL
 
     // POP BC
-    HL += 7;
+    slstate++;
   }
   while (--iters);
 }
@@ -6256,35 +6239,38 @@ next:
 /**
  * $AE78: Is the hero is caught in the spotlight?
  *
- * \param[in] state Pointer to game state.
- * \param[in] HL    Pointer to spotlight_movement_data_maybe.
+ * \param[in] state   Pointer to game state.
+ * \param[in] slstate Pointer to searchlight movement data. (was HL)
  */
-void searchlight_caught(tgestate_t *state, const uint8_t *HL)
+void searchlight_caught(tgestate_t                *state,
+                        const searchlight_state_t *slstate)
 {
-  uint8_t D, E;
+  uint8_t map_y, map_x; /* was D,E */
 
-  assert(state != NULL);
-  assert(HL != NULL);
+  assert(state   != NULL);
+  assert(slstate != NULL);
 
-  D = state->map_position[1];
-  E = state->map_position[0];
+  map_y = state->map_position[1];
+  map_x = state->map_position[0];
 
-  if ((HL[0] + 5 >= E + 12 || HL[0] + 10 < E + 10) ||
-      (HL[1] + 5 >= D + 10 || HL[1] + 12 < D +  6))
+  if ((slstate->x + 5 >= map_x + 12 || slstate->x + 10 < map_x + 10) ||
+      (slstate->y + 5 >= map_y + 10 || slstate->y + 12 < map_y +  6))
     return;
-  // We could rearrange the above like this:
-  //if ((HL[0] >= E + 7 || HL[0] < E    ) ||
-  //    (HL[1] >= D + 5 || HL[1] < D - 6))
+
+  // FUTURE: We could rearrange the above like this:
+  //if ((slm->x >= map_x + 7 || slm->x < map_x    ) ||
+  //    (slm->y >= map_y + 5 || slm->y < map_y - 6))
   //  return;
   // But that needs checking for edge cases.
 
+  // seems odd to not do this (cheaper) test before the earlier one
   if (state->searchlight_state == searchlight_STATE_CAUGHT)
-    return; /* already caught */ // seems odd to not do this test before the earlier one
+    return; /* already caught */
 
   state->searchlight_state = searchlight_STATE_CAUGHT;
 
-  state->searchlight_coords[0] = HL[1];
-  state->searchlight_coords[1] = HL[0];
+  state->searchlight_coords[0] = slstate->y;
+  state->searchlight_coords[1] = slstate->x;
 
   state->bell = bell_RING_PERPETUAL;
 
@@ -6296,10 +6282,10 @@ void searchlight_caught(tgestate_t *state, const uint8_t *HL)
  *
  * \param[in] state Pointer to game state.
  */
-void searchlight_plot(tgestate_t *state)
+void searchlight_plot(tgestate_t *state, attribute_t *DE) // DE must be passed in
 {
   /**
-   * $AF3E: Searchlight shape
+   * $AF3E: Searchlight circle shape.
    */
   static const uint8_t searchlight_shape[2 * 16] =
   {
@@ -6331,11 +6317,11 @@ void searchlight_plot(tgestate_t *state)
   uint8_t        A;       /* was A */
   attribute_t   *pattrs;  /* was HL */
 
-  uint8_t         D, E;
-  uint8_t         L;
-  uint8_t         iters2; /* was B' */
-  uint8_t         iters3, C;
-  int             carry;
+  uint8_t        D, E;
+  uint8_t        L;
+  uint8_t        iters2; /* was B' */
+  uint8_t        iters3, C;
+  int            carry;
 
   shape = &searchlight_shape[0];
   iters = 16; /* height */

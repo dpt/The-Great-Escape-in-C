@@ -254,6 +254,9 @@ struct tgestate
   /** $AB6A: Stored copy of game screen attribute, used to draw zoombox. */
   attribute_t     game_window_attribute;
 
+  /** $AD29: Searchlight movement data. */
+  searchlight_state_t searchlight_states[3];
+
   /** $AE75: (unknown) */
   uint8_t         searchlight_related;
 

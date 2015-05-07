@@ -80,6 +80,46 @@ static void tge_initialise(tgestate_t *state)
     { item_COMPASS,          room_NONE,        { 52, 28,  4 }, 0xF47E },
   };
 
+  /* $AD3E: Searchlight movement pattern for L-gap? */
+  static const uint8_t movement_0[] =
+  {
+    0x20, direction_BOTTOM_RIGHT,
+    0x20, direction_TOP_RIGHT,
+    0xFF
+  };
+
+  /* $AD43: Searchlight movement pattern for main compound. */
+  static const uint8_t movement_1[] =
+  {
+    0x18, direction_TOP_RIGHT,
+    0x0C, direction_TOP_LEFT,
+    0x18, direction_BOTTOM_LEFT,
+    0x0C, direction_TOP_LEFT,
+    0x20, direction_TOP_RIGHT,
+    0x14, direction_TOP_LEFT,
+    0x20, direction_BOTTOM_LEFT,
+    0x2C, direction_BOTTOM_RIGHT,
+    0xFF,
+  };
+
+  /* $AD54: Searchlight movement pattern for ? */
+  static const uint8_t movement_2[] =
+  {
+    0x2C, direction_BOTTOM_RIGHT,
+    0x2A, direction_TOP_RIGHT,
+    0xFF,
+  };
+
+  /**
+   * $AD29: Searchlight movement data.
+   */
+  static const searchlight_state_t searchlight_states[3] =
+  {
+    { 0x24, 0x52, 0x2C, direction_BOTTOM_RIGHT, 0, &movement_2[0] },
+    { 0x78, 0x52, 0x18, direction_TOP_RIGHT,    0, &movement_1[0] },
+    { 0x3C, 0x4C, 0x20, direction_BOTTOM_RIGHT, 0, &movement_0[0] },
+  };
+
   /**
    * $EDD3: Game screen start addresses.
    *
@@ -224,6 +264,10 @@ static void tge_initialise(tgestate_t *state)
          sizeof(character_structs));
 
   memcpy(state->item_structs, item_structs, sizeof(item_structs));
+
+  memcpy(state->searchlight_states,
+         searchlight_states,
+         sizeof(searchlight_states));
 
   state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
   state->messages.display_index = 0x80;
