@@ -6137,8 +6137,8 @@ void nighttime(tgestate_t *state)
   {
     map_x = state->map_position[0] + 4;
     map_y = state->map_position[1];
-    L = state->searchlight.coords[0]; /* Conv: Fused load split apart. */
-    H = state->searchlight.coords[1];
+    L = state->searchlight.caught_coords[0]; /* Conv: Fused load split apart. */
+    H = state->searchlight.caught_coords[1];
 
     /* If the highlight doesn't need to move, quit. */
     if (L == map_x && H == map_y)
@@ -6160,13 +6160,13 @@ void nighttime(tgestate_t *state)
         H--;
     }
 
-    state->searchlight.coords[0] = L; // Conv: Fused store split apart.
-    state->searchlight.coords[1] = H;
+    state->searchlight.caught_coords[0] = L; // Conv: Fused store split apart.
+    state->searchlight.caught_coords[1] = H;
   }
 
   map_x = state->map_position[0];
   map_y = state->map_position[1];
-  HL = &state->searchlight.coords[1]; // offset of 1 compensates for the HL-- ahead
+  HL = &state->searchlight.caught_coords[1]; // offset of 1 compensates for the HL-- ahead
   iters = 1; // 1 iteration
   // PUSH BC
   // PUSH HL
@@ -6202,9 +6202,9 @@ not_tracking:
 ae3f:
     A = 0;
     //Adash = A;
-    //HL--; // -> slstate->x OR -> state->searchlight.coords[0]
+    //HL--; // -> slstate->x OR -> state->searchlight.caught_coords[0]
     iters = 0x00;
-    Adash = *HL; // -> slstate->x OR -> state->searchlight.coords[0]
+    Adash = *HL; // -> slstate->x OR -> state->searchlight.caught_coords[0]
     if (Adash < map_x)
     {
       iters = 0xFF;
@@ -6269,8 +6269,8 @@ void searchlight_caught(tgestate_t                *state,
 
   state->searchlight_state = searchlight_STATE_CAUGHT;
 
-  state->searchlight.coords[0] = slstate->y;
-  state->searchlight.coords[1] = slstate->x;
+  state->searchlight.caught_coords[0] = slstate->y;
+  state->searchlight.caught_coords[1] = slstate->x;
 
   state->bell = bell_RING_PERPETUAL;
 

@@ -263,7 +263,7 @@ struct tgestate
     uint8_t             related;
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    uint8_t             coords[2];
+    uint8_t             caught_coords[2];
   }
   searchlight;
 
