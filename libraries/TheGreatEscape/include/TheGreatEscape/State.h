@@ -238,8 +238,8 @@ struct tgestate
   /** $A7C6: An index used only by move_map(). */
   uint8_t         move_map_y;
 
-  /** $A7C7: Game window plotting x offset. */
-  uint16_t        plot_game_window_x;
+  /** $A7C7: Game window plotting offset. */
+  xy_t            game_window_offset;
 
   /** $AB66: Zoombox parameters. */
   struct

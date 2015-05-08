@@ -1084,7 +1084,8 @@ void enter_room(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->plot_game_window_x = 0;
+  state->game_window_offset.x = 0;
+  state->game_window_offset.y = 0;
   setup_room(state);
   plot_interior_tiles(state);
   set_hero_sprite_for_room(state);
@@ -5512,7 +5513,7 @@ void move_map(tgestate_t *state)
   uint8_t        x,y;               /* was C,B */
   uint8_t       *pmove_map_y;       /* was HL */
   uint8_t       *pmove_map_y_copy;  /* was DE */
-  uint16_t       game_window_x;     /* was HL */
+  xy_t           game_window_offset;  /* was HL */
   // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
@@ -5587,29 +5588,31 @@ void move_map(tgestate_t *state)
   if (0)
   {
     // Equivalent:
-         if (move_map_y == 0) game_window_x = 0x0000;
-    else if (move_map_y == 1) game_window_x = 0xFF30;
-    else if (move_map_y == 2) game_window_x = 0x0060;
-    else if (move_map_y == 3) game_window_x = 0xFF90;
+//         if (move_map_y == 0) game_window_offset = 0x0000;
+//    else if (move_map_y == 1) game_window_offset = 0xFF30;
+//    else if (move_map_y == 2) game_window_offset = 0x0060;
+//    else if (move_map_y == 3) game_window_offset = 0xFF90;
   }
   else
   {
-    game_window_x = 0x0000;
+    game_window_offset.x = 0x00;
+    game_window_offset.y = 0x00;
     if (move_map_y != 0)
     {
-      game_window_x = 0x0060;
+      game_window_offset.x = 0x60;
       if (move_map_y != 2)
       {
-        game_window_x = 0xFF30;
+        game_window_offset.x = 0x30;
+        game_window_offset.y = 0xFF;
         if (move_map_y != 1)
         {
-          game_window_x = 0xFF90;
+          game_window_offset.x = 0x90;
         }
       }
     }
   }
 
-  state->plot_game_window_x = game_window_x;
+  state->game_window_offset = game_window_offset;
   // HLpos = state->map_position; // passing map_position in HL omitted in this version
 
   // pops and calls move_map_* routine pushed at $AAE0
@@ -13073,7 +13076,7 @@ void plot_game_window(tgestate_t *state)
 
   uint8_t *const  screen = &state->speccy->screen[0];
 
-  uint8_t         x_hi;      /* was A */
+  uint8_t         y;         /* was A */
   uint8_t        *src;       /* was HL */
   const uint16_t *offsets;   /* was SP */
   uint8_t         y_iters_A; /* was A */
@@ -13084,10 +13087,10 @@ void plot_game_window(tgestate_t *state)
   uint8_t         copy;      /* was C */
   uint8_t         tmp;       /* added for RRD macro */
 
-  x_hi = (state->plot_game_window_x & 0xFF00) >> 8;
-  if (x_hi == 0)
+  y = state->game_window_offset.y;
+  if (y == 0)
   {
-    src = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
+    src = &state->window_buf[1] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src);
     offsets = &state->game_window_start_offsets[0];
     y_iters_A = 128; /* iterations */
@@ -13125,7 +13128,7 @@ void plot_game_window(tgestate_t *state)
   }
   else
   {
-    src = &state->window_buf[1] + (state->plot_game_window_x & 0xFF);
+    src = &state->window_buf[1] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src);
     data = *src++;
     offsets = &state->game_window_start_offsets[0];
