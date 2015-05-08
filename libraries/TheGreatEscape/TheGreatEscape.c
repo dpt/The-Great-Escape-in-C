@@ -5509,8 +5509,7 @@ void move_map(tgestate_t *state)
   direction_t    direction;         /* was A */
   uint8_t        move_map_y;        /* was A */
   movemapfn_t   *pmovefn;           /* was HL */
-  uint8_t        B;                 /* was B */
-  uint8_t        C;                 /* was C */
+  uint8_t        x,y;               /* was C,B */
   uint8_t       *pmove_map_y;       /* was HL */
   uint8_t       *pmove_map_y_copy;  /* was DE */
   uint16_t       game_window_x;     /* was HL */
@@ -5541,27 +5540,27 @@ void move_map(tgestate_t *state)
   if (0)
   {
     // Equivalent
-         if (direction == direction_TOP_LEFT)     { B = 0x7C; C = 0xC0; }
-    else if (direction == direction_TOP_RIGHT)    { B = 0x7C; C = 0x00; }
-    else if (direction == direction_BOTTOM_RIGHT) { B = 0x00; C = 0x00; }
-    else if (direction == direction_BOTTOM_LEFT)  { B = 0x00; C = 0xC0; }
+         if (direction == direction_TOP_LEFT)     { y = 0x7C; x = 0xC0; }
+    else if (direction == direction_TOP_RIGHT)    { y = 0x7C; x = 0x00; }
+    else if (direction == direction_BOTTOM_RIGHT) { y = 0x00; x = 0x00; }
+    else if (direction == direction_BOTTOM_LEFT)  { y = 0x00; x = 0xC0; }
   }
   else
   {
-    B = 0x7C;
-    C = 0x00;
+    y = 0x7C;
+    x = 0x00;
     /* direction_BOTTOM_* - bottom of the map clamp */
     if (direction >= direction_BOTTOM_RIGHT)
-      B = 0x00;
+      y = 0x00;
     /* direction_*_LEFT - left of the map clamp */
     if (direction != direction_TOP_RIGHT &&
         direction != direction_BOTTOM_RIGHT)
-      C = 0xC0;
+      x = 0xC0;
   }
 
   /* Note: This looks like it ought to be an AND but it's definitely an OR in
    * the original game. */
-  if (state->map_position.x == C || state->map_position.y == B)
+  if (state->map_position.x == x || state->map_position.y == y)
     return; /* Don't move. */
 
   // POP AF
