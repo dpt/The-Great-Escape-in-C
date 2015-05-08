@@ -126,6 +126,7 @@ struct tgestate
   tinypos_t       tinypos_81B2;
 
   /** $81B5: (unknown) */
+  // assigned in called_from_main_loop_3, setup_item_plotting, setup_vischar_plotting
   xy_t            map_position_related;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
@@ -139,6 +140,8 @@ struct tgestate
 
   /** $81BB: Map position (on screen).
    * Used when drawing tiles. */
+  // assigned in reset_outdoors
+  // suspect that this is a centering value
   xy_t            map_position;
 
   /** $81BD: Searchlight state. Might be a counter in fact. */
