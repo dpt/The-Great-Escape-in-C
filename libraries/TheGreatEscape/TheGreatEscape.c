@@ -11997,7 +11997,7 @@ uint8_t item_visible(tgestate_t *state,
                      uint16_t   *clipped_height)
 {
   const uint8_t *px;            /* was HL */
-  uint16_t       map_position;  /* was DE */
+  xy_t           map_position;  /* was DE */
   uint8_t        xoff;          /* was A */
   uint8_t        yoff;          /* was A */
   uint16_t       width;         /* was BC */
@@ -12011,9 +12011,9 @@ uint8_t item_visible(tgestate_t *state,
 
   // Seems to be doing (map_position_x + state->tb_columns <= px[0])
   px = &state->map_position_related.x;
-  map_position = state->map_position.x | (state->map_position.y << 8); // Conv: Was a fused load
+  map_position = state->map_position;
 
-  xoff = (map_position & 0xFF) + state->tb_columns - px[0];
+  xoff = map_position.x + state->tb_columns - px[0];
   if (xoff > 0)
   {
 #define WIDTH_BYTES 3
@@ -12023,7 +12023,7 @@ uint8_t item_visible(tgestate_t *state,
     }
     else
     {
-      xoff = px[0] + WIDTH_BYTES - (map_position & 0xFF);
+      xoff = px[0] + WIDTH_BYTES - map_position.x;
       if (xoff <= 0)
         goto invisible; // off the left hand side?
 
@@ -12035,7 +12035,7 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Height part */
 
-    yoff = (map_position >> 8) + state->tb_rows - px[1]; // map_position_related.y
+    yoff = map_position.y + state->tb_rows - px[1]; // px[1] == map_position_related.y
     if (yoff > 0)
     {
 #define HEIGHT 2
@@ -12045,7 +12045,7 @@ uint8_t item_visible(tgestate_t *state,
       }
       else
       {
-        yoff = px[1] + HEIGHT - (map_position >> 8);
+        yoff = px[1] + HEIGHT - map_position.y;
         if (yoff <= 0)
           goto invisible;
 
