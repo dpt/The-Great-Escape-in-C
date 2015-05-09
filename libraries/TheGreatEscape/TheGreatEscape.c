@@ -3880,7 +3880,7 @@ void wake_up(tgestate_t *state)
 {
   characterstruct_t *charstr;  /* was HL */
   uint8_t            iters;    /* was B */
-  uint8_t *const    *bedpp;    // was ?
+  uint8_t *const    *bedpp;    /* was HL */
   uint8_t            loc_low;  /* was A' */
   uint8_t            loc_high; /* was C */
 
@@ -3918,9 +3918,9 @@ void wake_up(tgestate_t *state)
   set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
 
   /* Update all the bed objects to be empty. */
-  // FIXME: This writes to a possibly shared structure, ought to be moved into the state somehow.
+  // FIXME: This writes to a possibly shared structure, so ought to be moved into the state somehow.
   bedpp = &beds[0];
-  iters = beds_LENGTH;
+  iters = beds_LENGTH; /* Bug: Conv: Original code uses 7 which is wrong. */
   do
     **bedpp++ = interiorobject_EMPTY_BED;
   while (--iters);
