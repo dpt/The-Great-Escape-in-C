@@ -4201,7 +4201,7 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  state->byte_A13E = 0;
+  state->entered_move_characters = 0;
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
@@ -4243,7 +4243,7 @@ void store_location(location_t location, location_t *plocation)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A3F3: byte_A13E is non-zero.
+ * $A3F3: entered_move_characters is non-zero.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] charstr Pointer to character struct. (was HL)
@@ -4258,7 +4258,7 @@ void byte_A13E_is_nonzero(tgestate_t        *state,
 }
 
 /**
- * $A3F8: byte_A13E is zero.
+ * $A3F8: entered_move_characters is zero.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] charstr Pointer to character struct.  (was HL)
@@ -4567,7 +4567,7 @@ void set_location_0x0010(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4D3: byte_A13E is non-zero (another one).
+ * $A4D3: entered_move_characters is non-zero (another one).
  *
  * Very similar to the routine at $A3F3.
  *
@@ -4587,7 +4587,7 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t        *state,
 }
 
 /**
- * $A4D8: byte_A13E is zero (another one).
+ * $A4D8: entered_move_characters is zero (another one).
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9530,7 +9530,7 @@ c592:
   }
   else
   {
-    state->byte_A13E = 0;
+    state->entered_move_characters = 0;
     // PUSH DE // -> vischar->p04
     A = sub_C651(state, &charstr->target, &location);
     if (A == 255)
@@ -9859,7 +9859,7 @@ void move_characters(tgestate_t *state)
 
   assert(state != NULL);
 
-  state->byte_A13E = 0xFF;
+  state->entered_move_characters = 0xFF;
 
   /* Move to the next character, wrapping around after character 26. */
   character = state->character_index + 1;
@@ -10334,7 +10334,7 @@ void charevnt_handler_3_check_var_A13E(tgestate_t  *state,
   ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
-  if (state->byte_A13E == 0)
+  if (state->entered_move_characters == 0)
     byte_A13E_is_zero(state, charptr, vischar);
   else
     byte_A13E_is_nonzero(state, charptr);
@@ -10352,7 +10352,7 @@ void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t   *state,
   ASSERT_VISCHAR_VALID(vischar);
 
   // POP HL
-  if (state->byte_A13E == 0)
+  if (state->entered_move_characters == 0)
     byte_A13E_is_zero_anotherone(state, charptr, vischar);
   else
     byte_A13E_is_nonzero_anotherone(state, charptr, vischar);
@@ -10421,7 +10421,7 @@ void follow_suspicious_character(tgestate_t *state)
   assert(state != NULL);
 
   /* (I've still no idea what this flag means). */
-  state->byte_A13E = 0;
+  state->entered_move_characters = 0;
 
   /* If the bell is ringing, hostiles persue. */
   if (state->bell)

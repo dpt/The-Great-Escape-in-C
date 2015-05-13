@@ -208,7 +208,8 @@ struct tgestate
   eventtime_t     clock;
 
   /** $A13E: (unknown) (flag: 0 or 255). */
-  uint8_t         byte_A13E;
+  // set to 0xFF when move_characters is entered, and only then
+  uint8_t         entered_move_characters;
 
   /** $A13F: The hero is in bed (flag: 0 or 255). */
   uint8_t         hero_in_bed;
