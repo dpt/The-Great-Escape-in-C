@@ -178,10 +178,8 @@ const uint8_t music_channel1_data[] =
 
 /**
  * $FA48: Music tuning table.
- *
- * .. How can this be 460 entries long when it's only ever indexed by an 8-bit register?
  */
-const uint16_t music_tuning_table[460] =
+const uint16_t music_tuning_table[76] =
 {
   0xFEFE,
   0x0000,
@@ -258,8 +256,13 @@ const uint16_t music_tuning_table[460] =
   0x0000,
   0x0000,
   0x0000,
-  0x0000,
-  0x0F00,
+  0x0000, // likely end of table
+};
+
+// 768 bytes of apparently unreferenced bytes
+static const uint16_t junk[] =
+{
+  0x0F00, // no idea what this stuff is
   0x1800,
   0x1400,
   0x1800,
@@ -567,7 +570,8 @@ const uint16_t music_tuning_table[460] =
   0x1100,
   0x0D00,
   0xFF00,
-  0xFEFE,
+
+  0xFEFE, // another copy of the tuning table
   0x0000,
   0x0000,
   0x0000,

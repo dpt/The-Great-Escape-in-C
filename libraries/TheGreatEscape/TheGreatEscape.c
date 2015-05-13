@@ -14140,7 +14140,7 @@ void menu_screen(tgestate_t *state)
 /**
  * $F52C: Get tuning.
  *
- * \param[in] A Index.
+ * \param[in] A Index (never larger than 42?).
  *
  * \returns (was DE)
  */
@@ -14150,13 +14150,15 @@ uint16_t get_tuning(uint8_t A)
 
   BC = music_tuning_table[A]; // FIXME: Original loads endian swapped...
 
-  // Might be able to increment by 0x0101 rather than incrementing the bytes
-  // separately, but unsure currently of exact nature of calculation.
+#define INC_LO(x) \
+    do { x = (x & 0xFF00) | (((x & 0x00FF) + 0x0001) & 0x00FF); } while (0)
+#define INC_HI(x) \
+    do { x = (x & 0x00FF) | (((x & 0xFF00) + 0x0100) & 0xFF00); } while (0)
 
-  BC = ((BC + 0x0001) & 0x00FF); // B++
-  BC = ((BC + 0x0100) & 0xFF00); // C++
-  if ((BC & 0x00FF) == 0)
-    BC++;
+  INC_LO(BC);
+  INC_HI(BC);
+  if ((BC & 0xFF00) == 0)
+    INC_LO(BC);
 
   // L = 0; unsure what this is doing
 
