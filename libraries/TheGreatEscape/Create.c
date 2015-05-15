@@ -80,7 +80,7 @@ static void tge_initialise(tgestate_t *state)
     { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 0x7E, 0xF4 } },
   };
 
-  /* $AD3E: Searchlight movement pattern for L-gap? */
+  /* $AD3E: Searchlight movement pattern for L-shaped gap? */
   static const uint8_t movement_0[] =
   {
     0x20, direction_BOTTOM_RIGHT,
@@ -333,10 +333,10 @@ tgestate_t *tge_create(ZXSpectrum_t *speccy, const tgeconfig_t *config)
   
   /* Allocate buffers. */
   
-  game_window_start_offsets = malloc((size_t) (state->rows * 8) * sizeof(*game_window_start_offsets));
-  tile_buf                  = malloc((size_t) (state->tb_columns * state->tb_rows));
-  window_buf                = malloc((size_t) ((state->columns + 1) * state->rows * 8));
-  map_buf                   = malloc((size_t) (state->st_columns * state->st_rows));
+  game_window_start_offsets = calloc(1, (size_t) (state->rows * 8) * sizeof(*game_window_start_offsets));
+  tile_buf                  = calloc(1, (size_t) (state->tb_columns * state->tb_rows));
+  window_buf                = calloc(1, (size_t) ((state->columns + 1) * state->rows * 8));
+  map_buf                   = calloc(1, (size_t) (state->st_columns * state->st_rows));
 
   if (game_window_start_offsets == NULL ||
       tile_buf                  == NULL ||

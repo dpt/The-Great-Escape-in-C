@@ -272,8 +272,6 @@ enum characterstruct_flags
   characterstruct_BYTE0_BIT7           = 1 << 7, // set in sub_A404
 
   characterstruct_BYTE5_MASK           = 0x7F, // target low byte
-
-  characterstruct_BYTE6_MASK_HI        = 0xF8
 };
 
 /**
@@ -291,7 +289,7 @@ enum doorpos_flags
 enum searchlight_flags
 {
   searchlight_STATE_CAUGHT             = 0x1F, /**< Number of turns before the spotlight gives up looking when the hero hides behind something. */
-  searchlight_STATE_SEARCHING                = 0xFF, /**< Likely: Hunting for the hero. */
+  searchlight_STATE_SEARCHING          = 0xFF, /**< Likely: Hunting for the hero. */
 };
 
 /**
@@ -479,8 +477,7 @@ typedef struct vischar
   const uint8_t  *w0A;
 
   /** $800C */
-  // used with above?
-  uint8_t         b0C;
+  uint8_t         b0C; // up/down flag
 
   /** $800D movement */
   // compared to flags?
@@ -502,7 +499,7 @@ typedef struct vischar
   room_t          room;
 
   /** $801D unused */
-  uint8_t         unused;
+  uint8_t         unused; // FUTURE: Remove
 
   /** $801E copy of sprite width in bytes + 1 */
   uint8_t         width_bytes;
@@ -592,14 +589,14 @@ timedevent_t;
 /**
  * Defines an item.
  *
- * This has the same structure layout as characterstruct.
+ * This has a similar layout to characterstruct.
  */
 typedef struct itemstruct
 {
-  item_t     item_and_flags; // flags are which bits?
-  room_t     room_and_flags; // flags are which bits?
-  tinypos_t  pos;
-  xy_t       screenpos;
+  item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
+  room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
+  tinypos_t pos;
+  xy_t      screenpos;
 }
 itemstruct_t;
 
