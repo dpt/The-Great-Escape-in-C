@@ -2056,7 +2056,8 @@ void pick_up_item(tgestate_t *state)
   }
 
   itemstr->room_and_flags = 0;
-  itemstr->target         = 0;
+  itemstr->screenpos.x    = 0;
+  itemstr->screenpos.y    = 0;
 
   draw_all_items(state);
   play_speaker(state, sound_PICK_UP_ITEM);
@@ -2160,14 +2161,14 @@ void drop_item_tail(tgestate_t *state, item_t item)
  */
 void drop_item_tail_exterior(itemstruct_t *itemstr)
 {
-  uint8_t *t;
+  xy_t *t;
 
   assert(itemstr != NULL);
 
-  t = (uint8_t *) &itemstr->target;
+  t = &itemstr->screenpos;
 
-  t[0] = (0x40 + itemstr->pos.y - itemstr->pos.x) * 2;
-  t[1] = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
+  t->x = (0x40 + itemstr->pos.y - itemstr->pos.x) * 2;
+  t->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
@@ -2181,11 +2182,11 @@ void drop_item_tail_exterior(itemstruct_t *itemstr)
  */
 void drop_item_tail_interior(itemstruct_t *itemstr)
 {
-  uint8_t *t;
+  xy_t *t;
 
   assert(itemstr != NULL);
 
-  t = (uint8_t *) &itemstr->target;
+  t = &itemstr->screenpos;
 
   // This was a call to divide_by_8_with_rounding, but that expects
   // separate hi and lo arguments, which is not worth the effort of
@@ -2194,8 +2195,8 @@ void drop_item_tail_interior(itemstruct_t *itemstr)
   // This needs to go somewhere more general.
 #define divround(x) (((x) + 4) >> 3)
 
-  t[0] = divround((0x200 + itemstr->pos.y - itemstr->pos.x) * 2);
-  t[1] = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
+  t->x = divround((0x200 + itemstr->pos.y - itemstr->pos.x) * 2);
+  t->y = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
 
 #undef divround
 }
@@ -11725,10 +11726,10 @@ const uint8_t *character_related_pointers[24] =
  */
 void mark_nearby_items(tgestate_t *state)
 {
-  room_t        room;         /* was C */
-  uint8_t       map_y, map_x; /* was D, E */
-  uint8_t       iters;        /* was B */
-  itemstruct_t *itemstruct;   /* was HL */
+  room_t        room;       /* was C */
+  xy_t          map_xy;     /* was D, E */
+  uint8_t       iters;      /* was B */
+  itemstruct_t *itemstruct; /* was HL */
 
   assert(state != NULL);
 
@@ -11736,22 +11737,18 @@ void mark_nearby_items(tgestate_t *state)
   if (room == room_NONE)
     room = room_0_OUTDOORS;
 
-  map_x = state->map_position.x;
-  map_y = state->map_position.y;
+  map_xy = state->map_position;
 
   iters      = item__LIMIT;
   itemstruct = &state->item_structs[0];
   do
   {
-    uint8_t t1, t2;
-
-    t1 = (itemstruct->target & 0x00FF) >> 0;
-    t2 = (itemstruct->target & 0xFF00) >> 8;
+    xy_t screenpos = itemstruct->screenpos;
 
     /* Conv: Ranges adjusted. */
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (t1 >= map_x - 1 && t1 <= map_x + 25 - 1) &&
-        (t2 >= map_y     && t2 <= map_y + 17    ))
+        (screenpos.x >= map_xy.x - 1 && screenpos.x <= map_xy.x + 25 - 1) &&
+        (screenpos.y >= map_xy.y     && screenpos.y <= map_xy.y + 17    ))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
@@ -11874,10 +11871,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    */
   /* $8213 = A; */
 
-  state->tinypos_81B2           = itemstr->pos;
-  // map_position_related.x/y could well be a location_t
-  state->map_position_related.x = itemstr->target & 0xFF;
-  state->map_position_related.y = itemstr->target >> 8;
+  state->tinypos_81B2         = itemstr->pos;
+  // map_position_related.x/y - a location_t?
+  state->map_position_related = itemstr->screenpos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->tinypos_81B2 + 5;

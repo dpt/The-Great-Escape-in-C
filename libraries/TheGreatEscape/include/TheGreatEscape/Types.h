@@ -599,7 +599,7 @@ typedef struct itemstruct
   item_t     item_and_flags; // flags are which bits?
   room_t     room_and_flags; // flags are which bits?
   tinypos_t  pos;
-  location_t target;
+  xy_t       screenpos;
 }
 itemstruct_t;
 
