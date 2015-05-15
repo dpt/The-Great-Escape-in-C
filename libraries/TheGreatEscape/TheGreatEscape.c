@@ -540,7 +540,7 @@ static
 void plot_vertical_tiles_common(tgestate_t       *state,
                                 tileindex_t      *vistiles,
                                 supertileindex_t *maptiles,
-                                uint8_t           pos,
+                                uint8_t           x,
                                 uint8_t          *window);
 
 static
@@ -4948,17 +4948,17 @@ void plot_bottommost_tiles(tgestate_t *state)
 {
   tileindex_t      *vistiles; /* was DE */
   supertileindex_t *maptiles; /* was HL' */
-  uint8_t           pos;      /* was A */
+  uint8_t           y;        /* was A */
   uint8_t          *window;   /* was DE' */
 
   assert(state != NULL);
 
   vistiles = &state->tile_buf[24 * 16];       // $F278 = visible tiles array + 24 * 16
   maptiles = &state->map_buf[28];             // $FF74
-  pos      = state->map_position.y;           // map_position hi
+  y        = state->map_position.y;           // map_position y
   window   = &state->window_buf[24 * 16 * 8]; // $FE90
 
-  plot_horizontal_tiles_common(state, vistiles, maptiles, pos, window);
+  plot_horizontal_tiles_common(state, vistiles, maptiles, y, window);
 }
 
 /**
@@ -4972,17 +4972,17 @@ void plot_topmost_tiles(tgestate_t *state)
 {
   tileindex_t      *vistiles; /* was DE */
   supertileindex_t *maptiles; /* was HL' */
-  uint8_t           pos;      /* was A */
+  uint8_t           y;        /* was A */
   uint8_t          *window;   /* was DE' */
 
   assert(state != NULL);
 
-  vistiles = &state->tile_buf[0];    // $F0F8 = visible tiles array + 0
-  maptiles = &state->map_buf[8];     // $FF58
-  pos      = state->map_position.y;  // map_position hi
-  window   = &state->window_buf[0];  // $F290
+  vistiles = &state->tile_buf[0];   // $F0F8 = visible tiles array + 0
+  maptiles = &state->map_buf[8];    // $FF58
+  y        = state->map_position.y; // map_position y
+  window   = &state->window_buf[0]; // $F290
 
-  plot_horizontal_tiles_common(state, vistiles, maptiles, pos, window);
+  plot_horizontal_tiles_common(state, vistiles, maptiles, y, window);
 }
 
 /**u
@@ -4991,37 +4991,37 @@ void plot_topmost_tiles(tgestate_t *state)
  * \param[in] state    Pointer to game state.
  * \param[in] vistiles Pointer to visible tiles array.         (was DE)
  * \param[in] maptiles Pointer to 7x5 supertile refs.          (was HL')
- * \param[in] pos      Map position high byte.                 (was A)
+ * \param[in] y        Map position y.                         (was A)
  * \param[in] window   Pointer to screen buffer start address. (was DE')
  */
 void plot_horizontal_tiles_common(tgestate_t       *state,
                                   tileindex_t      *vistiles,
                                   supertileindex_t *maptiles,
-                                  uint8_t           pos,
+                                  uint8_t           y,
                                   uint8_t          *window)
 {
   // Conv: self_A86A removed. Can be replaced with pos_copy.
 
-  uint8_t            offset; /* was Cdash */
+  uint8_t            y_offset; /* was Cdash */
   const tileindex_t *tiles;  /* was HL */
   uint8_t            A;      /* was A */
   uint8_t            iters;  /* was B */
   uint8_t            iters2; /* was B' */
-  uint8_t            pos_1;  // new
+  uint8_t            offset;  // new
 
   assert(state    != NULL);
   assert(vistiles != NULL);
   assert(maptiles != NULL);
-  // assert(pos);
+  // assert(y);
   assert(window   != NULL);
 
-  offset = (pos & 3) * 4;
-  pos_1 = (state->map_position.x & 3) + offset;
+  y_offset = (y & 3) * 4;
+  offset = (state->map_position.x & 3) + y_offset;
 
   /* Initial edge. */
 
   assert(*maptiles < supertileindex__LIMIT);
-  tiles = &supertiles[*maptiles].tiles[0] + pos_1;
+  tiles = &supertiles[*maptiles].tiles[offset];
   A = tiles - &supertiles[0].tiles[0]; // Conv: Original code could simply use L.
 
   // 0,1,2,3 => 4,3,2,1
@@ -5048,7 +5048,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   do
   {
     assert(*maptiles < supertileindex__LIMIT);
-    tiles = &supertiles[*maptiles].tiles[0] + offset; // self modified by $A82A
+    tiles = &supertiles[*maptiles].tiles[y_offset]; // self modified by $A82A
 
     iters = 4;
     do
@@ -5069,7 +5069,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   //A = pos_copy; // an apparently unused assignment
 
   assert(*maptiles < supertileindex__LIMIT);
-  tiles = &supertiles[*maptiles].tiles[0] + offset; // read of self modified instruction
+  tiles = &supertiles[*maptiles].tiles[y_offset]; // read of self modified instruction
   // Conv: A was A'.
   A = state->map_position.x & 3; // map_position lo (repeats earlier work)
   if (A == 0)
@@ -5100,28 +5100,28 @@ void plot_all_tiles(tgestate_t *state)
   tileindex_t      *vistiles; /* was DE */
   supertileindex_t *maptiles; /* was HL' */
   uint8_t          *window;   /* was DE' */
-  uint8_t           pos;      /* was A */
+  uint8_t           x;        /* was A */
   uint8_t           iters;    /* was B' */
 
   assert(state != NULL);
 
-  vistiles = &state->tile_buf[0];    /* visible tiles array */
-  maptiles = &state->map_buf[0];     /* 7x5 supertile refs */
-  window   = &state->window_buf[0];  /* screen buffer start address */
-  pos      = state->map_position.x;  /* map_position lo */
+  vistiles = &state->tile_buf[0];   /* visible tiles array */
+  maptiles = &state->map_buf[0];    /* 7x5 supertile refs */
+  window   = &state->window_buf[0]; /* screen buffer start address */
+  x        = state->map_position.x; /* map_position x */
 
   iters = state->columns; /* Conv: was 24 */
   do
   {
     uint8_t newpos; /* was C' */
 
-    plot_vertical_tiles_common(state, vistiles, maptiles, pos, window);
+    plot_vertical_tiles_common(state, vistiles, maptiles, x, window);
     vistiles++;
 
-    newpos = ++pos;
-    if ((pos & 3) == 0)
+    newpos = ++x;
+    if ((x & 3) == 0)
       maptiles++;
-    pos = newpos;
+    x = newpos;
     window++;
   }
   while (--iters);
@@ -5139,21 +5139,21 @@ void plot_rightmost_tiles(tgestate_t *state)
   tileindex_t      *vistiles; /* was DE */
   supertileindex_t *maptiles; /* was HL' */
   uint8_t          *window;   /* was DE' */
-  uint8_t           pos;      /* was A */
+  uint8_t           x;        /* was A */
 
   assert(state != NULL);
 
   vistiles = &state->tile_buf[23];   /* visible tiles array */
   maptiles = &state->map_buf[6];     /* 7x5 supertile refs */
   window   = &state->window_buf[23]; /* screen buffer start address */
-  pos      = state->map_position.x;  /* map_position lo */
+  x        = state->map_position.x;  /* map_position x */
 
-  pos &= 3;
-  if (pos == 0)
+  x &= 3;
+  if (x == 0)
     maptiles--;
-  pos = state->map_position.x - 1; /* map_position lo */
+  x = state->map_position.x - 1; /* map_position x */
 
-  plot_vertical_tiles_common(state, vistiles, maptiles, pos, window);
+  plot_vertical_tiles_common(state, vistiles, maptiles, x, window);
 }
 
 /**
@@ -5168,16 +5168,16 @@ void plot_leftmost_tiles(tgestate_t *state)
   tileindex_t      *vistiles; /* was DE */
   supertileindex_t *maptiles; /* was HL' */
   uint8_t          *window;   /* was DE' */
-  uint8_t           pos;      /* was A */
+  uint8_t           x;        /* was A */
 
   assert(state != NULL);
 
-  vistiles = &state->tile_buf[0];    /* visible tiles array */
-  maptiles = &state->map_buf[0];     /* 7x5 supertile refs */
-  window   = &state->window_buf[0];  /* screen buffer start address */
-  pos      = state->map_position.x;  /* map_position lo */
+  vistiles = &state->tile_buf[0];   /* visible tiles array */
+  maptiles = &state->map_buf[0];    /* 7x5 supertile refs */
+  window   = &state->window_buf[0]; /* screen buffer start address */
+  x        = state->map_position.x; /* map_position x */
 
-  plot_vertical_tiles_common(state, vistiles, maptiles, pos, window);
+  plot_vertical_tiles_common(state, vistiles, maptiles, x, window);
 }
 
 /**
@@ -5186,13 +5186,13 @@ void plot_leftmost_tiles(tgestate_t *state)
  * \param[in] state    Pointer to game state.
  * \param[in] vistiles Pointer to visible tiles array.         (was DE)
  * \param[in] maptiles Pointer to 7x5 supertile refs.          (was HL')
- * \param[in] pos      Map position low byte.                  (was A)
+ * \param[in] x        Map position x.                         (was A)
  * \param[in] window   Pointer to screen buffer start address. (was DE')
  */
 void plot_vertical_tiles_common(tgestate_t       *state,
                                 tileindex_t      *vistiles,
                                 supertileindex_t *maptiles,
-                                uint8_t           pos,
+                                uint8_t           x,
                                 uint8_t          *window)
 {
   // Conv: self_A94D removed.
