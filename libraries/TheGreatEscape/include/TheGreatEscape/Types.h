@@ -228,8 +228,8 @@ enum vischar_flags
   vischar_BYTE12_MASK                  = 0x7F,
   vischar_BYTE12_BIT7                  = 1 << 7,
 
-  vischar_BYTE13_MASK                  = 0x7F,
-  vischar_BYTE13_BIT7                  = 1 << 7, // guess: input kicking flag
+  vischar_INPUT_MASK                   = 0x7F,
+  vischar_INPUT_KICK                   = 1 << 7, // input kicking flag
 
   // byte 14
   vischar_DIRECTION_MASK               = 0x03,
@@ -483,7 +483,7 @@ typedef struct vischar
   // compared to flags?
   // bottom two bits are a direction field
   // likely a prev/next version of the 'direction' field
-  uint8_t         b0D;
+  uint8_t         input;
 
   /** $800E direction and walk/crawl flag */
   // a direction_t?

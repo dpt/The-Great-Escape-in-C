@@ -1056,7 +1056,7 @@ void transition(tgestate_t      *state,
     {
       /* Outdoors */
 
-      vischar->b0D = vischar_BYTE13_BIT7; // kick
+      vischar->input = vischar_INPUT_KICK;
       vischar->direction &= vischar_DIRECTION_MASK;
       reset_outdoors(state);
       squash_stack_goto_main(state); // exit
@@ -1129,7 +1129,7 @@ void set_hero_sprite_for_room(tgestate_t *state)
   assert(state != NULL);
 
   hero = &state->vischars[0];
-  hero->b0D = vischar_BYTE13_BIT7; // likely a character direction
+  hero->input = vischar_INPUT_KICK;
 
   /* When in tunnel rooms this forces the hero sprite to 'prisoner' and sets
    * the crawl flag appropriately. */
@@ -1226,7 +1226,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->w08               = &character_related_pointers[0];
   vischar1->w0A               = character_related_pointers[8];
   vischar1->b0C               = 0;
-  vischar1->b0D               = 0;
+  vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
   vischar1->room              = state->room_index;
@@ -2783,7 +2783,7 @@ void process_player_input(tgestate_t *state)
   {
     /* Hero is picking a lock, or cutting through a wire fence. */
 
-    /* Hold off on automatic control. */
+    /* Postpone automatic control for 31 turns. */
     state->automatic_player_counter = 31;
 
     if (state->vischars[0].flags == vischar_FLAGS_PICKING_LOCK)
@@ -2844,12 +2844,13 @@ void process_player_input(tgestate_t *state)
     if (input >= input_FIRE)
     {
       process_player_input_fire(state, input);
-      input = vischar_BYTE13_BIT7;
+      input = vischar_INPUT_KICK;
     }
   }
 
-  if (state->vischars[0].b0D != input)
-    state->vischars[0].b0D = input | vischar_BYTE13_BIT7;
+  /* If input state has changed then kick a sprite update. */
+  if (state->vischars[0].input != input)
+    state->vischars[0].input = input | vischar_INPUT_KICK;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2891,10 +2892,10 @@ void snipping_wire(tgestate_t *state)
    */
   static const uint8_t table_9EE0[4] =
   {
-    vischar_BYTE13_BIT7 | 4,
-    vischar_BYTE13_BIT7 | 7,
-    vischar_BYTE13_BIT7 | 8,
-    vischar_BYTE13_BIT7 | 5
+    vischar_INPUT_KICK | 4,
+    vischar_INPUT_KICK | 7,
+    vischar_INPUT_KICK | 8,
+    vischar_INPUT_KICK | 5
   };
 
   int delta; /* was A */
@@ -2905,12 +2906,12 @@ void snipping_wire(tgestate_t *state)
   if (delta)
   {
     if (delta < 4)
-      state->vischars[0].b0D = table_9EE0[state->vischars[0].direction & vischar_DIRECTION_MASK]; // new direction?
+      state->vischars[0].input = table_9EE0[state->vischars[0].direction & vischar_DIRECTION_MASK]; // new direction?
   }
   else
   {
     state->vischars[0].direction = delta & vischar_DIRECTION_MASK; // set (randomish?) direction
-    state->vischars[0].b0D = vischar_BYTE13_BIT7;
+    state->vischars[0].input = vischar_INPUT_KICK;
     state->vischars[0].mi.pos.height = 24;
 
     /* Conv: The original code jumps into the tail end of picking_a_lock()
@@ -3097,7 +3098,7 @@ set_flag_red:
   if (state->speccy->attributes[morale_flag_attributes_offset] == attr)
     return; /* flag is already red */
 
-  state->vischars[0].b0D = 0;
+  state->vischars[0].input = 0;
   red_flag = 255;
   goto flag_select;
 }
@@ -6487,7 +6488,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
   uint8_t     B;
   uint8_t     C;
   character_t tmpA;
-  uint8_t     b0D;
+  uint8_t     input;
   uint8_t     direction;
   uint16_t    directionBC;  /* was BC */
 
@@ -6601,13 +6602,13 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
       // POP BC
     }
 
-    b0D = vischar->b0D & vischar_BYTE13_MASK; // sampled HL = $806D, $804D, $802D, $808D, $800D
-    if (b0D)
+    input = vischar->input & vischar_INPUT_MASK; // mask off kick flag // sampled HL = $806D, $804D, $802D, $808D, $800D
+    if (input)
     {
       direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
       if (direction != input_vischar->direction)
       {
-        input_vischar->b0D = vischar_BYTE13_BIT7;
+        input_vischar->input = vischar_INPUT_KICK;
 
 b0d0:
         input_vischar->counter_and_flags = (input_vischar->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
@@ -6618,11 +6619,17 @@ b0d0:
     }
 
     {
-      /** $B0F8: */
-      static const uint8_t four_bytes[] = { 0x85, 0x84, 0x87, 0x88 };
+      /** $B0F8: New inputs. */
+      static const uint8_t inputs[4] =
+      {
+        vischar_INPUT_KICK | input_DOWN | input_LEFT,  // 0x85
+        vischar_INPUT_KICK | input_UP   | input_LEFT,  // 0x84
+        vischar_INPUT_KICK | input_UP   | input_RIGHT, // 0x87
+        vischar_INPUT_KICK | input_DOWN | input_RIGHT, // 0x88
+      };
 
       directionBC = input_vischar->direction;
-      input_vischar->b0D = four_bytes[directionBC]; // sampled IY = $8000, $8040, $80E0
+      input_vischar->input = inputs[directionBC]; // sampled IY = $8000, $8040, $80E0
       if ((directionBC & 1) == 0) /* TL or BR */
         input_vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
       else
@@ -7045,7 +7052,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     room_and_flags = door->room_and_flags;
 
     // Conv: Cdash removed
-    if ((vischar->b0D & 3) != (room_and_flags & doorpos_FLAGS_MASK_LO)) // used B' // could be a check for facing the same direction as the door?
+    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_LO)) // used B' // could be a check for facing the same direction as the door?
       goto next;
 
     tinypos = &door->pos;
@@ -7303,7 +7310,7 @@ set_to_7: /* Crawl BL. */
 
 action_wiresnips_tail:
   state->vischars[0].direction      = flag; // walk/crawl flag
-  state->vischars[0].b0D            = vischar_BYTE13_BIT7;
+  state->vischars[0].input            = vischar_INPUT_KICK;
   state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
   state->vischars[0].mi.pos.height  = 12;
   state->vischars[0].mi.spriteset   = &sprites[sprite_PRISONER_FACING_AWAY_4];
@@ -7527,6 +7534,8 @@ const wall_t walls[24] =
 /**
  * $B5CE: called_from_main_loop_9
  *
+ *
+ *
  * - movement
  * - crash if disabled, crash if iters reduced from 8
  *
@@ -7571,8 +7580,8 @@ void called_from_main_loop_9(tgestate_t *state)
 
     vischar->flags |= vischar_FLAGS_NO_COLLIDE; // mark the slot as used?
 
-    if (vischar->b0D & vischar_BYTE13_BIT7) // kick/force flag?
-      goto byte13bit7set;
+    if (vischar->input & vischar_INPUT_KICK)
+      goto kicked;
 
     HL = vischar->w0A; // character_related_pointer
     A = vischar->b0C;
@@ -7659,11 +7668,11 @@ next:
   return;
 
 
-byte13bit7set:
-  vischar->b0D &= ~vischar_BYTE13_BIT7; // sampled IY = $8020, $80A0, $8060, $80E0, $8080,
+kicked:
+  vischar->input &= ~vischar_INPUT_KICK; // sampled IY = $8020, $80A0, $8060, $80E0, $8080,
 
 end_bit:
-  C = byte_CDAA[vischar->direction][vischar->b0D];
+  C = byte_CDAA[vischar->direction][vischar->input];
   DE = vischar->w08[C];
   vischar->w0A = DE;
   if ((C & (1 << 7)) == 0)
@@ -10571,8 +10580,8 @@ void character_behaviour_end_1(tgestate_t *state,
   ASSERT_VISCHAR_VALID(vischar);
   // assert(flags);
 
-  if (flags != vischar->b0D)
-    vischar->b0D = flags | vischar_BYTE13_BIT7;
+  if (flags != vischar->input)
+    vischar->input = flags | vischar_INPUT_KICK;
 }
 
 /**
@@ -13116,7 +13125,7 @@ void event_roll_call(tgestate_t *state)
   iters = vischars_LENGTH;
   do
   {
-    vischar->b0D = vischar_BYTE13_BIT7; // kick movement
+    vischar->input = vischar_INPUT_KICK; // kick movement
     vischar->direction = direction_BOTTOM_LEFT;
     vischar++;
   }
@@ -13252,7 +13261,7 @@ void tge_setup(tgestate_t *state)
     &character_related_pointers[0], // w08
     character_related_pointers[8],  // w0A
     0x00,                 // b0C
-    0x00,                 // b0D
+    0x00,                 // input
     direction_TOP_LEFT,   // direction
     { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_AWAY_4], 0 }, // mi
     0x0000,               // scrx
