@@ -259,9 +259,9 @@ void drop_item(tgestate_t *state);
 static
 void drop_item_tail(tgestate_t *state, item_t item);
 static
-void drop_item_tail_exterior(itemstruct_t *HL);
+void calc_exterior_item_screenpos(itemstruct_t *itemstr);
 static
-void drop_item_tail_interior(itemstruct_t *HL);
+void calc_interior_item_screenpos(itemstruct_t *itemstr);
 
 static INLINE
 itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item);
@@ -677,7 +677,7 @@ void called_from_main_loop_9(tgestate_t *state);
 static
 void reset_position(tgestate_t *state, vischar_t *vischar);
 static
-void reset_position_end(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar);
 
 static
 void reset_game(tgestate_t *state);
@@ -2133,7 +2133,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     pos_to_tinypos(inpos, outpos);
     outpos->height = 0;
 
-    drop_item_tail_exterior(itemstr);
+    calc_exterior_item_screenpos(itemstr);
   }
   else
   {
@@ -2146,7 +2146,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos->y      = inpos->y;
     outpos->height = 5;
 
-    drop_item_tail_interior(itemstr);
+    calc_interior_item_screenpos(itemstr);
   }
 }
 
@@ -2159,16 +2159,16 @@ void drop_item_tail(tgestate_t *state, item_t item)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void drop_item_tail_exterior(itemstruct_t *itemstr)
+void calc_exterior_item_screenpos(itemstruct_t *itemstr)
 {
-  xy_t *t;
+  xy_t *screenpos;
 
   assert(itemstr != NULL);
 
-  t = &itemstr->screenpos;
+  screenpos = &itemstr->screenpos;
 
-  t->x = (0x40 + itemstr->pos.y - itemstr->pos.x) * 2;
-  t->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
+  screenpos->x = (0x40 - itemstr->pos.x + itemstr->pos.y) * 2;
+  screenpos->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
@@ -2180,7 +2180,7 @@ void drop_item_tail_exterior(itemstruct_t *itemstr)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void drop_item_tail_interior(itemstruct_t *itemstr)
+void calc_interior_item_screenpos(itemstruct_t *itemstr)
 {
   xy_t *screenpos;
 
@@ -7645,7 +7645,7 @@ resume2:
 
     // HL = vischar;
 
-    reset_position_end(state, vischar);
+    calc_vischar_screenpos(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -7712,18 +7712,18 @@ void reset_position(tgestate_t *state, vischar_t *vischar)
   /* Save a copy of the vischar's position + offset. */
   memcpy(&state->saved_pos, &vischar->mi.pos, sizeof(pos_t));
 
-  reset_position_end(state, vischar);
+  calc_vischar_screenpos(state, vischar);
 }
 
 /**
- * $B729: Calculate screen position for vischars.
+ * $B729: Calculate screen position for vischars from saved_pos.
  *
- * Computes a screen position. \see drop_item_tail_interior.
+ * \see drop_item_tail_interior.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void reset_position_end(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -11525,12 +11525,12 @@ void item_discovered(tgestate_t *state, item_t item)
   {
     /* Conv: The original code just assigned A/'room' here, as it's already zero. */
     itemstruct->pos.height = 0;
-    drop_item_tail_exterior(itemstruct);
+    calc_exterior_item_screenpos(itemstruct);
   }
   else
   {
     itemstruct->pos.height = 5;
-    drop_item_tail_interior(itemstruct);
+    calc_interior_item_screenpos(itemstruct);
   }
 }
 
