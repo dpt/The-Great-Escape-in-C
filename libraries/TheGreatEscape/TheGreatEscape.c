@@ -7536,7 +7536,7 @@ const wall_t walls[24] =
 /**
  * $B5CE: called_from_main_loop_9
  *
- *
+ * work out screen positions
  *
  * - movement
  * - crash if disabled, crash if iters reduced from 8
@@ -7545,20 +7545,26 @@ const wall_t walls[24] =
  */
 void called_from_main_loop_9(tgestate_t *state)
 {
+#define O (0<<7)
+#define I (1<<7)
+
   /**
-   * $CDAA: (unknown)  likely: sprite offsets + flip flags
+   * $CDAA: indices into character_related_pointers
+   * indices: direction, input
    */
   static const uint8_t byte_CDAA[8][9] =
   {
-    { 0x08,0x00,0x04,0x87,0x00,0x87,0x04,0x04,0x04 },
-    { 0x09,0x84,0x05,0x05,0x84,0x05,0x01,0x01,0x05 },
-    { 0x0A,0x85,0x02,0x06,0x85,0x06,0x85,0x85,0x02 },
-    { 0x0B,0x07,0x86,0x03,0x07,0x03,0x07,0x07,0x86 },
-    { 0x14,0x0C,0x8C,0x93,0x0C,0x93,0x10,0x10,0x8C },
-    { 0x15,0x90,0x11,0x8D,0x90,0x95,0x0D,0x0D,0x11 },
-    { 0x16,0x8E,0x0E,0x12,0x8E,0x0E,0x91,0x91,0x0E },
-    { 0x17,0x13,0x92,0x0F,0x13,0x0F,0x8F,0x8F,0x92 },
+    // none, up, down, left, up+left, down+left, right, up+right, down+right, fire
+    { O|0x08, O|0x00, O|0x04, I|0x07, O|0x00, I|0x07, O|0x04, O|0x04, O|0x04 }, // TL
+    { O|0x09, I|0x04, O|0x05, O|0x05, I|0x04, O|0x05, O|0x01, O|0x01, O|0x05 }, // TR
+    { O|0x0A, I|0x05, O|0x02, O|0x06, I|0x05, O|0x06, I|0x05, I|0x05, O|0x02 }, // BR
+    { O|0x0B, O|0x07, I|0x06, O|0x03, O|0x07, O|0x03, O|0x07, O|0x07, I|0x06 }, // BL
+    { O|0x14, O|0x0C, I|0x0C, I|0x13, O|0x0C, I|0x13, O|0x10, O|0x10, I|0x0C }, // TL + crawl
+    { O|0x15, I|0x10, O|0x11, I|0x0D, I|0x10, I|0x15, O|0x0D, O|0x0D, O|0x11 }, // TR + crawl
+    { O|0x16, I|0x0E, O|0x0E, O|0x12, I|0x0E, O|0x0E, I|0x11, I|0x11, O|0x0E }, // BR + crawl
+    { O|0x17, O|0x13, I|0x12, O|0x0F, O|0x13, O|0x0F, I|0x0F, I|0x0F, I|0x12 }, // BL + crawl
   };
+  // highest index = 0x17 (23 == max index in character_related_pointers)
 
   uint8_t        iters;   /* was B */
   vischar_t     *vischar; /* was IY */
@@ -7675,14 +7681,15 @@ kicked:
 
 end_bit:
   C = byte_CDAA[vischar->direction][vischar->input];
-  DE = vischar->w08[C];
+  // original game uses ADD A,A to double A and in doing so discards top bit
+  DE = vischar->w08[C & 0x7F]; // sampled w08 = $CDF2 (always) == &character_related_pointers[0]
   vischar->w0A = DE;
-  if ((C & (1 << 7)) == 0)
+  if ((C & I) == 0)
   {
     vischar->b0C = 0;
     DE += 2;
     vischar->direction = *DE;
-    DE += 2;
+    DE += 2; // point to groups of four
     SWAP(const uint8_t *, DE, HL);
     goto resume2;
   }
@@ -7690,14 +7697,14 @@ end_bit:
   {
     const uint8_t *stacked;
 
-    C = *DE;
-    vischar->b0C = C | 0x80;
+    C = *DE; // count of four-byte groups
+    vischar->b0C = C | 0x80; // what flag is this?
     vischar->direction = *++DE;
-    DE += 3;
+    DE += 3; // point to groups of four
     stacked = DE;
     SWAP(const uint8_t *, DE, HL);
     HL += C * 4 - 1;
-    A = *HL;
+    A = *HL; // last byte in group of four, flip flag?
     SWAP(uint8_t, A, Adash);
     HL = stacked;
     goto resume1;
@@ -11583,6 +11590,8 @@ const default_item_location_t default_item_locations[item__LIMIT] =
 
 // spotted: first byte matches the number of following four-byte groups
 
+//                                        ......... direction_t's
+//                                        |   |
 static const uint8_t _cf06[] = { 0x01, 0x04,0x04,0xFF, 0x00,0x00,0x00,0x0A };
 static const uint8_t _cf0e[] = { 0x01, 0x05,0x05,0xFF, 0x00,0x00,0x00,0x8A };
 static const uint8_t _cf16[] = { 0x01, 0x06,0x06,0xFF, 0x00,0x00,0x00,0x88 };
