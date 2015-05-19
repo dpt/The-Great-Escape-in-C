@@ -6840,7 +6840,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   iters = 16; // 16 is the length of what?
   do
   {
-    if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_LO) == direction)
+    if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) == direction)
       if (door_in_range(state, door_pos))
         goto found;
     door_pos += 2;
@@ -6856,7 +6856,7 @@ found:
     return; // door was locked - return nonzero?
 
   vischar->room = (door_pos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // sampled HL = $792E (in door_positions[])
-  if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_LO) >= direction_BOTTOM_RIGHT) /* BR or BL */
+  if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) >= direction_BOTTOM_RIGHT) /* BR or BL */
     // point at the next door's pos
     transition(state, &door_pos[1].pos);
   else
@@ -7052,7 +7052,9 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     room_and_flags = door->room_and_flags;
 
     // Conv: Cdash removed
-    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_LO)) // used B' // could be a check for facing the same direction as the door?
+    // 3 => input_UP+input_DOWN
+    // input_t tested against a direction_t
+    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION)) // used B' // could be a check for facing the same direction as the door?
       goto next;
 
     tinypos = &door->pos;
@@ -9917,7 +9919,7 @@ character_12_or_higher:
       DEcharstr->room = (HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2;
 
       // Stuff reading from door_positions.
-      if ((HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_LO) < 2)
+      if ((HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < 2)
         // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
         HLtinypos = &HLdoorpos[1].pos;
       else
@@ -10795,7 +10797,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     doorpos = get_door_position(A); // door related
     vischar->room = (doorpos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
-    if ((doorpos->room_and_flags & doorpos_FLAGS_MASK_LO) <= direction_TOP_RIGHT)
+    if ((doorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
       /* TOP_LEFT or TOP_RIGHT */
       tinypos = &doorpos[1].pos; // was HL += 5; // next door pos
     else

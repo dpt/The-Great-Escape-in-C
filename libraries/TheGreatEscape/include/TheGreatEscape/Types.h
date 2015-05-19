@@ -279,7 +279,7 @@ enum characterstruct_flags
  */
 enum doorpos_flags
 {
-  doorpos_FLAGS_MASK_LO                = 0x03,
+  doorpos_FLAGS_MASK_DIRECTION         = 0x03, // up/down or direction field?
   doorpos_FLAGS_MASK_ROOM              = 0xFC
 };
 
