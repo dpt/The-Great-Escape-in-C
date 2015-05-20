@@ -146,6 +146,8 @@ do {                \
 
 /* ----------------------------------------------------------------------- */
 
+// state
+
 #define ASSERT_SCREEN_PTR_VALID(p)                    \
 do {                                                  \
   assert(p >= &state->speccy->screen[0]);             \
@@ -186,6 +188,47 @@ do {                                                  \
 do {                                                  \
   assert(p >= &state->vischars[0]);                   \
   assert(p < &state->vischars[vischars_LENGTH]);      \
+} while (0)
+
+// non-state
+
+#define ASSERT_CHARACTER_VALID(c)                             \
+do {                                                          \
+  assert(c >= 0 && c < character__LIMIT);                     \
+} while (0)
+
+#define ASSERT_ROOM_VALID(r)                                  \
+do {                                                          \
+  assert(r >= 0 && r < room__LIMIT);                          \
+} while (0)
+
+#define ASSERT_ITEM_VALID(i)                                  \
+do {                                                          \
+  assert(i >= 0 && i < item__LIMIT);                          \
+} while (0)
+
+#define ASSERT_INTERIOR_TILES_VALID(p)                        \
+do {                                                          \
+  assert(p >= &interior_tiles[0].row[0]);                     \
+  assert(p < &interior_tiles[interiorobjecttile_MAX].row[0]); \
+} while (0)
+
+#define ASSERT_DOORS_VALID(p)                                 \
+do {                                                          \
+  assert(p >= &state->doors[0]);                              \
+  assert(p < &state->doors[4]);                               \
+} while (0)
+
+#define ASSERT_SUPERTILE_PTR_VALID(p)                         \
+do {                                                          \
+  assert(p >= &supertiles[0].tiles[0]);                       \
+  assert(p < &supertiles[supertileindex__LIMIT].tiles[0]);    \
+} while (0)
+
+#define ASSERT_MAP_PTR_VALID(p)                               \
+do {                                                          \
+  assert(p >= &map[0]);                                       \
+  assert(p < &map[MAPX * MAPY]);                              \
 } while (0)
 
 /* ----------------------------------------------------------------------- */
@@ -269,7 +312,7 @@ itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item);
 static
 void draw_all_items(tgestate_t *state);
 static
-void draw_item(tgestate_t *state, item_t index, size_t dstoff);
+void draw_item(tgestate_t *state, item_t item, size_t dstoff);
 
 static
 itemstruct_t *find_nearby_item(tgestate_t *state);
@@ -431,7 +474,7 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
                                    uint8_t     loc_high);
 static
 void set_character_location(tgestate_t  *state,
-                            character_t  index,
+                            character_t  character,
                             location_t   location);
 static
 void sub_A3BB(tgestate_t *state, vischar_t *vischar);
@@ -748,8 +791,8 @@ int change_by_delta(int8_t         max,
                     uint8_t       *first);
 
 static
-characterstruct_t *get_character_struct(tgestate_t  *state,
-                                        character_t  index);
+characterstruct_t *get_character_struct(tgestate_t *state,
+                                        character_t character);
 
 static
 void character_event(tgestate_t *state, location_t *location);
@@ -1282,7 +1325,7 @@ void setup_doors(tgestate_t *state)
   while (--iters);
 
   pdoor++;
-  assert(pdoor == &state->doors[0]);
+  ASSERT_DOORS_VALID(pdoor);
 
   room = state->room_index << 2; /* Shunt left for comparison in loop. */
   door_index = 0;
@@ -1416,7 +1459,9 @@ void setup_room(tgestate_t *state)
 
   wipe_visible_tiles(state);
 
-  proomdef = rooms_and_tunnels[state->room_index - 1];
+  assert(state->room_index >= 0);
+  assert(state->room_index < room__LIMIT);
+  proomdef = rooms_and_tunnels[state->room_index - 1]; /* array starts with room 1 */
 
   setup_doors(state);
 
@@ -1424,6 +1469,7 @@ void setup_room(tgestate_t *state)
 
   /* Copy boundaries into state. */
   state->roomdef_object_bounds_count = count = *proomdef; /* count of boundaries */
+  assert(count <= 4);
   pbounds = &state->roomdef_object_bounds[0]; /* Conv: Moved */
   if (count == 0) /* no boundaries */
   {
@@ -1630,13 +1676,9 @@ void plot_interior_tiles(tgestate_t *state)
       const tilerow_t *tile_data;   /* was HL */
       uint8_t         *window_buf2; /* was DE */
 
-      assert(tiles_buf >= &state->tile_buf[0]);
-      assert(tiles_buf < &state->tile_buf[24*17]);
+      ASSERT_TILE_BUF_PTR_VALID(tiles_buf);
 
       tile_data = &interior_tiles[*tiles_buf++].row[0];
-
-      assert(tile_data >= &interior_tiles[0].row[0]);
-      assert(tile_data < &interior_tiles[interiorobjecttile_MAX].row[0]);
 
       window_buf2 = window_buf;
 
@@ -1644,8 +1686,8 @@ void plot_interior_tiles(tgestate_t *state)
       stride = columns;
       do
       {
-        assert(window_buf2 >= &state->window_buf[0]);
-        assert(window_buf2 < &state->window_buf[24*16*8]);
+        ASSERT_WINDOW_BUF_PTR_VALID(window_buf2);
+        ASSERT_INTERIOR_TILES_VALID(tile_data);
 
         *window_buf2 = *tile_data++;
         window_buf2 += stride;
@@ -1993,7 +2035,7 @@ void use_item_common(tgestate_t *state, item_t item)
   if (item == item_NONE)
     return;
 
-  assert(item >= 0 && item < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(pos_t));
 
@@ -2117,7 +2159,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
   pos_t        *inpos;   /* was HL */
 
   assert(state != NULL);
-  assert(item >= 0 && item < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   itemstr = item_to_itemstruct(state, item);
   room = state->room_index;
@@ -2213,7 +2255,7 @@ void calc_interior_item_screenpos(itemstruct_t *itemstr)
 itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item)
 {
   assert(state != NULL);
-  assert(item >= 0 && item < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   return &state->item_structs[item];
 }
@@ -2241,7 +2283,7 @@ void draw_all_items(tgestate_t *state)
  * \param[in] item   Item index.    (was A)
  * \param[in] dstoff Screen offset. (was HL) Assumed to be in the lower third of the display.
  */
-void draw_item(tgestate_t *state, item_t index, size_t dstoff)
+void draw_item(tgestate_t *state, item_t item, size_t dstoff)
 {
   assert(state != NULL);
 
@@ -2254,14 +2296,14 @@ void draw_item(tgestate_t *state, item_t index, size_t dstoff)
   /* Wipe item. */
   screen_wipe(state, 2, 16, screen + dstoff);
 
-  if (index == item_NONE)
+  if (item == item_NONE)
     return;
 
-  assert(index >= 0 && index < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   /* Set screen attributes. */
   attrs = (dstoff & 0xFF) + &state->speccy->attributes[0x5A00 - SCREEN_ATTRIBUTES_START_ADDRESS];
-  attr = state->item_attributes[index];
+  attr = state->item_attributes[item];
   attrs[0] = attr;
   attrs[1] = attr;
 
@@ -2271,7 +2313,7 @@ void draw_item(tgestate_t *state, item_t index, size_t dstoff)
   attrs[1] = attr;
 
   /* Plot the item bitmap. */
-  sprite = &item_definitions[index];
+  sprite = &item_definitions[item];
   plot_bitmap(state, sprite->width, sprite->height, sprite->bitmap, screen + dstoff);
 }
 
@@ -2815,6 +2857,8 @@ void process_player_input(tgestate_t *state)
 
     if (state->hero_in_bed || state->hero_in_breakfast)
     {
+      assert(state->hero_in_bed == 0 || state->hero_in_breakfast == 0);
+
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
@@ -4145,7 +4189,7 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
  * \param[in] location Location.              (was A' lo + C hi)
  */
 void set_character_location(tgestate_t  *state,
-                            character_t  index,
+                            character_t  character,
                             location_t   location)
 {
   characterstruct_t *charstr; /* was HL */
@@ -4153,18 +4197,18 @@ void set_character_location(tgestate_t  *state,
   uint8_t            iters;   /* was B */
 
   assert(state != NULL);
-  assert(index >= 0 && index < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
   // assert(location);
 
-  charstr = get_character_struct(state, index);
+  charstr = get_character_struct(state, character);
   if ((charstr->character & characterstruct_FLAG_DISABLED) != 0)
   {
-    index = charstr->character & characterstruct_BYTE0_MASK;
+    character = charstr->character & characterstruct_BYTE0_MASK;
     iters = vischars_LENGTH - 1;
     vischar = &state->vischars[1]; /* iterate over non-player characters */
     do
     {
-      if (index == charstr->character)
+      if (character == charstr->character)
         goto store_to_vischar; // an already visible character?
       vischar++;
     }
@@ -4296,7 +4340,7 @@ void sub_A404(tgestate_t        *state,
 {
   assert(state   != NULL);
   assert(charstr != NULL);
-  assert(character >= 0 && character < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
 
   charstr->room = room_NONE;
 
@@ -4338,7 +4382,7 @@ void character_sits(tgestate_t  *state,
   room_t   room;  /* was C */
 
   assert(state    != NULL);
-  assert(character >= 0 && character < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
   assert(location != NULL);
 
   index = character - 18;
@@ -4375,7 +4419,7 @@ void character_sleeps(tgestate_t  *state,
   room_t room; /* was C */
 
   assert(state    != NULL);
-  assert(character >= 0 && character < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
   assert(location != NULL);
 
   /* Poke object. */
@@ -4404,7 +4448,7 @@ void character_sit_sleep_common(tgestate_t *state,
    * characterstruct or a vischar. */
 
   assert(state    != NULL);
-  assert(room >= 0 && room < room__LIMIT);
+  ASSERT_ROOM_VALID(room);
   assert(location != NULL);
 
   // sampled HL =
@@ -4625,7 +4669,7 @@ void byte_A13E_anotherone_common(tgestate_t        *state,
 {
   assert(state   != NULL);
   assert(charstr != NULL);
-  assert(character >= 0 && character < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
 
   charstr->room = room_NONE;
 
@@ -5011,10 +5055,10 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   uint8_t            offset;  // new
 
   assert(state    != NULL);
-  assert(vistiles != NULL);
-  assert(maptiles != NULL);
-  // assert(y);
-  assert(window   != NULL);
+  ASSERT_TILE_BUF_PTR_VALID(vistiles);
+  ASSERT_MAP_BUF_PTR_VALID(maptiles);
+  // assert(pos);
+  ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   y_offset = (y & 3) * 4;
   offset = (state->map_position.x & 3) + y_offset;
@@ -5035,6 +5079,9 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   {
     tileindex_t t; /* was A */
 
+    ASSERT_TILE_BUF_PTR_VALID(vistiles);
+    ASSERT_SUPERTILE_PTR_VALID(tiles);
+
     // Conv: Fused accesses and increments.
     t = *vistiles++ = *tiles++; // A = tile index
     plot_tile(state, t, maptiles, window);
@@ -5048,6 +5095,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   iters2 = 5;
   do
   {
+    ASSERT_MAP_BUF_PTR_VALID(maptiles);
     assert(*maptiles < supertileindex__LIMIT);
     tiles = &supertiles[*maptiles].tiles[y_offset]; // self modified by $A82A
 
@@ -5055,6 +5103,9 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
     do
     {
       tileindex_t t; /* was A */
+
+      ASSERT_TILE_BUF_PTR_VALID(vistiles);
+      ASSERT_SUPERTILE_PTR_VALID(tiles);
 
       t = *vistiles++ = *tiles++; // A = tile index
       plot_tile(state, t, maptiles, window);
@@ -5069,6 +5120,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
 
   //A = pos_copy; // an apparently unused assignment
 
+  ASSERT_MAP_BUF_PTR_VALID(maptiles);
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[y_offset]; // read of self modified instruction
   // Conv: A was A'.
@@ -5080,6 +5132,9 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
   do
   {
     tileindex_t t; /* was Adash */
+
+    ASSERT_TILE_BUF_PTR_VALID(vistiles);
+    ASSERT_SUPERTILE_PTR_VALID(tiles);
 
     t = *vistiles++ = *tiles++; // Adash = tile index
     plot_tile(state, t, maptiles, window);
@@ -5205,10 +5260,10 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   uint8_t            iters2;    /* was B' */
 
   assert(state    != NULL);
-  assert(vistiles != NULL);
-  assert(maptiles != NULL);
+  ASSERT_TILE_BUF_PTR_VALID(vistiles);
+  ASSERT_MAP_BUF_PTR_VALID(maptiles);
   // assert(pos);
-  assert(window   != NULL);
+  ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   x_offset = x & 3; // self modify (local)
   offset = (state->map_position.y & 3) * 4 + x_offset;
@@ -5227,6 +5282,9 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   {
     tileindex_t t; /* was A */
 
+    ASSERT_TILE_BUF_PTR_VALID(vistiles);
+    ASSERT_SUPERTILE_PTR_VALID(tiles);
+
     t = *vistiles = *tiles; // A = tile index
     plot_tile_then_advance(state, t, tiles, window);
     vistiles += 4; // stride
@@ -5241,6 +5299,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   iters2 = 3;
   do
   {
+    ASSERT_MAP_BUF_PTR_VALID(maptiles);
     assert(*maptiles < supertileindex__LIMIT);
     tiles = &supertiles[*maptiles].tiles[x_offset]; // self modified by $A8F6
 
@@ -5248,6 +5307,9 @@ void plot_vertical_tiles_common(tgestate_t       *state,
     do
     {
       tileindex_t t; /* was A */
+
+      ASSERT_TILE_BUF_PTR_VALID(vistiles);
+      ASSERT_SUPERTILE_PTR_VALID(tiles);
 
       t = *vistiles = *tiles; // A = tile index
       plot_tile_then_advance(state, t, tiles, window);
@@ -5262,12 +5324,16 @@ void plot_vertical_tiles_common(tgestate_t       *state,
 
   /* Trailing edge. */
 
+  ASSERT_MAP_BUF_PTR_VALID(maptiles);
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[x_offset]; // x_offset = read of self modified instruction
   iters = (state->map_position.y & 3) + 1;
   do
   {
     tileindex_t t; /* was A */
+
+    ASSERT_TILE_BUF_PTR_VALID(vistiles);
+    ASSERT_SUPERTILE_PTR_VALID(tiles);
 
     t = *vistiles = *tiles; // A = tile index
     plot_tile_then_advance(state, t, tiles, window);
@@ -7393,7 +7459,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
   message_t message; /* was B */
 
   assert(state != NULL);
-  assert(room_of_key >= 0 && room_of_key < room__LIMIT);
+  ASSERT_ROOM_VALID(room_of_key);
 
   pdoor = open_door(state);
   if (pdoor == NULL)
@@ -10033,17 +10099,18 @@ int change_by_delta(int8_t         max,
 /**
  * $C7B9: Get character struct.
  *
- * \param[in] state Pointer to game state.
- * \param[in] index Character index. (was A)
+ * \param[in] state     Pointer to game state.
+ * \param[in] character Character index. (was A)
  *
  * \return Pointer to characterstruct. (was HL)
  */
-characterstruct_t *get_character_struct(tgestate_t *state, character_t index)
+characterstruct_t *get_character_struct(tgestate_t *state,
+                                        character_t character)
 {
   assert(state != NULL);
-  assert(index >= 0 && index < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
 
-  return &state->character_structs[index];
+  return &state->character_structs[character];
 }
 
 /* ----------------------------------------------------------------------- */
@@ -11509,7 +11576,7 @@ void item_discovered(tgestate_t *state, item_t item)
   if (item == item_NONE)
     return;
 
-  assert(item >= 0 && item < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   item &= itemstruct_ITEM_MASK;
 
@@ -11786,7 +11853,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   assert(state   != NULL);
   assert(itemstr != NULL); // will need ASSERT_ITEMSTRUCT_VALID
-  assert(item >= 0 && item < item__LIMIT);
+  ASSERT_ITEM_VALID(item);
 
   /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
   item &= 0x3F; // mask off mysteryflagconst874
