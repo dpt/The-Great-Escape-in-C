@@ -1132,7 +1132,7 @@ void set_hero_sprite_for_room(tgestate_t *state)
   if (state->room_index >= room_29_SECOND_TUNNEL_START)
   {
     hero->direction |= vischar_DIRECTION_CRAWL;
-    hero->mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4];
+    hero->mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
   }
   else
   {
@@ -2080,7 +2080,7 @@ void drop_item(tgestate_t *state)
     return;
 
   if (item == item_UNIFORM)
-    state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4];
+    state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
 
   /* Shuffle items down. */
   itemp = &state->items_held[1];
@@ -7154,7 +7154,7 @@ void action_uniform(tgestate_t *state)
 
   assert(state != NULL);
 
-  sprite = &sprites[sprite_GUARD_FACING_TOP_LEFT_4];
+  sprite = &sprites[sprite_GUARD_FACING_AWAY_4];
 
   if (state->vischars[0].mi.spriteset == sprite)
     return; /* Already in uniform. */
@@ -7276,7 +7276,7 @@ action_wiresnips_tail:
   state->vischars[0].b0D            = vischar_BYTE13_BIT7;
   state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
   state->vischars[0].mi.pos.height  = 12;
-  state->vischars[0].mi.spriteset   = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4];
+  state->vischars[0].mi.spriteset   = &sprites[sprite_PRISONER_FACING_AWAY_4];
   state->player_locked_out_until = state->game_counter + 96;
   queue_message_for_display(state, message_CUTTING_THE_WIRE);
 }
@@ -7738,7 +7738,7 @@ void reset_game(tgestate_t *state)
   draw_all_items(state);
 
   /* Reset the hero's sprite. */
-  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4];
+  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
 
   /* Put the hero to bed. */
   state->room_index = room_2_HUT2LEFT;
@@ -9369,10 +9369,10 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
    */
   static const character_meta_data_t character_meta_data[4] =
   {
-    { &character_related_pointers[0], &sprites[sprite_COMMANDANT_FACING_TOP_LEFT_4] },
-    { &character_related_pointers[0], &sprites[sprite_GUARD_FACING_TOP_LEFT_4]      },
-    { &character_related_pointers[0], &sprites[sprite_DOG_FACING_TOP_LEFT_1]        },
-    { &character_related_pointers[0], &sprites[sprite_PRISONER_FACING_TOP_LEFT_4]   },
+    { &character_related_pointers[0], &sprites[sprite_COMMANDANT_FACING_AWAY_4] },
+    { &character_related_pointers[0], &sprites[sprite_GUARD_FACING_AWAY_4]      },
+    { &character_related_pointers[0], &sprites[sprite_DOG_FACING_AWAY_1]        },
+    { &character_related_pointers[0], &sprites[sprite_PRISONER_FACING_AWAY_4]   },
   };
 
   vischar_t                   *vischar;   /* was HL/IY */
@@ -11302,7 +11302,7 @@ next:
 
   state->morale_1 = 0xFF; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
-  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_TOP_LEFT_4]; // $8015 = sprite_prisoner_tl_4;
+  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4]; // $8015 = sprite_prisoner_tl_4;
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
@@ -11337,7 +11337,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   /* Wearing the uniform stops anyone but the commandant from following the
    * hero. */
   if (character != character_0_COMMANDANT &&
-      state->vischars[0].mi.spriteset == &sprites[sprite_GUARD_FACING_TOP_LEFT_4])
+      state->vischars[0].mi.spriteset == &sprites[sprite_GUARD_FACING_AWAY_4])
     return;
 
   // Which is the case here?
@@ -13224,7 +13224,7 @@ void action_papers(tgestate_t *state)
 
   /* Using the papers at the main gate when not in uniform causes the hero
    * to be sent to solitary */
-  if (state->vischars[0].mi.spriteset != &sprites[sprite_GUARD_FACING_TOP_LEFT_4])
+  if (state->vischars[0].mi.spriteset != &sprites[sprite_GUARD_FACING_AWAY_4])
   {
     solitary(state);
     return;
@@ -13310,7 +13310,7 @@ void tge_setup(tgestate_t *state)
     0x00,                 // b0C
     0x00,                 // b0D
     direction_TOP_LEFT,   // direction
-    { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_TOP_LEFT_4], 0 }, // mi
+    { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_AWAY_4], 0 }, // mi
     0x0000,               // scrx
     0x0000,               // scry
     room_0_OUTDOORS,      // room
