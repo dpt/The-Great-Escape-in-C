@@ -699,12 +699,12 @@ mask_t;
 /**
  * Holds character meta data.
  */
-typedef struct character_meta_data
+typedef struct character_class_data
 {
-  const uint8_t  **data;
-  const sprite_t  *sprite;
+  const uint8_t **crpbase;
+  const sprite_t *sprite;
 }
-character_meta_data_t;
+character_class_data_t;
 
 /**
  * Holds searchlight movement data.

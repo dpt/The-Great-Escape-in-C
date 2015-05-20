@@ -850,7 +850,7 @@ void item_discovered(tgestate_t *state, item_t item);
 
 extern const default_item_location_t default_item_locations[item__LIMIT];
 
-extern const character_meta_data_t character_meta_data[4];
+extern const character_class_data_t character_class_data[4];
 
 extern const uint8_t *character_related_pointers[24];
 
@@ -9406,9 +9406,9 @@ next:
 int spawn_character(tgestate_t *state, characterstruct_t *charstr)
 {
   /**
-   * $CD9A: Maps characters to sprite sets (maybe).
+   * $CD9A: Data for the four classes of characters.
    */
-  static const character_meta_data_t character_meta_data[4] =
+  static const character_class_data_t character_class_data[4] =
   {
     { &character_related_pointers[0], &sprites[sprite_COMMANDANT_FACING_AWAY_4] },
     { &character_related_pointers[0], &sprites[sprite_GUARD_FACING_AWAY_4]      },
@@ -9421,7 +9421,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   characterstruct_t           *charstr2;  /* was DE */
   pos_t                       *saved_pos; /* was HL */
   character_t                  character; /* was A */
-  const character_meta_data_t *metadata;  /* was DE */
+  const character_class_data_t *metadata;  /* was DE */
   int                          Z;
   room_t                       room;      /* was A */
   uint8_t                      A;         /* was A */
@@ -9494,24 +9494,24 @@ found_empty_slot:
 
   // PUSH DE (charstr2)
 
-  metadata = &character_meta_data[0]; /* Commandant */
+  metadata = &character_class_data[0]; /* Commandant */
   if (character != 0)
   {
-    metadata = &character_meta_data[1]; /* Guard */
+    metadata = &character_class_data[1]; /* Guard */
     if (character >= 16)
     {
-      metadata = &character_meta_data[2]; /* Dog */
+      metadata = &character_class_data[2]; /* Dog */
       if (character >= 20)
       {
-        metadata = &character_meta_data[3]; /* Prisoner */
+        metadata = &character_class_data[3]; /* Prisoner */
       }
     }
   }
 
   // EX DE, HL (DE = vischar, HL = charstr)
 
-  vischar->crpbase    = metadata->data;
-  vischar->mi.sprite  = metadata->sprite;
+  vischar->crpbase   = metadata->crpbase; // seems to be a constant
+  vischar->mi.sprite = metadata->sprite;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
 
   // POP HL
