@@ -458,7 +458,7 @@ tinypos_t;
 typedef struct movableitem
 {
   pos_t           pos;
-  const sprite_t *spriteset;
+  const sprite_t *sprite;
   spriteindex_t   sprite_index;
 }
 movableitem_t;
@@ -702,7 +702,7 @@ mask_t;
 typedef struct character_meta_data
 {
   const uint8_t  **data;
-  const sprite_t  *spriteset;
+  const sprite_t  *sprite;
 }
 character_meta_data_t;
 

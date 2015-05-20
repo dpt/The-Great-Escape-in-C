@@ -1136,7 +1136,7 @@ void set_hero_sprite_for_room(tgestate_t *state)
   if (state->room_index >= room_29_SECOND_TUNNEL_START)
   {
     hero->direction |= vischar_DIRECTION_CRAWL;
-    hero->mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
+    hero->mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_4];
   }
   else
   {
@@ -2085,7 +2085,7 @@ void drop_item(tgestate_t *state)
     return;
 
   if (item == item_UNIFORM)
-    state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
+    state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_4];
 
   /* Shuffle items down. */
   itemp = &state->items_held[1];
@@ -7195,13 +7195,13 @@ void action_uniform(tgestate_t *state)
 
   sprite = &sprites[sprite_GUARD_FACING_AWAY_4];
 
-  if (state->vischars[0].mi.spriteset == sprite)
+  if (state->vischars[0].mi.sprite == sprite)
     return; /* Already in uniform. */
 
   if (state->room_index >= room_29_SECOND_TUNNEL_START)
     return; /* Can't don uniform when in a tunnel. */
 
-  state->vischars[0].mi.spriteset = sprite;
+  state->vischars[0].mi.sprite = sprite;
 
   increase_morale_by_10_score_by_50(state);
 }
@@ -7315,7 +7315,7 @@ action_wiresnips_tail:
   state->vischars[0].input            = vischar_INPUT_KICK;
   state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
   state->vischars[0].mi.pos.height  = 12;
-  state->vischars[0].mi.spriteset   = &sprites[sprite_PRISONER_FACING_AWAY_4];
+  state->vischars[0].mi.sprite      = &sprites[sprite_PRISONER_FACING_AWAY_4];
   state->player_locked_out_until = state->game_counter + 96;
   queue_message_for_display(state, message_CUTTING_THE_WIRE);
 }
@@ -7778,7 +7778,7 @@ void reset_game(tgestate_t *state)
   draw_all_items(state);
 
   /* Reset the hero's sprite. */
-  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4];
+  state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_4];
 
   /* Put the hero to bed. */
   state->room_index = room_2_HUT2LEFT;
@@ -9510,8 +9510,8 @@ found_empty_slot:
 
   // EX DE, HL (DE = vischar, HL = charstr)
 
-  vischar->crpbase          = metadata->data;
-  vischar->mi.spriteset = metadata->spriteset;
+  vischar->crpbase    = metadata->data;
+  vischar->mi.sprite  = metadata->sprite;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
 
   // POP HL
@@ -11257,7 +11257,7 @@ next:
 
   state->morale_1 = 0xFF; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
-  state->vischars[0].mi.spriteset = &sprites[sprite_PRISONER_FACING_AWAY_4]; // $8015 = sprite_prisoner_tl_4;
+  state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_4]; // $8015 = sprite_prisoner_tl_4;
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
@@ -11292,7 +11292,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   /* Wearing the uniform stops anyone but the commandant from following the
    * hero. */
   if (character != character_0_COMMANDANT &&
-      state->vischars[0].mi.spriteset == &sprites[sprite_GUARD_FACING_AWAY_4])
+      state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_4])
     return;
 
   // Which is the case here?
@@ -12793,7 +12793,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     tinypos->height = (pos->height) >> 3;
   }
 
-  sprite = vischar->mi.spriteset;
+  sprite = vischar->mi.sprite;
 
   state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
@@ -12806,7 +12806,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit
-  sprite2 = &sprite[sprite_index & spriteindex_MASK]; // spriteset pointer // A takes what values?
+  sprite2 = &sprite[sprite_index & spriteindex_MASK]; // sprite pointer // A takes what values?
 
   vischar->width_bytes = sprite2->width;  // width in bytes
   vischar->height      = sprite2->height; // height in rows
@@ -13176,7 +13176,7 @@ void action_papers(tgestate_t *state)
 
   /* Using the papers at the main gate when not in uniform causes the hero
    * to be sent to solitary */
-  if (state->vischars[0].mi.spriteset != &sprites[sprite_GUARD_FACING_AWAY_4])
+  if (state->vischars[0].mi.sprite != &sprites[sprite_GUARD_FACING_AWAY_4])
   {
     solitary(state);
     return;
