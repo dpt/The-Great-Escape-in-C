@@ -605,7 +605,7 @@ static
 void searchlight_plot(tgestate_t *state, attribute_t *DE);
 
 static
-int touch(tgestate_t *state, vischar_t *vischar, uint8_t flip_sprite);
+int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index);
 
 static
 int collision(tgestate_t *state, vischar_t *vischar);
@@ -6422,23 +6422,23 @@ nextrow:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AF8F: Stuff is touching.
+ * $AF8F: Stuff is touching. Also assigns saved_pos to specified vischar's pos and sets the sprite_index.
  *
- * \param[in] state       Pointer to game state.
- * \param[in] vischar     Pointer to visible character. (was IY)
- * \param[in] flip_sprite Flip flag + sprite offset. (was A')
+ * \param[in] state         Pointer to game state.
+ * \param[in] vischar       Pointer to visible character. (was IY)
+ * \param[in] sprite_index  Flip flag + sprite offset. (was A')
  *
  * \return 0/1 => within/outwith bounds
  */
-int touch(tgestate_t *state, vischar_t *vischar, uint8_t flip_sprite)
+int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 {
-  uint8_t stashed_flip_sprite; /* was $81AA */ // FUTURE: Can be removed.
+  spriteindex_t stashed_sprite_index; /* was $81AA */ // FUTURE: Can be removed.
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   // assert(Adash);
 
-  stashed_flip_sprite = flip_sprite;
+  stashed_sprite_index = sprite_index;
   vischar->counter_and_flags |= vischar_BYTE7_TOUCH | vischar_BYTE7_LOCATABLE; // wild guess: clamp character in position?
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
@@ -6459,8 +6459,8 @@ int touch(tgestate_t *state, vischar_t *vischar, uint8_t flip_sprite)
       return 1; // NZ
 
   vischar->counter_and_flags &= ~vischar_BYTE7_TOUCH; // clear
-  vischar->mi.pos         = state->saved_pos;
-  vischar->mi.flip_sprite = stashed_flip_sprite; // left/right flip flag / sprite offset
+  vischar->mi.pos           = state->saved_pos;
+  vischar->mi.sprite_index  = stashed_sprite_index; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
   return 0; // Z
@@ -7573,8 +7573,8 @@ void called_from_main_loop_9(tgestate_t *state)
   uint8_t        C;       /* was C */
   const uint8_t *DE;      /* was HL */
   uint16_t       BC;      /* was BC */
-  uint8_t        Adash;   /* was A' */ // flip flag
   uint16_t       HL2;     /* was HL */
+  spriteindex_t  Adash;   /* was A' */
 
   assert(state != NULL);
 
@@ -7600,7 +7600,7 @@ void called_from_main_loop_9(tgestate_t *state)
         goto end_bit;
 
       HL += (A + 1) * 4 - 1; /* 4..512 + 1 */
-      A = *HL++;
+      A = *HL++; // a spriteindex_t
 
       SWAP(uint8_t, A, Adash);
 
@@ -7623,7 +7623,7 @@ resume1:
       BC = SXT_8_16(DE);
       state->saved_pos.height = vischar->mi.pos.height - BC;
 
-      if (touch(state, vischar, Adash /* flip_sprite */))
+      if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
 
       vischar->b0C--;
@@ -7650,11 +7650,11 @@ resume2:
       state->saved_pos.height = HL2 + vischar->mi.pos.height;
       DE++;
 
-      A = *DE; // unsure
+      A = *DE; // a spriteindex_t
 
       SWAP(uint8_t, A, Adash);
 
-      if (touch(state, vischar, Adash /* flip_sprite */))
+      if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
 
       vischar->b0C++;
@@ -11819,7 +11819,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  // EX DE, HL
 //
 //  *DE = 0; // was B, which is always zero here
-  state->flip_sprite    = 0; /* Items are never drawn flipped. */
+  state->sprite_index   = 0; /* Items are never drawn flipped. */
 
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
@@ -12101,7 +12101,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask1 = *maskptr++;
       mask2 = *maskptr++;
 
-      if (state->flip_sprite & (1<<7)) // ToDo: Hoist out this constant flag.
+      if (state->sprite_index & spriteindex_FLIP)
         flip_24_masked_pixels(state, &mask2, &mask1, &mask0, &bm2, &bm1, &bm0);
 
       foremaskptr = state->foreground_mask_pointer;
@@ -12227,7 +12227,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask1 = *maskptr++;
       mask0 = *maskptr++;
 
-      if (state->flip_sprite & (1<<7)) // ToDo: Hoist out this constant flag.
+      if (state->sprite_index & spriteindex_FLIP)
         flip_24_masked_pixels(state, &mask0, &mask1, &mask2, &bm0, &bm1, &bm2);
 
       foremaskptr = state->foreground_mask_pointer;
@@ -12409,7 +12409,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     mask0 = *maskptr++;
     mask1 = *maskptr++;
 
-    if (state->flip_sprite & (1<<7)) // ToDo: Hoist out this constant flag.
+    if (state->sprite_index & spriteindex_FLIP)
       flip_16_masked_pixels(state, &mask0, &mask1, &bm0, &bm1);
 
     // I'm assuming foremaskptr to be a foreground mask pointer based on it being
@@ -12544,7 +12544,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     mask1 = *maskptr++;
     mask0 = *maskptr++;
 
-    if (state->flip_sprite & (1<<7)) // ToDo: Hoist out this constant flag.
+    if (state->sprite_index & spriteindex_FLIP)
       flip_16_masked_pixels(state, &mask1, &mask0, &bm1, &bm0);
 
     foremaskptr = state->foreground_mask_pointer;
@@ -12764,7 +12764,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   pos_t          *pos;            /* was HL */
   tinypos_t      *tinypos;        /* was DE */
   const sprite_t *sprite;         /* was BC */
-  uint8_t         flip_sprite;    /* was A */
+  spriteindex_t   sprite_index;   /* was A */
   const sprite_t *sprite2;        /* was DE */
   uint16_t        clipped_width;  /* was BC */
   uint16_t        clipped_height; /* was DE */
@@ -12807,9 +12807,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   sprite = vischar->mi.spriteset;
 
-  state->flip_sprite = flip_sprite = vischar->mi.flip_sprite; // set left/right flip flag / sprite offset
+  state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
-  // HL now points after flip_sprite
+  // HL now points after sprite_index
   // DE now points to state->map_position_related.x
 
   // unrolled over original
@@ -12818,7 +12818,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit
-  sprite2 = &sprite[flip_sprite & 0x7F]; // spriteset pointer // A takes what values?
+  sprite2 = &sprite[sprite_index & spriteindex_MASK]; // spriteset pointer // A takes what values?
 
   vischar->width_bytes = sprite2->width;  // width in bytes
   vischar->height      = sprite2->height; // height in rows

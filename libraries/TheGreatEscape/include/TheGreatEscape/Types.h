@@ -303,6 +303,20 @@ enum escapeitem_flags
   escapeitem_UNIFORM                   = 1 << 3
 };
 
+/**
+ * Identifiers of sprite indices.
+ */
+enum spriteindex_flags
+{
+  spriteindex_MASK                     = 0x7F,
+  spriteindex_FLIP                     = 1 << 7 // left/right flip flag
+};
+
+/**
+ * Holds a sprite index.
+ */
+typedef uint8_t spriteindex_t;
+
 /* ----------------------------------------------------------------------- */
 
 /* CONSTANTS
@@ -438,15 +452,14 @@ typedef struct tinypos
 tinypos_t;
 
 /**
- * Defines a movable item.
+ * Holds a movable item.
  * This is a sub-struct of vischar (from 'pos' onwards).
- * Unknown as yet its intent. Just calling it a "movable item" for now.
  */
 typedef struct movableitem
 {
   pos_t           pos;
   const sprite_t *spriteset;
-  uint8_t         flip_sprite; // sprite set offset / flip flag
+  spriteindex_t   sprite_index;
 }
 movableitem_t;
 
@@ -489,7 +502,7 @@ typedef struct vischar
   // a direction_t?
   uint8_t         direction;
 
-  /** $800F movable item (position, current character sprite set, flip_sprite) */
+  /** $800F movable item (position, current character sprite set, sprite_index) */
   movableitem_t   mi;
 
   /** $8018,$801A screen x,y coord */
