@@ -484,10 +484,10 @@ typedef struct vischar
   uint8_t         counter_and_flags;
 
   /** $8008 pointer to character_related_pointers (assigned once only) */
-  const uint8_t **w08;
+  const uint8_t **crpbase;
 
   /** $800A value in character_related_pointers */
-  const uint8_t  *w0A;
+  const uint8_t  *crp;
 
   /** $800C */
   uint8_t         b0C; // up/down flag

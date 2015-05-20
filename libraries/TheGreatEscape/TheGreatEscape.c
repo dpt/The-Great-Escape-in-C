@@ -1223,8 +1223,8 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->p04.y             = 0;
   vischar1->p04.height        = 0;
   vischar1->counter_and_flags = 0;
-  vischar1->w08               = &character_related_pointers[0];
-  vischar1->w0A               = character_related_pointers[8];
+  vischar1->crpbase           = &character_related_pointers[0];
+  vischar1->crp               = character_related_pointers[8];
   vischar1->b0C               = 0;
   vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
@@ -5524,7 +5524,7 @@ void move_map(tgestate_t *state)
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCH)
     return; // don't move the map if touch() is entered?
 
-  char_related = state->vischars[0].w0A;
+  char_related = state->vischars[0].crp;
   b0C = state->vischars[0].b0C;
   direction = char_related[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
   if (direction == 0xFF)
@@ -7572,8 +7572,6 @@ void called_from_main_loop_9(tgestate_t *state)
   uint8_t        A;       /* was A */
   uint8_t        C;       /* was C */
   const uint8_t *DE;      /* was HL */
-  uint16_t       BC;      /* was BC */
-  uint16_t       HL2;     /* was HL */
   spriteindex_t  Adash;   /* was A' */
 
   assert(state != NULL);
@@ -7591,9 +7589,9 @@ void called_from_main_loop_9(tgestate_t *state)
     if (vischar->input & vischar_INPUT_KICK)
       goto kicked;
 
-    HL = vischar->w0A; // character_related_pointer
+    HL = vischar->crp; // character_related_pointer
     A = vischar->b0C;
-    if (A >= 128) // signed byte < 0
+    if (A & vischar_BYTE12_BIT7) // up/down flag
     {
       A &= vischar_BYTE12_MASK;
       if (A == 0)
@@ -7607,21 +7605,16 @@ void called_from_main_loop_9(tgestate_t *state)
 // Conv: Simplified sign extend sequence to this. Too far?
 #define SXT_8_16(P) ((uint16_t) (*(int8_t *) (P)))
 
-resume1:
+decrement:
       SWAP(const uint8_t *, DE, HL);
 
       // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (character_related_data)
 
-      BC = SXT_8_16(DE);
-      state->saved_pos.x = vischar->mi.pos.x - BC;
+      state->saved_pos.x = vischar->mi.pos.x - SXT_8_16(DE);
       DE++;
-
-      BC = SXT_8_16(DE);
-      state->saved_pos.y = vischar->mi.pos.y - BC;
+      state->saved_pos.y = vischar->mi.pos.y - SXT_8_16(DE);
       DE++;
-
-      BC = SXT_8_16(DE);
-      state->saved_pos.height = vischar->mi.pos.height - BC;
+      state->saved_pos.height = vischar->mi.pos.height - SXT_8_16(DE);
 
       if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
@@ -7635,19 +7628,14 @@ resume1:
 
       HL += (A + 1) * 4;
 
-resume2:
+increment:
       SWAP(const uint8_t *, DE, HL);
 
-      HL2 = SXT_8_16(DE);
-      state->saved_pos.x = HL2 + vischar->mi.pos.x;
+      state->saved_pos.x = vischar->mi.pos.x + SXT_8_16(DE);
       DE++;
-
-      HL2 = SXT_8_16(DE);
-      state->saved_pos.y = HL2 + vischar->mi.pos.y;
+      state->saved_pos.y = vischar->mi.pos.y + SXT_8_16(DE);
       DE++;
-
-      HL2 = SXT_8_16(DE);
-      state->saved_pos.height = HL2 + vischar->mi.pos.height;
+      state->saved_pos.height = vischar->mi.pos.height + SXT_8_16(DE);
       DE++;
 
       A = *DE; // a spriteindex_t
@@ -7682,8 +7670,8 @@ kicked:
 end_bit:
   C = byte_CDAA[vischar->direction][vischar->input];
   // original game uses ADD A,A to double A and in doing so discards top bit
-  DE = vischar->w08[C & 0x7F]; // sampled w08 = $CDF2 (always) == &character_related_pointers[0]
-  vischar->w0A = DE;
+  DE = vischar->crpbase[C & 0x7F]; // sampled crpbase = $CDF2 (always) == &character_related_pointers[0]
+  vischar->crp = DE;
   if ((C & I) == 0)
   {
     vischar->b0C = 0;
@@ -7691,14 +7679,14 @@ end_bit:
     vischar->direction = *DE;
     DE += 2; // point to groups of four
     SWAP(const uint8_t *, DE, HL);
-    goto resume2;
+    goto increment;
   }
   else
   {
     const uint8_t *stacked;
 
     C = *DE; // count of four-byte groups
-    vischar->b0C = C | 0x80; // what flag is this?
+    vischar->b0C = C | vischar_BYTE12_BIT7;
     vischar->direction = *++DE;
     DE += 3; // point to groups of four
     stacked = DE;
@@ -7707,7 +7695,7 @@ end_bit:
     A = *HL; // last byte in group of four, flip flag?
     SWAP(uint8_t, A, Adash);
     HL = stacked;
-    goto resume1;
+    goto decrement;
   }
 
 #undef I
@@ -9522,7 +9510,7 @@ found_empty_slot:
 
   // EX DE, HL (DE = vischar, HL = charstr)
 
-  vischar->w08          = metadata->data;
+  vischar->crpbase          = metadata->data;
   vischar->mi.spriteset = metadata->spriteset;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
 
@@ -11591,7 +11579,7 @@ const default_item_location_t default_item_locations[item__LIMIT] =
 // spotted: first byte matches the number of following four-byte groups
 
 //                                        ......... direction_t's
-//                                        |   |
+//                                        |   |        dx   dy   dh   spriteindexthing
 static const uint8_t _cf06[] = { 0x01, 0x04,0x04,0xFF, 0x00,0x00,0x00,0x0A };
 static const uint8_t _cf0e[] = { 0x01, 0x05,0x05,0xFF, 0x00,0x00,0x00,0x8A };
 static const uint8_t _cf16[] = { 0x01, 0x06,0x06,0xFF, 0x00,0x00,0x00,0x88 };
@@ -13269,8 +13257,8 @@ void tge_setup(tgestate_t *state)
     0x012C,               // target
     { 0x2E, 0x2E, 0x18 }, // p04
     0x00,                 // counter_and_flags
-    &character_related_pointers[0], // w08
-    character_related_pointers[8],  // w0A
+    &character_related_pointers[0], // crpbase
+    character_related_pointers[8],  // crp
     0x00,                 // b0C
     0x00,                 // input
     direction_TOP_LEFT,   // direction
