@@ -80,6 +80,91 @@ static void tge_initialise(tgestate_t *state)
     { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 0x7E, 0xF4 } },
   };
 
+  /**
+   * $783A: Map locations.
+   */
+  static const xy_t locations[78] =
+  {
+    { 0x45, 0x68 },
+    { 0x44, 0x54 },
+    { 0x44, 0x46 },
+    { 0x40, 0x66 },
+    { 0x40, 0x40 },
+    { 0x44, 0x44 },
+    { 0x40, 0x40 },
+    { 0x44, 0x40 },
+    { 0x68, 0x70 },
+    { 0x60, 0x70 },
+    { 0x6A, 0x66 },
+    { 0x5D, 0x68 },
+    { 0x7C, 0x65 },
+    { 0x7C, 0x70 },
+    { 0x74, 0x68 },
+    { 0x70, 0x64 },
+    { 0x78, 0x60 },
+    { 0x80, 0x58 },
+    { 0x70, 0x60 },
+    { 0x74, 0x54 },
+    { 0x7C, 0x64 },
+    { 0x7C, 0x70 },
+    { 0x74, 0x68 },
+    { 0x70, 0x64 },
+    { 0x66, 0x44 },
+    { 0x66, 0x40 },
+    { 0x60, 0x40 },
+    { 0x5C, 0x44 },
+    { 0x56, 0x44 },
+    { 0x54, 0x40 },
+    { 0x4A, 0x44 },
+    { 0x4A, 0x40 },
+    { 0x66, 0x44 },
+    { 0x44, 0x44 },
+    { 0x44, 0x68 },
+    { 0x6B, 0x45 },
+    { 0x6B, 0x2D },
+    { 0x4D, 0x2D },
+    { 0x4D, 0x3D },
+    { 0x3D, 0x3D }, // outside main map?
+    { 0x3D, 0x67 }, // outside main map?
+    { 0x74, 0x4C },
+    { 0x2C, 0x2A }, // outside main map?
+    { 0x6A, 0x48 },
+    { 0x6E, 0x48 },
+    { 0x51, 0x68 },
+    { 0x34, 0x3C }, // outside main map?
+    { 0x34, 0x2C }, // outside main map?
+    { 0x34, 0x1C },
+    { 0x77, 0x6B },
+    { 0x7A, 0x6E },
+    { 0x34, 0x1C }, // outside main map?
+    { 0x28, 0x3C }, // outside main map?
+    { 0x24, 0x22 }, // outside main map?
+    { 0x50, 0x4C },
+    { 0x59, 0x4C },
+    { 0x59, 0x3C },
+    { 0x64, 0x3D },
+    { 0x5C, 0x36 },
+    { 0x54, 0x32 },
+    { 0x66, 0x30 },
+    { 0x60, 0x38 },
+    { 0x4F, 0x3B },
+    { 0x67, 0x2F },
+    { 0x34, 0x36 }, // outside main map?
+    { 0x34, 0x2E }, // outside main map?
+    { 0x34, 0x24 }, // outside main map?
+    { 0x34, 0x3E }, // outside main map?
+    { 0x20, 0x38 }, // outside main map?
+    { 0x34, 0x18 }, // outside main map?
+    { 0x2A, 0x2E }, // outside main map?
+    { 0x22, 0x22 }, // outside main map?
+    { 0x78, 0x6E }, // roll call
+    { 0x76, 0x6E }, // roll call
+    { 0x74, 0x6E }, // roll call
+    { 0x79, 0x6D }, // roll call
+    { 0x77, 0x6D }, // roll call
+    { 0x75, 0x6D }, // roll call
+  };
+
   /* $AD3E: Searchlight movement pattern for L-shaped gap? */
   static const uint8_t movement_0[] =
   {
@@ -257,31 +342,51 @@ static void tge_initialise(tgestate_t *state)
     0x1727,
   };
 
+  /* Initialise in structure order. */
+
+  // Future: Table drive this copying.
+
+  /* $69AE */
   memcpy(state->movable_items, movable_items, sizeof(movable_items));
 
+  /* $7612 */
   memcpy(state->character_structs,
          character_structs,
          sizeof(character_structs));
 
+  /* $76C8 */
   memcpy(state->item_structs, item_structs, sizeof(item_structs));
 
+  /* $783A */
+  memcpy(state->locations, locations, sizeof(locations));
+
+  /* $7CFC */
+  state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
+  state->messages.display_index = 0x80; // flag?
+  state->messages.queue_pointer = &state->messages.queue[2];
+
+  /* $A13C */
+  state->morale = morale_MAX;
+
+  /* $A141 */
+  state->moraleflag_screen_address =
+      &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
+
+  /* $AD29 */
   memcpy(state->searchlight.states,
          searchlight_states,
          sizeof(searchlight_states));
 
-  state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
-  state->messages.display_index = 0x80;
-  state->messages.queue_pointer = &state->messages.queue[2];
-
-  /* $A13C */ state->morale = morale_MAX;
-
-  /* $A141 */ state->moraleflag_screen_address =
-  &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
-
-  // future: recalculate these
+  /* $EDD3 */
+  // Future: recalculate these
   memcpy(state->game_window_start_offsets,
          game_window_start_offsets,
          sizeof(game_window_start_offsets));
+
+  // temporary
+  memset(state->tile_buf, 0x55, (state->tb_columns * state->tb_rows)); 
+  memset(state->window_buf, 0x55, ((state->columns + 1) * state->rows * 8));
+  memset(state->map_buf, 0x55, (state->st_columns * state->st_rows));
 }
 
 /**

@@ -69,6 +69,11 @@ struct tgestate
    */
   itemstruct_t    item_structs[item__LIMIT];
 
+  /**
+   * $783A: Map locations.
+   */
+  xy_t            locations[78];
+
   struct
   {
     /** $7CFC: Queue of message indexes.

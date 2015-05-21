@@ -734,9 +734,9 @@ static
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 static
-uint8_t sub_C651(tgestate_t  *state,
-                 location_t  *location,
-                 location_t **location_out);
+uint8_t sub_C651(tgestate_t *state,
+                 xy_t       *location,
+                 xy_t      **location_out);
 
 static
 void move_characters(tgestate_t *state);
@@ -4195,9 +4195,9 @@ store_to_vischar:
  */
 void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t           A;        /* was A */
-  tinypos_t        *pos;      /* was DE */
-  const location_t *location; /* was HL */
+  uint8_t     A;        /* was A */
+  tinypos_t  *pos;      /* was DE */
+  const xy_t *location; /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -4209,8 +4209,8 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
   A = sub_C651(state, &vischar->target, &location);
 
   pos = &vischar->p04;
-  pos->x = *location & 0xFF;
-  pos->y = *location >> 8;
+  pos->x = location->x;
+  pos->y = location->y;
 
   if (A == 255)
   {
@@ -9664,108 +9664,26 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  *
  * \return 0/128/255.
  */
-uint8_t sub_C651(tgestate_t  *state,
-                 location_t  *location,
-                 location_t **location_out)
+uint8_t sub_C651(tgestate_t *state,
+                 xy_t       *location,
+                 xy_t      **location_out)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
-  /**
-   * $783A: Map locations.
-   */
-  /*static const*/ location_t locations[78] =
+  uint8_t        x;   /* was A */
+  uint8_t        A;   /* was A */
+  uint8_t        y;   /* was A or C */
+  const uint8_t *DE;
+  int16_t        HL2; // signed
+  const uint8_t *HL3;
+
+  assert(state        != NULL);
+  assert(location     != NULL);
+  assert(location_out != NULL);
+
+  x = location->x; // read low byte only
+  if (x == 0xFF)
   {
-    0x6845,
-    0x5444,
-    0x4644,
-    0x6640,
-    0x4040,
-    0x4444,
-    0x4040,
-    0x4044,
-    0x7068,
-    0x7060,
-    0x666A,
-    0x685D,
-    0x657C,
-    0x707C,
-    0x6874,
-    0x6470,
-    0x6078,
-    0x5880,
-    0x6070,
-    0x5474,
-    0x647C,
-    0x707C,
-    0x6874,
-    0x6470,
-    0x4466,
-    0x4066,
-    0x4060,
-    0x445C,
-    0x4456,
-    0x4054,
-    0x444A,
-    0x404A,
-    0x4466,
-    0x4444,
-    0x6844,
-    0x456B,
-    0x2D6B,
-    0x2D4D,
-    0x3D4D,
-    0x3D3D, // outside main map?
-    0x673D, // outside main map?
-    0x4C74,
-    0x2A2C, // outside main map?
-    0x486A,
-    0x486E,
-    0x6851,
-    0x3C34, // outside main map?
-    0x2C34, // outside main map?
-    0x1C34,
-    0x6B77,
-    0x6E7A,
-    0x1C34, // outside main map?
-    0x3C28, // outside main map?
-    0x2224, // outside main map?
-    0x4C50,
-    0x4C59,
-    0x3C59,
-    0x3D64,
-    0x365C,
-    0x3254,
-    0x3066,
-    0x3860,
-    0x3B4F,
-    0x2F67,
-    0x3634, // outside main map?
-    0x2E34, // outside main map?
-    0x2434, // outside main map?
-    0x3E34, // outside main map?
-    0x3820, // outside main map?
-    0x1834, // outside main map?
-    0x2E2A, // outside main map?
-    0x2222, // outside main map?
-    0x6E78, // roll call
-    0x6E76, // roll call
-    0x6E74, // roll call
-    0x6D79, // roll call
-    0x6D77, // roll call
-    0x6D75, // roll call
-  };
-
-  uint8_t location_lo;  /* was A */
-  uint8_t A;            /* was A */
-
-  assert(state    != NULL); // this routine doesn't use state itself
-  assert(location != NULL);
-
-  location_lo = *location & 0xFF; // read low byte only
-  if (location_lo == 0xFF)
-  {
-    uint8_t location_hi;  /* was A */
-
 //    INC HL        ; {  A = *++HL & characterstruct_BYTE6_MASK_HI;
 //    LD A,(HL)     ;
 //    AND $F8       ; }
@@ -9776,27 +9694,22 @@ uint8_t sub_C651(tgestate_t  *state,
 //    LD (HL),A     ; {  *HL = A; %>
 
     // Conv: In original code, *HL is used as a temporary.
-    location_hi = *location >> 8;
 
     /* Randomise the bottom 3 bits of location's high byte. */
-    A = (location_hi & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
-    *location = (A << 8) | location_lo;
+    y = (location->y & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
+    location->x = x;
+    location->y = y;
   }
   else
   {
-    uint8_t        location_hi; /* was C */
-    const uint8_t *DE;
-    int16_t        HL2; // signed
-    const uint8_t *HL3;
-
     // PUSH HL
-    location_hi = *location >> 8;
-    DE = element_A_of_table_7738(location_lo);
+    y = location->y;
+    DE = element_A_of_table_7738(x);
 
     HL2 = 0; // was H = 0;
-    if (location_hi == 0xFF) // if high byte is 0xFF
+    if (y == 0xFF) // if high byte is 0xFF
       HL2 = 0xFF00; // was H--; // H = 0 - 1 => 0xFF
-    HL2 |= location_hi; // was L = A;
+    HL2 |= y; // was L = A;
     HL3 = DE + HL2;
     // EX DE,HL
     A = *HL3; // was A = *DE
@@ -9804,33 +9717,30 @@ uint8_t sub_C651(tgestate_t  *state,
     if (A == 0xFF) // end of list?
     {
       *location_out = location;
-      goto return_255; // FUTURE: Just return instead of goto.
+      return 255; /* Conv: Was a goto to a return. */
     }
 
     if ((A & 0x7F) < 40)
     {
       A = *HL3;
-      if (*location & (1 << 7))
+      if (location->x & (1 << 7))
         A ^= 0x80; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
       // toggling A but then doing nothing with it?
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
-      transition(state, location); // expects a tinypos, not a location!
+      transition(state, (tinypos_t *) location); // expects a tinypos, not a location!
       // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (doorpos again)
       *location_out = location + 1; // FIXME increment by a *byte* and return // so this IS returning a tinypos
       return 0x80;
     }
 
-    A = *HL3 - 40;
+    y = *HL3 - 40;
   }
 
   // sample A=$38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
-  *location_out = &locations[A];
+  *location_out = &state->locations[y];
   // need to be able to pass back HL (location)
 
   return 0;
-
-return_255:
-  return 255;
 }
 
 /* ----------------------------------------------------------------------- */
