@@ -62,22 +62,22 @@ static void tge_initialise(tgestate_t *state)
    */
   static const itemstruct_t item_structs[item__LIMIT] =
   {
-    { item_WIRESNIPS,        room_NONE,        { 64, 32,  2 }, 0xF478 },
-    { item_SHOVEL,           room_9_CRATE,     { 62, 48,  0 }, 0xF27C },
-    { item_LOCKPICK,         room_10_LOCKPICK, { 73, 36, 16 }, 0xF077 },
-    { item_PAPERS,           room_11_PAPERS,   { 42, 58,  4 }, 0xF384 },
-    { item_TORCH,            room_14_TORCH,    { 34, 24,  2 }, 0xF67A },
-    { item_BRIBE,            room_NONE,        { 36, 44,  4 }, 0xF47E },
-    { item_UNIFORM,          room_15_UNIFORM,  { 44, 65, 16 }, 0xF187 },
-    { item_FOOD,             room_19_FOOD,     { 64, 48, 16 }, 0xF07E },
-    { item_POISON,           room_1_HUT1RIGHT, { 66, 52,  4 }, 0xF17C },
-    { item_RED_KEY,          room_22_REDKEY,   { 60, 42,  0 }, 0xF27B },
-    { item_YELLOW_KEY,       room_11_PAPERS,   { 28, 34,  0 }, 0xF881 },
-    { item_GREEN_KEY,        room_0_OUTDOORS,  { 74, 72,  0 }, 0x6E7A },
-    { item_RED_CROSS_PARCEL, room_NONE,        { 28, 50, 12 }, 0xF685 },
-    { item_RADIO,            room_18_RADIO,    { 36, 58,  8 }, 0xF485 },
-    { item_PURSE,            room_NONE,        { 36, 44,  4 }, 0xF47E },
-    { item_COMPASS,          room_NONE,        { 52, 28,  4 }, 0xF47E },
+    { item_WIRESNIPS,        room_NONE,        { 64, 32,  2 }, { 0x78, 0xF4 } },
+    { item_SHOVEL,           room_9_CRATE,     { 62, 48,  0 }, { 0x7C, 0xF2 } },
+    { item_LOCKPICK,         room_10_LOCKPICK, { 73, 36, 16 }, { 0x77, 0xF0 } },
+    { item_PAPERS,           room_11_PAPERS,   { 42, 58,  4 }, { 0x84, 0xF3 } },
+    { item_TORCH,            room_14_TORCH,    { 34, 24,  2 }, { 0x7A, 0xF6 } },
+    { item_BRIBE,            room_NONE,        { 36, 44,  4 }, { 0x7E, 0xF4 } },
+    { item_UNIFORM,          room_15_UNIFORM,  { 44, 65, 16 }, { 0x87, 0xF1 } },
+    { item_FOOD,             room_19_FOOD,     { 64, 48, 16 }, { 0x7E, 0xF0 } },
+    { item_POISON,           room_1_HUT1RIGHT, { 66, 52,  4 }, { 0x7C, 0xF1 } },
+    { item_RED_KEY,          room_22_REDKEY,   { 60, 42,  0 }, { 0x7B, 0xF2 } },
+    { item_YELLOW_KEY,       room_11_PAPERS,   { 28, 34,  0 }, { 0x81, 0xF8 } },
+    { item_GREEN_KEY,        room_0_OUTDOORS,  { 74, 72,  0 }, { 0x7A, 0x6E } },
+    { item_RED_CROSS_PARCEL, room_NONE,        { 28, 50, 12 }, { 0x85, 0xF6 } },
+    { item_RADIO,            room_18_RADIO,    { 36, 58,  8 }, { 0x85, 0xF4 } },
+    { item_PURSE,            room_NONE,        { 36, 44,  4 }, { 0x7E, 0xF4 } },
+    { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 0x7E, 0xF4 } },
   };
 
   /* $AD3E: Searchlight movement pattern for L-gap? */
