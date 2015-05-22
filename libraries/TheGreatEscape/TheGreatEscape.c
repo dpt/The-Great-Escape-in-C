@@ -466,16 +466,16 @@ void go_to_time_for_bed(tgestate_t *state);
 
 static
 void set_prisoners_and_guards_location(tgestate_t *state,
-                                 uint8_t    *p_loc_low,
-                                 uint8_t     loc_high);
+                                       uint8_t    *p_loc_low,
+                                       uint8_t     loc_high);
 static
 void set_prisoners_and_guards_location_B(tgestate_t *state,
-                                   uint8_t    *p_loc_low,
-                                   uint8_t     loc_high);
+                                         uint8_t    *p_loc_low,
+                                         uint8_t     loc_high);
 static
-void set_character_location(tgestate_t  *state,
-                            character_t  character,
-                            location_t   location);
+void set_character_location(tgestate_t *state,
+                            character_t character,
+                            location_t  location);
 static
 void sub_A3BB(tgestate_t *state, vischar_t *vischar);
 
@@ -495,13 +495,13 @@ void sub_A404(tgestate_t        *state,
               character_t        character);
 
 static
-void character_sits(tgestate_t  *state,
-                    character_t  character,
-                    location_t  *location);
+void character_sits(tgestate_t *state,
+                    character_t character,
+                    location_t *location);
 static
-void character_sleeps(tgestate_t  *state,
-                      character_t  character,
-                      location_t  *location);
+void character_sleeps(tgestate_t *state,
+                      character_t character,
+                      location_t *location);
 static
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
@@ -856,11 +856,11 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location);
 static
 void sub_CB2D(tgestate_t *state, vischar_t *vischar, location_t *location);
 static
-void sub_CB61(tgestate_t *state,
-              vischar_t  *vischar,
-              location_t *pushed_HL,
+void sub_CB61(tgestate_t       *state,
+              vischar_t        *vischar,
+              location_t       *pushed_HL,
               const location_t *new_location,
-              uint8_t     A);
+              uint8_t           A);
 
 static INLINE
 uint16_t multiply_by_1(uint8_t A);
@@ -875,7 +875,8 @@ static
 void solitary(tgestate_t *state);
 
 static
-void guards_follow_suspicious_character(tgestate_t *state, vischar_t *vischar);
+void guards_follow_suspicious_character(tgestate_t *state,
+                                        vischar_t  *vischar);
 
 static
 void hostiles_persue(tgestate_t *state);
@@ -4184,13 +4185,13 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
  *
  * Finds a charstruct, or a vischar, and stores a location in its target.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] index    Character index.       (was A)
- * \param[in] location Location.              (was A' lo + C hi)
+ * \param[in] state     Pointer to game state.
+ * \param[in] character Character index.       (was A)
+ * \param[in] location  Location.              (was A' lo + C hi)
  */
-void set_character_location(tgestate_t  *state,
-                            character_t  character,
-                            location_t   location)
+void set_character_location(tgestate_t *state,
+                            character_t character,
+                            location_t  location)
 {
   characterstruct_t *charstr; /* was HL */
   vischar_t         *vischar; /* was HL */
@@ -4373,9 +4374,9 @@ void sub_A404(tgestate_t        *state,
  * \param[in] character Character index.       (was A)
  * \param[in] location  (unknown)
  */
-void character_sits(tgestate_t  *state,
-                    character_t  character,
-                    location_t  *location)
+void character_sits(tgestate_t *state,
+                    character_t character,
+                    location_t *location)
 {
   uint8_t  index; /* was A */
   uint8_t *bench; /* was HL */
@@ -10990,17 +10991,17 @@ cb50:
  *
  * Only ever called by sub_CB23.
  *
- * \param[in] state         Pointer to game state.
- * \param[in] vischar       Pointer to visible character. (was IY)
- * \param[in] pushed_HL     Pointer to location.          (was stack)
- * \param[in] new_location  Pointer to location.          (was HL)
- * \param[in] A             flags of some sort
+ * \param[in] state        Pointer to game state.
+ * \param[in] vischar      Pointer to visible character. (was IY)
+ * \param[in] pushed_HL    Pointer to location.          (was stack)
+ * \param[in] new_location Pointer to location.          (was HL)
+ * \param[in] A            flags of some sort
  */
-void sub_CB61(tgestate_t *state,
-              vischar_t  *vischar,
-              location_t *pushed_HL,
+void sub_CB61(tgestate_t       *state,
+              vischar_t        *vischar,
+              location_t       *pushed_HL,
               const location_t *new_location,
-              uint8_t     A)
+              uint8_t           A)
 {
   assert(state        != NULL);
   ASSERT_VISCHAR_VALID(vischar);
