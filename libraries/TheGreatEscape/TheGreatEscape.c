@@ -4229,33 +4229,35 @@ void set_character_location(tgestate_t *state,
   // assert(location);
 
   charstr = get_character_struct(state, character);
-  if ((charstr->character & characterstruct_FLAG_DISABLED) != 0)
+  if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) != 0)
   {
-    character = charstr->character & characterstruct_BYTE0_MASK;
+    // Why fetch this copy of character index, is it not the same as the passed-in character?
+    character = charstr->character_and_flags & characterstruct_CHARACTER_MASK;
+
+    /* Search non-player characters to see if this character is already on-screen. */
     iters = vischars_LENGTH - 1;
-    vischar = &state->vischars[1]; /* iterate over non-player characters */
+    vischar = &state->vischars[1];
     do
     {
-      if (character == charstr->character)
-        goto store_to_vischar; // an already visible character?
+      if (character == charstr->character_and_flags) // No masking of character_and_flags?
+        goto store_to_vischar; /* Character is on-screen: store to vischar. */
       vischar++;
     }
     while (--iters);
 
-    goto exit;
+    return; /* Conv: Was goto exit; */
   }
 
-  // store_to_charstruct:
+  /* Store to characterstruct only. */
   store_location(location, &charstr->target);
-
-exit:
   return;
 
+  // FUTURE: Move this chunk into the body of the loop above.
 store_to_vischar:
   vischar->flags &= ~vischar_FLAGS_BIT6;
   store_location(location, &vischar->target);
 
-  sub_A3BB(state, vischar); // 2nd arg a guess for now -- check // fallthrough
+  sub_A3BB(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
 }
 
 /**
@@ -4388,11 +4390,11 @@ void sub_A404(tgestate_t        *state,
     if (old_character & (1 << 0))
     {
       charstr->room = room_1_HUT1RIGHT;
-      character |= characterstruct_BYTE0_BIT7;
+      character |= characterstruct_FLAG_BYTE0_BIT7;
     }
   }
 
-  charstr->character = character;
+  charstr->character_and_flags = character;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4724,7 +4726,7 @@ void byte_A13E_anotherone_common(tgestate_t        *state,
       character++; // gets hit during breakfast
   }
 
-  charstr->character = character;
+  charstr->character_and_flags = character;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9406,7 +9408,7 @@ void spawn_characters(tgestate_t *state)
   iters   = character_structs__LIMIT;
   do
   {
-    if ((charstr->character & characterstruct_FLAG_DISABLED) == 0)
+    if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) == 0)
     {
       /* Is the character in this room? */
       if ((room = state->room_index) == charstr->room)
@@ -9535,7 +9537,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   assert(state   != NULL);
   assert(charstr != NULL);
 
-  if (charstr->character & characterstruct_FLAG_DISABLED) /* character disabled */
+  if (charstr->character_and_flags & characterstruct_FLAG_DISABLED) /* character disabled */
     return 1; // NZ
 
   /* Find an empty slot. */
@@ -9590,10 +9592,10 @@ found_empty_slot:
   if (Z == 1) // if collision or bounds_check is nonzero, then return
     return 0; // check
 
-  character = charstr2->character | characterstruct_FLAG_DISABLED; /* Disable character */
-  charstr2->character = character;
+  character = charstr2->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character */
+  charstr2->character_and_flags = character;
 
-  character &= characterstruct_BYTE0_MASK;
+  character &= characterstruct_CHARACTER_MASK;
   vischar->character = character;
   vischar->flags     = 0;
 
@@ -9724,7 +9726,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     /* A non-object character. */
 
     charstr = get_character_struct(state, character);
-    charstr->character &= ~characterstruct_FLAG_DISABLED; /* Enable character */
+    charstr->character_and_flags &= ~characterstruct_FLAG_DISABLED; /* Enable character */
 
     room = vischar->room;
     charstr->room = room;
@@ -9897,7 +9899,7 @@ void move_characters(tgestate_t *state)
 
   /* Get its chararacter struct, exiting if it's not enabled. */
   charstr = get_character_struct(state, character);
-  if (charstr->character & characterstruct_FLAG_DISABLED)
+  if (charstr->character_and_flags & characterstruct_FLAG_DISABLED)
     return; /* Disabled character. */
 
   // PUSH HL_charstr

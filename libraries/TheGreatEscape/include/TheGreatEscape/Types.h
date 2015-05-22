@@ -267,11 +267,13 @@ enum door_flags
  */
 enum characterstruct_flags
 {
-  characterstruct_BYTE0_MASK           = 0x1F, /* Character index mask. */
-  characterstruct_FLAG_DISABLED        = 1 << 6, /* This disables the character. */
-  characterstruct_BYTE0_BIT7           = 1 << 7, // set in sub_A404
+  /* Byte 0 */
+  characterstruct_CHARACTER_MASK       = 0x1F,   /**< Character index mask. */
+  characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */
+  characterstruct_FLAG_BYTE0_BIT7      = 1 << 7, /**< Set by sub_A404 but no other references. */
 
-  characterstruct_BYTE5_MASK           = 0x7F, // target low byte
+  /* Byte 5 */
+  characterstruct_BYTE5_MASK           = 0x7F,   // target low byte
 };
 
 /**
@@ -572,7 +574,7 @@ screenlocstring_t;
  */
 typedef struct characterstruct
 {
-  character_t character; // and flags
+  character_t character_and_flags;
   room_t      room;
   tinypos_t   pos;
   xy_t        target;
