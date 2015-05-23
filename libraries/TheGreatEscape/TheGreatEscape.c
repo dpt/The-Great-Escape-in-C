@@ -449,7 +449,7 @@ timedevent_handler_t event_time_for_bed;
 static
 timedevent_handler_t event_search_light;
 static
-void set_guards_location(tgestate_t *state, location_t location);
+void set_guards_location(tgestate_t *state, xy_t location);
 
 extern const character_t prisoners_and_guards[10];
 
@@ -459,7 +459,7 @@ static
 void breakfast_time(tgestate_t *state);
 
 static
-void set_hero_target_location(tgestate_t *state, location_t location);
+void set_hero_target_location(tgestate_t *state, xy_t location);
 
 static
 void go_to_time_for_bed(tgestate_t *state);
@@ -475,12 +475,12 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
 static
 void set_character_location(tgestate_t *state,
                             character_t character,
-                            location_t  location);
+                            xy_t        location);
 static
 void sub_A3BB(tgestate_t *state, vischar_t *vischar);
 
 static INLINE
-void store_location(location_t location, location_t *plocation);
+void store_location(xy_t location, xy_t *plocation);
 
 static
 void byte_A13E_is_nonzero(tgestate_t        *state,
@@ -497,15 +497,15 @@ void sub_A404(tgestate_t        *state,
 static
 void character_sits(tgestate_t *state,
                     character_t character,
-                    location_t *location);
+                    xy_t       *location);
 static
 void character_sleeps(tgestate_t *state,
                       character_t character,
-                      location_t *location);
+                      xy_t       *location);
 static
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                location_t *location);
+                                xy_t       *location);
 static
 void select_room_and_plot(tgestate_t *state);
 
@@ -795,7 +795,7 @@ characterstruct_t *get_character_struct(tgestate_t *state,
                                         character_t character);
 
 static
-void character_event(tgestate_t *state, location_t *location);
+void character_event(tgestate_t *state, xy_t *location);
 
 static
 charevnt_handler_t charevnt_handler_4_zeroes_morale_1;
@@ -852,15 +852,15 @@ static
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
 static
-void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location);
+void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location);
 static
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, location_t *location);
+void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location);
 static
-void sub_CB61(tgestate_t       *state,
-              vischar_t        *vischar,
-              location_t       *pushed_HL,
-              const location_t *new_location,
-              uint8_t           A);
+void sub_CB61(tgestate_t *state,
+              vischar_t  *vischar,
+              xy_t       *pushed_HL,
+              const xy_t *new_location,
+              uint8_t     A);
 
 static INLINE
 uint16_t multiply_by_1(uint8_t A);
@@ -1262,7 +1262,8 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->mi                = *movableitem;
 
   vischar1->flags             = 0;
-  vischar1->target            = 0;
+  vischar1->target.x          = 0;
+  vischar1->target.y          = 0;
   vischar1->p04.x             = 0;
   vischar1->p04.y             = 0;
   vischar1->p04.height        = 0;
@@ -2863,7 +2864,8 @@ void process_player_input(tgestate_t *state)
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
-        state->vischars[0].target         = 0x002B;
+        state->vischars[0].target.x       = 0x2B;
+        state->vischars[0].target.y       = 0x00;
         state->vischars[0].mi.pos.x       = 0x34;
         state->vischars[0].mi.pos.y       = 0x3E;
         roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
@@ -2872,7 +2874,8 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].target         = 0x012C;
+        state->vischars[0].target.x       = 0x2C;
+        state->vischars[0].target.y       = 0x01;
         state->vischars[0].p04.x          = 0x2E;
         state->vischars[0].p04.y          = 0x2E;
         state->vischars[0].mi.pos.x       = 0x2E;
@@ -3002,9 +3005,9 @@ void in_permitted_area(tgestate_t *state)
   pos_t       *vcpos;     /* was HL */
   tinypos_t   *pos;       /* was DE */
   attribute_t  attr;      /* was A */
-  location_t  *locptr;    /* was HL */
+  xy_t        *locptr;    /* was HL */
   uint8_t      A;
-  location_t   CA;
+  xy_t         loc;       /* was CA */
   uint16_t     BC;
   uint8_t      red_flag;  /* was A */
 
@@ -3054,15 +3057,15 @@ void in_permitted_area(tgestate_t *state)
     goto set_flag_green;
 
   locptr = &state->vischars[0].target;
-  CA = *locptr;
-  if ((CA & 0xFF) & vischar_BYTE2_BIT7)
-    CA += 1 << 8; // was 'C++'
+  loc = *locptr;
+  if (loc.x & vischar_BYTE2_BIT7)
+    loc.y++;
 
-  if ((CA & 0xFF) == 0xFF)
+  if (loc.x == 0xFF)
   {
     //uint8_t A;
 
-    A = ((*locptr & 0xF8) == 8) ? 1 : 2; // *locptr is a byte read in original
+    A = ((locptr->x & 0xF8) == 8) ? 1 : 2;
     if (in_permitted_area_end_bit(state, A) == 0)
       goto set_flag_green;
     else
@@ -3074,7 +3077,7 @@ void in_permitted_area(tgestate_t *state)
     uint8_t                  iters; /* was B */
     const uint8_t           *HL;
 
-    A = CA & 0xFF; // added to coax A back from CA
+    A = loc.x; // added to coax A back from loc
 
     A &= ~vischar_BYTE2_BIT7;
     tab = &byte_to_pointer[0]; // table mapping bytes to offsets
@@ -3090,11 +3093,12 @@ void in_permitted_area(tgestate_t *state)
 
 found:
     HL = tab->pointer;
-    HL += CA >> 8; // original code used B=0
+    // loc.y = 0; // not needed
+    HL += loc.y; // original code used B=0
     if (in_permitted_area_end_bit(state, *HL) == 0)
       goto set_flag_green;
 
-    if (state->vischars[0].target & vischar_BYTE2_BIT7) // low byte only
+    if (state->vischars[0].target.x & vischar_BYTE2_BIT7)
       HL++;
 
     BC = 0;
@@ -3116,7 +3120,14 @@ set_target_then_set_flag_green:
     // oddness here needs checking out. only 'B' is loaded from the target, but
     // set_hero_target_location needs BC
     // BC is reset to zero above, so C must be the loop counter
-    set_hero_target_location(state, ((state->vischars[0].target << 8) & 0xFF) | (BC & 0xFF));
+    // but why load .x into high byte?
+    {
+      xy_t loc2; /* was BC */
+
+      loc2.x = BC & 0xFF;
+      loc2.y = state->vischars[0].target.x;
+      set_hero_target_location(state, loc2);
+    }
     goto set_flag_green;
 
 pop_and_set_flag_red:
@@ -3699,7 +3710,10 @@ void event_night_time(tgestate_t *state)
   assert(state != NULL);
 
   if (state->hero_in_bed == 0)
-    set_hero_target_location(state, location_012C);
+  {
+    xy_t loc = { 0x2C, 0x01 }; // location_012C
+    set_hero_target_location(state, loc);
+  }
   set_day_or_night(state, 0xFF);
 }
 
@@ -3808,7 +3822,7 @@ void event_new_red_cross_parcel(tgestate_t *state)
     0x00, /* never used */
     room_20_REDCROSS,
     { 44, 44, 12 },
-    0xF480
+    { 0x80, 0xF4 }
   };
 
   static const item_t red_cross_parcel_contents_list[4] =
@@ -3857,16 +3871,20 @@ found:
 
 void event_time_for_bed(tgestate_t *state)
 {
+  const xy_t loc = { 0xA6, 0x03 }; // location_03A6
+
   assert(state != NULL);
 
-  set_guards_location(state, location_03A6);
+  set_guards_location(state, loc);
 }
 
 void event_search_light(tgestate_t *state)
 {
+  const xy_t loc = { 0x26, 0x00 }; // location_0026
+
   assert(state != NULL);
 
-  set_guards_location(state, location_0026);
+  set_guards_location(state, loc);
 }
 
 /**
@@ -3876,13 +3894,13 @@ void event_search_light(tgestate_t *state)
  * \param[in] state    Pointer to game state.
  * \param[in] location Location.              (was A lo + C hi)
  */
-void set_guards_location(tgestate_t *state, location_t location)
+void set_guards_location(tgestate_t *state, xy_t location)
 {
   character_t index; /* was A' */
   uint8_t     iters; /* was B */
 
   assert(state    != NULL);
-  assert(location != NULL);
+  //assert(location != NULL);
 
   index = character_12_GUARD_12;
   iters = 4;
@@ -3890,7 +3908,7 @@ void set_guards_location(tgestate_t *state, location_t location)
   {
     set_character_location(state, index, location);
     index++;
-    location++; /* Conv: Incrementing the full location_t not just the low byte. */
+    location.x++;
   }
   while (--iters);
 }
@@ -3941,7 +3959,8 @@ void wake_up(tgestate_t *state)
   }
 
   state->hero_in_bed = 0;
-  set_hero_target_location(state, location_002A);
+  const xy_t loc = { 0x2A, 0x00 }; // location_002A // was BC
+  set_hero_target_location(state, loc);
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -4004,7 +4023,10 @@ void breakfast_time(tgestate_t *state)
   }
 
   state->hero_in_breakfast = 0;
-  set_hero_target_location(state, location_0390);
+  {
+    xy_t loc = { 0x90, 0x03 }; // location_0390
+    set_hero_target_location(state, loc);
+  }
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -4052,7 +4074,7 @@ void breakfast_time(tgestate_t *state)
  * \param[in] state    Pointer to game state.
  * \param[in] location Location.              (was BC)
  */
-void set_hero_target_location(tgestate_t *state, location_t location)
+void set_hero_target_location(tgestate_t *state, xy_t location)
 {
   vischar_t *vischar; /* was HL */
 
@@ -4083,7 +4105,8 @@ void go_to_time_for_bed(tgestate_t *state)
 
   assert(state != NULL);
 
-  set_hero_target_location(state, location_0285);
+  xy_t loc = { 0x85, 0x02 }; // location_0285
+  set_hero_target_location(state, loc);
   loc_low  = location_0285 & 0xFF;
   loc_high = location_0285 >> 8;
   set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
@@ -4123,7 +4146,9 @@ void set_prisoners_and_guards_location(tgestate_t *state,
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    set_character_location(state, *pchars, loc_low | (loc_high << 8));
+    const xy_t loc = { loc_low, loc_high };
+
+    set_character_location(state, *pchars, loc);
     loc_low++;
     pchars++;
   }
@@ -4163,7 +4188,9 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    set_character_location(state, *pchars, loc_low | (loc_high << 8));
+    const xy_t loc = { loc_low, loc_high };
+
+    set_character_location(state, *pchars, loc);
 
     /* When this is 6, the character being processed is
      * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
@@ -4191,7 +4218,7 @@ void set_prisoners_and_guards_location_B(tgestate_t *state,
  */
 void set_character_location(tgestate_t *state,
                             character_t character,
-                            location_t  location)
+                            xy_t        location)
 {
   characterstruct_t *charstr; /* was HL */
   vischar_t         *vischar; /* was HL */
@@ -4241,9 +4268,9 @@ store_to_vischar:
  */
 void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t     A;        /* was A */
-  tinypos_t  *pos;      /* was DE */
-  const xy_t *location; /* was HL */
+  uint8_t    A;        /* was A */
+  tinypos_t *pos;      /* was DE */
+  xy_t      *location; /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -4272,14 +4299,14 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A3ED: Store a location_t at the specified address.
+ * $A3ED: Store an xy_t at the specified address.
  *
  * Used by set_character_location only.
  *
  * \param[in]  location  Location. (was A' lo + C hi)
  * \param[out] plocation Pointer to vischar->target, or characterstruct->target. (was HL)
  */
-void store_location(location_t location, location_t *plocation)
+void store_location(xy_t location, xy_t *plocation)
 {
   // assert(location);
   assert(plocation != NULL);
@@ -4323,7 +4350,10 @@ void byte_A13E_is_zero(tgestate_t        *state,
 
   character = vischar->character;
   if (character == character_0_COMMANDANT)
-    set_hero_target_location(state, location_002C);
+  {
+    xy_t loc = { 0x2C, 0x00 }; // location_002C
+    set_hero_target_location(state, loc);
+  }
   else
     sub_A404(state, charstr, character);
 }
@@ -4376,7 +4406,7 @@ void sub_A404(tgestate_t        *state,
  */
 void character_sits(tgestate_t *state,
                     character_t character,
-                    location_t *location)
+                    xy_t       *location)
 {
   uint8_t  index; /* was A */
   uint8_t *bench; /* was HL */
@@ -4413,9 +4443,9 @@ void character_sits(tgestate_t *state,
  * \param[in] character Character index.       (was A)
  * \param[in] location  (unknown)
  */
-void character_sleeps(tgestate_t  *state,
-                      character_t  character,
-                      location_t  *location)
+void character_sleeps(tgestate_t *state,
+                      character_t character,
+                      xy_t       *location)
 {
   room_t room; /* was C */
 
@@ -4438,12 +4468,12 @@ void character_sleeps(tgestate_t  *state,
  * $A462: Common end of character sits/sleeps.
  *
  * \param[in] state    Pointer to game state.
- * \param[in] room     Room index.                 (was C)
- * \param[in] location Likely a target location_t. (was DE/HL)
+ * \param[in] room     Room index.               (was C)
+ * \param[in] location Likely a target location. (was DE/HL)
  */
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                location_t *location)
+                                xy_t       *location)
 {
   /* This receives a pointer to a location structure which is within either a
    * characterstruct or a vischar. */
@@ -4460,7 +4490,7 @@ void character_sit_sleep_common(tgestate_t *state,
   // $8022 -> vischar[1]->target
   // others -> character_structs->target
 
-  *location |= 255; /* Conv: Was a byte write. */
+  location->x = 0xFF;
 
   if (state->room_index != room)
   {
@@ -4544,7 +4574,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   *pflag = 0xFF;
 
   /* Reset only the bottom byte of target location. */
-  state->vischars[0].target &= 0xFF00;
+  state->vischars[0].target.x = 0x00;
 
   /* Set hero position (x,y) to zero. */
   state->vischars[0].mi.pos.x = 0;
@@ -4569,7 +4599,8 @@ void set_location_0x000E(tgestate_t *state)
 
   assert(state != NULL);
 
-  set_hero_target_location(state, location_000E);
+  xy_t loc = { 0x0E, 0x00 }; // location_000E
+  set_hero_target_location(state, loc);
   loc_low  = location_000E & 0xFF;
   loc_high = location_000E >> 8;
   set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
@@ -4587,7 +4618,8 @@ void set_location_0x048E(tgestate_t *state)
 
   assert(state != NULL);
 
-  set_hero_target_location(state, location_048E);
+  xy_t loc = { 0x8E, 0x04 }; // location_048E
+  set_hero_target_location(state, loc);
   loc_low  = location_0010 & 0xFF;
   loc_high = location_0010 >> 8;
   set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
@@ -4605,7 +4637,8 @@ void set_location_0x0010(tgestate_t *state)
 
   assert(state != NULL);
 
-  set_hero_target_location(state, location_0010);
+  xy_t loc = { 0x10, 0x00 }; // location_0010
+  set_hero_target_location(state, loc);
   loc_low  = location_0010 & 0xFF;
   loc_high = location_0010 >> 8;
   set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
@@ -4652,7 +4685,10 @@ void byte_A13E_is_zero_anotherone(tgestate_t        *state,
 
   character = vischar->character;
   if (character == character_0_COMMANDANT)
-    set_hero_target_location(state, location_002B);
+  {
+    xy_t loc = { 0x2B, 0x00 }; // location_002B
+    set_hero_target_location(state, loc);
+  }
   else
     byte_A13E_anotherone_common(state, charstr, character);
 }
@@ -4708,7 +4744,9 @@ void go_to_roll_call(tgestate_t *state)
   loc_low  = location_001A & 0xFF;
   loc_high = location_001A >> 8;
   set_prisoners_and_guards_location(state, &loc_low, loc_high);
-  set_hero_target_location(state, location_002D);
+
+  xy_t loc = { 0x2D, 0x00 }; // location_002D
+  set_hero_target_location(state, loc);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7945,7 +7983,7 @@ void reset_map_and_characters(tgestate_t *state)
     charstr->pos.x      = reset->x;
     charstr->pos.y      = reset->y;
     charstr->pos.height = 18; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
-    charstr->target &= 0xFF00; /* clear bottom byte */
+    charstr->target.x   = 0;
     charstr++;
     reset++;
 
@@ -9492,7 +9530,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   int                          Z;
   room_t                       room;      /* was A */
   uint8_t                      A;         /* was A */
-  const location_t            *location;  /* was HL */
+  xy_t                       *location;  /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -9601,7 +9639,7 @@ found_empty_slot:
   //HL -= 2; // -> charstr->target
 
 c592:
-  if ((charstr->target & 0xFF) == 0)
+  if (charstr->target.x == 0)
   {
     // DE += 3; // -> vischar->counter_and_flags
   }
@@ -9720,9 +9758,13 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     if (character >= character_16_GUARD_DOG_1 &&
         character <= character_19_GUARD_DOG_4)
     {
-      vischar->target = 0x00FF;
+      vischar->target.x = 0xFF;
+      vischar->target.y = 0x00;
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
-        vischar->target = 0x18FF;
+      {
+        vischar->target.x = 0xFF;
+        vischar->target.y = 0x18;
+      }
     }
 
     charstr->target = vischar->target;
@@ -9833,7 +9875,7 @@ void move_characters(tgestate_t *state)
   room_t             room;        /* was A */
   item_t             item;        /* was C */
   uint8_t            A;           /* was A */
-  location_t        *HLlocation;  /* was HL */
+  xy_t              *HLlocation;  /* was HL */
 
   uint8_t            B;           /* was B */
   uint8_t            max;         /* was A' */
@@ -9873,7 +9915,7 @@ void move_characters(tgestate_t *state)
   // HL += 3; // point at charstr->target
 
   /* No target? Not yet understood. */
-  if ((charstr->target & 0xFF) == 0) /* temp was A */
+  if (charstr->target.x == 0) /* temp was A */
     // POP HL_pos
     return;
 
@@ -9890,19 +9932,13 @@ void move_characters(tgestate_t *state)
 
       /* Characters 1..11. */
 back:
-      // HL is byte pointer here
-      A = (*HLlocation & 0xFF) ^ 0x80;
-      *HLlocation++ = A; // byte increment
+      HLlocation->x = A = HLlocation->x ^ (1 << 7);
 
-      /* Original code: */
-//      if (A & (1 << 7))
-//        (*HLlocation) -= 2;
-//      (*HLlocation)++;
-      /* Conv: Adjusted to be clearer. */
+      /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
       if (A & (1 << 7))
-        (*HLlocation)--;
+        HLlocation->y--;
       else
-        (*HLlocation)++;
+        HLlocation->y++;
 
       // POP HL_pos
       return;
@@ -9912,7 +9948,7 @@ back:
       /* Commandant. */
 
       // sampled HL = $7617 (characterstruct + 5)
-      A = *HLlocation & characterstruct_BYTE5_MASK; // location
+      A = HLlocation->x & characterstruct_BYTE5_MASK; // location
       if (A != 36)
         goto back;
 
@@ -9938,8 +9974,8 @@ character_12_or_higher:
 
         DEpos = &state->saved_pos;
         /* Conv: Unrolled. */
-        DEpos->x = (*HLlocation & 0xFF) >> 1;
-        DEpos->y = (*HLlocation >> 8)   >> 1;
+        DEpos->x = HLlocation->x >> 1;
+        DEpos->y = HLlocation->y >> 1;
         HLpos    = &state->saved_pos;
 
         // POP DE_charstr
@@ -10034,14 +10070,13 @@ character_12_or_higher:
 //    DE++;
     // EX DE, HL
     // HL -> DEcharstr->target
-    A = *HLlocation; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
+    A = HLlocation->x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
     if (A == 0xFF)
       return;
-    HLlocation++;       // was interleaved
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      (*HLlocation)++;
+      HLlocation->y++;
     else
-      (*HLlocation)--;
+      HLlocation->y--;
   }
 }
 
@@ -10120,9 +10155,9 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  * $C7C6: Character event.
  *
  * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to location (was HL). [ NEEDS TO BE CHARSTRUCT+5 *OR* VISCHAR+2   // likely a location_t and not a characterstruct_t ]
+ * \param[in] location Pointer to location (was HL). [ NEEDS TO BE CHARSTRUCT+5 *OR* VISCHAR+2 // likely a xy_t and not a characterstruct_t ]
  */
-void character_event(tgestate_t *state, location_t *location)
+void character_event(tgestate_t *state, xy_t *location)
 {
   /* $C7F9 */
   static const charactereventmap_t eventmap[] =
@@ -10168,22 +10203,22 @@ void character_event(tgestate_t *state, location_t *location)
     &charevnt_handler_10_hero_released_from_solitary
   };
 
-  uint8_t                    location_lo; /* was A */
+  uint8_t                    x; /* was A */
   const charactereventmap_t *peventmap;   /* was HL */
   uint8_t                    iters;       /* was B */
 
   assert(state    != NULL);
   assert(location != NULL);
 
-  location_lo = *location & 0xFF;
-  if (location_lo >= 7 && location_lo <= 12)
+  x = location->x;
+  if (x >= 7 && x <= 12)
   {
-    character_sleeps(state, location_lo, location);
+    character_sleeps(state, x, location);
     return;
   }
-  if (location_lo >= 18 && location_lo <= 22)
+  if (x >= 18 && x <= 22)
   {
-    character_sits(state, location_lo, location);
+    character_sits(state, x, location);
     return;
   }
 
@@ -10191,7 +10226,7 @@ void character_event(tgestate_t *state, location_t *location)
   iters = NELEMS(eventmap);
   do
   {
-    if (location_lo == peventmap->something)
+    if (x == peventmap->x)
     {
       handlers[peventmap->handler](state, 0,0); // FIXME expecting charptr, vischar
       return;
@@ -10200,7 +10235,7 @@ void character_event(tgestate_t *state, location_t *location)
   }
   while (--iters);
 
-  *location = 0; /* Conv: Sets both bytes, original code sets first byte only. */
+  location->x = 0;
 }
 
 /**
@@ -10249,7 +10284,8 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t  *state,
   *charptr++ = 0xA4;
   *charptr   = 0x03;
   state->automatic_player_counter = 0; // force automatic control
-  set_hero_target_location(state, 0x2500); // original jump was $A344, but have moved it
+  xy_t loc = { 0x00, 0x25 }; // location_2500
+  set_hero_target_location(state, loc); // original jump was $A344, but have moved it
 }
 
 /**
@@ -10535,7 +10571,8 @@ a_1:
       else
       {
         vischar2->flags  = 0;
-        vischar2->target = 0x00FF;
+        vischar2->target.x = 0xFF;
+        vischar2->target.y = 0x00;
         sub_CB23(state, vischar2, &vischar2->target);
         return;
       }
@@ -10589,7 +10626,7 @@ found_bribed:
     }
   }
 
-  A = vischar2->target & 0x00FF;
+  A = vischar2->target.y = 0x00;
   if (A == 0)
   {
     character_behaviour_end_1(state, vischar, A);
@@ -10831,7 +10868,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       food_discovered_counter = 255; /* food is poisoned */
     state->food_discovered_counter = food_discovered_counter;
 
-    vischar->target &= ~0xFFu; // clear low byte
+    vischar->target.x = 0x00;
 
     character_behaviour_end_1(state, vischar, 0); // character_behaviour:$C9F5;
     return;
@@ -10842,19 +10879,20 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target location
     //orig:A = *--HL; // 80a2 etc
 
-    C = vischar->target >> 8;
-    A = vischar->target & 0xFF;
+    C = vischar->target.y;
+    A = vischar->target.x;
 
     A = element_A_of_table_7738(A)[C];
-    if ((vischar->target & 0xFF) & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
+    if ((vischar->target.x) & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
       A ^= door_LOCKED; // later given to get_door_position, so must be a door_t, so the flag must be the locked flag
 
     // PUSH AF
-    Astacked = vischar->target & 0xFF; // $8002, ...
+    Astacked = vischar->target.x; // $8002, ...
     // Conv: This is the [-2]+1 pattern which works out -1/+1.
     if (Astacked & vischar_BYTE2_BIT7)
-      vischar->target = (vischar->target & 0xFF00) | (((vischar->target & 0xFF) - 2) & 0xFF); // (*HL) -= 2; // $8003, ... // likely target location
-    vischar->target = (vischar->target & 0xFF00) | (((vischar->target & 0xFF) + 1) & 0xFF); // (*HL)++; // likely target location
+      vischar->target.x--;
+    else
+      vischar->target.x++;
     // POP AF
 
     doorpos = get_door_position(A); // door related
@@ -10914,10 +10952,10 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
  * \param[in] vischar  Pointer to visible character. (was IY)
  * \param[in] location seems to be an arg. (target loc ptr). (was HL)
  */
-void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location)
+void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location)
 {
-  uint8_t     A;
-  const location_t *new_location;
+  uint8_t A;
+  xy_t   *new_location;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10937,7 +10975,7 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, location_t *location)
  * \param[in] vischar  Pointer to visible character. (was IY)
  * \param[in] location seems to be an arg. (target loc ptr). (was HL)
  */
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, location_t *location)
+void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location)
 {
   character_t character; /* was A */
   uint8_t     A;         /* was A */
@@ -10952,7 +10990,7 @@ void sub_CB2D(tgestate_t *state, vischar_t *vischar, location_t *location)
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
     {
-      A = *location & vischar_BYTE2_MASK;
+      A = location->x & vischar_BYTE2_MASK;
       if (A == 0x24)
         goto cb46; // character index
       character = 0; // defeat the next 'if' statement // can probably go
@@ -10966,7 +11004,7 @@ cb46:
   // PUSH HL
   character_event(state, location);
   // POP HL
-  A = *location;
+  A = location->x;
   if (A == 0)
     return; // A returned?
 
@@ -10974,12 +11012,12 @@ cb46:
   return; // exit via
 
 cb50:
-  *location = *location ^ 0x80;
-  location++;
+  location->x = location->x ^ (1 << 7);
+  // Conv: Removed [-2]+1 pattern.
   if (A & (1 << 7)) // which flag is this?
-    (*location) -= 2;
-  (*location)++;
-  location--;
+    location->y--;
+  else
+    location->y++;
 
   A = 0; // returned?
 }
@@ -10997,11 +11035,11 @@ cb50:
  * \param[in] new_location Pointer to location.          (was HL)
  * \param[in] A            flags of some sort
  */
-void sub_CB61(tgestate_t       *state,
-              vischar_t        *vischar,
-              location_t       *pushed_HL,
-              const location_t *new_location,
-              uint8_t           A)
+void sub_CB61(tgestate_t *state,
+              vischar_t  *vischar,
+              xy_t       *pushed_HL,
+              const xy_t *new_location,
+              uint8_t     A)
 {
   assert(state        != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -11012,7 +11050,7 @@ void sub_CB61(tgestate_t       *state,
   if (A == (1 << 7))
     vischar->flags |= vischar_FLAGS_BIT6;
 
-  memcpy(pushed_HL + 2, new_location, 2); // replace with straight assignment
+  pushed_HL[1] = *new_location;
 
   A = (1 << 7); // returned?
 }
@@ -11329,7 +11367,7 @@ next:
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
-  state->vischars[0].target &= 0xFF00; // ($8002) = 0; // target location - why is this storing a byte and not a word?
+  state->vischars[0].target.x = 0x00; // ($8002) = 0; // target location - why is this storing a byte and not a word?
   transition(state, &solitary_pos);
 
   NEVER_RETURNS;
@@ -11836,7 +11874,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-//  location_t   *HL; /* was HL */
+//  xy_t         *HL; /* was HL */
 //  tinypos_t    *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
   uint16_t      clipped_width;  /* was BC */
@@ -11865,7 +11903,6 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   /* $8213 = A; */
 
   state->tinypos_81B2         = itemstr->pos;
-  // map_position_related.x/y - a location_t?
   state->map_position_related = itemstr->screenpos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
@@ -13322,7 +13359,7 @@ void tge_setup(tgestate_t *state)
   {
     0x00,                 // character
     0x00,                 // flags
-    0x012C,               // target
+    { 0x2C, 0x01 },       // target
     { 0x2E, 0x2E, 0x18 }, // p04
     0x00,                 // counter_and_flags
     &character_related_pointers[0], // crpbase

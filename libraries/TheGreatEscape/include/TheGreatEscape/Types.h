@@ -360,11 +360,6 @@ enum location
 };
 
 /**
- * Holds a location.
- */
-typedef uint16_t location_t;
-
-/**
  * Identifiers of map locations.
  *
  * These are /ranges/ of locations.
@@ -475,7 +470,7 @@ typedef struct vischar
   uint8_t         flags;
 
   /** $8002 target location */
-  location_t      target;
+  xy_t            target;
 
   /** $8004 position */
   tinypos_t       p04;
@@ -580,7 +575,7 @@ typedef struct characterstruct
   character_t character; // and flags
   room_t      room;
   tinypos_t   pos;
-  location_t  target;
+  xy_t        target;
 }
 characterstruct_t;
 
@@ -618,7 +613,7 @@ itemstruct_t;
  */
 typedef struct charactereventmap
 {
-  uint8_t something;
+  uint8_t x;
   uint8_t handler;
 }
 charactereventmap_t;
