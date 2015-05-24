@@ -10829,8 +10829,8 @@ uint8_t move_character_y(tgestate_t *state,
  */
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          flags;                   /* was A */
-  uint8_t          flags_copy;              /* was C */
+  uint8_t          flags_lower6;                   /* was A */
+  uint8_t          flags_all;               /* was C */
   uint8_t          food_discovered_counter; /* was A */
   uint8_t          C;                       /* was C */
   uint8_t          A;                       /* was A */
@@ -10845,12 +10845,11 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   // In the original code HL is IY + 4 on entry.
   // In this version we replace HL references with IY ones.
 
-  flags = vischar->flags;
-  flags_copy = flags;
-  flags &= vischar_FLAGS_MASK;
-  if (flags)
+  flags_all = flags_lower6 = vischar->flags;
+  flags_lower6 &= vischar_FLAGS_MASK; // lower 6 bits only
+  if (flags_lower6)
   {
-    if (flags == vischar_FLAGS_BRIBE_PENDING)
+    if (flags_lower6 == vischar_FLAGS_BRIBE_PENDING)
     {
       if (vischar->character == state->bribed_character)
         accept_bribe(state, vischar);
@@ -10858,7 +10857,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
         solitary(state); // failed to bribe?
       return; // exit via // factored out
     }
-    else if (flags == vischar_FLAGS_BIT1 || flags == vischar_FLAGS_SAW_BRIBE)
+    else if (flags_lower6 == vischar_FLAGS_BIT1 || flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
       return;
     }
@@ -10876,7 +10875,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  if (flags_copy & vischar_FLAGS_BIT6)
+  if (flags_all & vischar_FLAGS_BIT6)
   {
     //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target location
     //orig:A = *--HL; // 80a2 etc
