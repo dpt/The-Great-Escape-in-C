@@ -551,3 +551,6 @@ const uint8_t mask_food[] =
   0xF8, 0x03,
   0xFE, 0x07,
 };
+
+// vim: ts=8 sts=2 sw=2 et
+

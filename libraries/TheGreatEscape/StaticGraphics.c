@@ -117,3 +117,6 @@ const statictileline_t static_graphic_defs[18] =
 
 #undef HORIZONTAL
 #undef VERTICAL
+
+// vim: ts=8 sts=2 sw=2 et
+

@@ -631,3 +631,6 @@ const uint8_t mask_stove[] =
   0x80, 0x01, 0x0C, 0x30,
 };
 
+// vim: ts=8 sts=2 sw=2 et
+
+

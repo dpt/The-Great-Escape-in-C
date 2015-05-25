@@ -72,3 +72,5 @@ const unsigned char ascii_to_font[256] =
 #undef _
 };
 
+// vim: ts=8 sts=2 sw=2 et
+

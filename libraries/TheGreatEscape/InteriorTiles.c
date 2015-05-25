@@ -203,3 +203,6 @@ const tile_t interior_tiles[interiorobjecttile_MAX] =
   { { 0x20, 0xEC, 0xEF, 0xDF, 0x33, 0xCD, 0x31, 0xC1 } },
 };
 
+// vim: ts=8 sts=2 sw=2 et
+
+

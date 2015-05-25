@@ -652,3 +652,6 @@ uint8_t roomdef_50_blocked_tunnel[] =
   interiorobject_TUNNEL_0,                    4,  8,
   interiorobject_TUNNEL_0,                    0, 10,
 };
+
+// vim: ts=8 sts=2 sw=2 et
+

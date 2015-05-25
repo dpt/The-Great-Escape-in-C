@@ -341,3 +341,6 @@ void tge_destroy(tgestate_t *state)
 
   free(state);
 }
+
+// vim: ts=8 sts=2 sw=2 et
+
