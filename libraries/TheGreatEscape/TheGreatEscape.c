@@ -2238,7 +2238,7 @@ void draw_all_items(tgestate_t *state)
  * $7C46: Draw a single held item.
  *
  * \param[in] state  Pointer to game state.
- * \param[in] index  Item index.    (was A)
+ * \param[in] item   Item index.    (was A)
  * \param[in] dstoff Screen offset. (was HL) Assumed to be in the lower third of the display.
  */
 void draw_item(tgestate_t *state, item_t index, size_t dstoff)
@@ -7691,6 +7691,9 @@ end_bit:
     HL = stacked;
     goto resume1;
   }
+
+#undef I
+#undef O
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9724,13 +9727,13 @@ uint8_t sub_C651(tgestate_t *state,
     {
       A = *HL3;
       if (location->x & (1 << 7))
-        A ^= 0x80; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
+        A ^= (1 << 7); // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
       // toggling A but then doing nothing with it?
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
       transition(state, (tinypos_t *) location); // expects a tinypos, not a location!
       // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (doorpos again)
       *location_out = location + 1; // FIXME increment by a *byte* and return // so this IS returning a tinypos
-      return 0x80;
+      return (1 << 7);
     }
 
     y = *HL3 - 40;
@@ -9848,7 +9851,7 @@ character_12_or_higher:
   }
   else
   {
-    if (A == 0x80)
+    if (A == (1 << 7))
     {
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
@@ -10932,12 +10935,12 @@ void sub_CB61(tgestate_t *state,
   assert(new_location != NULL);
   // assert(A);
 
-  if (A == 128)
+  if (A == (1 << 7))
     vischar->flags |= vischar_FLAGS_BIT6;
 
   memcpy(pushed_HL + 2, new_location, 2); // replace with straight assignment
 
-  A = 128; // returned?
+  A = (1 << 7); // returned?
 }
 
 /* ----------------------------------------------------------------------- */
@@ -13503,18 +13506,22 @@ void plot_static_tiles(tgestate_t             *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F257: Clear the screen and attributes. Set the border to black.
+ * $F257: Clear the screen and attributes and set the screen border to black.
  *
  * \param[in] state Pointer to game state.
  */
 void wipe_full_screen_and_attributes(tgestate_t *state)
 {
   assert(state != NULL);
+  assert(state->speccy != NULL);
 
   memset(&state->speccy->screen, 0, SCREEN_LENGTH);
-  memset(&state->speccy->attributes, attribute_WHITE_OVER_BLACK, SCREEN_ATTRIBUTES_LENGTH);
+  memset(&state->speccy->attributes,
+         attribute_WHITE_OVER_BLACK,
+         SCREEN_ATTRIBUTES_LENGTH);
 
-  state->speccy->out(state->speccy, port_BORDER, 0); /* set border to black */
+  /* Set the screen border to black. */
+  state->speccy->out(state->speccy, port_BORDER, 0);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -13585,6 +13592,7 @@ int check_menu_keys(tgestate_t *state)
 void wipe_game_window(tgestate_t *state)
 {
   assert(state != NULL);
+  assert(state->speccy != NULL);
 
   uint8_t *const  screen = &state->speccy->screen[0];
   const uint16_t *poffsets; /* was SP */
@@ -13847,16 +13855,7 @@ assign_keydef:
       while (--prompt_iters);
     }
 
-    {
-//      uint16_t count; /* was BC */
-//
-//      /* Delay loop */
-//      count = 0xFFFF;
-//      while (--count)
-//        ;
-
-      state->speccy->sleep(state->speccy, 0xFFFF);
-    }
+    state->speccy->sleep(state->speccy, 0xFFFF);
 
     /* Wait for user's input */
     if (user_confirm(state) == 0) /* Confirmed - return */
@@ -13882,6 +13881,7 @@ void set_menu_item_attributes(tgestate_t *state,
   assert(state != NULL);
   assert(index < 4); // a guess
   assert(attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
+  assert(state->speccy != NULL);
 
   pattr = &state->speccy->attributes[(0x590D - SCREEN_ATTRIBUTES_START_ADDRESS)];
 
@@ -13909,9 +13909,11 @@ uint8_t menu_keyscan(tgestate_t *state)
   uint8_t iters;   /* was B */
 
   assert(state != NULL);
+  assert(state->speccy != NULL);
 
   count = 0;
-  keymask = ~state->speccy->in(state->speccy, port_KEYBOARD_12345) & 0xF; /* 1..4 keys only */
+  /* Keys 1..4 only. */
+  keymask = ~state->speccy->in(state->speccy, port_KEYBOARD_12345) & 0xF;
   if (keymask)
   {
     iters = 4;
@@ -13929,7 +13931,8 @@ uint8_t menu_keyscan(tgestate_t *state)
   }
   else
   {
-    if ((state->speccy->in(state->speccy, port_KEYBOARD_09876) & 1) == 0) /* 0 key only */
+    /* Key 0 only. */
+    if ((state->speccy->in(state->speccy, port_KEYBOARD_09876) & 1) == 0)
       return count; /* always zero */
 
     return 0xFF; /* no keypress */
@@ -14071,6 +14074,9 @@ uint16_t get_tuning(uint8_t A)
     INC_LO(BC);
 
   // L = 0; unsure what this is doing
+
+#undef INC_HI
+#undef INC_LO
 
   return BC;
 }
