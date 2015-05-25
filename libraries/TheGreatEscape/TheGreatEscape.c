@@ -11166,8 +11166,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->map_position_related.y = vischar->scry >> 3;
 
   // A is (1<<7) mask OR sprite offset
-  // original game uses ADD A,A to double A and in doing so discards top bit
-  sprite2 = &sprite[sprite_index & spriteindex_MASK]; // sprite pointer // A takes what values?
+  // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
+  sprite2 = &sprite[sprite_index & ~spriteindex_FLIP]; // sprite pointer
 
   vischar->width_bytes = sprite2->width;  // width in bytes
   vischar->height      = sprite2->height; // height in rows

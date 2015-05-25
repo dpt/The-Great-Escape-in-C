@@ -286,8 +286,7 @@ enum escapeitem_flags
  */
 enum spriteindex_flags
 {
-  spriteindex_MASK                     = 0x7F,
-  spriteindex_FLIP                     = 1 << 7 // left/right flip flag
+  spriteindex_FLIP                     = 1 << 7 /**< Left/right flip flag. */
 };
 
 /**
