@@ -168,17 +168,7 @@ void screen_wipe(tgestate_t *state,
                  uint8_t     height,
                  uint8_t    *dst);
 
-INLINE uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp);
-
-void queue_message_for_display(tgestate_t *state,
-                               message_t   message_index);
-
-INLINE uint8_t *plot_glyph(const char *pcharacter, uint8_t *output);
-uint8_t *plot_single_glyph(int character, uint8_t *output);
-
-void message_display(tgestate_t *state);
-void wipe_message(tgestate_t *state);
-void next_message(tgestate_t *state);
+uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp);
 
 /* $8000 onwards */
 

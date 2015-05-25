@@ -18,6 +18,15 @@
 
 /* ----------------------------------------------------------------------- */
 
+/**
+ * The NEVER_RETURNS macro is placed after calls which are not expected to
+ * return (calls which ultimately invoke squash_stack_goto_main()).
+ */
+#define NEVER_RETURNS assert("Unexpected return." == NULL); return
+
+#define UNFINISHED assert("Unfinished conversion here!" == NULL)
+
+/* ----------------------------------------------------------------------- */
 
 /* Z80 instruction simulator macros. */
 

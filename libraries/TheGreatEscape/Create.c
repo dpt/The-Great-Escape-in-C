@@ -5,6 +5,7 @@
 
 #include "TheGreatEscape/State.h"
 
+#include "TheGreatEscape/Messages.h"
 #include "TheGreatEscape/TheGreatEscape.h"
 
 /**

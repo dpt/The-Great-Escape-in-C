@@ -1,9 +1,11 @@
 #include <assert.h>
+#include <string.h>
 
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Music.h"
 #include "TheGreatEscape/State.h"
+#include "TheGreatEscape/Text.h"
 
 //static
 //int check_menu_keys(tgestate_t *state);
