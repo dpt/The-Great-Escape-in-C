@@ -614,17 +614,4 @@ int user_confirm(tgestate_t *state);
 
 void wipe_full_screen_and_attributes(tgestate_t *state);
 
-void plot_statics_and_menu_text(tgestate_t *state);
-
-void plot_static_tiles_horizontal(tgestate_t             *state,
-                                  uint8_t                *out,
-                                  const statictileline_t *stline);
-void plot_static_tiles_vertical(tgestate_t             *state,
-                                uint8_t                *out,
-                                const statictileline_t *stline);
-void plot_static_tiles(tgestate_t             *state,
-                       uint8_t                *out,
-                       const statictileline_t *stline,
-                       int                     orientation);
-
 #endif /* THEGREATESCAPE_H */
