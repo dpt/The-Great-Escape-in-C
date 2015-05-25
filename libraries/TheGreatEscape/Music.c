@@ -179,7 +179,7 @@ const uint8_t music_channel1_data[] =
 /**
  * $FA48: Music tuning table.
  */
-const uint16_t music_tuning_table[76] =
+static const uint16_t music_tuning_table[76] =
 {
   0xFEFE,
   0x0000,
@@ -648,5 +648,41 @@ static const uint16_t junk[] =
   0x0000,
   0x0000
 };
+
+/* ----------------------------------------------------------------------- */
+
+/**
+ * $F52C: Get tuning.
+ *
+ * \param[in] A Index (never larger than 42?).
+ *
+ * \returns (was DE)
+ */
+uint16_t get_tuning(uint8_t A)
+{
+  uint16_t BC;
+
+  BC = music_tuning_table[A]; // FIXME: Original loads endian swapped...
+
+#define INC_LO(x) \
+do { x = (x & 0xFF00) | (((x & 0x00FF) + 0x0001) & 0x00FF); } while (0)
+#define INC_HI(x) \
+do { x = (x & 0x00FF) | (((x & 0xFF00) + 0x0100) & 0xFF00); } while (0)
+
+  INC_LO(BC);
+  INC_HI(BC);
+  if ((BC & 0xFF00) == 0)
+    INC_LO(BC);
+
+  // L = 0; unsure what this is doing
+
+#undef INC_HI
+#undef INC_LO
+
+  return BC;
+}
+
+/* ----------------------------------------------------------------------- */
+
 // vim: ts=8 sts=2 sw=2 et
 

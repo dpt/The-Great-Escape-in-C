@@ -26,6 +26,8 @@
 		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
 		554808E917E117CF00387328 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 554808E817E117CF00387328 /* AppDelegate.m */; };
 		554808EC17E117CF00387328 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 554808EA17E117CF00387328 /* MainMenu.xib */; };
+		556D1A1A1B135D900036AED0 /* Input.c in Sources */ = {isa = PBXBuildFile; fileRef = 556D1A191B135D900036AED0 /* Input.c */; };
+		556D1A1E1B13617B0036AED0 /* Menu.c in Sources */ = {isa = PBXBuildFile; fileRef = 556D1A1D1B13617B0036AED0 /* Menu.c */; };
 		558FC65E1A0ECC7F00A4F50F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 554808E117E117CF00387328 /* main.m */; };
 		558FC67C1A0EE13000A4F50F /* ZXScreen.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6791A0EE13000A4F50F /* ZXScreen.c */; };
 		558FC67D1A0EE13000A4F50F /* ZXSpectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC67B1A0EE13000A4F50F /* ZXSpectrum.c */; };
@@ -62,6 +64,11 @@
 		554808E817E117CF00387328 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		554808EB17E117CF00387328 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		555C5BCA1A0D9432003A3496 /* TheGreatEscape.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = TheGreatEscape.profdata; sourceTree = "<group>"; };
+		556D1A191B135D900036AED0 /* Input.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Input.c; sourceTree = "<group>"; };
+		556D1A1B1B135E3C0036AED0 /* Input.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Input.h; path = TheGreatEscape/Input.h; sourceTree = "<group>"; };
+		556D1A1C1B1361570036AED0 /* Menu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Menu.h; path = TheGreatEscape/Menu.h; sourceTree = "<group>"; };
+		556D1A1D1B13617B0036AED0 /* Menu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Menu.c; sourceTree = "<group>"; };
+		556D1A1F1B1363780036AED0 /* Main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Main.h; path = TheGreatEscape/Main.h; sourceTree = "<group>"; };
 		558FC6781A0EE11F00A4F50F /* ZXSpectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZXSpectrum.h; sourceTree = "<group>"; };
 		558FC6791A0EE13000A4F50F /* ZXScreen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ZXScreen.c; path = ../../libraries/ZXSpectrum/ZXScreen.c; sourceTree = "<group>"; };
 		558FC67A1A0EE13000A4F50F /* ZXScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZXScreen.h; path = ../../libraries/ZXSpectrum/ZXScreen.h; sourceTree = "<group>"; };
@@ -228,10 +235,12 @@
 				558FC6821A0EE15B00A4F50F /* Create.c */,
 				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
 				558FC6841A0EE15B00A4F50F /* Font.c */,
+				556D1A191B135D900036AED0 /* Input.c */,
 				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
 				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
 				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
 				558FC6A01A0EE15B00A4F50F /* Map.c */,
+				556D1A1D1B13617B0036AED0 /* Menu.c */,
 				558FC6A11A0EE15B00A4F50F /* Music.c */,
 				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
 				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
@@ -255,7 +264,9 @@
 				558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */,
 				558FC68D1A0EE15B00A4F50F /* ItemBitmaps.h */,
 				558FC68E1A0EE15B00A4F50F /* Items.h */,
+				556D1A1B1B135E3C0036AED0 /* Input.h */,
 				558FC68F1A0EE15B00A4F50F /* Map.h */,
+				556D1A1C1B1361570036AED0 /* Menu.h */,
 				558FC6901A0EE15B00A4F50F /* Music.h */,
 				558FC6911A0EE15B00A4F50F /* RoomDefs.h */,
 				558FC6921A0EE15B00A4F50F /* Rooms.h */,
@@ -270,6 +281,7 @@
 				558FC69A1A0EE15B00A4F50F /* Tiles.h */,
 				558FC69B1A0EE15B00A4F50F /* Types.h */,
 				558FC69C1A0EE15B00A4F50F /* Utils.h */,
+				556D1A1F1B1363780036AED0 /* Main.h */,
 			);
 			name = "include (private)";
 			path = include;
@@ -372,6 +384,7 @@
 				558FC6B01A0EE15B00A4F50F /* Map.c in Sources */,
 				558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */,
 				558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */,
+				556D1A1A1B135D900036AED0 /* Input.c in Sources */,
 				554808E917E117CF00387328 /* AppDelegate.m in Sources */,
 				558FC6B41A0EE15B00A4F50F /* Sprites.c in Sources */,
 				558FC67C1A0EE13000A4F50F /* ZXScreen.c in Sources */,
@@ -382,6 +395,7 @@
 				55F0CA5D19E9E23C0033FC17 /* TheGreatEscapeView.m in Sources */,
 				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,
 				558FC6AB1A0EE15B00A4F50F /* Font.c in Sources */,
+				556D1A1E1B13617B0036AED0 /* Menu.c in Sources */,
 				558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */,
 				558FC6B11A0EE15B00A4F50F /* Music.c in Sources */,
 				558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */,
