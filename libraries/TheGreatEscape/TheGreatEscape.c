@@ -2521,7 +2521,7 @@ void event_night_time(tgestate_t *state)
 
   if (state->hero_in_bed == 0)
   {
-    xy_t loc = { 0x2C, 0x01 }; // location_012C
+    const xy_t loc = { 0x2C, 0x01 }; /* location_012C */ /* was BC */
     set_hero_target_location(state, loc);
   }
   set_day_or_night(state, 0xFF);
@@ -2681,19 +2681,17 @@ found:
 
 void event_time_for_bed(tgestate_t *state)
 {
-  const xy_t loc = { 0xA6, 0x03 }; // location_03A6
-
   assert(state != NULL);
 
+  const xy_t loc = { 0xA6, 0x03 }; /* location_03A6 */ /* was C,A */
   set_guards_location(state, loc);
 }
 
 void event_search_light(tgestate_t *state)
 {
-  const xy_t loc = { 0x26, 0x00 }; // location_0026
-
   assert(state != NULL);
 
+  const xy_t loc = { 0x26, 0x00 }; /* location_0026 */ /* was C,A */
   set_guards_location(state, loc);
 }
 
@@ -2702,7 +2700,7 @@ void event_search_light(tgestate_t *state)
  * Sets the location of guards 12..15 (the guards from prisoners_and_guards).
  *
  * \param[in] state    Pointer to game state.
- * \param[in] location Location.              (was A lo + C hi)
+ * \param[in] location Location.              (was C,A (hi,lo))
  */
 void set_guards_location(tgestate_t *state, xy_t location)
 {
@@ -2728,7 +2726,8 @@ void set_guards_location(tgestate_t *state, xy_t location)
 /**
  * $A27F: List of non-player characters: six prisoners and four guards.
  *
- * Used by set_prisoners_and_guards_location and set_prisoners_and_guards_location_B.
+ * Used by set_prisoners_and_guards_location and
+ * set_prisoners_and_guards_location_B.
  */
 const character_t prisoners_and_guards[10] =
 {
@@ -2756,8 +2755,6 @@ void wake_up(tgestate_t *state)
   characterstruct_t *charstr;  /* was HL */
   uint8_t            iters;    /* was B */
   uint8_t *const    *bedpp;    /* was HL */
-  uint8_t            loc_low;  /* was A' */
-  uint8_t            loc_high; /* was C */
 
   assert(state != NULL);
 
@@ -2769,8 +2766,9 @@ void wake_up(tgestate_t *state)
   }
 
   state->hero_in_bed = 0;
-  const xy_t loc = { 0x2A, 0x00 }; // location_002A // was BC
-  set_hero_target_location(state, loc);
+
+  const xy_t loc002A = { 0x2A, 0x00 }; /* location_002A */ /* was BC */
+  set_hero_target_location(state, loc002A);
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -2789,9 +2787,9 @@ void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  loc_low  = location_0005 & 0xFF; // incremented by set_prisoners_and_guards_location_B (but it's unclear why)
-  loc_high = location_0005 >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+  xy_t loc0005 = { 0x05, 0x00 }; /* location_0005 */ /* was C,A' (hi,lo) */
+  // .x is incremented by set_prisoners_and_guards_location_B (but it's unclear why)
+  set_prisoners_and_guards_location_B(state, &loc0005);
 
   /* Update all the bed objects to be empty. */
   // FIXME: This writes to a possibly shared structure, so ought to be moved into the state somehow.
@@ -2821,8 +2819,6 @@ void breakfast_time(tgestate_t *state)
 {
   characterstruct_t *charstr;  /* was HL */
   uint8_t            iters;    /* was B */
-  uint8_t            loc_low;  /* was A' */
-  uint8_t            loc_high; /* was C */
 
   assert(state != NULL);
 
@@ -2833,10 +2829,8 @@ void breakfast_time(tgestate_t *state)
   }
 
   state->hero_in_breakfast = 0;
-  {
-    xy_t loc = { 0x90, 0x03 }; // location_0390
-    set_hero_target_location(state, loc);
-  }
+  const xy_t loc = { 0x90, 0x03 }; /* location_0390 */ /* was BC */
+  set_hero_target_location(state, loc);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -2854,9 +2848,8 @@ void breakfast_time(tgestate_t *state)
   }
   while (--iters);
 
-  loc_low  = location_0390 & 0xFF;
-  loc_high = location_0390 >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+  xy_t loc0390 = { 0x90, 0x30 }; /* location_0390 */ /* was C,A' (hi,lo) */
+  set_prisoners_and_guards_location_B(state, &loc0390);
 
   /* Update all the benches to be empty. */
   // FIXME: Writing to shared state.
@@ -2910,16 +2903,13 @@ void set_hero_target_location(tgestate_t *state, xy_t location)
  */
 void go_to_time_for_bed(tgestate_t *state)
 {
-  uint8_t loc_low;  /* was A' */
-  uint8_t loc_high; /* was C */
-
   assert(state != NULL);
 
-  xy_t loc = { 0x85, 0x02 }; // location_0285
+  const xy_t loc = { 0x85, 0x02 }; /* location_0285 */ /* was BC */
   set_hero_target_location(state, loc);
-  loc_low  = location_0285 & 0xFF;
-  loc_high = location_0285 >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+
+  xy_t loc0285 = { 0x85, 0x02 }; /* location_0285 */ /* was C,A' (hi,lo) */
+  set_prisoners_and_guards_location_B(state, &loc0285);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2931,40 +2921,34 @@ void go_to_time_for_bed(tgestate_t *state)
  *
  * Called by go_to_roll_call.
  *
- * This increments loc_low and returns it, but it's unclear why it does that.
+ * This increments .x and returns it, but it's unclear why it does that.
  * None of the calls seem to make use of it.
  *
- * \param[in]     state     Pointer to game state.
- * \param[in,out] p_loc_low Pointer to location low byte. (was A')
- * \param[in]     loc_high  Location high byte.           (was C)
+ * \param[in]     state Pointer to game state.
+ * \param[in,out] ploc  Pointer to location. (was C,A')
  */
-void set_prisoners_and_guards_location(tgestate_t *state,
-                                       uint8_t    *p_loc_low,
-                                       uint8_t     loc_high)
+void set_prisoners_and_guards_location(tgestate_t *state, xy_t *ploc)
 {
-  uint8_t            loc_low; /* new var */
-  const character_t *pchars;  /* was HL */
-  uint8_t            iters;   /* was B */
+  xy_t               loc;    /* new var */
+  const character_t *pchars; /* was HL */
+  uint8_t            iters;  /* was B */
 
-  assert(state     != NULL);
-  assert(p_loc_low != NULL);
-  // assert(loc_high);
+  assert(state != NULL);
+  assert(ploc  != NULL);
 
-  loc_low = *p_loc_low; // Conv: Keep a local copy of counter.
+  loc = *ploc; /* Conv: Keep a local copy of counter. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    const xy_t loc = { loc_low, loc_high };
-
     set_character_location(state, *pchars, loc);
-    loc_low++;
+    loc.x++;
     pchars++;
   }
   while (--iters);
 
-  *p_loc_low = loc_low;
+  *ploc = loc;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2976,43 +2960,37 @@ void set_prisoners_and_guards_location(tgestate_t *state,
  *
  * Called by the set_location routines.
  *
- * \param[in]     state     Pointer to game state.
- * \param[in,out] p_loc_low Pointer to location low byte. (was A')
- * \param[in]     loc_high  Location high byte.           (was C)
+ * \param[in]     state Pointer to game state.
+ * \param[in,out] ploc  Pointer to location. (was C,A')
  */
-void set_prisoners_and_guards_location_B(tgestate_t *state,
-                                         uint8_t    *p_loc_low,
-                                         uint8_t     loc_high)
+void set_prisoners_and_guards_location_B(tgestate_t *state, xy_t *ploc)
 {
-  uint8_t            loc_low; /* new var */
-  const character_t *pchars;  /* was HL */
-  uint8_t            iters;   /* was B */
+  xy_t               loc;    /* new var */
+  const character_t *pchars; /* was HL */
+  uint8_t            iters;  /* was B */
 
-  assert(state     != NULL);
-  assert(p_loc_low != NULL);
-  // assert(loc_high);
+  assert(state != NULL);
+  assert(ploc  != NULL);
 
-  loc_low = *p_loc_low; // Conv: Keep a local copy of counter.
+  loc = *ploc; /* Conv: Keep a local copy of counter. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    const xy_t loc = { loc_low, loc_high };
-
     set_character_location(state, *pchars, loc);
 
     /* When this is 6, the character being processed is
      * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
      * start of the second half of the list. */
     if (iters == 6)
-      loc_low++;
+      loc.x++;
 
     pchars++;
   }
   while (--iters);
 
-  *p_loc_low = loc_low;
+  *ploc = loc;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3163,11 +3141,13 @@ void byte_A13E_is_zero(tgestate_t        *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    xy_t loc = { 0x2C, 0x00 }; // location_002C
+    xy_t loc = { 0x2C, 0x00 }; /* location_002C */ /* was BC */
     set_hero_target_location(state, loc);
   }
   else
+  {
     sub_A404(state, charstr, character);
+  }
 }
 
 /**
@@ -3406,16 +3386,13 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
  */
 void set_location_0x000E(tgestate_t *state)
 {
-  uint8_t loc_low;  /* was A' */
-  uint8_t loc_high; /* was C */
-
   assert(state != NULL);
 
-  xy_t loc = { 0x0E, 0x00 }; // location_000E
+  const xy_t loc = { 0x0E, 0x00 }; /* location_000E */
   set_hero_target_location(state, loc);
-  loc_low  = location_000E & 0xFF;
-  loc_high = location_000E >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+
+  xy_t loc000E = { 0x0E, 0x00 }; /* location_000E */ /* was C,A' */
+  set_prisoners_and_guards_location_B(state, &loc000E);
 }
 
 /**
@@ -3425,16 +3402,13 @@ void set_location_0x000E(tgestate_t *state)
  */
 void set_location_0x048E(tgestate_t *state)
 {
-  uint8_t loc_low;  /* was A' */
-  uint8_t loc_high; /* was C */
-
   assert(state != NULL);
 
-  xy_t loc = { 0x8E, 0x04 }; // location_048E
+  xy_t loc = { 0x8E, 0x04 }; /* location_048E */
   set_hero_target_location(state, loc);
-  loc_low  = location_0010 & 0xFF;
-  loc_high = location_0010 >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+
+  xy_t loc0010 = { 0x10, 0x00 }; /* location_0010 */ /* was C,A' */
+  set_prisoners_and_guards_location_B(state, &loc0010);
 }
 
 /**
@@ -3444,16 +3418,13 @@ void set_location_0x048E(tgestate_t *state)
  */
 void set_location_0x0010(tgestate_t *state)
 {
-  uint8_t loc_low;  /* was A' */
-  uint8_t loc_high; /* was C */
-
   assert(state != NULL);
 
-  xy_t loc = { 0x10, 0x00 }; // location_0010
+  xy_t loc = { 0x10, 0x00 }; /* location_0010 */
   set_hero_target_location(state, loc);
-  loc_low  = location_0010 & 0xFF;
-  loc_high = location_0010 >> 8;
-  set_prisoners_and_guards_location_B(state, &loc_low, loc_high);
+
+  xy_t loc0010 = { 0x10, 0x00 }; /* location_0010 */ /* was C,A' */
+  set_prisoners_and_guards_location_B(state, &loc0010);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3498,11 +3469,13 @@ void byte_A13E_is_zero_anotherone(tgestate_t        *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    xy_t loc = { 0x2B, 0x00 }; // location_002B
+    const xy_t loc = { 0x2B, 0x00 }; /* location_002B */ /* was BC */
     set_hero_target_location(state, loc);
   }
   else
+  {
     byte_A13E_anotherone_common(state, charstr, character);
+  }
 }
 
 /**
@@ -3548,16 +3521,12 @@ void byte_A13E_anotherone_common(tgestate_t        *state,
  */
 void go_to_roll_call(tgestate_t *state)
 {
-  uint8_t loc_low;  /* was A' */
-  uint8_t loc_high; /* was C */
-
   assert(state != NULL);
 
-  loc_low  = location_001A & 0xFF;
-  loc_high = location_001A >> 8;
-  set_prisoners_and_guards_location(state, &loc_low, loc_high);
+  xy_t loc001A = { 0x1A, 0x00 }; /* location_001A */ /* was C,A' */
+  set_prisoners_and_guards_location(state, &loc001A);
 
-  xy_t loc = { 0x2D, 0x00 }; // location_002D
+  const xy_t loc = { 0x2D, 0x00 }; /* location_002D */
   set_hero_target_location(state, loc);
 }
 
@@ -8577,7 +8546,7 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t  *state,
   *charptr++ = 0xA4;
   *charptr   = 0x03;
   state->automatic_player_counter = 0; // force automatic control
-  xy_t loc = { 0x00, 0x25 }; // location_2500
+  const xy_t loc = { 0x00, 0x25 }; /* location_2500 */ /* was BC */
   set_hero_target_location(state, loc); // original jump was $A344, but have moved it
 }
 

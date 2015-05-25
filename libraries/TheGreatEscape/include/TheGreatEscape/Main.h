@@ -243,12 +243,8 @@ void set_hero_target_location(tgestate_t *state, xy_t location);
 
 void go_to_time_for_bed(tgestate_t *state);
 
-void set_prisoners_and_guards_location(tgestate_t *state,
-                                       uint8_t    *p_loc_low,
-                                       uint8_t     loc_high);
-void set_prisoners_and_guards_location_B(tgestate_t *state,
-                                         uint8_t    *p_loc_low,
-                                         uint8_t     loc_high);
+void set_prisoners_and_guards_location(tgestate_t *state, xy_t *loc);
+void set_prisoners_and_guards_location_B(tgestate_t *state, xy_t *loc);
 void set_character_location(tgestate_t *state,
                             character_t character,
                             xy_t        location);
