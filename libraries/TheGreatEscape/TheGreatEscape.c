@@ -3109,33 +3109,34 @@ void store_location(xy_t location, xy_t *plocation)
 /**
  * $A3F3: entered_move_characters is non-zero.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] charstr Pointer to character struct. (was HL)
+ * \param[in] state    Pointer to game state.
+ * \param[in] location Pointer to location. (was HL)
  */
-void byte_A13E_is_nonzero(tgestate_t        *state,
-                          characterstruct_t *charstr)
+void byte_A13E_is_nonzero(tgestate_t *state,
+                          xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charstr != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  sub_A404(state, charstr, state->character_index);
+  byte_A13E_common(state, location, state->character_index);
 }
 
 /**
  * $A3F8: entered_move_characters is zero.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] charstr Pointer to character struct.  (was HL)
- * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] state    Pointer to game state.
+ * \param[in] location Pointer to location. (was HL)
  */
-void byte_A13E_is_zero(tgestate_t        *state,
-                       characterstruct_t *charstr,
-                       vischar_t         *vischar)
+void byte_A13E_is_zero(tgestate_t *state,
+                       xy_t       *location)
 {
   character_t character;
+  vischar_t  *vischar;
 
-  assert(state   != NULL);
-  assert(charstr != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
+
+  vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
 
   character = vischar->character;
@@ -3146,7 +3147,7 @@ void byte_A13E_is_zero(tgestate_t        *state,
   }
   else
   {
-    sub_A404(state, charstr, character);
+    byte_A13E_common(state, character, location); /* was fallthrough */
   }
 }
 
@@ -3154,18 +3155,18 @@ void byte_A13E_is_zero(tgestate_t        *state,
  * $A404: Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] charstr   Pointer to character struct. (was HL)
- * \param[in] character Character index.             (was A)
+ * \param[in] character Character index.     (was A)
+ * \param[in] location  Pointer to location. (was HL)
  */
-void sub_A404(tgestate_t        *state,
-              characterstruct_t *charstr,
-              character_t        character)
+void byte_A13E_common(tgestate_t *state,
+                      character_t character,
+                      xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charstr != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
   ASSERT_CHARACTER_VALID(character);
 
-  charstr->room = room_NONE;
+  location->y = 0;
 
   if (character >= character_20_PRISONER_1)
   {
@@ -3177,14 +3178,14 @@ void sub_A404(tgestate_t        *state,
 
     old_character = character;
     character = character_13_GUARD_13;
-    if (old_character & (1 << 0))
+    if (old_character & (1 << 0)) // every other character?
     {
-      charstr->room = room_1_HUT1RIGHT;
+      //FIXME charstr->room = room_1_HUT1RIGHT;   location->y = 0x01 ?
       character |= characterstruct_FLAG_BYTE0_BIT7;
     }
   }
 
-  charstr->character_and_flags = character;
+  //FIXME charstr->character_and_flags = character;   location->x = .... hmmm
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3434,37 +3435,35 @@ void set_location_0x0010(tgestate_t *state)
  *
  * Very similar to the routine at $A3F3.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character. (was IY)
- * \param[in] charstr Pointer to character struct.  (was HL)
+ * \param[in] state    Pointer to game state.
+ * \param[in] location Pointer to character struct. (was HL)
  */
-void byte_A13E_is_nonzero_anotherone(tgestate_t        *state,
-                                     vischar_t         *vischar,
-                                     characterstruct_t *charstr)
+void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
+                                     xy_t       *location)
 {
-  assert(state   != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
-  assert(charstr != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  byte_A13E_anotherone_common(state, charstr, state->character_index);
+  byte_A13E_anotherone_common(state, location, state->character_index);
 }
 
 /**
  * $A4D8: entered_move_characters is zero (another one).
  *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character. (was IY)
- * \param[in] charstr Pointer to character struct.  (was HL)
+ * \param[in] state    Pointer to game state.
+ * \param[in] location Pointer to character struct. (was HL)
  */
-void byte_A13E_is_zero_anotherone(tgestate_t        *state,
-                                  vischar_t         *vischar,
-                                  characterstruct_t *charstr)
+void byte_A13E_is_zero_anotherone(tgestate_t *state,
+                                  xy_t       *location)
 {
   character_t character;
+  vischar_t  *vischar;
 
-  assert(state   != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
+
+  vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
-  assert(charstr != NULL);
 
   character = vischar->character;
   if (character == character_0_COMMANDANT)
@@ -3474,7 +3473,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t        *state,
   }
   else
   {
-    byte_A13E_anotherone_common(state, charstr, character);
+    byte_A13E_anotherone_common(state, location, character);
   }
 }
 
@@ -3482,34 +3481,37 @@ void byte_A13E_is_zero_anotherone(tgestate_t        *state,
  * $A4E4: Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] charstr   Pointer to character struct. (was HL)
+ * \param[in] location  Pointer to character struct. (was HL)
  * \param[in] character Character index.             (was A)
  */
-void byte_A13E_anotherone_common(tgestate_t        *state,
-                                 characterstruct_t *charstr,
-                                 character_t        character)
+void byte_A13E_anotherone_common(tgestate_t  *state,
+                                 xy_t        *location,
+                                 character_t  character)
 {
-  assert(state   != NULL);
-  assert(charstr != NULL);
+  assert(state    != NULL);
+  assert(location != NULL);
   ASSERT_CHARACTER_VALID(character);
 
-  charstr->room = room_NONE;
+  // FIXME: charstr is a location
 
-  if (character >= character_20_PRISONER_1)
-  {
-    character -= 2;
-  }
-  else
-  {
-    character_t old_character;
-
-    old_character = character;
-    character = character_24_PRISONER_5;
-    if (old_character & (1 << 0))
-      character++; // gets hit during breakfast
-  }
-
-  charstr->character_and_flags = character;
+//  charstr->room = room_NONE;
+//
+//  if (character >= character_20_PRISONER_1)
+//  {
+//    character -= 2;
+//  }
+//  else
+//  {
+//    character_t old_character;
+//
+//    old_character = character;
+//    character = character_24_PRISONER_5;
+//    if (old_character & (1 << 0))
+//      character++; // gets hit during breakfast
+//  }
+//
+//  charstr->character_and_flags = character;
+//
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8417,12 +8419,12 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  * $C7C6: Character event.
  *
  * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to location (was HL). [ NEEDS TO BE CHARSTRUCT+5 *OR* VISCHAR+2 // likely a xy_t and not a characterstruct_t ]
+ * \param[in] location Pointer to a location (was HL). sampling shows this can be a charstruct.target or a vischar.target.
  */
 void character_event(tgestate_t *state, xy_t *location)
 {
   /* $C7F9 */
-  static const charactereventmap_t eventmap[] =
+  static const charactereventmap_t eventmap[24] =
   {
     { 0xA6,  0 },
     { 0xA7,  0 },
@@ -8465,9 +8467,9 @@ void character_event(tgestate_t *state, xy_t *location)
     &charevnt_handler_10_hero_released_from_solitary
   };
 
-  uint8_t                    x; /* was A */
-  const charactereventmap_t *peventmap;   /* was HL */
-  uint8_t                    iters;       /* was B */
+  uint8_t                    x;         /* was A */
+  const charactereventmap_t *peventmap; /* was HL */
+  uint8_t                    iters;     /* was B */
 
   assert(state    != NULL);
   assert(location != NULL);
@@ -8484,18 +8486,23 @@ void character_event(tgestate_t *state, xy_t *location)
     return;
   }
 
+  // PUSH location (HL)
+
   peventmap = &eventmap[0];
   iters = NELEMS(eventmap);
   do
   {
     if (x == peventmap->x)
     {
-      handlers[peventmap->handler](state, 0,0); // FIXME expecting charptr, vischar
+      /* Conv: call_action moved here. */
+      handlers[peventmap->handler](state, location);
       return;
     }
     peventmap++;
   }
   while (--iters);
+
+  // POP location (HL)
 
   location->x = 0;
 }
@@ -8503,49 +8510,45 @@ void character_event(tgestate_t *state, xy_t *location)
 /**
  * $C83F:
  */
-void charevnt_handler_4_zeroes_morale_1(tgestate_t  *state,
-                                        character_t *charptr,
-                                        vischar_t   *vischar)
+void charevnt_handler_4_zeroes_morale_1(tgestate_t *state,
+                                        xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
   state->morale_1 = 0; /* Enable player control */
-  charevnt_handler_0(state, charptr, vischar);
+  charevnt_handler_0(state, location);
 }
 
 /**
  * $C845:
  */
-void charevnt_handler_6(tgestate_t  *state,
-                        character_t *charptr,
-                        vischar_t   *vischar)
+void charevnt_handler_6(tgestate_t *state,
+                        xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP charptr // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
-  *charptr++ = 0x03;
-  *charptr   = 0x15;
+  // POP location // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
+  location->x = 0x03;
+  location->y = 0x15;
 }
 
 /**
  * $C84C:
  */
-void charevnt_handler_10_hero_released_from_solitary(tgestate_t  *state,
-                                                     character_t *charptr,
-                                                     vischar_t   *vischar)
+void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
+                                                     xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP charptr
-  *charptr++ = 0xA4;
-  *charptr   = 0x03;
+  // POP location
+  location->x = 0xA4;
+  location->y = 0x03;
+
   state->automatic_player_counter = 0; // force automatic control
+
   const xy_t loc = { 0x00, 0x25 }; /* location_2500 */ /* was BC */
   set_hero_target_location(state, loc); // original jump was $A344, but have moved it
 }
@@ -8553,144 +8556,135 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t  *state,
 /**
  * $C85C:
  */
-void charevnt_handler_1(tgestate_t  *state,
-                        character_t *charptr,
-                        vischar_t   *vischar)
+void charevnt_handler_1(tgestate_t *state,
+                        xy_t       *location)
 {
-  uint8_t C;
+  uint8_t y; /* was C */
 
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  C = 0x10; // 0xFF10
-  localexit(state, charptr, C);
+  y = 0x10; // 0xFF10
+  set_location_ffxx(state, location, y);
 }
 
 /**
  * $C860:
  */
-void charevnt_handler_2(tgestate_t  *state,
-                        character_t *charptr,
-                        vischar_t   *vischar)
+void charevnt_handler_2(tgestate_t *state,
+                        xy_t       *location)
 {
-  uint8_t C;
+  uint8_t y; /* was C */
 
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  C = 0x38; // 0xFF38
-  localexit(state, charptr, C);
+  y = 0x38; // 0xFF38
+  set_location_ffxx(state, location, y);
 }
 
 /**
  * $C864:
+ *
+ * \param[in] location ? (was HL)
  */
-void charevnt_handler_0(tgestate_t  *state,
-                        character_t *charptr,
-                        vischar_t   *vischar)
+void charevnt_handler_0(tgestate_t *state,
+                        xy_t       *location)
 {
-  uint8_t C;
+  uint8_t y; /* was C */
 
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  C = 0x08; // 0xFF08 // sampled HL=$8022,$8042,$8002,$8062
-  localexit(state, charptr, C);
+  y = 0x08; // 0xFF08 // sampled HL=$8022,$8042,$8002,$8062
+  set_location_ffxx(state, location, y);
 }
 
-void localexit(tgestate_t *state, character_t *charptr, uint8_t C)
+/**
+ * $C866: 
+ *
+ * \param[in] y Y byte. (was C)
+ */
+void set_location_ffxx(tgestate_t *state, xy_t *location, uint8_t y)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  // assert(C);
+  assert(state    != NULL);
+  assert(location != NULL);
+  // assert(y);
 
-  // POP charptr
-  *charptr++ = 0xFF;
-  *charptr   = C;
+  // POP location (HL)
+  location->x = 0xFF;
+  location->y = y;
 }
 
 /**
  * $C86C:
  */
-void charevnt_handler_3_check_var_A13E(tgestate_t  *state,
-                                       character_t *charptr,
-                                       vischar_t   *vischar)
+void charevnt_handler_3_check_var_A13E(tgestate_t *state,
+                                       xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP HL
+  // POP location (HL)
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero(state, charptr, vischar);
+    byte_A13E_is_zero(state, location);
   else
-    byte_A13E_is_nonzero(state, charptr);
+    byte_A13E_is_nonzero(state, location);
 }
 
 /**
  * $C877:
  */
-void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t   *state,
-                                                  character_t *charptr,
-                                                  vischar_t    *vischar)
+void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
+                                                  xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP HL
+  // POP location (HL)
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero_anotherone(state, charptr, vischar);
+    byte_A13E_is_zero_anotherone(state, location);
   else
-    byte_A13E_is_nonzero_anotherone(state, charptr, vischar);
+    byte_A13E_is_nonzero_anotherone(state, location);
 }
 
 /**
  * $C882:
  */
-void charevnt_handler_7(tgestate_t  *state,
-                        character_t *charptr,
-                        vischar_t   *vischar)
+void charevnt_handler_7(tgestate_t *state,
+                        xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP charptr
-  *charptr++ = 0x05;
-  *charptr   = 0x00;
+  // POP location (HL)
+  location->x = 0x05;
+  location->y = 0x00;
 }
 
 /**
  * $C889:
  */
-void charevnt_handler_9_hero_sits(tgestate_t  *state,
-                                  character_t *charptr,
-                                  vischar_t   *vischar)
+void charevnt_handler_9_hero_sits(tgestate_t *state,
+                                  xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP HL
+  // POP location (HL)
   hero_sits(state);
 }
 
 /**
  * $C88D:
  */
-void charevnt_handler_8_hero_sleeps(tgestate_t  *state,
-                                    character_t *charptr,
-                                    vischar_t   *vischar)
+void charevnt_handler_8_hero_sleeps(tgestate_t *state,
+                                    xy_t       *location)
 {
-  assert(state   != NULL);
-  assert(charptr != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  assert(state    != NULL);
+  assert(location != NULL);
 
-  // POP HL
+  // POP location (HL)
   hero_sleeps(state);
 }
 

@@ -252,14 +252,13 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar);
 
 INLINE void store_location(xy_t location, xy_t *plocation);
 
-void byte_A13E_is_nonzero(tgestate_t        *state,
-                          characterstruct_t *charstr);
-void byte_A13E_is_zero(tgestate_t        *state,
-                       characterstruct_t *charstr,
-                       vischar_t         *vischar);
-void sub_A404(tgestate_t        *state,
-              characterstruct_t *charstr,
-              character_t        character);
+void byte_A13E_is_nonzero(tgestate_t *state,
+                          xy_t       *location);
+void byte_A13E_is_zero(tgestate_t *state,
+                       xy_t       *location);
+void byte_A13E_common(tgestate_t *state,
+                      character_t character,
+                      xy_t       *location);
 
 void character_sits(tgestate_t *state,
                     character_t character,
@@ -280,15 +279,13 @@ void set_location_0x000E(tgestate_t *state);
 void set_location_0x048E(tgestate_t *state);
 void set_location_0x0010(tgestate_t *state);
 
-void byte_A13E_is_nonzero_anotherone(tgestate_t        *state,
-                                     vischar_t         *vischar,
-                                     characterstruct_t *charstr);
-void byte_A13E_is_zero_anotherone(tgestate_t        *state,
-                                  vischar_t         *vischar,
-                                  characterstruct_t *charstr);
-void byte_A13E_anotherone_common(tgestate_t        *state,
-                                 characterstruct_t *charstr,
-                                 character_t        character_index);
+void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
+                                     xy_t       *location);
+void byte_A13E_is_zero_anotherone(tgestate_t *state,
+                                  xy_t       *location);
+void byte_A13E_anotherone_common(tgestate_t  *state,
+                                 xy_t        *location,
+                                 character_t  character);
 
 void go_to_roll_call(tgestate_t *state);
 
@@ -473,7 +470,7 @@ charevnt_handler_t charevnt_handler_10_hero_released_from_solitary;
 charevnt_handler_t charevnt_handler_1;
 charevnt_handler_t charevnt_handler_2;
 charevnt_handler_t charevnt_handler_0;
-void localexit(tgestate_t *state, character_t *charptr, uint8_t C);
+void set_location_ffxx(tgestate_t *state, xy_t *charptr, uint8_t y);
 charevnt_handler_t charevnt_handler_3_check_var_A13E;
 charevnt_handler_t charevnt_handler_5_check_var_A13E_anotherone;
 charevnt_handler_t charevnt_handler_7;
