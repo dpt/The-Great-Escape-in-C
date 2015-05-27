@@ -860,7 +860,7 @@ const doorpos_t door_positions[door_MAX * 2] =
   { ROOMDIR(room_22_REDKEY,               BL), { 0x22, 0x1C, 24 } },
 
   { ROOMDIR(room_22_REDKEY,               TR), { 0x2C, 0x36, 24 } },
-  { ROOMDIR(room_23_SOLITARY,             BL), { 0x2A, 0x26, 24 } },
+  { ROOMDIR(room_24_SOLITARY,             BL), { 0x2A, 0x26, 24 } },
 
   { ROOMDIR(room_12_CORRIDOR,             TR), { 0x42, 0x3A, 24 } }, // 50
   { ROOMDIR(room_18_RADIO,                BL), { 0x22, 0x1C, 24 } },
@@ -9603,7 +9603,7 @@ next:
   while (--iters);
 
   /* Move character to solitary. */
-  state->vischars[0].room = room_23_SOLITARY;
+  state->vischars[0].room = room_24_SOLITARY;
   state->current_door = 20;
 
   decrease_morale(state, 35);

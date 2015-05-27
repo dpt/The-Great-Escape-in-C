@@ -96,7 +96,7 @@ enum room
   room_21_CORRIDOR,
   room_22_REDKEY,
   room_23_BREAKFAST,
-  room_23_SOLITARY,
+  room_24_SOLITARY,
   room_25_BREAKFAST,
   room_26,           // unused
   room_27,           // unused
