@@ -261,10 +261,10 @@ void byte_A13E_common(tgestate_t *state,
                       xy_t       *location);
 
 void character_sits(tgestate_t *state,
-                    character_t character,
+                    uint8_t     A,
                     xy_t       *location);
 void character_sleeps(tgestate_t *state,
-                      character_t character,
+                      uint8_t     A,
                       xy_t       *location);
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
@@ -284,8 +284,8 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
                                   xy_t       *location);
 void byte_A13E_anotherone_common(tgestate_t  *state,
-                                 xy_t        *location,
-                                 character_t  character);
+                                 character_t  character,
+                                 xy_t        *location);
 
 void go_to_roll_call(tgestate_t *state);
 

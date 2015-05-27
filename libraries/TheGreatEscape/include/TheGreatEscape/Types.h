@@ -240,7 +240,6 @@ enum characterstruct_flags
   /* Byte 0 */
   characterstruct_CHARACTER_MASK       = 0x1F,   /**< Character index mask. */
   characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */
-  characterstruct_FLAG_BYTE0_BIT7      = 1 << 7, /**< Set by sub_A404 but no other references. */
 
   /* Byte 5 */
   characterstruct_BYTE5_MASK           = 0x7F,   // target low byte
@@ -593,9 +592,8 @@ charactereventmap_t;
 /**
  * Defines a character event handler.
  */
-typedef void (charevnt_handler_t)(tgestate_t  *state,
-                                  character_t *charptr,
-                                  vischar_t   *vischar);
+typedef void (charevnt_handler_t)(tgestate_t *state,
+                                  xy_t       *charptr);
 
 /**
  * Defines a door's room, direction and position.

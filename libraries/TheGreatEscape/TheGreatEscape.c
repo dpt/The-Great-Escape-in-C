@@ -3118,7 +3118,7 @@ void byte_A13E_is_nonzero(tgestate_t *state,
   assert(state    != NULL);
   assert(location != NULL);
 
-  byte_A13E_common(state, location, state->character_index);
+  byte_A13E_common(state, state->character_index, location);
 }
 
 /**
@@ -3162,30 +3162,29 @@ void byte_A13E_common(tgestate_t *state,
                       character_t character,
                       xy_t       *location)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
-  ASSERT_CHARACTER_VALID(character);
+  uint8_t A; /* was A */
 
-  location->y = 0;
+  assert(state    != NULL);
+  ASSERT_CHARACTER_VALID(character);
+  assert(location != NULL);
+
+  location->y = 0x00;
 
   if (character >= character_20_PRISONER_1)
   {
-    character -= 13; // character_20_PRISONER_1 -> character_7_GUARD_7 etc.
+    A = character - 13;
   }
   else
   {
-    character_t old_character;
-
-    old_character = character;
-    character = character_13_GUARD_13;
-    if (old_character & (1 << 0)) // every other character?
+    A = 13;
+    if (character & (1 << 0)) /* Odd numbered characters? */
     {
-      //FIXME charstr->room = room_1_HUT1RIGHT;   location->y = 0x01 ?
-      character |= characterstruct_FLAG_BYTE0_BIT7;
+      location->y = 0x01;
+      A = character | (1 << 7);
     }
   }
 
-  //FIXME charstr->character_and_flags = character;   location->x = .... hmmm
+  location->x = A;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3194,11 +3193,11 @@ void byte_A13E_common(tgestate_t *state,
  * $A420: Character sits.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] character Character index.       (was A)
- * \param[in] location  (unknown)
+ * \param[in] A         (was A)
+ * \param[in] location  Pointer to location.   (was ?)
  */
 void character_sits(tgestate_t *state,
-                    character_t character,
+                    uint8_t     A,
                     xy_t       *location)
 {
   uint8_t  index; /* was A */
@@ -3206,13 +3205,13 @@ void character_sits(tgestate_t *state,
   room_t   room;  /* was C */
 
   assert(state    != NULL);
-  ASSERT_CHARACTER_VALID(character);
+  //ASSERT_..._VALID(A);
   assert(location != NULL);
 
-  index = character - 18;
+  index = A - 18;
   /* First three characters. */
   bench = &roomdef_25_breakfast[roomdef_25_BENCH_D];
-  if (index >= 3) /* character_21_PRISONER_2 */
+  if (index >= 3)
   {
     /* Second three characters. */
     bench = &roomdef_23_breakfast[roomdef_23_BENCH_A];
@@ -3222,8 +3221,9 @@ void character_sits(tgestate_t *state,
   /* Poke object. */
   bench[index * 3] = interiorobject_PRISONER_SAT_DOWN_MID_TABLE;
 
-  room = room_25_BREAKFAST;
-  if (character >= character_21_PRISONER_2)
+  if (A < 21)
+    room = room_25_BREAKFAST;
+  else
     room = room_23_BREAKFAST;
 
   character_sit_sleep_common(state, room, location);
@@ -3233,23 +3233,23 @@ void character_sits(tgestate_t *state,
  * $A444: Character sleeps.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] character Character index.       (was A)
- * \param[in] location  (unknown)
+ * \param[in] A         (was A)
+ * \param[in] location  Pointer to location.   (was ?)
  */
 void character_sleeps(tgestate_t *state,
-                      character_t character,
+                      uint8_t     A,
                       xy_t       *location)
 {
   room_t room; /* was C */
 
   assert(state    != NULL);
-  ASSERT_CHARACTER_VALID(character);
+  //ASSERT_..._VALID(A);
   assert(location != NULL);
 
   /* Poke object. */
-  *beds[character - 7] = interiorobject_OCCUPIED_BED;
+  *beds[A - 7] = interiorobject_OCCUPIED_BED;
 
-  if (character < character_10_GUARD_10)
+  if (A < 10)
     room = room_3_HUT2RIGHT;
   else
     room = room_5_HUT3RIGHT;
@@ -3444,14 +3444,14 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
   assert(state    != NULL);
   assert(location != NULL);
 
-  byte_A13E_anotherone_common(state, location, state->character_index);
+  byte_A13E_anotherone_common(state, state->character_index, location);
 }
 
 /**
  * $A4D8: entered_move_characters is zero (another one).
  *
  * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to character struct. (was HL)
+ * \param[in] location Pointer to location. (was HL)
  */
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
                                   xy_t       *location)
@@ -3473,7 +3473,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   }
   else
   {
-    byte_A13E_anotherone_common(state, location, character);
+    byte_A13E_anotherone_common(state, character, location); /* was fallthrough */
   }
 }
 
@@ -3481,37 +3481,33 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
  * $A4E4: Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] location  Pointer to character struct. (was HL)
- * \param[in] character Character index.             (was A)
+ * \param[in] character Character index.     (was A)
+ * \param[in] location  Pointer to location. (was HL)
  */
-void byte_A13E_anotherone_common(tgestate_t  *state,
-                                 xy_t        *location,
-                                 character_t  character)
+void byte_A13E_anotherone_common(tgestate_t *state,
+                                 character_t character,
+                                 xy_t       *location)
 {
+  uint8_t A; /* was A */
+
   assert(state    != NULL);
-  assert(location != NULL);
   ASSERT_CHARACTER_VALID(character);
+  assert(location != NULL);
 
-  // FIXME: charstr is a location
+  location->y = 0x00;
 
-//  charstr->room = room_NONE;
-//
-//  if (character >= character_20_PRISONER_1)
-//  {
-//    character -= 2;
-//  }
-//  else
-//  {
-//    character_t old_character;
-//
-//    old_character = character;
-//    character = character_24_PRISONER_5;
-//    if (old_character & (1 << 0))
-//      character++; // gets hit during breakfast
-//  }
-//
-//  charstr->character_and_flags = character;
-//
+  if (character >= character_20_PRISONER_1)
+  {
+    A = character - 2;
+  }
+  else
+  {
+    A = 24;
+    if (character & (1 << 0)) /* Odd numbered characters? */
+      A++; // gets hit during breakfast // would result in 25 which is the room number for breakfast ... which could be a clue
+  }
+
+  location->x = A;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8474,7 +8470,7 @@ void character_event(tgestate_t *state, xy_t *location)
   assert(state    != NULL);
   assert(location != NULL);
 
-  x = location->x;
+  x = location->x; // ### these identify prisoner characters but they don't match character_t ###
   if (x >= 7 && x <= 12)
   {
     character_sleeps(state, x, location);
@@ -8529,7 +8525,8 @@ void charevnt_handler_6(tgestate_t *state,
   assert(state    != NULL);
   assert(location != NULL);
 
-  // POP location // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
+  // POP location (HL)
+  // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
   location->x = 0x03;
   location->y = 0x15;
 }
@@ -8543,7 +8540,7 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
   assert(state    != NULL);
   assert(location != NULL);
 
-  // POP location
+  // POP location (HL)
   location->x = 0xA4;
   location->y = 0x03;
 
