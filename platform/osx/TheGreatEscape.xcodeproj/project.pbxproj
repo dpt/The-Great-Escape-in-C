@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		552049381B16831C0075ED47 /* Masks.c in Sources */ = {isa = PBXBuildFile; fileRef = 552049361B16831C0075ED47 /* Masks.c */; };
 		554808D617E117CF00387328 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808D517E117CF00387328 /* Cocoa.framework */; };
 		554808E017E117CF00387328 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 554808DE17E117CF00387328 /* InfoPlist.strings */; };
 		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
@@ -54,6 +55,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		552049361B16831C0075ED47 /* Masks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Masks.c; sourceTree = "<group>"; };
+		552049371B16831C0075ED47 /* Masks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Masks.h; path = TheGreatEscape/Masks.h; sourceTree = "<group>"; };
 		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		554808D517E117CF00387328 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		554808DA17E117CF00387328 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -246,6 +249,7 @@
 				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
 				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
 				558FC6A01A0EE15B00A4F50F /* Map.c */,
+				552049361B16831C0075ED47 /* Masks.c */,
 				556D1A1D1B13617B0036AED0 /* Menu.c */,
 				556D1A241B137A4C0036AED0 /* Messages.c */,
 				558FC6A11A0EE15B00A4F50F /* Music.c */,
@@ -274,6 +278,7 @@
 				558FC68E1A0EE15B00A4F50F /* Items.h */,
 				556D1A1B1B135E3C0036AED0 /* Input.h */,
 				558FC68F1A0EE15B00A4F50F /* Map.h */,
+				552049371B16831C0075ED47 /* Masks.h */,
 				556D1A1C1B1361570036AED0 /* Menu.h */,
 				556D1A231B137A300036AED0 /* Messages.h */,
 				558FC6901A0EE15B00A4F50F /* Music.h */,
@@ -407,6 +412,7 @@
 				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,
 				558FC6AB1A0EE15B00A4F50F /* Font.c in Sources */,
 				556D1A221B1379CF0036AED0 /* Text.c in Sources */,
+				552049381B16831C0075ED47 /* Masks.c in Sources */,
 				556D1A1E1B13617B0036AED0 /* Menu.c in Sources */,
 				558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */,
 				558FC6B11A0EE15B00A4F50F /* Music.c in Sources */,
