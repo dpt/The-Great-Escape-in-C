@@ -107,10 +107,6 @@ struct tgestate
   // TODO: Dynamically allocate.
   uint8_t         mask_buffer[5 * MASK_BUFFER_WIDTH];
 
-  /** $81A0: Pointer into the mask buffer.
-   * Only used by mask_stuff (TODO: Hoist to a local in mask_stuff). */
-  uint8_t        *mask_buffer_pointer;
-
   /** $81A2: Output screen pointer. Used by masked sprite plotters. */
   uint8_t        *screen_pointer;
 

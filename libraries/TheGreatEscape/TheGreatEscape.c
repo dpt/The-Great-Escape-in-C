@@ -7016,6 +7016,7 @@ void mask_stuff(tgestate_t *state)
   const uint8_t     *DE;          /* was DE */
 //  uint16_t           HL;          /* was HL */
   uint16_t           count_of_something; /* was HL */
+  uint8_t *mask_buffer_pointer; /* was $81A0 */
 
   /* mask against all */
   do
@@ -7107,7 +7108,7 @@ void mask_stuff(tgestate_t *state)
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
 
-      state->mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH + x];
+      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH + x];
 
       DE = mask_pointers[index];
 //      HL = byte_B839 | (byte_B83A << 8); // vertical bits // fused then split apart again immediately below
@@ -7157,7 +7158,7 @@ void mask_stuff(tgestate_t *state)
       uint8_t *maskbufptr; /* was HL */
       uint8_t  iters2;     /* was C */
 
-      maskbufptr = state->mask_buffer_pointer;
+      maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
       iters2 = clip_y1; // self modified // height
       do
