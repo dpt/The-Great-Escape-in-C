@@ -162,10 +162,13 @@ enum input_flags
   input_LEFT                           = 3,
   input_RIGHT                          = 6,
   input_FIRE                           = 9,
+
   input_UP_FIRE                        = input_UP    + input_FIRE,
   input_DOWN_FIRE                      = input_DOWN  + input_FIRE,
   input_LEFT_FIRE                      = input_LEFT  + input_FIRE,
-  input_RIGHT_FIRE                     = input_RIGHT + input_FIRE
+  input_RIGHT_FIRE                     = input_RIGHT + input_FIRE,
+
+  input_KICK                           = 1 << 7, // input kicking flag
 };
 
 /**
@@ -198,8 +201,7 @@ enum vischar_flags
   vischar_BYTE12_MASK                  = 0x7F,
   vischar_BYTE12_BIT7                  = 1 << 7,
 
-  vischar_INPUT_MASK                   = 0x7F,
-  vischar_INPUT_KICK                   = 1 << 7, // input kicking flag
+  vischar_INPUT_MASK                   = 0x7F,   // masks off input_KICK
 
   // byte 14
   vischar_DIRECTION_MASK               = 0x03,
