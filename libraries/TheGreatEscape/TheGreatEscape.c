@@ -5159,7 +5159,6 @@ void searchlight_caught(tgestate_t                *state,
   state->searchlight_state = searchlight_STATE_CAUGHT;
 
   // CHECK: this x/y transpose looks dodgy
-  // FUTURE: is a struct copy doable?
   state->searchlight.caught_coord.x = slstate->xy.y;
   state->searchlight.caught_coord.y = slstate->xy.x;
 
