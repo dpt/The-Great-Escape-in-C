@@ -110,7 +110,7 @@ static void wipe_game_window(tgestate_t *state)
  */
 static void choose_keys(tgestate_t *state)
 {
-  /** $F2AD: Table of prompt strings. */
+  /** $F2AD: Key choice prompt strings. */
   static const screenlocstring_t choose_key_prompts[6] =
   {
     { 0x006D, 11, "CHOOSE KEYS" },
@@ -124,16 +124,16 @@ static void choose_keys(tgestate_t *state)
   /** $F2E1: Table of keyscan high bytes. */
   static const uint8_t keyboard_port_hi_bytes[10] =
   {
-    /* The first byte is unused. */
-    /* The final zero byte is a terminator. */
-    0x24, 0xF7, 0xEF, 0xFB, 0xDF, 0xFD, 0xBF, 0xFE, 0x7F, 0x00,
+    0x24, /* unused */
+    0xF7, 0xEF, 0xFB, 0xDF, 0xFD, 0xBF, 0xFE, 0x7F,
+    0x00 /* terminator */
   };
 
   /** $F2EB: Table of special key name strings, prefixed by their length. */
   static const char special_key_names[] = "\x05" "ENTER"
-  "\x04" "CAPS"   /* CAPS SHIFT */
-  "\x06" "SYMBOL" /* SYMBOL SHIFT */
-  "\x05" "SPACE";
+                                          "\x04" "CAPS"   /* CAPS SHIFT */
+                                          "\x06" "SYMBOL" /* SYMBOL SHIFT */
+                                          "\x05" "SPACE";
 
   /* Macro to encode special_key_names in below keycode_to_glyph table. */
 #define O(n) ((n) | (1 << 7))
@@ -226,7 +226,7 @@ static void choose_keys(tgestate_t *state)
       poffset = &key_name_screen_offsets[0];
       do
       {
-        uint16_t  self_F3E9;  /* was $F3E9 */
+        uint16_t  screenoff;  /* was $F3E9 */
         uint8_t   A; /* was A */ // seems to be a row count
 
         // this block moved up for scope
@@ -234,7 +234,7 @@ static void choose_keys(tgestate_t *state)
         uint8_t   port;    /* was B */
         uint8_t   mask;    /* was C */
 
-        self_F3E9 = *poffset++; // self modify screen addr
+        screenoff = *poffset++; // self modify screen addr
         A = 0xFF;
 
         {
@@ -245,7 +245,7 @@ static void choose_keys(tgestate_t *state)
           // uint8_t        storedport;  /* was A' */
           uint8_t        keyflags;    /* was E */
 
-        for_loop:
+for_loop:
           for (;;)
           {
             state->speccy->sleep(state->speccy, 10000); // 10000 is arbitrary for the moment
@@ -254,7 +254,7 @@ static void choose_keys(tgestate_t *state)
 
             hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
             index = 0xFF;
-          try_next_port:
+try_next_port:
             hi_bytes++;
             index++;
             A = *hi_bytes;
@@ -265,7 +265,7 @@ static void choose_keys(tgestate_t *state)
             A = ~state->speccy->in(state->speccy, (port << 8) | 0xFE);
             keyflags = A;
             mask = 1 << 5;
-          key_loop:
+key_loop:
             SRL(mask);
             if (carry)
               goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
@@ -300,7 +300,7 @@ static void choose_keys(tgestate_t *state)
           } // for_loop
         }
 
-      assign_keydef:
+assign_keydef:
         keydef->port = port;
         keydef->mask = mask;
 
@@ -310,7 +310,7 @@ static void choose_keys(tgestate_t *state)
           int                  carry = 0;
           uint8_t              length;          /* was B */
           uint8_t              glyph_and_flags; /* was A */
-          unsigned char       *screenoff;       /* was DE */
+          unsigned char       *screenptr;       /* was DE */
 
           SWAP(uint8_t, A, Adash);
 
@@ -336,12 +336,12 @@ static void choose_keys(tgestate_t *state)
           }
 
           /* Plot. */
-          screenoff = screen + self_F3E9; // self modified // screen offset
+          screenptr = screen + screenoff; // self modified // screen offset
           do
           {
             // glyph_and_flags = *pkeyname; // Conv: dead code? similar to other instances of calls to plot_glyph
-            ASSERT_SCREEN_PTR_VALID(screenoff);
-            screenoff = plot_glyph(pkeyname, screenoff);
+            ASSERT_SCREEN_PTR_VALID(screenptr);
+            screenptr = plot_glyph(pkeyname, screenptr);
             pkeyname++;
           }
           while (--length);
@@ -352,6 +352,7 @@ static void choose_keys(tgestate_t *state)
       while (--prompt_iters);
     }
 
+    /* (was) Delay loop. */
     state->speccy->sleep(state->speccy, 0xFFFF);
 
     /* Wait for user's input */
@@ -523,7 +524,7 @@ void menu_screen(tgestate_t *state)
           state->speccy->out(state->speccy, port_BORDER, channel0_index & 0xFF);
           BC = DE;
         }
-        // otherwise needs B & C writing back
+        // FIXME else B & C need writing back
 
         Bdash = BCdash >> 8;
         Cdash = BCdash & 0xFF;
@@ -533,7 +534,7 @@ void menu_screen(tgestate_t *state)
           state->speccy->out(state->speccy, port_BORDER, channel1_index & 0xFF);
           BCdash = DEdash;
         }
-        // otherwise needs B' & C' writing back
+        // FIXME else B' & C' need writing back
       }
       while (--iters);
     }

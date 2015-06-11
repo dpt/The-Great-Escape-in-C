@@ -41,10 +41,11 @@ struct tgestate
   /** $68A0: Index of the current room, or 0 when outside. */
   room_t          room_index;
 
-  /** $68A1: Holds current door. */
+  /** $68A1: Holds the current door id. */
   door_t          current_door;
 
-  /** $69AE: Movable items.
+  /**
+   * $69AE: Movable items.
    *
    * Used by setup_movable_items and reset_visible_character. 
    */
@@ -80,8 +81,8 @@ struct tgestate
      * (Pairs of bytes + terminator). */
     uint8_t       queue[message_queue_LENGTH];
     
-    /** $7D0F: Decrementing counter which shows next message when it reaches
-     * zero. */
+    /** $7D0F: Decrementing counter which shows the next message when it
+     * reaches zero. */
     uint8_t       display_delay;
     
     /** $7D10: Index into the message we're displaying or wiping. */
@@ -95,8 +96,11 @@ struct tgestate
   }
   messages;
 
-  /** $7F00: A table of 256 bit-reversed bytes.
-   * Read by flip_16_masked_pixels and flip_24_masked_pixels only. */
+  /**
+   * $7F00: A table of 256 bit-reversed bytes.
+   *
+   * Read by flip_16_masked_pixels and flip_24_masked_pixels only.
+   */
   uint8_t         reversed[256];
 
   /** $8000: Array of visible characters. */
@@ -121,18 +125,27 @@ struct tgestate
   /** $81B0: Input foreground mask pointer. Used by masked sprite plotters. */
   const uint8_t  *foreground_mask_pointer;
 
-  /** $81B2: (unknown) Used by masked sprite plotters.
+  /**
+   * $81B2: (unknown) Used by masked sprite plotters.
+   *
    * Written by setup_item_plotting, setup_vischar_plotting.
-   * Read by mask_stuff, guards_follow_suspicious_character. */
-  tinypos_t       tinypos_81B2;
+   * Read by mask_stuff, guards_follow_suspicious_character.
+   */
+  tinypos_t       tinypos_stash;
 
   /** $81B5: (unknown) */
   // assigned in called_from_main_loop_3, setup_item_plotting, setup_vischar_plotting
   xy_t            map_position_related;
 
-  /** $81B7: Used by masked sprite plotters to flip characters left/right.
-   * Bit 7 controls flipping, the remainder is an index, but the index is never read.
-   * Assigned from vischar->mi.sprite_index, but only used to test the flip flag. */
+  /**
+   * $81B7: Used by masked sprite plotters to flip characters left/right.
+   *
+   * Bit 7 controls flipping, the remainder is an index, but the index is
+   * never read.
+   *
+   * Assigned from vischar->mi.sprite_index, but only used to test the flip
+   * flag.
+   */
   spriteindex_t   sprite_index;
 
   /** $81B8: Hero's map position. */
@@ -162,7 +175,7 @@ struct tgestate
 #define MAX_INTERIOR_MASK_REFS 7
   /** $81DA: Interior mask data count. */
   uint8_t         interior_mask_data_count;
-  /** $81DB: Interior mask data values. */
+  /** $81DB: Interior mask data copies. */
   mask_t          interior_mask_data[MAX_INTERIOR_MASK_REFS];
 
   /** $8214: Item bitmap height.
@@ -207,23 +220,30 @@ struct tgestate
   /** $A13D: Clock. Incremented once every 64 ticks of game_counter. */
   eventtime_t     clock;
 
-  /** $A13E: (unknown) (flag: 0 or 255). */
-  // set to 0xFF when move_characters is entered, and only then
+  /** $A13E: (unknown) (flag: 0 or 255).
+   *
+   * Set to 0xFF when move_characters is entered, and only then.
+   * Set to 0x00 in sub_A3BB and follow_suspicious_character.
+   */
   uint8_t         entered_move_characters;
 
   /** $A13F: The hero is in bed (flag: 0 or 255). */
   uint8_t         hero_in_bed;
 
-  /** $A140: Displayed morale.
-   * Lags behind actual morale while the flag moves towards to its target. */
+  /**
+   * $A140: Displayed morale.
+   *
+   * The displayed morale lags behind actual morale as the flag moves towards
+   * its target.
+   */
   uint8_t         displayed_morale;
 
   /** $A141: Pointer to the screen address where the morale flag was last
    * plotted. */
   uint8_t        *moraleflag_screen_address;
 
-  /** $A143: Pointer to a door in gates_and_doors[] in which bit 7 is cleared
-   * when picked. */
+  /** $A143: Pointer to a door in gates_and_doors[] in which door_LOCKED is
+   * cleared when picked. */
   door_t         *ptr_to_door_being_lockpicked;
 
   /** $A145: Game time when player control is restored.
@@ -317,7 +337,7 @@ struct tgestate
 
   /* $F075: static_tiles_plot_direction - removed. */
 
-  /** $F445: Indexes inputroutines[]. */
+  /** $F445: Chosen input device. */
   inputdevice_t   chosen_input_device;
 
   /** $F541: Music channel indices. */

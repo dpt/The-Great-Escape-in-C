@@ -82,7 +82,7 @@ static void tge_initialise(tgestate_t *state)
   };
 
   /**
-   * $783A: Map locations.
+   * $783A: Default map locations.
    */
   static const xy_t locations[78] =
   {

@@ -20,7 +20,7 @@ static void next_message(tgestate_t *state);
 /* ----------------------------------------------------------------------- */
 
 /**
- * $7D15: Add a message to the display queue.
+ * $7D15: Add a message to the pending messages queue.
  *
  * Conversion note: The original code accepts BC combined as the message
  * index. However only one of the callers sets up C. We therefore ignore the
@@ -66,6 +66,7 @@ void message_display(tgestate_t *state)
 
   assert(state != NULL);
 
+  /* Proceed only if message_display_counter is zero. */
   if (state->messages.display_delay > 0)
   {
     state->messages.display_delay--;
@@ -128,7 +129,7 @@ void wipe_message(tgestate_t *state)
 
   scr = &state->speccy->screen[screen_text_start_address + index];
 
-  /* Plot a SPACE character. */
+  /* Plot a single space character. */
   (void) plot_single_glyph(' ', scr);
 }
 
@@ -144,7 +145,7 @@ void wipe_message(tgestate_t *state)
 void next_message(tgestate_t *state)
 {
   /**
-   * $7DCD: Table of game messages.
+   * $7DCD: Game messages.
    *
    * Conv: These are 0xFF terminated in the original game.
    */
@@ -185,6 +186,8 @@ void next_message(tgestate_t *state)
   message = messages_table[*qp];
 
   state->messages.current_character = message;
+
+  /* Discard the first element. */
   memmove(state->messages.queue, state->messages.queue + 2, 16);
   state->messages.queue_pointer -= 2;
   state->messages.display_index = 0;

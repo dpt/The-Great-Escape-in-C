@@ -7,7 +7,7 @@
 /* ----------------------------------------------------------------------- */
 
 /**
- * $FE00: inputroutine_keyboard.
+ * $FE00: Keyboard input routine.
  *
  * \param[in] state Pointer to game state.
  *
@@ -22,7 +22,7 @@ static input_t inputroutine_keyboard(tgestate_t *state)
 
   assert(state != NULL);
 
-  def = &state->keydefs.defs[0]; /* A list of (port, mask) */
+  def = &state->keydefs.defs[0]; /* A list of (port high byte, key mask) */
 
   /* Left or right? */
   port = (def->port << 8) | 0xFE;
@@ -74,7 +74,7 @@ static input_t inputroutine_keyboard(tgestate_t *state)
 }
 
 /**
- * $FE47: Protek/cursor joystick input routine.
+ * $FE47: Protek (cursor) joystick input routine.
  *
  * Up/Down/Left/Right/Fire = keys 7/6/5/8/0.
  *

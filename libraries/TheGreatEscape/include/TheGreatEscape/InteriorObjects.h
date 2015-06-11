@@ -8,7 +8,7 @@ enum interior_object
 {
   interiorobject_TUNNEL_0,
   interiorobject_SMALL_TUNNEL_ENTRANCE,
-  interiorobject_ROOM_OUTLINE_2,
+  interiorobject_ROOM_OUTLINE_2, // 24x12
   interiorobject_TUNNEL_3,
   interiorobject_TUNNEL_JOIN_4,
   interiorobject_PRISONER_SAT_DOWN_MID_TABLE,
@@ -28,10 +28,10 @@ enum interior_object
   interiorobject_PRISONER_SAT_DOWN_END_TABLE,
   interiorobject_COLLAPSED_TUNNEL,
   interiorobject_UNUSED_21,   // unused by game, draws as interiorobject_ROOM_OUTLINE_2
-  interiorobject_CHAIR_POINTING_BOTTOM_RIGHT,
+  interiorobject_CHAIR_FACING_BOTTOM_RIGHT,
   interiorobject_OCCUPIED_BED,
   interiorobject_WARDROBE_WITH_KNOCKERS,
-  interiorobject_CHAIR_POINTING_BOTTOM_LEFT,
+  interiorobject_CHAIR_FACING_BOTTOM_LEFT,
   interiorobject_CUPBOARD,
   interiorobject_ROOM_OUTLINE_27,
   interiorobject_UNUSED_28,   // unused by game, draws as interiorobject_TABLE_2

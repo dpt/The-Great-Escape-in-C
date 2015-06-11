@@ -189,6 +189,11 @@ enum vischar_flags
   vischar_FLAGS_BIT6                   = 1 << 6, // affects scaling
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
+  // vischar_FLAGS_BIT6:
+  // set by sub_A3BB (sub_C651 A == 128 case), spawn_character (sub_C651 A == 128 case), sub_CB61 (sub_C651 A == 128 case)
+  // cleared by set_hero_target_location, set_character_location (store_to_vischar case), bribes_solitary_food (character entering door chunk)
+  // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
+
   vischar_BYTE2_MASK                   = 0x7F,   // target mask
   vischar_BYTE2_BIT7                   = 1 << 7, // target mask
 
@@ -216,12 +221,12 @@ enum itemstruct_flags
   itemstruct_ITEM_MASK                 = 0x0F,
   itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4,
   itemstruct_ITEM_FLAG_POISONED        = 1 << 5,
-  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /* Set when the item is picked up for the first time. */
+  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /**< Set when the item is picked up for the first time. */
 
   itemstruct_ROOM_NONE                 = 0x3F,
   itemstruct_ROOM_MASK                 = 0x3F,
-  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /* Set when the item is nearby. Cleared when? */
-  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /* Set when the item is nearby. */
+  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /**< Set when the item is nearby. Cleared when? */
+  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /**< Set when the item is nearby. */
 };
 
 /**

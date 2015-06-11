@@ -145,8 +145,8 @@ uint8_t roomdef_4_hut3_left[] =
   interiorobject_STOVE_PIPE,                  4,  5,
   interiorobject_EMPTY_BED,                   8,  7,
   interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_CHAIR_POINTING_BOTTOM_RIGHT, 11, 11,
-  interiorobject_CHAIR_POINTING_BOTTOM_LEFT, 13, 10,
+  interiorobject_CHAIR_FACING_BOTTOM_RIGHT,  11, 11,
+  interiorobject_CHAIR_FACING_BOTTOM_LEFT,   13, 10,
   interiorobject_STUFF_31,                   14, 14,
 };
 
@@ -501,7 +501,7 @@ uint8_t roomdef_28_hut1_left[] =
   interiorobject_CUPBOARD,                    3,  6,
   interiorobject_OCCUPIED_BED,                8,  7,
   interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_CHAIR_POINTING_BOTTOM_LEFT, 15, 10,
+  interiorobject_CHAIR_FACING_BOTTOM_LEFT,   15, 10,
   interiorobject_TABLE_2,                    11, 12,
 };
 

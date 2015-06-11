@@ -259,7 +259,9 @@ static const uint16_t music_tuning_table[76] =
   0x0000, // likely end of table
 };
 
-// 768 bytes of apparently unreferenced bytes
+/**
+ * $FAE0: 768 bytes of apparently unreferenced bytes
+ */
 static const uint16_t junk[] =
 {
   0x0F00, // no idea what this stuff is

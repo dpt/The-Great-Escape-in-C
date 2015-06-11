@@ -1,7 +1,5 @@
 /**
- * $F076: static_graphic_defs.
- *
- * Definitions of fixed graphic elements.
+ * $F076: Definitions of fixed graphic elements.
  * Only used by plot_statics_and_menu_text().
  */
 
@@ -149,7 +147,7 @@ static void plot_static_tiles(tgestate_t             *state,
 void plot_statics_and_menu_text(tgestate_t *state)
 {
   /**
-   * $F446: key_choice_screenlocstrings.
+   * $F446: Key choice screenlocstrings.
    */
   static const screenlocstring_t key_choice_screenlocstrings[] =
   {
