@@ -1,2 +1,8 @@
+*.o
+*.a
+*.d
+*.pyc
 xcuserdata
 TheGreatEscape_html
+*.sync-conflict-*
+*.dia
