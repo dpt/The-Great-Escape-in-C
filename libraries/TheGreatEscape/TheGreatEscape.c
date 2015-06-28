@@ -4245,7 +4245,7 @@ uint8_t *plot_tile(tgestate_t             *state,
 
 // Fixed constants for now.
 #define tile_buf_length      (24 * 17)
-#define screen_buffer_length (24 * 8 * 17)
+#define window_buf_length (24 * 8 * 17)
 
 /**
  * $A9E4: Shunt the map left.
@@ -4261,7 +4261,7 @@ void shunt_map_left(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[0], &state->tile_buf[1], tile_buf_length - 1);
-  memmove(&state->window_buf[0], &state->window_buf[1], screen_buffer_length - 1);
+  memmove(&state->window_buf[0], &state->window_buf[1], window_buf_length - 1);
 
   plot_rightmost_tiles(state);
 }
@@ -4280,7 +4280,7 @@ void shunt_map_right(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[1], &state->tile_buf[0], tile_buf_length - 1);
-  memmove(&state->window_buf[1], &state->window_buf[0], screen_buffer_length);
+  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length);
 
   plot_leftmost_tiles(state);
 }
@@ -4302,7 +4302,7 @@ void shunt_map_up_right(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[1], &state->tile_buf[24], tile_buf_length - 24);
-  memmove(&state->window_buf[1], &state->window_buf[24 * 8], screen_buffer_length - 24 * 8);
+  memmove(&state->window_buf[1], &state->window_buf[24 * 8], window_buf_length - 24 * 8);
 
   plot_bottommost_tiles(state);
   plot_leftmost_tiles(state);
@@ -4322,7 +4322,7 @@ void shunt_map_up(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[0], &state->tile_buf[24], tile_buf_length - 24);
-  memmove(&state->window_buf[0], &state->window_buf[24 * 8], screen_buffer_length - 24 * 8);
+  memmove(&state->window_buf[0], &state->window_buf[24 * 8], window_buf_length - 24 * 8);
 
   plot_bottommost_tiles(state);
 }
@@ -4341,7 +4341,7 @@ void shunt_map_down(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[24], &state->tile_buf[0], tile_buf_length - 24);
-  memmove(&state->window_buf[24 * 8], &state->window_buf[0], screen_buffer_length - 24 * 8);
+  memmove(&state->window_buf[24 * 8], &state->window_buf[0], window_buf_length - 24 * 8);
 
   plot_topmost_tiles(state);
 }
@@ -4361,7 +4361,7 @@ void shunt_map_down_left(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[24], &state->tile_buf[1], tile_buf_length - 24 - 1);
-  memmove(&state->window_buf[24 * 8], &state->window_buf[1], screen_buffer_length - 24 * 8);
+  memmove(&state->window_buf[24 * 8], &state->window_buf[1], window_buf_length - 24 * 8 - 1);
 
   plot_topmost_tiles(state);
   plot_rightmost_tiles(state);
