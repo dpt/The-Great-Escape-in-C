@@ -77,16 +77,16 @@ uint8_t roomdef_1_hut1_right[] =
   4, // number of mask bytes
   0, 1, 3, 10, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_WIDE_WINDOW,                 8,  0,
-  interiorobject_WIDE_WINDOW,                 2,  3,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 8,  0,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 2,  3,
   interiorobject_OCCUPIED_BED,               10,  5,
   interiorobject_OCCUPIED_BED,                6,  7,
-  interiorobject_DOOR_FRAME_15,              15,  8,
-  interiorobject_WARDROBE_WITH_KNOCKERS,     18,  5,
-  interiorobject_WARDROBE_WITH_KNOCKERS,     20,  6,
-  interiorobject_EMPTY_BED,                   2,  9,
-  interiorobject_DOOR_FRAME_16,               7, 10,
+  interiorobject_DOOR_FRAME_SE,              15,  8,
+  interiorobject_ORNATE_WARDROBE_FACING_SW,     18,  5,
+  interiorobject_ORNATE_WARDROBE_FACING_SW,     20,  6,
+  interiorobject_EMPTY_BED_FACING_SE,                   2,  9,
+  interiorobject_DOOR_FRAME_SW,               7, 10,
 };
 
 uint8_t roomdef_2_hut2_left[] =
@@ -98,13 +98,13 @@ uint8_t roomdef_2_hut2_left[] =
   2, // number of mask bytes
   13, 8, // mask
   8, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_WIDE_WINDOW,                 6,  2,
-  interiorobject_DOOR_FRAME_40,              16,  5,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 6,  2,
+  interiorobject_DOOR_FRAME_NE,              16,  5,
   interiorobject_STOVE_PIPE,                  4,  5,
   interiorobject_OCCUPIED_BED,                8,  7, /* Hero's bed. */
-  interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_TABLE_2,                    11, 12,
+  interiorobject_DOOR_FRAME_SW,               7,  9,
+  interiorobject_TABLE,                      11, 12,
   interiorobject_SMALL_TUNNEL_ENTRANCE,       5,  9,
 };
 
@@ -118,16 +118,16 @@ uint8_t roomdef_3_hut2_right[] =
   4, // number of mask bytes
   0, 1, 3, 10, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_WIDE_WINDOW,                 8,  0,
-  interiorobject_WIDE_WINDOW,                 2,  3,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 8,  0,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 2,  3,
   interiorobject_OCCUPIED_BED,               10,  5, // bed_C
   interiorobject_OCCUPIED_BED,                6,  7, // bed_B
   interiorobject_OCCUPIED_BED,                2,  9, // bed_A
-  interiorobject_CHEST_OF_DRAWERS,           16,  5,
-  interiorobject_DOOR_FRAME_15,              15,  8,
-  interiorobject_SHORT_WARDROBE,             18,  5,
-  interiorobject_DOOR_FRAME_16,               7, 10,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           16,  5,
+  interiorobject_DOOR_FRAME_SE,              15,  8,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             18,  5,
+  interiorobject_DOOR_FRAME_SW,               7, 10,
 };
 
 uint8_t roomdef_4_hut3_left[] =
@@ -139,15 +139,15 @@ uint8_t roomdef_4_hut3_left[] =
   3, // number of mask bytes
   18, 20, 8, // mask
   9, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_DOOR_FRAME_40,              16,  5,
-  interiorobject_WIDE_WINDOW,                 6,  2,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_DOOR_FRAME_NE,              16,  5,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 6,  2,
   interiorobject_STOVE_PIPE,                  4,  5,
-  interiorobject_EMPTY_BED,                   8,  7,
-  interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_CHAIR_FACING_BOTTOM_RIGHT,  11, 11,
-  interiorobject_CHAIR_FACING_BOTTOM_LEFT,   13, 10,
-  interiorobject_STUFF_31,                   14, 14,
+  interiorobject_EMPTY_BED_FACING_SE,                   8,  7,
+  interiorobject_DOOR_FRAME_SW,               7,  9,
+  interiorobject_CHAIR_FACING_SE,  11, 11,
+  interiorobject_CHAIR_FACING_SW,   13, 10,
+  interiorobject_PAPERS_ON_FLOOR,                   14, 14,
 };
 
 uint8_t roomdef_5_hut3_right[] =
@@ -160,16 +160,16 @@ uint8_t roomdef_5_hut3_right[] =
   4, // number of mask bytes
   0, 1, 3, 10, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_WIDE_WINDOW,                 8,  0,
-  interiorobject_WIDE_WINDOW,                 2,  3,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 8,  0,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 2,  3,
   interiorobject_OCCUPIED_BED,               10,  5, // bed_D
   interiorobject_OCCUPIED_BED,                6,  7, // bed_E
   interiorobject_OCCUPIED_BED,                2,  9, // bed_F
-  interiorobject_DOOR_FRAME_15,              15,  8,
-  interiorobject_CHEST_OF_DRAWERS,           16,  5,
-  interiorobject_CHEST_OF_DRAWERS,           20,  7,
-  interiorobject_DOOR_FRAME_16,               7, 10,
+  interiorobject_DOOR_FRAME_SE,              15,  8,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           16,  5,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           20,  7,
+  interiorobject_DOOR_FRAME_SW,               7, 10,
 };
 
 uint8_t roomdef_8_corridor[] =
@@ -179,11 +179,11 @@ uint8_t roomdef_8_corridor[] =
   1, // number of mask bytes
   9, // mask
   5, // nobjects
-  interiorobject_ROOM_OUTLINE_46,             3,  6,
-  interiorobject_DOOR_FRAME_38,              10,  3,
-  interiorobject_DOOR_FRAME_38,               4,  6,
-  interiorobject_DOOR_FRAME_16,               5, 10,
-  interiorobject_SHORT_WARDROBE,             18,  6,
+  interiorobject_ROOM_OUTLINE_18x10_B,             3,  6,
+  interiorobject_DOOR_FRAME_NW,              10,  3,
+  interiorobject_DOOR_FRAME_NW,               4,  6,
+  interiorobject_DOOR_FRAME_SW,               5, 10,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             18,  6,
 };
 
 uint8_t roomdef_9_crate[] =
@@ -194,14 +194,14 @@ uint8_t roomdef_9_crate[] =
   2, // number of mask bytes
   4, 21, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_SMALL_WINDOW,                6,  3,
-  interiorobject_SMALL_SHELF,                 9,  4,
-  interiorobject_DOOR_FRAME_36,              12,  6,
-  interiorobject_DOOR_FRAME_15,              13, 10,
-  interiorobject_TALL_WARDROBE,              16,  6,
-  interiorobject_SHORT_WARDROBE,             18,  8,
-  interiorobject_CUPBOARD,                    3,  6,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                6,  3,
+  interiorobject_SMALL_SHELF_FACING_SE,                 9,  4,
+  interiorobject_TINY_DOOR_FRAME_NE,              12,  6,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
+  interiorobject_TALL_WARDROBE_FACING_SW,              16,  6,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             18,  8,
+  interiorobject_CUPBOARD_FACING_SE,                    3,  6,
   interiorobject_SMALL_CRATE,                 6,  8,
   interiorobject_SMALL_CRATE,                 4,  9,
 };
@@ -215,20 +215,20 @@ uint8_t roomdef_10_lockpick[] =
   3, // number of mask bytes
   6, 14, 22, // mask
   14, // nobjects
-  interiorobject_ROOM_OUTLINE_47,             1,  4,
-  interiorobject_DOOR_FRAME_15,              15, 10,
-  interiorobject_SMALL_WINDOW,                4,  1,
-  interiorobject_KEY_RACK,                    2,  3,
-  interiorobject_KEY_RACK,                    7,  2,
-  interiorobject_TALL_WARDROBE,              10,  2,
-  interiorobject_CUPBOARD_42,                13,  3,
-  interiorobject_CUPBOARD_42,                15,  4,
-  interiorobject_CUPBOARD_42,                17,  5,
-  interiorobject_TABLE_2,                    14,  8,
-  interiorobject_CHEST_OF_DRAWERS,           18,  8,
-  interiorobject_CHEST_OF_DRAWERS,           20,  9,
+  interiorobject_ROOM_OUTLINE_22x12_B,             1,  4,
+  interiorobject_DOOR_FRAME_SE,              15, 10,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                4,  1,
+  interiorobject_KEY_RACK_FACING_SE,                    2,  3,
+  interiorobject_KEY_RACK_FACING_SE,                    7,  2,
+  interiorobject_TALL_WARDROBE_FACING_SW,              10,  2,
+  interiorobject_CUPBOARD_FACING_SW,                13,  3,
+  interiorobject_CUPBOARD_FACING_SW,                15,  4,
+  interiorobject_CUPBOARD_FACING_SW,                17,  5,
+  interiorobject_TABLE,                      14,  8,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           18,  8,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           20,  9,
   interiorobject_SMALL_CRATE,                 6,  5,
-  interiorobject_TABLE_2,                     2,  6,
+  interiorobject_TABLE,                       2,  6,
 };
 
 uint8_t roomdef_11_papers[] =
@@ -239,15 +239,15 @@ uint8_t roomdef_11_papers[] =
   1, // number of mask bytes
   23, // mask
   9, // nobjects
-  interiorobject_ROOM_OUTLINE_47,             1,  4,
-  interiorobject_SMALL_SHELF,                 6,  3,
-  interiorobject_TALL_WARDROBE,              12,  3,
-  interiorobject_DRAWERS_50,                 10,  3,
-  interiorobject_SHORT_WARDROBE,             14,  5,
-  interiorobject_DOOR_FRAME_38,               2,  2,
-  interiorobject_DRAWERS_50,                 18,  7,
-  interiorobject_DRAWERS_50,                 20,  8,
-  interiorobject_DESK,                       12, 10,
+  interiorobject_ROOM_OUTLINE_22x12_B,             1,  4,
+  interiorobject_SMALL_SHELF_FACING_SE,                 6,  3,
+  interiorobject_TALL_WARDROBE_FACING_SW,              12,  3,
+  interiorobject_TALL_DRAWERS_FACING_SW,                 10,  3,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             14,  5,
+  interiorobject_DOOR_FRAME_NW,               2,  2,
+  interiorobject_TALL_DRAWERS_FACING_SW,                 18,  7,
+  interiorobject_TALL_DRAWERS_FACING_SW,                 20,  8,
+  interiorobject_DESK_FACING_SW,                       12, 10,
 };
 
 uint8_t roomdef_12_corridor[] =
@@ -257,10 +257,10 @@ uint8_t roomdef_12_corridor[] =
   2, // number of mask bytes
   4, 7, // mask
   4, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_SMALL_WINDOW,                6,  3,
-  interiorobject_DOOR_FRAME_16,               9, 10,
-  interiorobject_DOOR_FRAME_15,              13, 10,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                6,  3,
+  interiorobject_DOOR_FRAME_SW,               9, 10,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
 };
 
 uint8_t roomdef_13_corridor[] =
@@ -270,12 +270,12 @@ uint8_t roomdef_13_corridor[] =
   2, // number of mask bytes
   4, 8, // mask
   6, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_DOOR_FRAME_38,               6,  3,
-  interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_DOOR_FRAME_15,              13, 10,
-  interiorobject_DRAWERS_50,                 12,  5,
-  interiorobject_CHEST_OF_DRAWERS,           14,  7,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_DOOR_FRAME_NW,               6,  3,
+  interiorobject_DOOR_FRAME_SW,               7,  9,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
+  interiorobject_TALL_DRAWERS_FACING_SW,                 12,  5,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           14,  7,
 };
 
 uint8_t roomdef_14_torch[] =
@@ -288,15 +288,15 @@ uint8_t roomdef_14_torch[] =
   1, // number of mask bytes
   1, // mask
   9, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_DOOR_FRAME_38,               4,  3,
-  interiorobject_TINY_DRAWERS,                8,  5,
-  interiorobject_EMPTY_BED,                  10,  5,
-  interiorobject_CHEST_OF_DRAWERS,           16,  5,
-  interiorobject_SHORT_WARDROBE,             18,  5,
-  interiorobject_DOOR_FRAME_40,              20,  4,
-  interiorobject_SMALL_SHELF,                 2,  7,
-  interiorobject_EMPTY_BED,                   2,  9,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_DOOR_FRAME_NW,               4,  3,
+  interiorobject_TINY_DRAWERS_FACING_SE,                8,  5,
+  interiorobject_EMPTY_BED_FACING_SE,                  10,  5,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           16,  5,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             18,  5,
+  interiorobject_DOOR_FRAME_NE,              20,  4,
+  interiorobject_SMALL_SHELF_FACING_SE,                 2,  7,
+  interiorobject_EMPTY_BED_FACING_SE,                   2,  9,
 };
 
 uint8_t roomdef_15_uniform[] =
@@ -310,16 +310,16 @@ uint8_t roomdef_15_uniform[] =
   4, // number of mask bytes
   1, 5, 10, 15, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_SHORT_WARDROBE,             16,  4,
-  interiorobject_EMPTY_BED,                  10,  5,
-  interiorobject_TINY_DRAWERS,                8,  5,
-  interiorobject_TINY_DRAWERS,                6,  6,
-  interiorobject_SMALL_SHELF,                 2,  7,
-  interiorobject_EMPTY_BED,                   2,  9,
-  interiorobject_DOOR_FRAME_16,               7, 10,
-  interiorobject_DOOR_FRAME_15,              13,  9,
-  interiorobject_TABLE_2,                    18,  8,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_SHORT_WARDROBE_FACING_SW,             16,  4,
+  interiorobject_EMPTY_BED_FACING_SE,                  10,  5,
+  interiorobject_TINY_DRAWERS_FACING_SE,                8,  5,
+  interiorobject_TINY_DRAWERS_FACING_SE,                6,  6,
+  interiorobject_SMALL_SHELF_FACING_SE,                 2,  7,
+  interiorobject_EMPTY_BED_FACING_SE,                   2,  9,
+  interiorobject_DOOR_FRAME_SW,               7, 10,
+  interiorobject_DOOR_FRAME_SE,              13,  9,
+  interiorobject_TABLE,                      18,  8,
 };
 
 uint8_t roomdef_16_corridor[] =
@@ -329,10 +329,10 @@ uint8_t roomdef_16_corridor[] =
   2, // number of mask bytes
   4, 7, // mask
   4, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_DOOR_FRAME_38,               4,  4,
-  interiorobject_DOOR_FRAME_16,               9, 10,
-  interiorobject_DOOR_FRAME_15,              13, 10,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_DOOR_FRAME_NW,               4,  4,
+  interiorobject_DOOR_FRAME_SW,               9, 10,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
 };
 
 uint8_t roomdef_7_corridor[] =
@@ -342,10 +342,10 @@ uint8_t roomdef_7_corridor[] =
   1, // number of mask bytes
   4, // mask
   4, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_DOOR_FRAME_38,               4,  4,
-  interiorobject_DOOR_FRAME_15,              13, 10,
-  interiorobject_TALL_WARDROBE,              12,  4,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_DOOR_FRAME_NW,               4,  4,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
+  interiorobject_TALL_WARDROBE_FACING_SW,              12,  4,
 };
 
 uint8_t roomdef_18_radio[] =
@@ -358,16 +358,16 @@ uint8_t roomdef_18_radio[] =
   5, // number of mask bytes
   11, 17, 16, 24, 25, // mask
   10, // nobjects
-  interiorobject_ROOM_OUTLINE_47,             1,  4,
-  interiorobject_CUPBOARD,                    1,  4,
-  interiorobject_SMALL_WINDOW,                4,  1,
-  interiorobject_SMALL_SHELF,                 7,  2,
-  interiorobject_DOOR_FRAME_40,              10,  1,
-  interiorobject_TABLE_2,                    12,  7,
+  interiorobject_ROOM_OUTLINE_22x12_B,             1,  4,
+  interiorobject_CUPBOARD_FACING_SE,                    1,  4,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                4,  1,
+  interiorobject_SMALL_SHELF_FACING_SE,                 7,  2,
+  interiorobject_DOOR_FRAME_NE,              10,  1,
+  interiorobject_TABLE,                      12,  7,
   interiorobject_MESS_BENCH_SHORT,           12,  9,
-  interiorobject_TABLE_2,                    18, 10,
+  interiorobject_TABLE,                      18, 10,
   interiorobject_TINY_TABLE,                 16, 12,
-  interiorobject_DOOR_FRAME_16,               5,  7,
+  interiorobject_DOOR_FRAME_SW,               5,  7,
 };
 
 uint8_t roomdef_19_food[] =
@@ -378,17 +378,17 @@ uint8_t roomdef_19_food[] =
   1, // number of mask bytes
   7, // mask
   11, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_SMALL_WINDOW,                6,  3,
-  interiorobject_CUPBOARD,                    9,  3,
-  interiorobject_CUPBOARD_42,                12,  3,
-  interiorobject_CUPBOARD_42,                14,  4,
-  interiorobject_TABLE_2,                     9,  6,
-  interiorobject_SMALL_SHELF,                 3,  5,
-  interiorobject_SINK,                        3,  7,
-  interiorobject_CHEST_OF_DRAWERS,           14,  7,
-  interiorobject_DOOR_FRAME_40,              16,  5,
-  interiorobject_DOOR_FRAME_16,               9, 10,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                6,  3,
+  interiorobject_CUPBOARD_FACING_SE,                    9,  3,
+  interiorobject_CUPBOARD_FACING_SW,                12,  3,
+  interiorobject_CUPBOARD_FACING_SW,                14,  4,
+  interiorobject_TABLE,                       9,  6,
+  interiorobject_SMALL_SHELF_FACING_SE,                 3,  5,
+  interiorobject_SINK_FACING_SE,                        3,  7,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,           14,  7,
+  interiorobject_DOOR_FRAME_NE,              16,  5,
+  interiorobject_DOOR_FRAME_SW,               9, 10,
 };
 
 uint8_t roomdef_20_redcross[] =
@@ -400,16 +400,16 @@ uint8_t roomdef_20_redcross[] =
   2, // number of mask bytes
   21, 4, // mask
   11, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_DOOR_FRAME_15,              13, 10,
-  interiorobject_SMALL_SHELF,                 9,  4,
-  interiorobject_CUPBOARD,                    3,  6,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_DOOR_FRAME_SE,              13, 10,
+  interiorobject_SMALL_SHELF_FACING_SE,                 9,  4,
+  interiorobject_CUPBOARD_FACING_SE,                    3,  6,
   interiorobject_SMALL_CRATE,                 6,  8,
   interiorobject_SMALL_CRATE,                 4,  9,
-  interiorobject_TABLE_2,                     9,  6,
-  interiorobject_TALL_WARDROBE,              14,  5,
-  interiorobject_TALL_WARDROBE,              16,  6,
-  interiorobject_WARDROBE_WITH_KNOCKERS,     18,  8,
+  interiorobject_TABLE,                       9,  6,
+  interiorobject_TALL_WARDROBE_FACING_SW,              14,  5,
+  interiorobject_TALL_WARDROBE_FACING_SW,              16,  6,
+  interiorobject_ORNATE_WARDROBE_FACING_SW,     18,  8,
   interiorobject_TINY_TABLE,                 11,  8,
 };
 
@@ -422,13 +422,13 @@ uint8_t roomdef_22_red_key[] =
   2, // number of mask bytes
   12, 21, // mask
   7, // nobjects
-  interiorobject_ROOM_OUTLINE_41,             5,  6,
-  interiorobject_NOTICEBOARD,                 4,  4,
-  interiorobject_SMALL_SHELF,                 9,  4,
+  interiorobject_ROOM_OUTLINE_15x8,             5,  6,
+  interiorobject_NOTICEBOARD_FACING_SE,                 4,  4,
+  interiorobject_SMALL_SHELF_FACING_SE,                 9,  4,
   interiorobject_SMALL_CRATE,                 6,  8,
-  interiorobject_DOOR_FRAME_16,               9,  8,
-  interiorobject_TABLE_2,                     9,  6,
-  interiorobject_DOOR_FRAME_40,              14,  4,
+  interiorobject_DOOR_FRAME_SW,               9,  8,
+  interiorobject_TABLE,                       9,  6,
+  interiorobject_DOOR_FRAME_NE,              14,  4,
 };
 
 uint8_t roomdef_23_breakfast[] =
@@ -439,14 +439,14 @@ uint8_t roomdef_23_breakfast[] =
   2, // number of mask bytes
   10, 3, // mask
   12, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_SMALL_WINDOW,                8,  0,
-  interiorobject_SMALL_WINDOW,                2,  3,
-  interiorobject_DOOR_FRAME_16,               7, 10,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                8,  0,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                2,  3,
+  interiorobject_DOOR_FRAME_SW,               7, 10,
   interiorobject_MESS_TABLE,                  5,  4,
-  interiorobject_CUPBOARD_42,                18,  4,
-  interiorobject_DOOR_FRAME_40,              20,  4,
-  interiorobject_DOOR_FRAME_15,              15,  8,
+  interiorobject_CUPBOARD_FACING_SW,                18,  4,
+  interiorobject_DOOR_FRAME_NE,              20,  4,
+  interiorobject_DOOR_FRAME_SE,              15,  8,
   interiorobject_MESS_BENCH,                  7,  6,
   interiorobject_EMPTY_BENCH,                12,  5,
   interiorobject_EMPTY_BENCH,                10,  6,
@@ -461,8 +461,8 @@ uint8_t roomdef_24_solitary[] =
   1, // number of mask bytes
   26, // mask
   3, // nobjects
-  interiorobject_ROOM_OUTLINE_41,             5,  6,
-  interiorobject_DOOR_FRAME_40,              14,  4,
+  interiorobject_ROOM_OUTLINE_15x8,             5,  6,
+  interiorobject_DOOR_FRAME_NE,              14,  4,
   interiorobject_TINY_TABLE,                 10,  9,
 };
 
@@ -473,11 +473,11 @@ uint8_t roomdef_25_breakfast[] =
   54, 68, 34, 68, // boundary
   0, // number of mask bytes
   11, // nobjects
-  interiorobject_ROOM_OUTLINE_2,              1,  4,
-  interiorobject_SMALL_WINDOW,                8,  0,
-  interiorobject_CUPBOARD,                    5,  3,
-  interiorobject_SMALL_WINDOW,                2,  3,
-  interiorobject_DOOR_FRAME_40,              18,  3,
+  interiorobject_ROOM_OUTLINE_22x12_A,              1,  4,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                8,  0,
+  interiorobject_CUPBOARD_FACING_SE,                    5,  3,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,                2,  3,
+  interiorobject_DOOR_FRAME_NE,              18,  3,
   interiorobject_MESS_TABLE,                  5,  4,
   interiorobject_MESS_BENCH,                  7,  6,
   interiorobject_EMPTY_BENCH,                12,  5,
@@ -495,14 +495,14 @@ uint8_t roomdef_28_hut1_left[] =
   3, // number of mask bytes
   8, 13, 19, // mask
   8, // nobjects
-  interiorobject_ROOM_OUTLINE_27,             3,  6,
-  interiorobject_WIDE_WINDOW,                 6,  2,
-  interiorobject_DOOR_FRAME_40,              14,  4,
-  interiorobject_CUPBOARD,                    3,  6,
+  interiorobject_ROOM_OUTLINE_18x10_A,             3,  6,
+  interiorobject_WIDE_WINDOW_FACING_SE,                 6,  2,
+  interiorobject_DOOR_FRAME_NE,              14,  4,
+  interiorobject_CUPBOARD_FACING_SE,                    3,  6,
   interiorobject_OCCUPIED_BED,                8,  7,
-  interiorobject_DOOR_FRAME_16,               7,  9,
-  interiorobject_CHAIR_FACING_BOTTOM_LEFT,   15, 10,
-  interiorobject_TABLE_2,                    11, 12,
+  interiorobject_DOOR_FRAME_SW,               7,  9,
+  interiorobject_CHAIR_FACING_SW,   15, 10,
+  interiorobject_TABLE,                      11, 12,
 };
 
 uint8_t roomdef_29_second_tunnel_start[] =
@@ -512,12 +512,12 @@ uint8_t roomdef_29_second_tunnel_start[] =
   6, // number of mask bytes
   30, 31, 32, 33, 34, 35, // mask
   6, // nobjects
-  interiorobject_TUNNEL_0,                   20,  0,
-  interiorobject_TUNNEL_0,                   16,  2,
-  interiorobject_TUNNEL_0,                   12,  4,
-  interiorobject_TUNNEL_0,                    8,  6,
-  interiorobject_TUNNEL_0,                    4,  8,
-  interiorobject_TUNNEL_0,                    0, 10,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   20,  0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   16,  2,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   12,  4,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    8,  6,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    4,  8,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    0, 10,
 };
 
 uint8_t roomdef_31[] =
@@ -527,12 +527,12 @@ uint8_t roomdef_31[] =
   6, // number of mask bytes
   36, 37, 38, 39, 40, 41, // mask
   6, // nobjects
-  interiorobject_TUNNEL_3,                    0,  0,
-  interiorobject_TUNNEL_3,                    4,  2,
-  interiorobject_TUNNEL_3,                    8,  4,
-  interiorobject_TUNNEL_3,                   12,  6,
-  interiorobject_TUNNEL_3,                   16,  8,
-  interiorobject_TUNNEL_3,                   20, 10,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    0,  0,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    4,  2,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    8,  4,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   12,  6,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   16,  8,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   20, 10,
 };
 
 uint8_t roomdef_36[] =
@@ -542,11 +542,11 @@ uint8_t roomdef_36[] =
   6, // number of mask bytes
   31, 32, 33, 34, 35, 45, // mask
   5, // nobjects
-  interiorobject_TUNNEL_0,                   20,  0,
-  interiorobject_TUNNEL_0,                   16,  2,
-  interiorobject_TUNNEL_0,                   12,  4,
-  interiorobject_TUNNEL_0,                    8,  6,
-  interiorobject_TUNNEL_14,                   4,  8,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   20,  0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   16,  2,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   12,  4,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    8,  6,
+  interiorobject_TUNNEL_CORNER_NE_SE,                   4,  8,
 };
 
 uint8_t roomdef_32[] =
@@ -556,11 +556,11 @@ uint8_t roomdef_32[] =
   6, // number of mask bytes
   36, 37, 38, 39, 40, 42, // mask
   5, // nobjects
-  interiorobject_TUNNEL_3,                    0,  0,
-  interiorobject_TUNNEL_3,                    4,  2,
-  interiorobject_TUNNEL_3,                    8,  4,
-  interiorobject_TUNNEL_3,                   12,  6,
-  interiorobject_TUNNEL_17,                  16,  8,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    0,  0,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    4,  2,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    8,  4,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   12,  6,
+  interiorobject_TUNNEL_CORNER_NW_SW,                  16,  8,
 };
 
 uint8_t roomdef_34[] =
@@ -570,12 +570,12 @@ uint8_t roomdef_34[] =
   6, // number of mask bytes
   36, 37, 38, 39, 40, 46, // mask
   6, // nobjects
-  interiorobject_TUNNEL_3,                    0,  0,
-  interiorobject_TUNNEL_3,                    4,  2,
-  interiorobject_TUNNEL_3,                    8,  4,
-  interiorobject_TUNNEL_3,                   12,  6,
-  interiorobject_TUNNEL_3,                   16,  8,
-  interiorobject_TUNNEL_18,                  20, 10,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    0,  0,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    4,  2,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    8,  4,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   12,  6,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   16,  8,
+  interiorobject_TUNNEL_ENTRANCE,                  20, 10,
 };
 
 uint8_t roomdef_35[] =
@@ -585,12 +585,12 @@ uint8_t roomdef_35[] =
   6, // number of mask bytes
   36, 37, 38, 39, 40, 41, // mask
   6, // nobjects
-  interiorobject_TUNNEL_3,                    0,  0,
-  interiorobject_TUNNEL_3,                    4,  2,
-  interiorobject_TUNNEL_JOIN_4,               8,  4,
-  interiorobject_TUNNEL_3,                   12,  6,
-  interiorobject_TUNNEL_3,                   16,  8,
-  interiorobject_TUNNEL_3,                   20, 10,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    0,  0,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    4,  2,
+  interiorobject_TUNNEL_T_JOIN_NW_SE,               8,  4,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   12,  6,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   16,  8,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   20, 10,
 };
 
 uint8_t roomdef_30[] =
@@ -600,12 +600,12 @@ uint8_t roomdef_30[] =
   7, // number of mask bytes
   30, 31, 32, 33, 34, 35, 44, // mask
   6, // nobjects
-  interiorobject_TUNNEL_0,                   20,  0,
-  interiorobject_TUNNEL_0,                   16,  2,
-  interiorobject_TUNNEL_0,                   12,  4,
-  interiorobject_TUNNEL_CORNER_6,             8,  6,
-  interiorobject_TUNNEL_0,                    4,  8,
-  interiorobject_TUNNEL_0,                    0, 10,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   20,  0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   16,  2,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   12,  4,
+  interiorobject_TUNNEL_T_JOIN_SW_NE,             8,  6,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    4,  8,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    0, 10,
 };
 
 uint8_t roomdef_40[] =
@@ -615,12 +615,12 @@ uint8_t roomdef_40[] =
   6, // number of mask bytes
   30, 31, 32, 33, 34, 43, // mask
   6, // nobjects
-  interiorobject_TUNNEL_7,                   20,  0,
-  interiorobject_TUNNEL_0,                   16,  2,
-  interiorobject_TUNNEL_0,                   12,  4,
-  interiorobject_TUNNEL_0,                    8,  6,
-  interiorobject_TUNNEL_0,                    4,  8,
-  interiorobject_TUNNEL_0,                    0, 10,
+  interiorobject_TUNNEL_CORNER_SW_SE,                   20,  0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   16,  2,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   12,  4,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    8,  6,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    4,  8,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    0, 10,
 };
 
 uint8_t roomdef_44[] =
@@ -630,11 +630,11 @@ uint8_t roomdef_44[] =
   5, // number of mask bytes
   36, 37, 38, 39, 40, // mask
   5, // nobjects
-  interiorobject_TUNNEL_3,                    0,  0,
-  interiorobject_TUNNEL_3,                    4,  2,
-  interiorobject_TUNNEL_3,                    8,  4,
-  interiorobject_TUNNEL_3,                   12,  6,
-  interiorobject_TUNNEL_12,                  16,  8,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    0,  0,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    4,  2,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                    8,  4,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,                   12,  6,
+  interiorobject_TUNNEL_CORNER_NW_NE,                  16,  8,
 };
 
 uint8_t roomdef_50_blocked_tunnel[] =
@@ -645,12 +645,12 @@ uint8_t roomdef_50_blocked_tunnel[] =
   6, // number of mask bytes
   30, 31, 32, 33, 34, 43, // mask
   6, // nobjects
-  interiorobject_TUNNEL_7,                   20,  0,
-  interiorobject_TUNNEL_0,                   16,  2,
-  interiorobject_TUNNEL_0,                   12,  4,
-  interiorobject_COLLAPSED_TUNNEL,            8,  6, // collapsed_tunnel_obj
-  interiorobject_TUNNEL_0,                    4,  8,
-  interiorobject_TUNNEL_0,                    0, 10,
+  interiorobject_TUNNEL_CORNER_SW_SE,                   20,  0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   16,  2,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                   12,  4,
+  interiorobject_COLLAPSED_TUNNEL_SW_NE,            8,  6, // collapsed_tunnel_obj
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    4,  8,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,                    0, 10,
 };
 
 // vim: ts=8 sts=2 sw=2 et

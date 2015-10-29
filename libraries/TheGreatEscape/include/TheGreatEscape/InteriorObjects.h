@@ -3,63 +3,69 @@
 
 /**
  * Identifiers of objects used to build interiors.
+ *
+ * Compass directions are suffixed to indicate where the object faces e.g.
+ * interiorobject_WIDE_WINDOW_FACING_SE faces south-east.
+ *
+ * A double suffix like SW_NE means that an object goes south-west to
+ * north-east in screen space (or vice versa).
  */
 enum interior_object
 {
-  interiorobject_TUNNEL_0,
+  interiorobject_STRAIGHT_TUNNEL_SW_NE,
   interiorobject_SMALL_TUNNEL_ENTRANCE,
-  interiorobject_ROOM_OUTLINE_2, // 24x12
-  interiorobject_TUNNEL_3,
-  interiorobject_TUNNEL_JOIN_4,
-  interiorobject_PRISONER_SAT_DOWN_MID_TABLE,
-  interiorobject_TUNNEL_CORNER_6,
-  interiorobject_TUNNEL_7,
-  interiorobject_WIDE_WINDOW,
-  interiorobject_EMPTY_BED,
-  interiorobject_SHORT_WARDROBE,
-  interiorobject_CHEST_OF_DRAWERS,
-  interiorobject_TUNNEL_12,
+  interiorobject_ROOM_OUTLINE_22x12_A,
+  interiorobject_STRAIGHT_TUNNEL_NW_SE,
+  interiorobject_TUNNEL_T_JOIN_NW_SE,
+  interiorobject_PRISONER_SAT_MID_TABLE,
+  interiorobject_TUNNEL_T_JOIN_SW_NE,
+  interiorobject_TUNNEL_CORNER_SW_SE,
+  interiorobject_WIDE_WINDOW_FACING_SE,
+  interiorobject_EMPTY_BED_FACING_SE,
+  interiorobject_SHORT_WARDROBE_FACING_SW,
+  interiorobject_CHEST_OF_DRAWERS_FACING_SW,
+  interiorobject_TUNNEL_CORNER_NW_NE,
   interiorobject_EMPTY_BENCH,
-  interiorobject_TUNNEL_14,
-  interiorobject_DOOR_FRAME_15,
-  interiorobject_DOOR_FRAME_16,
-  interiorobject_TUNNEL_17,
-  interiorobject_TUNNEL_18,
-  interiorobject_PRISONER_SAT_DOWN_END_TABLE,
-  interiorobject_COLLAPSED_TUNNEL,
-  interiorobject_UNUSED_21,   // unused by game, draws as interiorobject_ROOM_OUTLINE_2
-  interiorobject_CHAIR_FACING_BOTTOM_RIGHT,
+  interiorobject_TUNNEL_CORNER_NE_SE,
+  interiorobject_DOOR_FRAME_SE,
+  interiorobject_DOOR_FRAME_SW,
+  interiorobject_TUNNEL_CORNER_NW_SW,
+  interiorobject_TUNNEL_ENTRANCE,
+  interiorobject_PRISONER_SAT_END_TABLE,
+  interiorobject_COLLAPSED_TUNNEL_SW_NE,
+  interiorobject_UNUSED_21, // unused by game, draws as interiorobject_ROOM_OUTLINE_22x12_A
+  interiorobject_CHAIR_FACING_SE,
   interiorobject_OCCUPIED_BED,
-  interiorobject_WARDROBE_WITH_KNOCKERS,
-  interiorobject_CHAIR_FACING_BOTTOM_LEFT,
-  interiorobject_CUPBOARD,
-  interiorobject_ROOM_OUTLINE_27,
-  interiorobject_UNUSED_28,   // unused by game, draws as interiorobject_TABLE_2
-  interiorobject_TABLE_2,
+  interiorobject_ORNATE_WARDROBE_FACING_SW,
+  interiorobject_CHAIR_FACING_SW,
+  interiorobject_CUPBOARD_FACING_SE,
+  interiorobject_ROOM_OUTLINE_18x10_A,
+  interiorobject_UNUSED_28, // unused by game, draws as interiorobject_TABLE
+  interiorobject_TABLE,
   interiorobject_STOVE_PIPE,
-  interiorobject_STUFF_31,
-  interiorobject_TALL_WARDROBE,
-  interiorobject_SMALL_SHELF,
+  interiorobject_PAPERS_ON_FLOOR,
+  interiorobject_TALL_WARDROBE_FACING_SW,
+  interiorobject_SMALL_SHELF_FACING_SE,
   interiorobject_SMALL_CRATE,
-  interiorobject_SMALL_WINDOW,
-  interiorobject_DOOR_FRAME_36,
-  interiorobject_NOTICEBOARD,
-  interiorobject_DOOR_FRAME_38,
-  interiorobject_UNUSED_39,   // unused by game, draws as interiorobject_DOOR_FRAME_40
-  interiorobject_DOOR_FRAME_40,
-  interiorobject_ROOM_OUTLINE_41,
-  interiorobject_CUPBOARD_42,
+  interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,
+  interiorobject_TINY_DOOR_FRAME_NE,  // tunnel entrance
+  interiorobject_NOTICEBOARD_FACING_SE,
+  interiorobject_DOOR_FRAME_NW,
+  interiorobject_UNUSED_39, // unused by game, draws as interiorobject_END_DOOR_FRAME_NW_SE
+  interiorobject_DOOR_FRAME_NE,
+  interiorobject_ROOM_OUTLINE_15x8,
+  interiorobject_CUPBOARD_FACING_SW,
   interiorobject_MESS_BENCH,
   interiorobject_MESS_TABLE,
   interiorobject_MESS_BENCH_SHORT,
-  interiorobject_ROOM_OUTLINE_46,
-  interiorobject_ROOM_OUTLINE_47,
+  interiorobject_ROOM_OUTLINE_18x10_B,
+  interiorobject_ROOM_OUTLINE_22x12_B,
   interiorobject_TINY_TABLE,
-  interiorobject_TINY_DRAWERS,
-  interiorobject_DRAWERS_50,
-  interiorobject_DESK,
-  interiorobject_SINK,
-  interiorobject_KEY_RACK,
+  interiorobject_TINY_DRAWERS_FACING_SE,
+  interiorobject_TALL_DRAWERS_FACING_SW,
+  interiorobject_DESK_FACING_SW,
+  interiorobject_SINK_FACING_SE,
+  interiorobject_KEY_RACK_FACING_SE,
   interiorobject__LIMIT
 };
 

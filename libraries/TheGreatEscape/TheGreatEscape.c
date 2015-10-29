@@ -1697,7 +1697,7 @@ void process_player_input(tgestate_t *state)
         state->vischars[0].mi.pos.x       = 0x2E;
         state->vischars[0].mi.pos.y       = 0x2E;
         state->vischars[0].mi.pos.height  = 24;
-        roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED;
+        roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
         state->hero_in_bed = 0;
       }
 
@@ -2800,11 +2800,11 @@ void wake_up(tgestate_t *state)
   bedpp = &beds[0];
   iters = beds_LENGTH; /* Bug: Conv: Original code uses 7 which is wrong. */
   do
-    **bedpp++ = interiorobject_EMPTY_BED;
+    **bedpp++ = interiorobject_EMPTY_BED_FACING_SE;
   while (--iters);
 
   /* Update the hero's bed object to be empty and redraw if required. */
-  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED;
+  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
   if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
   {
     setup_room(state);
@@ -3225,7 +3225,7 @@ void character_sits(tgestate_t *state,
   }
 
   /* Poke object. */
-  bench[index * 3] = interiorobject_PRISONER_SAT_DOWN_MID_TABLE;
+  bench[index * 3] = interiorobject_PRISONER_SAT_MID_TABLE;
 
   if (A < 21)
     room = room_25_BREAKFAST;
@@ -3341,7 +3341,7 @@ void hero_sits(tgestate_t *state)
 {
   assert(state != NULL);
 
-  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_PRISONER_SAT_DOWN_END_TABLE;
+  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_PRISONER_SAT_END_TABLE;
   hero_sit_sleep_common(state, &state->hero_in_breakfast);
 }
 
@@ -6111,7 +6111,7 @@ void action_shovel(tgestate_t *state)
   /* Release boundary. */
   roomdef_50_blocked_tunnel[2] = 255;
   /* Remove blockage graphic. */
-  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_TUNNEL_0;
+  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_STRAIGHT_TUNNEL_SW_NE;
 
   setup_room(state);
   choose_game_window_attributes(state);
@@ -6727,7 +6727,7 @@ void reset_map_and_characters(tgestate_t *state)
   state->clock = 7;
   state->day_or_night = 0;
   state->vischars[0].flags = 0;
-  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL;
+  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL_SW_NE;
   roomdef_50_blocked_tunnel[2] = 0x34; /* Reset boundary. */
 
   /* Lock the gates. */
