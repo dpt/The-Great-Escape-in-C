@@ -268,7 +268,7 @@ static void draw_handler(unsigned int *pixels, void *opaque)
   [(__bridge id) opaque setPixels:pixels];
 }
 
-static void sleep_handler(int duration, void *opaque)
+static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 {
   usleep(duration); // duration is taken literally for now
 }

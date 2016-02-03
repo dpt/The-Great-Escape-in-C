@@ -248,7 +248,7 @@ static void choose_keys(tgestate_t *state)
 for_loop:
           for (;;)
           {
-            state->speccy->sleep(state->speccy, 10000); // 10000 is arbitrary for the moment
+            state->speccy->sleep(state->speccy, sleeptype_MENU, 10000); // 10000 is arbitrary for the moment
 
             SWAP(uint8_t, A, Adash);
 
@@ -353,7 +353,7 @@ assign_keydef:
     }
 
     /* (was) Delay loop. */
-    state->speccy->sleep(state->speccy, 0xFFFF);
+    state->speccy->sleep(state->speccy, sleeptype_MENU, 0xFFFF);
 
     /* Wait for user's input */
     if (user_confirm(state) == 0) /* Confirmed - return */
@@ -540,9 +540,8 @@ void menu_screen(tgestate_t *state)
     }
     while (--overall_delay);
     
-    
     state->speccy->kick(state->speccy);
-    state->speccy->sleep(state->speccy, 87500);
+    state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
   }
 }
 

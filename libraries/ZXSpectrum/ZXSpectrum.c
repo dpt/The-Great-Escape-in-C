@@ -70,11 +70,13 @@ static void zx_kick(ZXSpectrum_t *state)
   prv->config.draw(prv->screen, prv->config.opaque);
 }
 
-static void zx_sleep(ZXSpectrum_t *state, int duration)
+static void zx_sleep(ZXSpectrum_t *state,
+                     sleeptype_t   sleeptype,
+                     int           duration)
 {
   ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
 
-  prv->config.sleep(duration, prv->config.opaque);
+  prv->config.sleep(duration, sleeptype, prv->config.opaque);
 }
 
 ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config)

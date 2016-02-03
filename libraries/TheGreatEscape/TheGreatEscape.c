@@ -2159,7 +2159,7 @@ void interior_delay_loop(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->speccy->sleep(state->speccy, 0xFFF);
+  state->speccy->sleep(state->speccy, sleeptype_DELAY, 0xFFF);
 
 //  volatile int BC = 0xFFF;
 //  while (--BC)
@@ -2414,10 +2414,7 @@ void play_speaker(tgestate_t *state, sound_t sound)
     state->speccy->out(state->speccy, port_BORDER, speakerbit); /* Play. */
 
     /* Conv: Removed self-modified counter. */
-    state->speccy->sleep(state->speccy, delay);
-//    subcount = delay;
-//    while (subcount--)
-//      ;
+    state->speccy->sleep(state->speccy, sleeptype_SOUND, delay);
 
     speakerbit ^= 16; /* Toggle speaker bit. */
   }
@@ -11589,7 +11586,7 @@ int user_confirm(tgestate_t *state)
     if ((keymask & (1 << 3)) != 0)
       return 1; /* is 'N' pressed? return NZ */
 
-    state->speccy->sleep(state->speccy, 0xFFFF);
+    state->speccy->sleep(state->speccy, sleeptype_KEYSCAN, 0xFFFF);
   }
 }
 

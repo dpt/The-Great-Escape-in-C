@@ -74,6 +74,18 @@ enum
 typedef struct ZXSpectrum ZXSpectrum_t;
 
 /**
+ * Indicates what type of operation is in progress when doing sleep (e.g. waiting for a menu, playing a sound).
+ */
+typedef enum
+{
+  sleeptype_MENU,
+  sleeptype_SOUND,
+  sleeptype_KEYSCAN,
+  sleeptype_DELAY
+}
+sleeptype_t;
+
+/**
  * The current state of the machine.
  */
 struct ZXSpectrum
@@ -96,7 +108,7 @@ struct ZXSpectrum
   /**
    * Call the implementer when we need to sleep.
    */
-  void (*sleep)(ZXSpectrum_t *state, int duration);
+  void (*sleep)(ZXSpectrum_t *state, sleeptype_t type, int duration);
 
 
   uint8_t     screen[SCREEN_LENGTH];
@@ -115,7 +127,7 @@ typedef struct ZXSpectrum_config
   void (*draw)(unsigned int *pixels, void *opaque);
 
   /** Called when there's nothing to do. */
-  void (*sleep)(int duration, void *opaque);
+  void (*sleep)(int duration, sleeptype_t sleeptype, void *opaque);
   
   /** Called when a key is tested. */
   int (*key)(uint16_t port, void *opaque);
