@@ -355,10 +355,10 @@ void zoombox_draw_tile(tgestate_t     *state,
                        zoombox_tile_t  index,
                        uint8_t        *addr);
 
-void searchlight_movement(searchlight_state_t *slstate);
 void nighttime(tgestate_t *state);
+void searchlight_movement(searchlight_movement_t *slstate);
 void searchlight_caught(tgestate_t                *state,
-                        const searchlight_state_t *slstate);
+                        const searchlight_movement_t *slstate);
 void searchlight_plot(tgestate_t *state, attribute_t *DE);
 
 int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index);

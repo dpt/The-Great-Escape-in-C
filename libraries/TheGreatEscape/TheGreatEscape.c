@@ -4909,7 +4909,7 @@ void zoombox_draw_tile(tgestate_t     *state,
  *
  * \param[in] slstate Pointer to a searchlight movement data. (was HL)
  */
-void searchlight_movement(searchlight_state_t *slstate)
+void searchlight_movement(searchlight_movement_t *slstate)
 {
   uint8_t        x,y;       /* was E,D */
   uint8_t        counter;   /* was A */
@@ -4995,7 +4995,7 @@ void nighttime(tgestate_t *state)
   uint16_t x;                   /* was BC */
   uint8_t *HL;                  /* was HL */
   attribute_t *attrs;           /* was HL */
-  searchlight_state_t *slstate; /* was HL */
+  searchlight_movement_t *slstate;            /* was HL */
 
   assert(state != NULL);
 
@@ -5120,10 +5120,10 @@ next:
  * $AE78: Is the hero is caught in the spotlight?
  *
  * \param[in] state   Pointer to game state.
- * \param[in] slstate Pointer to searchlight movement data. (was HL)
+ * \param[in] slstate Pointer to per-searchlight state. (was HL)
  */
-void searchlight_caught(tgestate_t                *state,
-                        const searchlight_state_t *slstate)
+void searchlight_caught(tgestate_t                   *state,
+                        const searchlight_movement_t *slstate)
 {
   uint8_t map_y, map_x; /* was D,E */
 

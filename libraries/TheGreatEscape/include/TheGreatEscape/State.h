@@ -157,7 +157,7 @@ struct tgestate
   // suspect that this is a centering value
   xy_t            map_position;
 
-  /** $81BD: Searchlight state. Might be a counter in fact. */
+  /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
   uint8_t         searchlight_state;
 
   /** $81BE: Index into roomdef_bounds[]. */
@@ -278,7 +278,7 @@ struct tgestate
   struct
   {
     /** $AD29: Searchlight movement data. */
-    searchlight_state_t states[3];
+    searchlight_movement_t states[3];
 
     /** $AE75: (unknown) */
     uint8_t             related;

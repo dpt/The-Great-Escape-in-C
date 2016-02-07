@@ -688,7 +688,7 @@ typedef struct searchlight_movement
   uint8_t        counter;  // sign magnitude counter
   const uint8_t *ptr;
 }
-searchlight_state_t;
+searchlight_movement_t;
 
 /* ----------------------------------------------------------------------- */
 

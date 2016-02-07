@@ -199,7 +199,7 @@ static void tge_initialise(tgestate_t *state)
   /**
    * $AD29: Searchlight movement data.
    */
-  static const searchlight_state_t searchlight_states[3] =
+  static const searchlight_movement_t searchlight_states[3] =
   {
     { 0x24, 0x52, 0x2C, direction_BOTTOM_RIGHT, 0, &movement_2[0] },
     { 0x78, 0x52, 0x18, direction_TOP_RIGHT,    0, &movement_1[0] },
