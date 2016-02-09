@@ -397,7 +397,7 @@ static void tge_initialise(tgestate_t *state)
  * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
-tgestate_t *tge_create(ZXSpectrum_t *speccy, const tgeconfig_t *config)
+TGE_API tgestate_t *tge_create(ZXSpectrum_t *speccy, const tgeconfig_t *config)
 {
   tgestate_t       *state                     = NULL;
   uint16_t         *game_window_start_offsets = NULL;
@@ -479,7 +479,7 @@ failure:
   return NULL;
 }
 
-void tge_destroy(tgestate_t *state)
+TGE_API void tge_destroy(tgestate_t *state)
 {
   if (state == NULL)
     return;

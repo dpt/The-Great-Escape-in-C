@@ -11597,7 +11597,7 @@ int user_confirm(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void tge_setup(tgestate_t *state)
+TGE_API void tge_setup(tgestate_t *state)
 {
   /**
    * $F1C9: Initial state of a visible character.
@@ -11709,7 +11709,7 @@ void tge_setup(tgestate_t *state)
   }
 }
 
-void tge_main(tgestate_t *state)
+TGE_API void tge_main(tgestate_t *state)
 {
   // Conv: Need to get main loop to setjmp so we call it from here.
   if (setjmp(state->jmpbuf_main) == 0)
