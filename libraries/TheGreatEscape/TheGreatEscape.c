@@ -6071,19 +6071,19 @@ void action_poison(tgestate_t *state)
  */
 void action_uniform(tgestate_t *state)
 {
-  const sprite_t *sprite; /* was HL */
+  const sprite_t *guard_sprite; /* was HL */
 
   assert(state != NULL);
 
-  sprite = &sprites[sprite_GUARD_FACING_AWAY_1];
+  guard_sprite = &sprites[sprite_GUARD_FACING_AWAY_1];
 
-  if (state->vischars[0].mi.sprite == sprite)
+  if (state->vischars[0].mi.sprite == guard_sprite)
     return; /* Already in uniform. */
 
   if (state->room_index >= room_29_SECOND_TUNNEL_START)
     return; /* Can't don uniform when in a tunnel. */
 
-  state->vischars[0].mi.sprite = sprite;
+  state->vischars[0].mi.sprite = guard_sprite;
 
   increase_morale_by_10_score_by_50(state);
 }
