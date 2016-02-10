@@ -2890,7 +2890,7 @@ void set_hero_target_location(tgestate_t *state, xy_t location)
 
   vischar = &state->vischars[0];
 
-  vischar->character &= ~vischar_FLAGS_BIT6;
+  vischar->flags &= ~vischar_FLAGS_BIT6;
   vischar->target = location;
   sub_A3BB(state, vischar);
 }
