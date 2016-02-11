@@ -688,6 +688,16 @@ typedef struct searchlight_movement
 }
 searchlight_movement_t;
 
+/**
+ * An animation frame.
+ */
+typedef struct anim
+{
+  int8_t  dx, dy, dh;  /**< signed deltas */
+  uint8_t spriteindex; /**< top bit is probably a flip flag */
+}
+anim_t;
+
 /* ----------------------------------------------------------------------- */
 
 #endif /* TYPES_H */
