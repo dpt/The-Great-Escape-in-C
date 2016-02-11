@@ -311,7 +311,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->p04.height        = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
-  vischar1->anim              = animations[8];
+  vischar1->anim              = animations[8]; /* -> 'tl_none' animation */
   vischar1->b0C               = 0;
   vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
@@ -4383,7 +4383,7 @@ void move_map(tgestate_t *state)
     &move_map_down_left,
   };
 
-  const uint8_t *char_related;      /* was DE */
+  const uint8_t *anim;              /* was DE */
   uint8_t        b0C;               /* was C */
   direction_t    direction;         /* was A */
   uint8_t        move_map_y;        /* was A */
@@ -4402,9 +4402,9 @@ void move_map(tgestate_t *state)
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCH)
     return; // don't move the map if touch() is entered?
 
-  char_related = state->vischars[0].anim;
+  anim = state->vischars[0].anim;
   b0C = state->vischars[0].b0C;
-  direction = char_related[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
+  direction = anim[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
   if (direction == 0xFF)
     return; /* Don't move. */
 
@@ -6450,7 +6450,7 @@ void called_from_main_loop_9(tgestate_t *state)
 
   uint8_t        iters;   /* was B */
   vischar_t     *vischar; /* was IY */
-  const uint8_t *HL;      /* was HL */
+  const uint8_t *anim;    /* was HL */
   uint8_t        A;       /* was A */
   uint8_t        C;       /* was C */
   const uint8_t *DE;      /* was HL */
@@ -6471,7 +6471,7 @@ void called_from_main_loop_9(tgestate_t *state)
     if (vischar->input & input_KICK)
       goto kicked;
 
-    HL = vischar->anim;
+    anim = vischar->anim;
     A = vischar->b0C;
     if (A & vischar_BYTE12_BIT7) // up/down flag
     {
@@ -6479,8 +6479,8 @@ void called_from_main_loop_9(tgestate_t *state)
       if (A == 0)
         goto end_bit;
 
-      HL += (A + 1) * 4 - 1; /* 4..512 + 1 */
-      A = *HL++; // a spriteindex_t
+      anim += (A + 1) * 4 - 1; /* 4..512 + 1 */
+      A = *anim++; // a spriteindex_t
 
       SWAP(uint8_t, A, Adash);
 
@@ -6488,7 +6488,7 @@ void called_from_main_loop_9(tgestate_t *state)
 #define SXT_8_16(P) ((uint16_t) (*(int8_t *) (P)))
 
 decrement:
-      SWAP(const uint8_t *, DE, HL);
+      SWAP(const uint8_t *, DE, anim);
 
       // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (animations)
 
@@ -6505,13 +6505,13 @@ decrement:
     }
     else
     {
-      if (A == *HL)
+      if (A == *anim)
         goto end_bit;
 
-      HL += (A + 1) * 4;
+      anim += (A + 1) * 4;
 
 increment:
-      SWAP(const uint8_t *, DE, HL);
+      SWAP(const uint8_t *, DE, anim);
 
       state->saved_pos.x = vischar->mi.pos.x + SXT_8_16(DE);
       DE++;
@@ -6560,7 +6560,7 @@ end_bit:
     DE += 2;
     vischar->direction = *DE;
     DE += 2; // point to groups of four
-    SWAP(const uint8_t *, DE, HL);
+    SWAP(const uint8_t *, DE, anim);
     goto increment;
   }
   else
@@ -6572,11 +6572,11 @@ end_bit:
     vischar->direction = *++DE;
     DE += 3; // point to groups of four
     stacked = DE;
-    SWAP(const uint8_t *, DE, HL);
-    HL += C * 4 - 1;
-    A = *HL; // last byte in group of four, flip flag?
+    SWAP(const uint8_t *, DE, anim);
+    anim += C * 4 - 1;
+    A = *anim; // last byte in group of four, flip flag?
     SWAP(uint8_t, A, Adash);
-    HL = stacked;
+    anim = stacked;
     goto decrement;
   }
 
