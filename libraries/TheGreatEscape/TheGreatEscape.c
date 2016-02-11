@@ -5828,8 +5828,8 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const bounds_t *room_bounds;   /* was BC */
-  pos_t          *saved_pos;     /* was HL */
-  bounds_t       *object_bounds; /* was HL */
+  const pos_t    *saved_pos;     /* was HL */
+  const bounds_t *object_bounds; /* was HL */
   uint8_t         nbounds;       /* was B */
 
   assert(state != NULL);
