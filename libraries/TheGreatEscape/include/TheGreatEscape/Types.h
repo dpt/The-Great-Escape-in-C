@@ -206,8 +206,6 @@ enum vischar_flags
   vischar_BYTE12_MASK                  = 0x7F,
   vischar_BYTE12_BIT7                  = 1 << 7,
 
-  vischar_INPUT_MASK                   = 0x7F,   // masks off input_KICK
-
   // byte 14
   vischar_DIRECTION_MASK               = 0x03,
   vischar_DIRECTION_CRAWL              = 1 << 2

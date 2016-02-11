@@ -5484,7 +5484,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
       // POP BC
     }
 
-    input = vischar->input & vischar_INPUT_MASK; // mask off kick flag // sampled HL = $806D, $804D, $802D, $808D, $800D
+    input = vischar->input & ~input_KICK; // sampled HL = $806D, $804D, $802D, $808D, $800D
     if (input)
     {
       direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
