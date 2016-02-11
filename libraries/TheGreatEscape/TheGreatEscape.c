@@ -310,8 +310,8 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->p04.y             = 0;
   vischar1->p04.height        = 0;
   vischar1->counter_and_flags = 0;
-  vischar1->crpbase           = &character_related_pointers[0];
-  vischar1->crp               = character_related_pointers[8];
+  vischar1->animbase          = &animations[0];
+  vischar1->anim              = animations[8];
   vischar1->b0C               = 0;
   vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
@@ -4402,7 +4402,7 @@ void move_map(tgestate_t *state)
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCH)
     return; // don't move the map if touch() is entered?
 
-  char_related = state->vischars[0].crp;
+  char_related = state->vischars[0].anim;
   b0C = state->vischars[0].b0C;
   direction = char_related[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
   if (direction == 0xFF)
@@ -6431,7 +6431,7 @@ void called_from_main_loop_9(tgestate_t *state)
 #define I (1<<7)
 
   /**
-   * $CDAA: Indices into character_related_pointers.
+   * $CDAA: Indices into animations.
    * indices: direction, input
    */
   static const uint8_t byte_CDAA[8][9] =
@@ -6446,7 +6446,7 @@ void called_from_main_loop_9(tgestate_t *state)
     { O|0x16, I|0x0E, O|0x0E, O|0x12, I|0x0E, O|0x0E, I|0x11, I|0x11, O|0x0E }, // BR + crawl
     { O|0x17, O|0x13, I|0x12, O|0x0F, O|0x13, O|0x0F, I|0x0F, I|0x0F, I|0x12 }, // BL + crawl
   };
-  // highest index = 0x17 (23 == max index in character_related_pointers)
+  // highest index = 0x17 (23 == max index in animations)
 
   uint8_t        iters;   /* was B */
   vischar_t     *vischar; /* was IY */
@@ -6471,7 +6471,7 @@ void called_from_main_loop_9(tgestate_t *state)
     if (vischar->input & input_KICK)
       goto kicked;
 
-    HL = vischar->crp; // character_related_pointer
+    HL = vischar->anim;
     A = vischar->b0C;
     if (A & vischar_BYTE12_BIT7) // up/down flag
     {
@@ -6490,7 +6490,7 @@ void called_from_main_loop_9(tgestate_t *state)
 decrement:
       SWAP(const uint8_t *, DE, HL);
 
-      // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (character_related_data)
+      // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (animations)
 
       state->saved_pos.x = vischar->mi.pos.x - SXT_8_16(DE);
       DE++;
@@ -6552,8 +6552,8 @@ kicked:
 end_bit:
   C = byte_CDAA[vischar->direction][vischar->input];
   // original game uses ADD A,A to double A and in doing so discards top bit
-  DE = vischar->crpbase[C & 0x7F]; // sampled crpbase = $CDF2 (always) == &character_related_pointers[0]
-  vischar->crp = DE;
+  DE = vischar->animbase[C & 0x7F]; // sampled animbase = $CDF2 (always) == &animations[0]
+  vischar->anim = DE;
   if ((C & I) == 0)
   {
     vischar->b0C = 0;
@@ -7771,10 +7771,10 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
    */
   static const character_class_data_t character_class_data[4] =
   {
-    { &character_related_pointers[0], &sprites[sprite_COMMANDANT_FACING_AWAY_1] },
-    { &character_related_pointers[0], &sprites[sprite_GUARD_FACING_AWAY_1]      },
-    { &character_related_pointers[0], &sprites[sprite_DOG_FACING_AWAY_1]        },
-    { &character_related_pointers[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
+    { &animations[0], &sprites[sprite_COMMANDANT_FACING_AWAY_1] },
+    { &animations[0], &sprites[sprite_GUARD_FACING_AWAY_1]      },
+    { &animations[0], &sprites[sprite_DOG_FACING_AWAY_1]        },
+    { &animations[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
   };
 
   vischar_t                   *vischar;   /* was HL/IY */
@@ -7871,7 +7871,7 @@ found_empty_slot:
 
   // EX DE, HL (DE = vischar, HL = charstr)
 
-  vischar->crpbase   = metadata->crpbase; // seems to be a constant
+  vischar->animbase  = metadata->animbase; // seems to be a constant
   vischar->mi.sprite = metadata->sprite;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
 
@@ -9965,7 +9965,7 @@ static const uint8_t _d01a[] = { 0x02, 0x07,0x04,0xFF, 0x00,0x00,0x00,0x08, 0x00
 /**
  * $CDF2: (unknown)
  */
-const uint8_t *character_related_pointers[24] =
+const uint8_t *animations[24] =
 {
   _cf26,
   _cf3a,
@@ -11615,8 +11615,8 @@ TGE_API void tge_setup(tgestate_t *state)
     { 0x2C, 0x01 },       // target
     { 0x2E, 0x2E, 0x18 }, // p04
     0x00,                 // counter_and_flags
-    &character_related_pointers[0], // crpbase
-    character_related_pointers[8],  // crp
+    &animations[0],       // animbase
+    animations[8],        // anim
     0x00,                 // b0C
     0x00,                 // input
     direction_TOP_LEFT,   // direction

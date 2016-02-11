@@ -453,11 +453,11 @@ typedef struct vischar
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
 
-  /** $8008 pointer to character_related_pointers (assigned once only) */
-  const uint8_t **crpbase;
+  /** $8008 pointer to animations (assigned once only) */
+  const uint8_t **animbase;
 
-  /** $800A value in character_related_pointers */
-  const uint8_t  *crp;
+  /** $800A value in animations */
+  const uint8_t  *anim;
 
   /** $800C */
   uint8_t         b0C; // up/down flag
@@ -670,7 +670,7 @@ mask_t;
  */
 typedef struct character_class_data
 {
-  const uint8_t **crpbase;
+  const uint8_t **animbase;
   const sprite_t *sprite;
 }
 character_class_data_t;

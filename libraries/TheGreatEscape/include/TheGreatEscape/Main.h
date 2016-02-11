@@ -532,7 +532,7 @@ extern const default_item_location_t default_item_locations[item__LIMIT];
 
 extern const character_class_data_t character_class_data[4];
 
-extern const uint8_t *character_related_pointers[24];
+extern const uint8_t *animations[24];
 
 /* $D000 onwards */
 
