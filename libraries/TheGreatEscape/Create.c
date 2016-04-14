@@ -204,7 +204,7 @@ static void tge_initialise(tgestate_t *state)
   };
 
   /**
-   * $AD29: Searchlight movement data.
+   * $AD29: Default searchlight movement data.
    */
   static const searchlight_movement_t searchlight_states[3] =
   {
