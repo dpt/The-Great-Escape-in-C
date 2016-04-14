@@ -9456,10 +9456,10 @@ uint8_t random_nibble(tgestate_t *state)
    * from this location and returns it to the caller as a nibble, giving a
    * simple pseudo-random number source.
    *
-   * Poking around in our own innards is likely to be too fragile for the
-   * portable C version, but we still want to emulate the game precisely, so
-   * we capture all possible values from the original game into the following
-   * array and use it as our random data source.
+   * Poking around in our own innards will be too fragile for the portable C
+   * version, but we still want to emulate the game precisely, so we capture
+   * all 256 nibbles from the original game into the following array and use
+   * it as our random data source.
    */
 
   static const uint32_t packed_nibbles[] =
