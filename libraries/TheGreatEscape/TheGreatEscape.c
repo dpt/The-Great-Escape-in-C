@@ -3982,6 +3982,7 @@ void plot_all_tiles(tgestate_t *state)
   uint8_t           iters;    /* was B' */
 
   assert(state != NULL);
+  ASSERT_MAP_POSITION_VALID(state->map_position);
 
   vistiles = &state->tile_buf[0];   /* visible tiles array */
   maptiles = &state->map_buf[0];    /* 7x5 supertile refs */
@@ -4084,6 +4085,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   x_offset = x & 3; // self modify (local)
+  ASSERT_MAP_POSITION_VALID(state->map_position);
   offset = (state->map_position.y & 3) * 4 + x_offset;
 
   /* Initial edge. */
@@ -5892,6 +5894,8 @@ void reset_outdoors(tgestate_t *state)
   /* Conv: Removed divide_by_8 calls here. */
   state->map_position.x = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
   state->map_position.y = (state->vischars[1].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
+
+  ASSERT_MAP_POSITION_VALID(state->map_position);
 
   state->room_index = room_NONE;
   get_supertiles(state);

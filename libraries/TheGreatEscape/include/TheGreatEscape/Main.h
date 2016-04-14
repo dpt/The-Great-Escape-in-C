@@ -97,6 +97,15 @@ do {                                                          \
   assert(p < &map[MAPX * MAPY]);                              \
 } while (0)
 
+// These limits were determined by checking the original game and cover the main map only. They'll need adjusting.
+#define ASSERT_MAP_POSITION_VALID(p)                          \
+do {                                                          \
+  assert(p.x >= 0x00);                                        \
+  assert(p.x < 0xBC);                                         \
+  assert(p.y >= 0x06);                                        \
+  assert(p.y < 0x78);                                         \
+} while (0)
+
 /* ----------------------------------------------------------------------- */
 
 // FORWARD REFERENCES
