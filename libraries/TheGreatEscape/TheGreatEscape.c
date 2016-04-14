@@ -8120,7 +8120,7 @@ uint8_t sub_C651(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C6A0: Moves characters around.
+ * $C6A0: Move one character around at a time.
  *
  * \param[in] state Pointer to game state.
  */
