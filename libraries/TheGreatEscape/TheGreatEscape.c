@@ -5893,7 +5893,7 @@ void reset_outdoors(tgestate_t *state)
   /* Centre the screen on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
   state->map_position.x = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[1].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.y = (state->vischars[0].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
 
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
