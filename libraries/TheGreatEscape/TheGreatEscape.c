@@ -8451,6 +8451,7 @@ void character_event(tgestate_t *state, xy_t *location)
   /* $C829 */
   static charevnt_handler_t *const handlers[] =
   {
+    &charevnt_handler_0,
     &charevnt_handler_1,
     &charevnt_handler_2,
     &charevnt_handler_3_check_var_A13E,
