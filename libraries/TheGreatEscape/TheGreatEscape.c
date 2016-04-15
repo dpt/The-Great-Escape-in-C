@@ -6479,7 +6479,7 @@ void called_from_main_loop_9(tgestate_t *state)
     A = vischar->b0C;
     if (A & vischar_BYTE12_BIT7) // up/down flag
     {
-      A &= vischar_BYTE12_MASK;
+      A &= ~vischar_BYTE12_BIT7;
       if (A == 0)
         goto end_bit;
 

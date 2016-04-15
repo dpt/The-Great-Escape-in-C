@@ -203,8 +203,7 @@ enum vischar_flags
   vischar_BYTE7_TOUCH                  = 1 << 6, // set while touch() entered
   vischar_BYTE7_LOCATABLE              = 1 << 7, // stops locate_vischar_or_itemstruct considering a vischar
 
-  vischar_BYTE12_MASK                  = 0x7F,
-  vischar_BYTE12_BIT7                  = 1 << 7,
+  vischar_BYTE12_BIT7                  = 1 << 7, // up/down flag
 
   // byte 14
   vischar_DIRECTION_MASK               = 0x03,
