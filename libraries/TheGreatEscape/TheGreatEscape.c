@@ -8718,7 +8718,7 @@ void follow_suspicious_character(tgestate_t *state)
     item_discovered(state, item_FOOD);
   }
 
-  /* Make supporting characters react. */
+  /* Make supporting characters react (if flags are set). */
   vischar = &state->vischars[1];
   state->IY = &state->vischars[0];
   iters   = vischars_LENGTH - 1;
@@ -8744,7 +8744,7 @@ void follow_suspicious_character(tgestate_t *state)
 
           /* Is the food nearby? */
           if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
-            vischar->flags = vischar_FLAGS_BRIBE_PENDING | vischar_FLAGS_BIT1; // dead dog? or just baited?
+            vischar->flags = vischar_FLAGS_DOG_FOOD; // guards dogs are near the food (not necesarily poisoned?)
         }
       }
 
@@ -8806,14 +8806,14 @@ a_1:
     }
     else if (flags == vischar_FLAGS_BIT1) // == 2
     {
-      if (state->automatic_player_counter > 0)
+      if (state->automatic_player_counter > 0) // under player control, not automatic
         goto a_1;
 
       vischar2->flags = 0;
       sub_CB23(state, vischar2, &vischar2->target);
       return;
     }
-    else if (flags == (vischar_FLAGS_BRIBE_PENDING + vischar_FLAGS_BIT1)) // == 3
+    else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
     {
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
@@ -8831,7 +8831,7 @@ a_1:
         return;
       }
     }
-    else if (flags == vischar_FLAGS_SAW_BRIBE)
+    else if (flags == vischar_FLAGS_SAW_BRIBE) // == 4
     {
       character_t  bribed_character; /* was A */
       vischar_t   *found;            /* was HL */
@@ -8844,8 +8844,8 @@ a_1:
         found = &state->vischars[1];
         do
         {
-          if (found->character == bribed_character) /* Bug? This doesn't mask off HL->character. */
-            goto found_bribed;
+          if (found->character == bribed_character) /* Bug? This doesn't mask found->character with vischar_CHARACTER_MASK. */
+            goto bribed_visible;
           found++;
         }
         while (--iters);
@@ -8856,8 +8856,8 @@ a_1:
       sub_CB23(state, vischar2, &vischar2->target);
       return;
 
-found_bribed:
-      /* Found bribed character. */
+bribed_visible:
+      /* Found bribed character in vischars. */
       {
         pos_t     *pos;     /* was HL */
         tinypos_t *tinypos; /* was DE */
@@ -9652,9 +9652,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
       state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_1])
     return;
 
-  // Which is the case here?
-  // - Don't follow mad people, or
-  // - Don't follow the hero when bribe has been used
+  /* If this character saw the bribe being used then ignore the hero's antics. */
   if (vischar->flags == vischar_FLAGS_SAW_BRIBE)
     return;
 
@@ -9701,7 +9699,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (!state->red_flag)
   {
     if (vischar->mi.pos.height < 32) /* uses A as temporary */
-      vischar->flags = vischar_FLAGS_BIT1; // dog+food flag?
+      vischar->flags = vischar_FLAGS_BIT1;
   }
   else
   {

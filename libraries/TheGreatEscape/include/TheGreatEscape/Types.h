@@ -183,9 +183,12 @@ enum vischar_flags
   vischar_FLAGS_MASK                   = 0x3F,
   vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only? */
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only? */
-  vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPC only? */
-  vischar_FLAGS_BIT1                   = 1 << 1, /* NPC only? */ // dog+food flag
-  vischar_FLAGS_SAW_BRIBE              = 1 << 2, // set when a hostile 'saw' a bribe being used (was nearby) // perhaps distracted
+
+  vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPC only? */ // this flag is set when a visible friendly was nearby when a bribe was used. also set in hostiles_persue.
+  vischar_FLAGS_BIT1                   = 2 << 0, /* NPC only? */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
+  vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
+  vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
+
   vischar_FLAGS_BIT6                   = 1 << 6, // affects scaling
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
