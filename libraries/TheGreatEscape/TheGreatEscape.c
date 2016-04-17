@@ -8799,15 +8799,17 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   {
     if (flags == vischar_FLAGS_BRIBE_PENDING) // == 1
     {
-a_1:
+set_p04:
       vischar2->p04.x = state->hero_map_position.x;
       vischar2->p04.y = state->hero_map_position.y;
-      goto jump_c9c0;
+      goto end_bit;
     }
-    else if (flags == vischar_FLAGS_BIT1) // == 2
+    else if (flags == vischar_FLAGS_PERSUE) // == 2
     {
       if (state->automatic_player_counter > 0) // under player control, not automatic
-        goto a_1;
+        goto set_p04;
+
+      // hero is under automatic control
 
       vischar2->flags = 0;
       sub_CB23(state, vischar2, &vischar2->target);
@@ -8820,7 +8822,7 @@ a_1:
         // Moves dog toward poisoned food?
         vischar2->p04.x = state->item_structs[item_FOOD].pos.x;
         vischar2->p04.y = state->item_structs[item_FOOD].pos.y;
-        goto jump_c9c0;
+        goto end_bit;
       }
       else
       {
@@ -8875,7 +8877,7 @@ bribed_visible:
           tinypos->x = pos->x;
           tinypos->y = pos->y;
         }
-        goto jump_c9c0;
+        goto end_bit;
       }
 
     }
@@ -8888,7 +8890,7 @@ bribed_visible:
     return; // exit via
   }
 
-jump_c9c0:
+end_bit:
   Cdash = A = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
 #if ORIGINAL
@@ -9110,9 +9112,10 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
         solitary(state); // failed to bribe?
       return; // exit via // factored out
     }
-    else if (flags_lower6 == vischar_FLAGS_BIT1 ||
+    else if (flags_lower6 == vischar_FLAGS_PERSUE ||
              flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
+      // perhaps: when hostiles are distracted food remains undiscovered?
       return;
     }
 
@@ -9698,8 +9701,9 @@ void guards_follow_suspicious_character(tgestate_t *state,
 
   if (!state->red_flag)
   {
+    /* Hostiles *not* in guard towers persue the hero. */
     if (vischar->mi.pos.height < 32) /* uses A as temporary */
-      vischar->flags = vischar_FLAGS_BIT1;
+      vischar->flags = vischar_FLAGS_PERSUE;
   }
   else
   {

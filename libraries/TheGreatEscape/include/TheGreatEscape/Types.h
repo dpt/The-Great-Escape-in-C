@@ -185,7 +185,7 @@ enum vischar_flags
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only? */
 
   vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPC only? */ // this flag is set when a visible friendly was nearby when a bribe was used. also set in hostiles_persue.
-  vischar_FLAGS_BIT1                   = 2 << 0, /* NPC only? */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
+  vischar_FLAGS_PERSUE                 = 2 << 0, /* NPC only? */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
