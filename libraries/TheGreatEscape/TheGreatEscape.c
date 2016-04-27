@@ -9426,6 +9426,11 @@ const uint8_t *element_A_of_table_7738(uint8_t A)
     // original game has an FF byte here
   };
 
+  /* Conv: A may have flags bit 7 set so mask it off. */
+  A &= ~(1 << 7);
+
+  assert(A < NELEMS(table_7738));
+
   return table_7738[A];
 }
 
