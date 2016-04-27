@@ -2474,7 +2474,7 @@ void dispatch_timed_event(tgestate_t *state)
     {  16, &event_go_to_roll_call      },
     {  20, &event_roll_call            },
     {  21, &event_go_to_breakfast_time },
-    {  36, &event_breakfast_time       },
+    {  36, &event_end_of_breakfast     },
     {  46, &event_go_to_exercise_time  },
     {  64, &event_exercise_time        },
     {  74, &event_go_to_roll_call      },
@@ -2582,12 +2582,12 @@ void event_go_to_breakfast_time(tgestate_t *state)
   set_location_0x0010(state);
 }
 
-void event_breakfast_time(tgestate_t *state)
+void event_end_of_breakfast(tgestate_t *state)
 {
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  breakfast_time(state);
+  end_of_breakfast(state);
 }
 
 void event_go_to_exercise_time(tgestate_t *state)
@@ -2812,11 +2812,11 @@ void wake_up(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A2E2: Breakfast time.
+ * $A2E2: End of breakfast time.
  *
  * \param[in] state Pointer to game state.
  */
-void breakfast_time(tgestate_t *state)
+void end_of_breakfast(tgestate_t *state)
 {
   characterstruct_t *charstr;  /* was HL */
   uint8_t            iters;    /* was B */

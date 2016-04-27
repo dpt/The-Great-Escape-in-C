@@ -234,7 +234,7 @@ void set_day_or_night(tgestate_t *state, uint8_t day_night);
 timedevent_handler_t event_wake_up;
 timedevent_handler_t event_go_to_roll_call;
 timedevent_handler_t event_go_to_breakfast_time;
-timedevent_handler_t event_breakfast_time;
+timedevent_handler_t event_end_of_breakfast;
 timedevent_handler_t event_go_to_exercise_time;
 timedevent_handler_t event_exercise_time;
 timedevent_handler_t event_go_to_time_for_bed;
@@ -246,7 +246,7 @@ void set_guards_location(tgestate_t *state, xy_t location);
 extern const character_t prisoners_and_guards[10];
 
 void wake_up(tgestate_t *state);
-void breakfast_time(tgestate_t *state);
+void end_of_breakfast(tgestate_t *state);
 
 void set_hero_target_location(tgestate_t *state, xy_t location);
 
