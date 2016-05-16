@@ -510,8 +510,8 @@ failure:
    * command = ([event modifierFlags] & NSCommandKeyMask) != 0;
    */
 
-  assign_speckey(keys, speckey_CAPS_SHIFT,   shift);
-  assign_speckey(keys, speckey_SYMBOL_SHIFT, alt);
+  keys = assign_speckey(keys, speckey_CAPS_SHIFT,   shift);
+  keys = assign_speckey(keys, speckey_SYMBOL_SHIFT, alt);
 
   // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }
