@@ -183,6 +183,8 @@ void next_message(tgestate_t *state)
   if (state->messages.queue_pointer == qp)
     return;
 
+  assert(*qp < message__LIMIT);
+
   message = messages_table[*qp];
 
   state->messages.current_character = message;
