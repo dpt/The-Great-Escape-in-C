@@ -2254,7 +2254,7 @@ void plot_ringer(tgestate_t *state, const uint8_t *src)
  */
 void increase_morale(tgestate_t *state, uint8_t delta)
 {
-  uint8_t increased_morale;
+  int increased_morale;
 
   assert(state != NULL);
   assert(delta > 0);
@@ -2262,6 +2262,9 @@ void increase_morale(tgestate_t *state, uint8_t delta)
   increased_morale = state->morale + delta;
   if (increased_morale >= morale_MAX)
     increased_morale = morale_MAX;
+
+  assert(increased_morale >= morale_MIN);
+  assert(increased_morale <= morale_MAX);
 
   state->morale = increased_morale;
 }
@@ -2274,7 +2277,7 @@ void increase_morale(tgestate_t *state, uint8_t delta)
  */
 void decrease_morale(tgestate_t *state, uint8_t delta)
 {
-  uint8_t decreased_morale;
+  int decreased_morale;
 
   assert(state != NULL);
   assert(delta > 0);
@@ -2282,6 +2285,9 @@ void decrease_morale(tgestate_t *state, uint8_t delta)
   decreased_morale = state->morale - delta;
   if (decreased_morale < morale_MIN)
     decreased_morale = morale_MIN;
+
+  assert(decreased_morale >= morale_MIN);
+  assert(decreased_morale <= morale_MAX);
 
   /* Conv: This jumps into the tail end of increase_morale in the original
    * code. */
