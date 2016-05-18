@@ -6858,7 +6858,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       assert(itemstruct != NULL);
 #endif
 
-    if ((index & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag
+    if ((index & item_FOUND) == 0)
     {
       found = setup_vischar_plotting(state, vischar);
       if (found)
@@ -6885,6 +6885,8 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
 }
 
 /* ----------------------------------------------------------------------- */
+
+#define item_FOUND (1 << 6) // set by get_greatest_itemstruct
 
 /**
  * $B89C: Locates a vischar or item to plot.
@@ -6961,7 +6963,7 @@ next:
   if (item_and_flag & (1 << 7))
     return 0; // NZ => not found
 
-  if ((item_and_flag & (1 << 6)) == 0) // mysteryflagconst874 'item found' flag?
+  if ((item_and_flag & item_FOUND) == 0)
   {
     found_vischar->counter_and_flags &= ~vischar_BYTE7_LOCATABLE;
 
@@ -10118,7 +10120,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
         /* It seems that A' is the output register, irrespective. */
-        item_and_flag = (item__LIMIT - iters) | (1 << 6); // iteration count + 'item found' flag? mysteryflagconst874
+        item_and_flag = (item__LIMIT - iters) | item_FOUND; // iteration count + 'item found' flag
       }
     }
     itemstr++;
@@ -10164,7 +10166,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   ASSERT_ITEM_VALID(item);
 
   /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
-  item &= 0x3F; // mask off mysteryflagconst874
+  item &= 0x3F; // mask off item_FOUND
 
   /* Bug: The original game writes to this location but it's never
    * subsequently read from.
