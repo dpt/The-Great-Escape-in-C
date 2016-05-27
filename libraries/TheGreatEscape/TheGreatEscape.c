@@ -3670,7 +3670,7 @@ uint8_t keyscan_all(tgestate_t *state)
 {
   uint16_t port;  /* was BC */
   uint8_t  keys;  /* was A */
-  int      carry;
+  int      carry = 0;
 
   assert(state != NULL);
 
@@ -7287,7 +7287,7 @@ uint16_t multiply(uint8_t left, uint8_t right)
   result = 0;
   do
   {
-    int carry;
+    int carry = 0;
 
     result <<= 1;
     carry = left >> 7; /* shift out of high end */
@@ -7509,7 +7509,7 @@ void called_from_main_loop_3(tgestate_t *state)
     self_BC95 = A; // self modify // HL stride
 
     xy_t *HL;
-    int carry;
+    int carry = 0;
 
     HL = &state->map_position;
 
@@ -10455,7 +10455,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
     {
       uint8_t bm0, bm1, bm2, bm3;         // was B, C, E, D
       uint8_t mask0, mask1, mask2, mask3; // was B', C', E', D'
-      int     carry;
+      int     carry = 0;
 
       /* Load bitmap bytes into B,C,E. */
       bm0 = *bitmapptr++;
@@ -10581,7 +10581,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       /* Note the different variable order to the case above. */
       uint8_t bm0, bm1, bm2, bm3;         // was E, C, B, D
       uint8_t mask0, mask1, mask2, mask3; // was E', C', B', D'
-      int     carry;
+      int     carry = 0;
 
       /* Load bitmap bytes into B,C,E. */
       bm2 = *bitmapptr++;
@@ -10765,7 +10765,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   {
     uint8_t bm0, bm1, bm2;       // was D, E, C
     uint8_t mask0, mask1, mask2; // was D', E', C'
-    int     carry;
+    int     carry = 0;
 
     /* Load bitmap bytes into D,E. */
     bm0 = *bitmapptr++;
@@ -10900,7 +10900,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     /* Note the different variable order to the 'left' case above. */
     uint8_t bm0, bm1, bm2;       // was E, D, C
     uint8_t mask0, mask1, mask2; // was E', D', C'
-    int     carry;
+    int     carry = 0;
 
     /* Load bitmap bytes into D,E. */
     bm1 = *bitmapptr++;
@@ -11653,7 +11653,7 @@ TGE_API void tge_setup(tgestate_t *state)
   uint8_t    counter;  /* was A */
   uint8_t    byte;     /* was C */
   uint8_t    iters;    /* was B */
-  int        carry;
+  int        carry = 0;
   vischar_t *vischar;  /* was HL */
 
   assert(state != NULL);

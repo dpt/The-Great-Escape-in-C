@@ -240,7 +240,7 @@ static void choose_keys(tgestate_t *state)
         {
           const uint8_t *hi_bytes;    /* was HL */
           uint8_t        index;       /* was D */
-          int            carry;
+          int            carry = 0;
           // uint8_t        hi_byte;     /* was A' */
           // uint8_t        storedport;  /* was A' */
           uint8_t        keyflags;    /* was E */
