@@ -6829,6 +6829,8 @@ still_in_spotlight:
 
 /* ----------------------------------------------------------------------- */
 
+#define item_FOUND (1 << 6) // set by get_greatest_itemstruct
+
 /**
  * $B866: Seems to locate things to plot, then invoke masked sprite plotter
  * on those things.
@@ -6885,8 +6887,6 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
 }
 
 /* ----------------------------------------------------------------------- */
-
-#define item_FOUND (1 << 6) // set by get_greatest_itemstruct
 
 /**
  * $B89C: Locates a vischar or item to plot.
