@@ -9927,22 +9927,22 @@ void item_discovered(tgestate_t *state, item_t item)
 
 const default_item_location_t default_item_locations[item__LIMIT] =
 {
-  { ITEM_ROOM(room_NONE,        3), 0x40, 0x20 }, /* item_WIRESNIPS        */
-  { ITEM_ROOM(room_9_CRATE,     0), 0x3E, 0x30 }, /* item_SHOVEL           */
-  { ITEM_ROOM(room_10_LOCKPICK, 0), 0x49, 0x24 }, /* item_LOCKPICK         */
-  { ITEM_ROOM(room_11_PAPERS,   0), 0x2A, 0x3A }, /* item_PAPERS           */
-  { ITEM_ROOM(room_14_TORCH,    0), 0x32, 0x18 }, /* item_TORCH            */
-  { ITEM_ROOM(room_NONE,        0), 0x24, 0x2C }, /* item_BRIBE            */
-  { ITEM_ROOM(room_15_UNIFORM,  0), 0x2C, 0x41 }, /* item_UNIFORM          */
-  { ITEM_ROOM(room_19_FOOD,     0), 0x40, 0x30 }, /* item_FOOD             */
-  { ITEM_ROOM(room_1_HUT1RIGHT, 0), 0x42, 0x34 }, /* item_POISON           */
-  { ITEM_ROOM(room_22_REDKEY,   0), 0x3C, 0x2A }, /* item_RED_KEY          */
-  { ITEM_ROOM(room_11_PAPERS,   0), 0x1C, 0x22 }, /* item_YELLOW_KEY       */
-  { ITEM_ROOM(room_0_OUTDOORS,  0), 0x4A, 0x48 }, /* item_GREEN_KEY        */
-  { ITEM_ROOM(room_NONE,        0), 0x1C, 0x32 }, /* item_RED_CROSS_PARCEL */
-  { ITEM_ROOM(room_18_RADIO,    0), 0x24, 0x3A }, /* item_RADIO            */
-  { ITEM_ROOM(room_NONE,        0), 0x1E, 0x22 }, /* item_PURSE            */
-  { ITEM_ROOM(room_NONE,        0), 0x34, 0x1C }, /* item_COMPASS          */
+  { ITEM_ROOM(room_NONE,        3), { 0x40, 0x20 } }, /* item_WIRESNIPS        */
+  { ITEM_ROOM(room_9_CRATE,     0), { 0x3E, 0x30 } }, /* item_SHOVEL           */
+  { ITEM_ROOM(room_10_LOCKPICK, 0), { 0x49, 0x24 } }, /* item_LOCKPICK         */
+  { ITEM_ROOM(room_11_PAPERS,   0), { 0x2A, 0x3A } }, /* item_PAPERS           */
+  { ITEM_ROOM(room_14_TORCH,    0), { 0x32, 0x18 } }, /* item_TORCH            */
+  { ITEM_ROOM(room_NONE,        0), { 0x24, 0x2C } }, /* item_BRIBE            */
+  { ITEM_ROOM(room_15_UNIFORM,  0), { 0x2C, 0x41 } }, /* item_UNIFORM          */
+  { ITEM_ROOM(room_19_FOOD,     0), { 0x40, 0x30 } }, /* item_FOOD             */
+  { ITEM_ROOM(room_1_HUT1RIGHT, 0), { 0x42, 0x34 } }, /* item_POISON           */
+  { ITEM_ROOM(room_22_REDKEY,   0), { 0x3C, 0x2A } }, /* item_RED_KEY          */
+  { ITEM_ROOM(room_11_PAPERS,   0), { 0x1C, 0x22 } }, /* item_YELLOW_KEY       */
+  { ITEM_ROOM(room_0_OUTDOORS,  0), { 0x4A, 0x48 } }, /* item_GREEN_KEY        */
+  { ITEM_ROOM(room_NONE,        0), { 0x1C, 0x32 } }, /* item_RED_CROSS_PARCEL */
+  { ITEM_ROOM(room_18_RADIO,    0), { 0x24, 0x3A } }, /* item_RADIO            */
+  { ITEM_ROOM(room_NONE,        0), { 0x1E, 0x22 } }, /* item_PURSE            */
+  { ITEM_ROOM(room_NONE,        0), { 0x34, 0x1C } }, /* item_COMPASS          */
 };
 
 #undef ITEM_ROOM
