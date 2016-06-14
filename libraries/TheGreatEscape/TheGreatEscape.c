@@ -7833,7 +7833,7 @@ found_empty_slot:
 
   /* Scale coords dependent on which room the character is in. */
   saved_pos = &state->saved_pos;
-  if (charstr2->room == 0)
+  if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
     saved_pos->x      = charstr2->pos.x      * 8;
