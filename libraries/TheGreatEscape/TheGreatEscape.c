@@ -5720,14 +5720,16 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* Select start position in door_positions based on the direction the hero
-   * is facing. */
+  /* Select a start position in door_positions based on the direction the
+   * hero is facing. */
   door_pos = &door_positions[0];
   direction = vischar->direction;
   if (direction >= direction_BOTTOM_RIGHT) /* BOTTOM_RIGHT or BOTTOM_LEFT */
     door_pos = &door_positions[1];
 
-  iters = 16; // 16 is the length of what?
+  /* The first 16 (pairs of) entries in door_positions[] are the only ones
+   * with room_0_OUTDOORS as a destination, so only consider those. */
+  iters = 16;
   do
   {
     if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) == direction)
@@ -5736,21 +5738,23 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
     door_pos += 2;
   }
   while (--iters);
-  // A &= B; // seems to exist to set Z, but routine doesn't return anything?
+
+  /* Conv: Removed unused 'A &= B' op. */
+
   return;
 
 found:
   state->current_door = 16 - iters;
 
   if (is_door_locked(state))
-    return; // door was locked - return nonzero?
+    return;
 
   vischar->room = (door_pos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // sampled HL = $792E (in door_positions[])
   if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) >= direction_BOTTOM_RIGHT) /* BR or BL */
-    // point at the next door's pos
+    /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
   else
-    // point at the previous door's pos
+    /* Point to the previous door's pos */
     transition(state, &door_pos[-1].pos);
 
   NEVER_RETURNS; // highly likely if this is only tiggered by the hero
