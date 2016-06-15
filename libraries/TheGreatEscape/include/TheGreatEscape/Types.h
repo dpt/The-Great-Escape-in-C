@@ -194,7 +194,7 @@ enum vischar_flags
 
   // vischar_FLAGS_BIT6:
   // set by sub_A3BB (sub_C651 A == 128 case), spawn_character (sub_C651 A == 128 case), sub_CB61 (sub_C651 A == 128 case)
-  // cleared by set_hero_target_location, set_character_location (store_to_vischar case), bribes_solitary_food (character entering door chunk)
+  // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
   vischar_BYTE2_MASK                   = 0x7F,   // target mask
@@ -316,24 +316,24 @@ enum morale
 };
 
 /**
- * Identifiers of map locations.
+ * Identifiers of map targets.
  */
-enum location
+enum targets
 {
-  location_0005                        = 0x0005, /* used in wake_up */
-  location_000E                        = 0x000E, /* used at exercise time (prior) */
-  location_0010                        = 0x0010,
-  location_001A                        = 0x001A, /* used in go_to_roll_call */
-  location_0026                        = 0x0026, /* used in event_search_light */
-  location_002A                        = 0x002A, /* used at wake up time */
-  location_002B                        = 0x002B,
-  location_002C                        = 0x002C,
-  location_002D                        = 0x002D, /* used at roll call */
-  location_012C                        = 0x012C, /* used at night time */
-  location_0285                        = 0x0285, /* used at bed time */
-  location_0390                        = 0x0390, /* used at breakfast time */
-  location_03A6                        = 0x03A6, /* used in event_time_for_bed */
-  location_048E                        = 0x048E, /* used at exercise time */
+  target_0005                        = 0x0005, /* used in wake_up */
+  target_000E                        = 0x000E, /* used at exercise time (prior) */
+  target_0010                        = 0x0010,
+  target_001A                        = 0x001A, /* used in go_to_roll_call */
+  target_0026                        = 0x0026, /* used in event_search_light */
+  target_002A                        = 0x002A, /* used at wake up time */
+  target_002B                        = 0x002B,
+  target_002C                        = 0x002C,
+  target_002D                        = 0x002D, /* used at roll call */
+  target_012C                        = 0x012C, /* used at night time */
+  target_0285                        = 0x0285, /* used at bed time */
+  target_0390                        = 0x0390, /* used at breakfast time */
+  target_03A6                        = 0x03A6, /* used in event_time_for_bed */
+  target_048E                        = 0x048E, /* used at exercise time */
 };
 
 /**

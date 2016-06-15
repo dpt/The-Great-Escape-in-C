@@ -1934,15 +1934,15 @@ found:
 
 set_target_then_set_flag_green:
     // oddness here needs checking out. only 'B' is loaded from the target, but
-    // set_hero_target_location needs BC
+    // set_hero_target needs BC
     // BC is reset to zero above, so C must be the loop counter
     // but why load .x into high byte?
     {
-      xy_t loc2; /* was BC */
+      xy_t target2; /* was BC */
 
-      loc2.x = BC & 0xFF;
-      loc2.y = state->vischars[0].target.x;
-      set_hero_target_location(state, loc2);
+      target2.x = BC & 0xFF;
+      target2.y = state->vischars[0].target.x;
+      set_hero_target(state, target2);
     }
     goto set_flag_green;
 
@@ -2528,8 +2528,8 @@ void event_night_time(tgestate_t *state)
 
   if (state->hero_in_bed == 0)
   {
-    const xy_t loc = { 0x2C, 0x01 }; /* location_012C */ /* was BC */
-    set_hero_target_location(state, loc);
+    const xy_t target = { 0x2C, 0x01 }; /* target_012C */ /* was BC */
+    set_hero_target(state, target);
   }
   set_day_or_night(state, 0xFF);
 }
@@ -2585,7 +2585,7 @@ void event_go_to_breakfast_time(tgestate_t *state)
 
   state->bell = bell_RING_40_TIMES;
   queue_message_for_display(state, message_BREAKFAST_TIME);
-  set_location_0x0010(state);
+  set_target_0x0010(state);
 }
 
 void event_end_of_breakfast(tgestate_t *state)
@@ -2607,7 +2607,7 @@ void event_go_to_exercise_time(tgestate_t *state)
   state->gates_and_doors[0] = 0; /* Index into door_positions + clear locked flag. */
   state->gates_and_doors[1] = 1;
 
-  set_location_0x000E(state);
+  set_target_0x000E(state);
 }
 
 void event_exercise_time(tgestate_t *state)
@@ -2615,7 +2615,7 @@ void event_exercise_time(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  set_location_0x048E(state);
+  set_target_0x048E(state);
 }
 
 void event_go_to_time_for_bed(tgestate_t *state)
@@ -2690,40 +2690,40 @@ void event_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t loc = { 0xA6, 0x03 }; /* location_03A6 */ /* was C,A */
-  set_guards_location(state, loc);
+  const xy_t target = { 0xA6, 0x03 }; /* target_03A6 */ /* was C,A */
+  set_guards_target(state, target);
 }
 
 void event_search_light(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t loc = { 0x26, 0x00 }; /* location_0026 */ /* was C,A */
-  set_guards_location(state, loc);
+  const xy_t target = { 0x26, 0x00 }; /* target_0026 */ /* was C,A */
+  set_guards_target(state, target);
 }
 
 /**
  * Common end of event_time_for_bed and event_search_light.
  * Sets the location of guards 12..15 (the guards from prisoners_and_guards).
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Location.              (was C,A (hi,lo))
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Target.                (was C,A (hi,lo))
  */
-void set_guards_location(tgestate_t *state, xy_t location)
+void set_guards_target(tgestate_t *state, xy_t target)
 {
   character_t index; /* was A' */
   uint8_t     iters; /* was B */
 
   assert(state    != NULL);
-  //assert(location != NULL);
+  //assert(target != NULL);
 
   index = character_12_GUARD_12;
   iters = 4;
   do
   {
-    set_character_location(state, index, location);
+    set_character_target(state, index, target);
     index++;
-    location.x++;
+    target.x++;
   }
   while (--iters);
 }
@@ -2733,8 +2733,8 @@ void set_guards_location(tgestate_t *state, xy_t location)
 /**
  * $A27F: List of non-player characters: six prisoners and four guards.
  *
- * Used by set_prisoners_and_guards_location and
- * set_prisoners_and_guards_location_B.
+ * Used by set_prisoners_and_guards_target and
+ * set_prisoners_and_guards_target_B.
  */
 const character_t prisoners_and_guards[10] =
 {
@@ -2774,8 +2774,8 @@ void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
-  const xy_t loc002A = { 0x2A, 0x00 }; /* location_002A */ /* was BC */
-  set_hero_target_location(state, loc002A);
+  const xy_t target002A = { 0x2A, 0x00 }; /* target_002A */ /* was BC */
+  set_hero_target(state, target002A);
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -2794,9 +2794,9 @@ void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t loc0005 = { 0x05, 0x00 }; /* location_0005 */ /* was C,A' (hi,lo) */
-  // .x is incremented by set_prisoners_and_guards_location_B (but it's unclear why)
-  set_prisoners_and_guards_location_B(state, &loc0005);
+  xy_t target0005 = { 0x05, 0x00 }; /* target_0005 */ /* was C,A' (hi,lo) */
+  // .x is incremented by set_prisoners_and_guards_target_B (but it's unclear why)
+  set_prisoners_and_guards_target_B(state, &target0005);
 
   /* Update all the bed objects to be empty. */
   // FIXME: This writes to a possibly shared structure, so ought to be moved into the state somehow.
@@ -2836,8 +2836,8 @@ void end_of_breakfast(tgestate_t *state)
   }
 
   state->hero_in_breakfast = 0;
-  const xy_t loc = { 0x90, 0x03 }; /* location_0390 */ /* was BC */
-  set_hero_target_location(state, loc);
+  const xy_t target = { 0x90, 0x03 }; /* target_0390 */ /* was BC */
+  set_hero_target(state, target);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -2855,8 +2855,8 @@ void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t loc0390 = { 0x90, 0x30 }; /* location_0390 */ /* was C,A' (hi,lo) */
-  set_prisoners_and_guards_location_B(state, &loc0390);
+  xy_t target0390 = { 0x90, 0x30 }; /* target_0390 */ /* was C,A' (hi,lo) */
+  set_prisoners_and_guards_target_B(state, &target0390);
 
   /* Update all the benches to be empty. */
   // FIXME: Writing to shared state.
@@ -2879,17 +2879,17 @@ void end_of_breakfast(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A33F: Set the hero's target location.
+ * $A33F: Set the hero's target.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Location.              (was BC)
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Target.                (was BC)
  */
-void set_hero_target_location(tgestate_t *state, xy_t location)
+void set_hero_target(tgestate_t *state, xy_t target)
 {
   vischar_t *vischar; /* was HL */
 
   assert(state != NULL);
-  // assert(location);
+  // assert(target);
 
   if (state->morale_1)
     return;
@@ -2897,7 +2897,7 @@ void set_hero_target_location(tgestate_t *state, xy_t location)
   vischar = &state->vischars[0];
 
   vischar->flags &= ~vischar_FLAGS_BIT6;
-  vischar->target = location;
+  vischar->target = target;
   sub_A3BB(state, vischar);
 }
 
@@ -2912,108 +2912,108 @@ void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t loc = { 0x85, 0x02 }; /* location_0285 */ /* was BC */
-  set_hero_target_location(state, loc);
+  const xy_t target = { 0x85, 0x02 }; /* target_0285 */ /* was BC */
+  set_hero_target(state, target);
 
-  xy_t loc0285 = { 0x85, 0x02 }; /* location_0285 */ /* was C,A' (hi,lo) */
-  set_prisoners_and_guards_location_B(state, &loc0285);
+  xy_t target0285 = { 0x85, 0x02 }; /* target_0285 */ /* was C,A' (hi,lo) */
+  set_prisoners_and_guards_target_B(state, &target0285);
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A35F: Set the location of the prisoners_and_guards.
+ * $A35F: Set the target for all prisoners and guards.
  *
- * Set a different location for each character.
+ * Set a different target for each character.
  *
  * Called by go_to_roll_call.
  *
  * This increments .x and returns it, but it's unclear why it does that.
  * None of the calls seem to make use of it.
  *
- * \param[in]     state Pointer to game state.
- * \param[in,out] ploc  Pointer to location. (was C,A')
+ * \param[in]     state   Pointer to game state.
+ * \param[in,out] ptarget Pointer to target. (was C,A')
  */
-void set_prisoners_and_guards_location(tgestate_t *state, xy_t *ploc)
+void set_prisoners_and_guards_target(tgestate_t *state, xy_t *ptarget)
 {
-  xy_t               loc;    /* new var */
+  xy_t               target; /* new var */
   const character_t *pchars; /* was HL */
   uint8_t            iters;  /* was B */
 
-  assert(state != NULL);
-  assert(ploc  != NULL);
+  assert(state   != NULL);
+  assert(ptarget != NULL);
 
-  loc = *ploc; /* Conv: Keep a local copy of counter. */
+  target = *ptarget; /* Conv: Keep a local copy of counter. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    set_character_location(state, *pchars, loc);
-    loc.x++;
+    set_character_target(state, *pchars, target);
+    target.x++;
     pchars++;
   }
   while (--iters);
 
-  *ploc = loc;
+  *ptarget = target;
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A373: Set the location of the prisoners_and_guards.
+ * $A373: Set the target for all prisoners and guards.
  *
- * Set the same location for each half of the group.
+ * Set the same target for each half of the group.
  *
- * Called by the set_location routines.
+ * Called by the set_target routines.
  *
- * \param[in]     state Pointer to game state.
- * \param[in,out] ploc  Pointer to location. (was C,A')
+ * \param[in]     state   Pointer to game state.
+ * \param[in,out] ptarget Pointer to target. (was C,A')
  */
-void set_prisoners_and_guards_location_B(tgestate_t *state, xy_t *ploc)
+void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *ptarget)
 {
-  xy_t               loc;    /* new var */
+  xy_t               target;  /* new var */
   const character_t *pchars; /* was HL */
   uint8_t            iters;  /* was B */
 
-  assert(state != NULL);
-  assert(ploc  != NULL);
+  assert(state   != NULL);
+  assert(ptarget != NULL);
 
-  loc = *ploc; /* Conv: Keep a local copy of counter. */
+  target = *ptarget; /* Conv: Keep a local copy of counter. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
   do
   {
-    set_character_location(state, *pchars, loc);
+    set_character_target(state, *pchars, target);
 
     /* When this is 6, the character being processed is
      * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
      * start of the second half of the list. */
     if (iters == 6)
-      loc.x++;
+      target.x++;
 
     pchars++;
   }
   while (--iters);
 
-  *ploc = loc;
+  *ptarget = target;
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A38C: Set location of a character.
+ * $A38C: Set the target for a character.
  *
- * Finds a charstruct, or a vischar, and stores a location in its target.
+ * Finds a charstruct, or a vischar, and stores a target.
  *
  * \param[in] state     Pointer to game state.
  * \param[in] character Character index.       (was A)
- * \param[in] location  Location.              (was A' lo + C hi)
+ * \param[in] target    Target.                (was A' lo + C hi)
  */
-void set_character_location(tgestate_t *state,
-                            character_t character,
-                            xy_t        location)
+void set_character_target(tgestate_t *state,
+                          character_t character,
+                          xy_t        target)
 {
   characterstruct_t *charstr; /* was HL */
   vischar_t         *vischar; /* was HL */
@@ -3021,7 +3021,7 @@ void set_character_location(tgestate_t *state,
 
   assert(state != NULL);
   ASSERT_CHARACTER_VALID(character);
-  // assert(location);
+  // assert(target);
 
   charstr = get_character_struct(state, character);
   if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) != 0)
@@ -3044,13 +3044,13 @@ void set_character_location(tgestate_t *state,
   }
 
   /* Store to characterstruct only. */
-  store_location(location, &charstr->target);
+  store_target(target, &charstr->target);
   return;
 
   // FUTURE: Move this chunk into the body of the loop above.
 store_to_vischar:
   vischar->flags &= ~vischar_FLAGS_BIT6;
-  store_location(location, &vischar->target);
+  store_target(target, &vischar->target);
 
   sub_A3BB(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
 }
@@ -3058,16 +3058,16 @@ store_to_vischar:
 /**
  * $A3BB: sub_A3BB.
  *
- * Called by set_character_location, set_hero_target_location.
+ * Called by set_character_target, set_hero_target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL) (e.g. $8003 in original)
  */
 void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t    A;        /* was A */
-  tinypos_t *pos;      /* was DE */
-  xy_t      *location; /* was HL */
+  uint8_t    A;      /* was A */
+  tinypos_t *pos;    /* was DE */
+  xy_t      *target; /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3076,11 +3076,11 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  A = sub_C651(state, &vischar->target, &location);
+  A = sub_C651(state, &vischar->target, &target);
 
   pos = &vischar->p04;
-  pos->x = location->x;
-  pos->y = location->y;
+  pos->x = target->x;
+  pos->y = target->y;
 
   if (A == 255)
   {
@@ -3098,17 +3098,17 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 /**
  * $A3ED: Store an xy_t at the specified address.
  *
- * Used by set_character_location only.
+ * Used by set_character_target only.
  *
- * \param[in]  location  Location. (was A' lo + C hi)
- * \param[out] plocation Pointer to vischar->target, or characterstruct->target. (was HL)
+ * \param[in]  target  Target. (was A' lo + C hi)
+ * \param[out] ptarget Pointer to vischar->target, or characterstruct->target. (was HL)
  */
-void store_location(xy_t location, xy_t *plocation)
+void store_target(xy_t target, xy_t *ptarget)
 {
-  // assert(location);
-  assert(plocation != NULL);
+  // assert(target);
+  assert(ptarget != NULL);
 
-  *plocation = location;
+  *ptarget = target;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3116,16 +3116,16 @@ void store_location(xy_t location, xy_t *plocation)
 /**
  * $A3F3: entered_move_characters is non-zero.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to location. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_nonzero(tgestate_t *state,
-                          xy_t       *location)
+                          xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  byte_A13E_common(state, state->character_index, location);
+  byte_A13E_common(state, state->character_index, target);
 }
 
 /**
@@ -3133,17 +3133,17 @@ void byte_A13E_is_nonzero(tgestate_t *state,
  *
  * Gets hit when hero enters hut at end of day.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to location. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_zero(tgestate_t *state,
-                       xy_t       *location)
+                       xy_t       *target)
 {
   character_t character;
   vischar_t  *vischar;
 
   assert(state    != NULL);
-  assert(location != NULL);
+  assert(target != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -3151,12 +3151,12 @@ void byte_A13E_is_zero(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    xy_t loc = { 0x2C, 0x00 }; /* location_002C */ /* was BC */
-    set_hero_target_location(state, loc);
+    xy_t target2 = { 0x2C, 0x00 }; /* target_002C */ /* was BC */
+    set_hero_target(state, target2);
   }
   else
   {
-    byte_A13E_common(state, character, location); /* was fallthrough */
+    byte_A13E_common(state, character, target); /* was fallthrough */
   }
 }
 
@@ -3164,20 +3164,20 @@ void byte_A13E_is_zero(tgestate_t *state,
  * $A404: Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] character Character index.     (was A)
- * \param[in] location  Pointer to location. (was HL)
+ * \param[in] character Character index.       (was A)
+ * \param[in] target    Pointer to target.     (was HL)
  */
 void byte_A13E_common(tgestate_t *state,
                       character_t character,
-                      xy_t       *location)
+                      xy_t       *target)
 {
   uint8_t A; /* was A */
 
   assert(state    != NULL);
   ASSERT_CHARACTER_VALID(character);
-  assert(location != NULL);
+  assert(target   != NULL);
 
-  location->y = 0x00;
+  target->y = 0x00;
 
   if (character >= character_20_PRISONER_1)
   {
@@ -3188,12 +3188,12 @@ void byte_A13E_common(tgestate_t *state,
     A = 13;
     if (character & (1 << 0)) /* Odd numbered characters? */
     {
-      location->y = 0x01;
+      target->y = 0x01;
       A = character | (1 << 7);
     }
   }
 
-  location->x = A;
+  target->x = A;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3201,13 +3201,13 @@ void byte_A13E_common(tgestate_t *state,
 /**
  * $A420: Character sits.
  *
- * \param[in] state     Pointer to game state.
- * \param[in] A         (was A)
- * \param[in] location  Pointer to location. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] A      (was A)
+ * \param[in] target Pointer to target. (was HL)
  */
 void character_sits(tgestate_t *state,
                     uint8_t     A,
-                    xy_t       *location)
+                    xy_t       *target)
 {
   uint8_t  index; /* was A */
   uint8_t *bench; /* was HL */
@@ -3215,7 +3215,7 @@ void character_sits(tgestate_t *state,
 
   assert(state    != NULL);
   //ASSERT_..._VALID(A);
-  assert(location != NULL);
+  assert(target != NULL);
 
   index = A - 18;
   /* First three characters. */
@@ -3235,25 +3235,25 @@ void character_sits(tgestate_t *state,
   else
     room = room_23_BREAKFAST;
 
-  character_sit_sleep_common(state, room, location);
+  character_sit_sleep_common(state, room, target);
 }
 
 /**
  * $A444: Character sleeps.
  *
- * \param[in] state     Pointer to game state.
- * \param[in] A         (was A)
- * \param[in] location  Pointer to location. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] A      (was A)
+ * \param[in] target Pointer to target. (was HL)
  */
 void character_sleeps(tgestate_t *state,
                       uint8_t     A,
-                      xy_t       *location)
+                      xy_t       *target)
 {
   room_t room; /* was C */
 
-  assert(state    != NULL);
+  assert(state  != NULL);
   //ASSERT_..._VALID(A);
-  assert(location != NULL);
+  assert(target != NULL);
 
   /* Poke object. */
   *beds[A - 7] = interiorobject_OCCUPIED_BED;
@@ -3263,26 +3263,26 @@ void character_sleeps(tgestate_t *state,
   else
     room = room_5_HUT3RIGHT;
 
-  character_sit_sleep_common(state, room, location);
+  character_sit_sleep_common(state, room, target);
 }
 
 /**
  * $A462: Common end of character sits/sleeps.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] room     Room index.               (was C)
- * \param[in] location Likely a target location. (was DE/HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] room   Room index.            (was C)
+ * \param[in] target Likely a target.       (was DE/HL)
  */
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                xy_t       *location)
+                                xy_t       *target)
 {
-  /* This receives a pointer to a location structure which is within either a
+  /* This receives a pointer to a target structure which is within either a
    * characterstruct or a vischar. */
 
-  assert(state    != NULL);
+  assert(state  != NULL);
   ASSERT_ROOM_VALID(room);
-  assert(location != NULL);
+  assert(target != NULL);
 
   // sampled HL =
   // breakfast $8022 + + $76B8 $76BF
@@ -3292,7 +3292,7 @@ void character_sit_sleep_common(tgestate_t *state,
   // $8022 -> vischar[1]->target
   // others -> character_structs->target
 
-  location->x = 0xFF;
+  target->x = 0xFF;
 
   if (state->room_index != room)
   {
@@ -3301,7 +3301,7 @@ void character_sit_sleep_common(tgestate_t *state,
     characterstruct_t *cs;
 
     /* Retrieve the parent structure pointer. */
-    cs = structof(location, characterstruct_t, target);
+    cs = structof(target, characterstruct_t, target);
     cs->room = room_NONE;
   }
   else
@@ -3313,7 +3313,7 @@ void character_sit_sleep_common(tgestate_t *state,
     /* This is only ever hit when location is in vischar @ $8020. */
 
     /* Retrieve the parent structure pointer. */
-    vc = structof(location, vischar_t, target);
+    vc = structof(target, vischar_t, target);
     vc->room = room_NONE;
 
     select_room_and_plot(state);
@@ -3375,7 +3375,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   /* Set hero_in_breakfast or hero_in_bed flag. */
   *pflag = 0xFF;
 
-  /* Reset only the bottom byte of target location. */
+  /* Reset only the bottom byte of target. */
   state->vischars[0].target.x = 0x00;
 
   /* Set hero position (x,y) to zero. */
@@ -3390,51 +3390,51 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4A9: Set location 0x000E.
+ * $A4A9: Set target 0x000E.
  *
  * \param[in] state Pointer to game state.
  */
-void set_location_0x000E(tgestate_t *state)
+void set_target_0x000E(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t loc = { 0x0E, 0x00 }; /* location_000E */
-  set_hero_target_location(state, loc);
+  const xy_t target = { 0x0E, 0x00 }; /* target_000E */
+  set_hero_target(state, target);
 
-  xy_t loc000E = { 0x0E, 0x00 }; /* location_000E */ /* was C,A' */
-  set_prisoners_and_guards_location_B(state, &loc000E);
+  xy_t loc000E = { 0x0E, 0x00 }; /* target_000E */ /* was C,A' */
+  set_prisoners_and_guards_target_B(state, &loc000E);
 }
 
 /**
- * $A4B7: Set location 0x048E.
+ * $A4B7: Set target 0x048E.
  *
  * \param[in] state Pointer to game state.
  */
-void set_location_0x048E(tgestate_t *state)
+void set_target_0x048E(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t loc = { 0x8E, 0x04 }; /* location_048E */
-  set_hero_target_location(state, loc);
+  xy_t target = { 0x8E, 0x04 }; /* target_048E */
+  set_hero_target(state, target);
 
-  xy_t loc0010 = { 0x10, 0x00 }; /* location_0010 */ /* was C,A' */
-  set_prisoners_and_guards_location_B(state, &loc0010);
+  xy_t loc0010 = { 0x10, 0x00 }; /* target_0010 */ /* was C,A' */
+  set_prisoners_and_guards_target_B(state, &loc0010);
 }
 
 /**
- * $A4C5: Set location 0x0010.
+ * $A4C5: Set target 0x0010.
  *
  * \param[in] state Pointer to game state.
  */
-void set_location_0x0010(tgestate_t *state)
+void set_target_0x0010(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t loc = { 0x10, 0x00 }; /* location_0010 */
-  set_hero_target_location(state, loc);
+  xy_t target = { 0x10, 0x00 }; /* target_0010 */
+  set_hero_target(state, target);
 
-  xy_t loc0010 = { 0x10, 0x00 }; /* location_0010 */ /* was C,A' */
-  set_prisoners_and_guards_location_B(state, &loc0010);
+  xy_t loc0010 = { 0x10, 0x00 }; /* target_0010 */ /* was C,A' */
+  set_prisoners_and_guards_target_B(state, &loc0010);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3444,32 +3444,32 @@ void set_location_0x0010(tgestate_t *state)
  *
  * Very similar to the routine at $A3F3.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to character struct. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Pointer to character struct. (was HL)
  */
 void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     xy_t       *location)
+                                     xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  byte_A13E_anotherone_common(state, state->character_index, location);
+  byte_A13E_anotherone_common(state, state->character_index, target);
 }
 
 /**
  * $A4D8: entered_move_characters is zero (another one).
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to location. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  xy_t       *location)
+                                  xy_t       *target)
 {
   character_t character;
   vischar_t  *vischar;
 
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -3477,12 +3477,12 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    const xy_t loc = { 0x2B, 0x00 }; /* location_002B */ /* was BC */
-    set_hero_target_location(state, loc);
+    const xy_t target2 = { 0x2B, 0x00 }; /* target_002B */ /* was BC */
+    set_hero_target(state, target2);
   }
   else
   {
-    byte_A13E_anotherone_common(state, character, location); /* was fallthrough */
+    byte_A13E_anotherone_common(state, character, target); /* was fallthrough */
   }
 }
 
@@ -3490,20 +3490,20 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
  * $A4E4: Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] character Character index.     (was A)
- * \param[in] location  Pointer to location. (was HL)
+ * \param[in] character Character index.       (was A)
+ * \param[in] target    Pointer to target.     (was HL)
  */
 void byte_A13E_anotherone_common(tgestate_t *state,
                                  character_t character,
-                                 xy_t       *location)
+                                 xy_t       *target)
 {
   uint8_t A; /* was A */
 
   assert(state    != NULL);
   ASSERT_CHARACTER_VALID(character);
-  assert(location != NULL);
+  assert(target != NULL);
 
-  location->y = 0x00;
+  target->y = 0x00;
 
   if (character >= character_20_PRISONER_1)
   {
@@ -3516,7 +3516,7 @@ void byte_A13E_anotherone_common(tgestate_t *state,
       A++; // gets hit during breakfast // would result in 25 which is the room number for breakfast ... which could be a clue
   }
 
-  location->x = A;
+  target->x = A;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3530,11 +3530,11 @@ void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t loc001A = { 0x1A, 0x00 }; /* location_001A */ /* was C,A' */
-  set_prisoners_and_guards_location(state, &loc001A);
+  xy_t loc001A = { 0x1A, 0x00 }; /* target_001A */ /* was C,A' */
+  set_prisoners_and_guards_target(state, &loc001A);
 
-  const xy_t loc = { 0x2D, 0x00 }; /* location_002D */
-  set_hero_target_location(state, loc);
+  const xy_t target = { 0x2D, 0x00 }; /* target_002D */
+  set_hero_target(state, target);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7802,7 +7802,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   int                          Z;
   room_t                       room;      /* was A */
   uint8_t                      A;         /* was A */
-  xy_t                       *location;  /* was HL */
+  xy_t                        *target;    /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -7919,7 +7919,7 @@ c592:
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->p04
-    A = sub_C651(state, &charstr->target, &location);
+    A = sub_C651(state, &charstr->target, &target);
     if (A == 255)
     {
       // POP HL // HL = DE
@@ -7936,7 +7936,7 @@ c592:
     }
     // POP DE // -> vischar->p04
     // sampled HL is $7913 (a door_positions tinypos)
-    memcpy(&vischar->p04, location, sizeof(tinypos_t)); // so location must be wrong!
+    memcpy(&vischar->p04, target, sizeof(tinypos_t)); // so target must be wrong!
     // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
@@ -8046,17 +8046,17 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C651: Gets a new location.
+ * $C651: Gets a new target.
  *
- * \param[in] state        Pointer to game state.
- * \param[in] location     Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
- * \param[in] location_out Pointer to recieve new location. (was HL)
+ * \param[in] state      Pointer to game state.
+ * \param[in] target     Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
+ * \param[in] target_out Pointer to recieve new target. (was HL)
  *
  * \return 0/128/255.
  */
 uint8_t sub_C651(tgestate_t *state,
-                 xy_t       *location,
-                 xy_t      **location_out)
+                 xy_t       *target,
+                 xy_t      **target_out)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
@@ -8067,11 +8067,11 @@ uint8_t sub_C651(tgestate_t *state,
   int16_t        HL2; // signed
   const uint8_t *HL3;
 
-  assert(state        != NULL);
-  assert(location     != NULL);
-  assert(location_out != NULL);
+  assert(state      != NULL);
+  assert(target     != NULL);
+  assert(target_out != NULL);
 
-  x = location->x; // read low byte only
+  x = target->x; // read low byte only
   if (x == 0xFF)
   {
 //    INC HL        ; {  A = *++HL & characterstruct_BYTE6_MASK_HI;
@@ -8085,15 +8085,15 @@ uint8_t sub_C651(tgestate_t *state,
 
     // Conv: In original code, *HL is used as a temporary.
 
-    /* Randomise the bottom 3 bits of location's high byte. */
-    y = (location->y & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
-    location->x = x;
-    location->y = y;
+    /* Randomise the bottom 3 bits of target's high byte. */
+    y = (target->y & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
+    target->x = x;
+    target->y = y;
   }
   else
   {
     // PUSH HL
-    y = location->y;
+    y = target->y;
     DE = element_A_of_table_7738(x);
 
     HL2 = 0; // was H = 0;
@@ -8106,20 +8106,20 @@ uint8_t sub_C651(tgestate_t *state,
     // POP HL // was interleaved
     if (A == 0xFF) // end of list?
     {
-      *location_out = location;
+      *target_out = target;
       return 255; /* Conv: Was a goto to a return. */
     }
 
     if ((A & 0x7F) < 40)
     {
       A = *HL3;
-      if (location->x & (1 << 7))
+      if (target->x & (1 << 7))
         A ^= (1 << 7); // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
       // toggling A but then doing nothing with it?
-      // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
-      transition(state, (tinypos_t *) location); // expects a tinypos, not a location!
+      // sampled HL = 7617 (character_structs.target)  762c (charstructs again)
+      transition(state, (tinypos_t *) target); // expects a tinypos, not a target!
       // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (doorpos again)
-      *location_out = location + 1; // FIXME increment by a *byte* and return // so this IS returning a tinypos
+      *target_out = target + 1; // FIXME increment by a *byte* and return // so this IS returning a tinypos
       return (1 << 7);
     }
 
@@ -8127,8 +8127,8 @@ uint8_t sub_C651(tgestate_t *state,
   }
 
   // sample A=$38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
-  *location_out = &state->locations[y];
-  // need to be able to pass back HL (location)
+  *target_out = &state->locations[y];
+  // need to be able to pass back HL (target)
 
   return 0;
 }
@@ -8147,7 +8147,7 @@ void move_characters(tgestate_t *state)
   room_t             room;        /* was A */
   item_t             item;        /* was C */
   uint8_t            A;           /* was A */
-  xy_t              *HLlocation;  /* was HL */
+  xy_t              *HLtarget;    /* was HL */
 
   uint8_t            B;           /* was B */
   uint8_t            max;         /* was A' */
@@ -8191,7 +8191,7 @@ void move_characters(tgestate_t *state)
     // POP HL_pos
     return;
 
-  A = sub_C651(state, &charstr->target, &HLlocation); // "move towards" ?
+  A = sub_C651(state, &charstr->target, &HLtarget); // "move towards" ?
   if (A == 0xFF)
   {
     character = state->character_index;
@@ -8204,13 +8204,13 @@ void move_characters(tgestate_t *state)
 
       /* Characters 1..11. */
 back:
-      HLlocation->x = A = HLlocation->x ^ (1 << 7);
+      HLtarget->x = A = HLtarget->x ^ (1 << 7);
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
       if (A & (1 << 7))
-        HLlocation->y--;
+        HLtarget->y--;
       else
-        HLlocation->y++;
+        HLtarget->y++;
 
       // POP HL_pos
       return;
@@ -8220,13 +8220,13 @@ back:
       /* Commandant. */
 
       // sampled HL = $7617 (characterstruct + 5)
-      A = HLlocation->x & characterstruct_BYTE5_MASK; // location
+      A = HLtarget->x & characterstruct_BYTE5_MASK; // location
       if (A != 36)
         goto back;
 
 character_12_or_higher:
       // POP DE_pos
-      character_event(state, HLlocation);
+      character_event(state, HLtarget);
       return; // exit via
     }
   }
@@ -8237,7 +8237,7 @@ character_12_or_higher:
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
       room = DEcharstr->room; // read one byte earlier
-      // PUSH HL_location
+      // PUSH HL_target
       if (room == room_0_OUTDOORS)
       {
         pos_t *DEpos;
@@ -8246,15 +8246,15 @@ character_12_or_higher:
 
         DEpos = &state->saved_pos;
         /* Conv: Unrolled. */
-        DEpos->x = HLlocation->x >> 1;
-        DEpos->y = HLlocation->y >> 1;
+        DEpos->x = HLtarget->x >> 1;
+        DEpos->y = HLtarget->y >> 1;
         HLpos    = &state->saved_pos;
 
         // POP DE_charstr
       }
       else
       {
-        HLpos = HLlocation;
+        HLpos = HLtarget;
       }
 
       if (DEcharstr->room == room_0_OUTDOORS) // reloads 'room'
@@ -8271,7 +8271,7 @@ character_12_or_higher:
       // HL++;
       B = change_by_delta(max, B, (const uint8_t *) &HLpos->y, &DEtinypos->y);
 
-      // POP HL_location
+      // POP HL_target
 
       if (B != 2)
         return; /* Managed to move. */
@@ -8279,7 +8279,7 @@ character_12_or_higher:
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      HLdoorpos = (doorpos_t *) ((char *) HLlocation - 1); // ugly cast
+      HLdoorpos = (doorpos_t *) ((char *) HLtarget - 1); // ugly cast
       assert(HLdoorpos >= &door_positions[0]);
       assert(HLdoorpos < &door_positions[door_MAX * 2]);
 
@@ -8328,13 +8328,13 @@ character_12_or_higher:
 
       // sampled HL at $C77A = 787a, 787e, 7888, 7890, 78aa, 783a, 786a, 7896, 787c,
       // => state->locations[]
-      // HL comes from HLlocation
+      // HL comes from HLtarget
 
       B = 0;
-      B = change_by_delta(max, B, (const uint8_t *) HLlocation + 0, &charstr->pos.x);
+      B = change_by_delta(max, B, (const uint8_t *) HLtarget + 0, &charstr->pos.x);
 //      HL++;
 //      DE++;
-      B = change_by_delta(max, B, (const uint8_t *) HLlocation + 1, &charstr->pos.y);
+      B = change_by_delta(max, B, (const uint8_t *) HLtarget + 1, &charstr->pos.y);
 //      DE++;
       if (B != 2)
         return; // managed to move
@@ -8342,13 +8342,13 @@ character_12_or_higher:
 //    DE++;
     // EX DE, HL
     // HL -> DEcharstr->target
-    A = HLlocation->x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
+    A = HLtarget->x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
     if (A == 0xFF)
       return;
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      HLlocation->y++;
+      HLtarget->y++;
     else
-      HLlocation->y--;
+      HLtarget->y--;
   }
 }
 
@@ -8426,10 +8426,10 @@ characterstruct_t *get_character_struct(tgestate_t *state,
 /**
  * $C7C6: Character event.
  *
- * \param[in] state    Pointer to game state.
- * \param[in] location Pointer to a location (was HL). sampling shows this can be a charstruct.target or a vischar.target.
+ * \param[in] state  Pointer to game state.
+ * \param[in] target Pointer to a target.   (was HL). // sampling shows this can be a charstruct.target or a vischar.target.
  */
-void character_event(tgestate_t *state, xy_t *location)
+void character_event(tgestate_t *state, xy_t *target)
 {
   /* $C7F9 */
   static const charactereventmap_t eventmap[24] =
@@ -8480,22 +8480,22 @@ void character_event(tgestate_t *state, xy_t *location)
   const charactereventmap_t *peventmap; /* was HL */
   uint8_t                    iters;     /* was B */
 
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  x = location->x; // ### these identify prisoner characters but they don't match character_t ###
+  x = target->x; // ### these identify prisoner characters but they don't match character_t ###
   if (x >= 7 && x <= 12)
   {
-    character_sleeps(state, x, location);
+    character_sleeps(state, x, target);
     return;
   }
   if (x >= 18 && x <= 22)
   {
-    character_sits(state, x, location);
+    character_sits(state, x, target);
     return;
   }
 
-  // PUSH location (HL)
+  // PUSH target (HL)
 
   peventmap = &eventmap[0];
   iters = NELEMS(eventmap);
@@ -8504,110 +8504,110 @@ void character_event(tgestate_t *state, xy_t *location)
     if (x == peventmap->x)
     {
       /* Conv: call_action moved here. */
-      handlers[peventmap->handler](state, location);
+      handlers[peventmap->handler](state, target);
       return;
     }
     peventmap++;
   }
   while (--iters);
 
-  // POP location (HL)
+  // POP target (HL)
 
-  location->x = 0;
+  target->x = 0;
 }
 
 /**
  * $C83F:
  */
 void charevnt_handler_4_zeroes_morale_1(tgestate_t *state,
-                                        xy_t       *location)
+                                        xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
   state->morale_1 = 0; /* Enable player control */
-  charevnt_handler_0(state, location);
+  charevnt_handler_0(state, target);
 }
 
 /**
  * $C845:
  */
 void charevnt_handler_6(tgestate_t *state,
-                        xy_t       *location)
+                        xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
-  // (popped) sampled charptr = $80C2 (x2), $8042  // likely target location
-  location->x = 0x03;
-  location->y = 0x15;
+  // POP target (HL)
+  // (popped) sampled charptr = $80C2 (x2), $8042  // likely target
+  target->x = 0x03;
+  target->y = 0x15;
 }
 
 /**
  * $C84C:
  */
 void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
-                                                     xy_t       *location)
+                                                     xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
-  location->x = 0xA4;
-  location->y = 0x03;
+  // POP target (HL)
+  target->x = 0xA4;
+  target->y = 0x03;
 
   state->automatic_player_counter = 0; // force automatic control
 
-  const xy_t loc = { 0x00, 0x25 }; /* location_2500 */ /* was BC */
-  set_hero_target_location(state, loc); // original jump was $A344, but have moved it
+  const xy_t target2 = { 0x00, 0x25 }; /* target_2500 */ /* was BC */
+  set_hero_target(state, target2); // original jump was $A344, but have moved it
 }
 
 /**
  * $C85C:
  */
 void charevnt_handler_1(tgestate_t *state,
-                        xy_t       *location)
+                        xy_t       *target)
 {
   uint8_t y; /* was C */
 
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
   y = 0x10; // 0xFF10
-  set_location_ffxx(state, location, y);
+  set_target_ffxx(state, target, y);
 }
 
 /**
  * $C860:
  */
 void charevnt_handler_2(tgestate_t *state,
-                        xy_t       *location)
+                        xy_t       *target)
 {
   uint8_t y; /* was C */
 
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
   y = 0x38; // 0xFF38
-  set_location_ffxx(state, location, y);
+  set_target_ffxx(state, target, y);
 }
 
 /**
  * $C864:
  *
- * \param[in] location ? (was HL)
+ * \param[in] target ? (was HL)
  */
 void charevnt_handler_0(tgestate_t *state,
-                        xy_t       *location)
+                        xy_t       *target)
 {
   uint8_t y; /* was C */
 
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
   y = 0x08; // 0xFF08 // sampled HL=$8022,$8042,$8002,$8062
-  set_location_ffxx(state, location, y);
+  set_target_ffxx(state, target, y);
 }
 
 /**
@@ -8615,73 +8615,73 @@ void charevnt_handler_0(tgestate_t *state,
  *
  * \param[in] y Y byte. (was C)
  */
-void set_location_ffxx(tgestate_t *state, xy_t *location, uint8_t y)
+void set_target_ffxx(tgestate_t *state, xy_t *target, uint8_t y)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
   // assert(y);
 
-  // POP location (HL)
-  location->x = 0xFF;
-  location->y = y;
+  // POP target (HL)
+  target->x = 0xFF;
+  target->y = y;
 }
 
 /**
  * $C86C:
  */
 void charevnt_handler_3_check_var_A13E(tgestate_t *state,
-                                       xy_t       *location)
+                                       xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
+  // POP target (HL)
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero(state, location);
+    byte_A13E_is_zero(state, target);
   else
-    byte_A13E_is_nonzero(state, location);
+    byte_A13E_is_nonzero(state, target);
 }
 
 /**
  * $C877:
  */
 void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
-                                                  xy_t       *location)
+                                                  xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
+  // POP target (HL)
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero_anotherone(state, location);
+    byte_A13E_is_zero_anotherone(state, target);
   else
-    byte_A13E_is_nonzero_anotherone(state, location);
+    byte_A13E_is_nonzero_anotherone(state, target);
 }
 
 /**
  * $C882:
  */
 void charevnt_handler_7(tgestate_t *state,
-                        xy_t       *location)
+                        xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
-  location->x = 0x05;
-  location->y = 0x00;
+  // POP target (HL)
+  target->x = 0x05;
+  target->y = 0x00;
 }
 
 /**
  * $C889:
  */
 void charevnt_handler_9_hero_sits(tgestate_t *state,
-                                  xy_t       *location)
+                                  xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
+  // POP target (HL)
   hero_sits(state);
 }
 
@@ -8689,12 +8689,12 @@ void charevnt_handler_9_hero_sits(tgestate_t *state,
  * $C88D:
  */
 void charevnt_handler_8_hero_sleeps(tgestate_t *state,
-                                    xy_t       *location)
+                                    xy_t       *target)
 {
-  assert(state    != NULL);
-  assert(location != NULL);
+  assert(state  != NULL);
+  assert(target != NULL);
 
-  // POP location (HL)
+  // POP target (HL)
   hero_sleeps(state);
 }
 
@@ -9148,7 +9148,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   {
     /* Results in character entering. */
 
-    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target location
+    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target
     //orig:A = *--HL; // 80a2 etc
 
     C = vischar->target.y; // check order
@@ -9210,49 +9210,49 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 /**
  * $CB23: (unknown) sub_CB23
  *
- * \param[in] state    Pointer to game state.
- * \param[in] vischar  Pointer to visible character. (was IY)
- * \param[in] location Pointer to vischar->target.   (was HL)
+ * \param[in] state   Pointer to game state.
+ * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location)
+void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *target)
 {
   uint8_t A;
-  xy_t   *new_location;
+  xy_t   *new_target;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  assert(location);
+  assert(target);
 
-  A = sub_C651(state, location, &new_location);
+  A = sub_C651(state, target, &new_target);
   if (A != 0xFF)
-    sub_CB61(state, vischar, location, new_location, A);
+    sub_CB61(state, vischar, target, new_target, A);
   else
-    sub_CB2D(state, vischar, location); // was fallthrough
+    sub_CB2D(state, vischar, target); // was fallthrough
 }
 
 /**
  * $CB2D: (unknown) sub_CB2D
  *
- * \param[in] state    Pointer to game state.
- * \param[in] vischar  Pointer to visible character. (was IY)
- * \param[in] location Pointer to vischar->target.   (was HL)
+ * \param[in] state   Pointer to game state.
+ * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location)
+void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target)
 {
   character_t character; /* was A */
   uint8_t     x;         /* was A */
 
   assert(state    != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  assert(location != NULL);
+  assert(target   != NULL);
 
   /* If not the hero's vischar ... */
-  if (location != &state->vischars[0].target) /* was (L != 0x02) */
+  if (target != &state->vischars[0].target) /* was (L != 0x02) */
   {
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
     {
-      x = location->x & vischar_BYTE2_MASK;
+      x = target->x & vischar_BYTE2_MASK;
       if (x == 36)
         goto cb46; // character index
       character = 0; // force the next 'if' statement
@@ -9264,29 +9264,29 @@ void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location)
 cb46:
   /* We arrive here if:
    * - vischar is the hero, or
-   * - character is character_0_COMMANDANT and (location low byte & 0x7F) == 36
+   * - character is character_0_COMMANDANT and (target low byte & 0x7F) == 36
    */
 
-  character_event(state, location);
-  if (location->x == 0)
+  character_event(state, target);
+  if (target->x == 0)
     return;
 
-  sub_CB23(state, vischar, location); // re-enter
+  sub_CB23(state, vischar, target); // re-enter
   return; // exit via
 
 cb50:
   /* We arrive here if:
    * - vischar is not hero, and
-   *   - character is character_0_COMMANDANT and (location low byte & 0x7F) != 36, or
+   *   - character is character_0_COMMANDANT and (target low byte & 0x7F) != 36, or
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
-  location->x ^= (1 << 7);
+  target->x ^= (1 << 7);
   // Conv: Removed [-2]+1 pattern.
-  if (location->x & (1 << 7))
-    location->y--;
+  if (target->x & (1 << 7))
+    target->y--;
   else
-    location->y++;
+    target->y++;
 
   // Conv: 'A = 0' removed as it has no effect.
 }
@@ -9298,28 +9298,28 @@ cb50:
  *
  * Only ever called by sub_CB23.
  *
- * \param[in] state        Pointer to game state.
- * \param[in] vischar      Pointer to visible character. (was IY)
- * \param[in] pushed_HL    Pointer to location.          (was stack)
- * \param[in] new_location Pointer to location.          (was HL)
- * \param[in] A            flags of some sort
+ * \param[in] state      Pointer to game state.
+ * \param[in] vischar    Pointer to visible character. (was IY)
+ * \param[in] pushed_HL  Pointer to target.            (was stack)
+ * \param[in] new_target Pointer to target.            (was HL)
+ * \param[in] A          flags of some sort
  */
 void sub_CB61(tgestate_t *state,
               vischar_t  *vischar,
               xy_t       *pushed_HL,
-              const xy_t *new_location,
+              const xy_t *new_target,
               uint8_t     A)
 {
   assert(state        != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(pushed_HL    != NULL);
-  assert(new_location != NULL);
+  assert(new_target != NULL);
   // assert(A);
 
   if (A == (1 << 7))
     vischar->flags |= vischar_FLAGS_BIT6;
 
-  pushed_HL[1] = *new_location;
+  pushed_HL[1] = *new_target;
 
   A = (1 << 7); // returned?
 }
@@ -9644,7 +9644,7 @@ next:
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
-  state->vischars[0].target.x = 0x00; // ($8002) = 0; // target location - why is this storing a byte and not a word?
+  state->vischars[0].target.x = 0x00; // ($8002) = 0; // target - why is this storing a byte and not a word?
   transition(state, &solitary_pos);
 
   NEVER_RETURNS;

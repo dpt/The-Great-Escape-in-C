@@ -210,7 +210,7 @@ struct tgestate
    * input events. */
   uint8_t         automatic_player_counter;
 
-  /** $A13A: (unknown) -- if nonzero then player control is inhibited (process_player_input, set_hero_target_location) */
+  /** $A13A: (unknown) -- if nonzero then player control is inhibited (process_player_input, set_hero_target) */
   uint8_t         morale_1;
   /** $A13B: (unknown) -- if nonzero then player control is inhibited */
   uint8_t         morale_2;

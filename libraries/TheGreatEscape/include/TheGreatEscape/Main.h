@@ -241,60 +241,60 @@ timedevent_handler_t event_go_to_time_for_bed;
 timedevent_handler_t event_new_red_cross_parcel;
 timedevent_handler_t event_time_for_bed;
 timedevent_handler_t event_search_light;
-void set_guards_location(tgestate_t *state, xy_t location);
+void set_guards_target(tgestate_t *state, xy_t target);
 
 extern const character_t prisoners_and_guards[10];
 
 void wake_up(tgestate_t *state);
 void end_of_breakfast(tgestate_t *state);
 
-void set_hero_target_location(tgestate_t *state, xy_t location);
+void set_hero_target(tgestate_t *state, xy_t target);
 
 void go_to_time_for_bed(tgestate_t *state);
 
-void set_prisoners_and_guards_location(tgestate_t *state, xy_t *loc);
-void set_prisoners_and_guards_location_B(tgestate_t *state, xy_t *loc);
-void set_character_location(tgestate_t *state,
-                            character_t character,
-                            xy_t        location);
+void set_prisoners_and_guards_target(tgestate_t *state, xy_t *target);
+void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *target);
+void set_character_target(tgestate_t *state,
+                          character_t character,
+                          xy_t        target);
 void sub_A3BB(tgestate_t *state, vischar_t *vischar);
 
-INLINE void store_location(xy_t location, xy_t *plocation);
+INLINE void store_target(xy_t target, xy_t *ptarget);
 
 void byte_A13E_is_nonzero(tgestate_t *state,
-                          xy_t       *location);
+                          xy_t       *target);
 void byte_A13E_is_zero(tgestate_t *state,
-                       xy_t       *location);
+                       xy_t       *target);
 void byte_A13E_common(tgestate_t *state,
                       character_t character,
-                      xy_t       *location);
+                      xy_t       *target);
 
 void character_sits(tgestate_t *state,
                     uint8_t     A,
-                    xy_t       *location);
+                    xy_t       *target);
 void character_sleeps(tgestate_t *state,
                       uint8_t     A,
-                      xy_t       *location);
+                      xy_t       *target);
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                xy_t       *location);
+                                xy_t       *target);
 void select_room_and_plot(tgestate_t *state);
 
 void hero_sits(tgestate_t *state);
 void hero_sleeps(tgestate_t *state);
 void hero_sit_sleep_common(tgestate_t *state, uint8_t *HL);
 
-void set_location_0x000E(tgestate_t *state);
-void set_location_0x048E(tgestate_t *state);
-void set_location_0x0010(tgestate_t *state);
+void set_target_0x000E(tgestate_t *state);
+void set_target_0x048E(tgestate_t *state);
+void set_target_0x0010(tgestate_t *state);
 
 void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     xy_t       *location);
+                                     xy_t       *target);
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  xy_t       *location);
+                                  xy_t       *target);
 void byte_A13E_anotherone_common(tgestate_t  *state,
                                  character_t  character,
-                                 xy_t        *location);
+                                 xy_t        *target);
 
 void go_to_roll_call(tgestate_t *state);
 
@@ -458,8 +458,8 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t sub_C651(tgestate_t *state,
-                 xy_t       *location,
-                 xy_t      **location_out);
+                 xy_t       *target,
+                 xy_t      **target_out);
 
 void move_characters(tgestate_t *state);
 
@@ -471,7 +471,7 @@ int change_by_delta(int8_t         max,
 characterstruct_t *get_character_struct(tgestate_t *state,
                                         character_t character);
 
-void character_event(tgestate_t *state, xy_t *location);
+void character_event(tgestate_t *state, xy_t *target);
 
 charevnt_handler_t charevnt_handler_4_zeroes_morale_1;
 charevnt_handler_t charevnt_handler_6;
@@ -479,7 +479,7 @@ charevnt_handler_t charevnt_handler_10_hero_released_from_solitary;
 charevnt_handler_t charevnt_handler_1;
 charevnt_handler_t charevnt_handler_2;
 charevnt_handler_t charevnt_handler_0;
-void set_location_ffxx(tgestate_t *state, xy_t *charptr, uint8_t y);
+void set_target_ffxx(tgestate_t *state, xy_t *charptr, uint8_t y);
 charevnt_handler_t charevnt_handler_3_check_var_A13E;
 charevnt_handler_t charevnt_handler_5_check_var_A13E_anotherone;
 charevnt_handler_t charevnt_handler_7;
@@ -508,12 +508,12 @@ uint8_t move_character_y(tgestate_t *state,
 
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
-void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location);
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location);
+void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *target);
+void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target);
 void sub_CB61(tgestate_t *state,
               vischar_t  *vischar,
               xy_t       *pushed_HL,
-              const xy_t *new_location,
+              const xy_t *new_target,
               uint8_t     A);
 
 INLINE uint16_t multiply_by_1(uint8_t A);
