@@ -8895,10 +8895,10 @@ bribed_visible:
     }
   }
 
-  A = vischar2->target.y = 0x00;
+  A = vischar2->target.y = 0x00; // makes no sense - check again
   if (A == 0)
   {
-    character_behaviour_end_1(state, vischar, A);
+    character_behaviour_set_input(state, vischar, A);
     return; // exit via
   }
 
@@ -8933,26 +8933,26 @@ end_bit:
     // character couldn't move?
     bribes_solitary_food(state, vischar);
   else
-    character_behaviour_end_1(state, vischar, A); /* was fallthrough */
+    character_behaviour_set_input(state, vischar, A); /* was fallthrough */
 }
 
 /**
- * $C9F5: Unknown end part.
+ * $C9F5: Sets an input if different from current.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character.   (was IY)
- * \param[in] flags   Flags (of another character...) (was A)
+ * \param[in] state     Pointer to game state.
+ * \param[in] vischar   Pointer to visible character. (was IY)
+ * \param[in] new_input New input flags.              (was A)
  */
-void character_behaviour_end_1(tgestate_t *state,
-                               vischar_t  *vischar,
-                               uint8_t     flags)
+void character_behaviour_set_input(tgestate_t *state,
+                                   vischar_t  *vischar,
+                                   uint8_t     new_input)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(flags);
+  // assert(new_input);
 
-  if (flags != vischar->input)
-    vischar->input = flags | input_KICK;
+  if (new_input != vischar->input)
+    vischar->input = new_input | input_KICK;
 }
 
 /**
@@ -8977,7 +8977,7 @@ void character_behaviour_end_2(tgestate_t *state,
   if (move_character_y(state, vischar, log2scale) == 0 &&
       move_character_x(state, vischar, log2scale) == 0)
   {
-    character_behaviour_end_1(state, vischar, flags); // likely: couldn't move, so .. do something
+    character_behaviour_set_input(state, vischar, flags); // likely: couldn't move, so .. do something
     return;
   }
 
@@ -9140,7 +9140,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 
     vischar->target.x = 0x00;
 
-    character_behaviour_end_1(state, vischar, 0); // character_behaviour:$C9F5;
+    character_behaviour_set_input(state, vischar, 0); // character_behaviour:$C9F5;
     return;
   }
 

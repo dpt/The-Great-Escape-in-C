@@ -490,9 +490,9 @@ void follow_suspicious_character(tgestate_t *state);
 
 void character_behaviour(tgestate_t *state,
                          vischar_t  *vischar);
-void character_behaviour_end_1(tgestate_t *state,
-                               vischar_t  *vischar,
-                               uint8_t     A);
+void character_behaviour_set_input(tgestate_t *state,
+                                   vischar_t  *vischar,
+                                   uint8_t     new_input);
 void character_behaviour_end_2(tgestate_t *state,
                                vischar_t  *vischar,
                                uint8_t     A,
