@@ -9212,7 +9212,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
  *
  * \param[in] state    Pointer to game state.
  * \param[in] vischar  Pointer to visible character. (was IY)
- * \param[in] location seems to be an arg. (target loc ptr). (was HL)
+ * \param[in] location Pointer to vischar->target.   (was HL)
  */
 void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location)
 {
@@ -9235,12 +9235,12 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *location)
  *
  * \param[in] state    Pointer to game state.
  * \param[in] vischar  Pointer to visible character. (was IY)
- * \param[in] location seems to be an arg. (target loc ptr). (was HL)
+ * \param[in] location Pointer to vischar->target.   (was HL)
  */
 void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location)
 {
   character_t character; /* was A */
-  uint8_t     A;         /* was A */
+  uint8_t     x;         /* was A */
 
   assert(state    != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9252,37 +9252,43 @@ void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *location)
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
     {
-      A = location->x & vischar_BYTE2_MASK;
-      if (A == 0x24)
+      x = location->x & vischar_BYTE2_MASK;
+      if (x == 36)
         goto cb46; // character index
-      character = 0; // defeat the next 'if' statement // can probably go
+      character = 0; // force the next 'if' statement
     }
-    if (character == character_12_GUARD_12)
+    if (character <= character_11_GUARD_11)
       goto cb50;
   }
 
 cb46:
-  // arrive here if (character == 0 && (location low byte & 7F) == 36)
-  // PUSH HL
+  /* We arrive here if:
+   * - vischar is the hero, or
+   * - character is character_0_COMMANDANT and (location low byte & 0x7F) == 36
+   */
+
   character_event(state, location);
-  // POP HL
-  A = location->x;
-  if (A == 0)
-    return; // A returned?
+  if (location->x == 0)
+    return;
 
   sub_CB23(state, vischar, location); // re-enter
   return; // exit via
 
 cb50:
-  // arrive here if (character == character_12_GUARD_12)
+  /* We arrive here if:
+   * - vischar is not hero, and
+   *   - character is character_0_COMMANDANT and (location low byte & 0x7F) != 36, or
+   *   - character is character_1_GUARD_1 .. character_11_GUARD_11
+   */
+
   location->x ^= (1 << 7);
   // Conv: Removed [-2]+1 pattern.
-  if (A & (1 << 7)) // which flag is this?
+  if (location->x & (1 << 7))
     location->y--;
   else
     location->y++;
 
-  A = 0; // returned?
+  // Conv: 'A = 0' removed as it has no effect.
 }
 
 // $CB5F,2 Unreferenced bytes.
