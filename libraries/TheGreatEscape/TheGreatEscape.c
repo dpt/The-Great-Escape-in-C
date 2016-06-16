@@ -9252,7 +9252,7 @@ void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
     {
-      x = target->x & vischar_BYTE2_MASK;
+      x = target->x & ~vischar_BYTE2_BIT7;
       if (x == 36)
         goto cb46; // character index
       character = 0; // force the next 'if' statement

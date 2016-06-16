@@ -197,7 +197,6 @@ enum vischar_flags
   // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
-  vischar_BYTE2_MASK                   = 0x7F,   // target mask
   vischar_BYTE2_BIT7                   = 1 << 7, // target mask
 
   vischar_BYTE7_MASK_LO                = 0x0F,
