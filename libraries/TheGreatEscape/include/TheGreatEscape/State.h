@@ -285,7 +285,7 @@ struct tgestate
 
     /** $AE75: Flag which affects clipping in searchlight_plot. If non-zero
      * then the full game window is used. */
-    uint8_t                 related;
+    uint8_t                 use_full_window;
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
     xy_t                    caught_coord;

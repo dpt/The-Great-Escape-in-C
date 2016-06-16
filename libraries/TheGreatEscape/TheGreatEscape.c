@@ -5119,7 +5119,7 @@ ae3f:
     attrs = &state->speccy->attributes[0x46 + y * state->width + x]; // 0x46 = address of top-left game window attribute
     // EX DE,HL
 
-    state->searchlight.related = A;
+    state->searchlight.use_full_window = A;
     searchlight_plot(state, attrs); // was DE
 
 next:
@@ -5177,12 +5177,12 @@ void searchlight_caught(tgestate_t                   *state,
  * $AEB8: Searchlight plotter.
  *
  * \param[in] state Pointer to game state.
- * \param[in] DE    Pointer to screen attributes. (was DE)
+ * \param[in] attrs Pointer to screen attributes. (was DE)
  */
-void searchlight_plot(tgestate_t *state, attribute_t *DE)
+void searchlight_plot(tgestate_t *state, attribute_t *attrs)
 {
   /**
-   * $AF3E: Searchlight circle shape.
+   * $AF3E: Circle shaped bitmap.
    */
   static const uint8_t searchlight_shape[2 * 16] =
   {
@@ -5206,96 +5206,105 @@ void searchlight_plot(tgestate_t *state, attribute_t *DE)
 
   assert(state != NULL);
 
-  attribute_t *const attrs = &state->speccy->attributes[0];
-  ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs);
+  attribute_t *const attrs_base = &state->speccy->attributes[0];
+  ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs_base);
 
-  const uint8_t *shape;   /* was DE */
-  uint8_t        iters;   /* was C */
-  uint8_t        A;       /* was A */
-  attribute_t   *pattrs;  /* was HL */
-
-  uint8_t        D, E;
-  uint8_t        L;
-  uint8_t        iters2; /* was B' */
-  uint8_t        iters3, C;
-  int            carry;
+  const uint8_t *shape;           /* was DE' */
+  uint8_t        iters;           /* was C' */
+  uint8_t        use_full_window; /* was A */
+  ptrdiff_t      x;               /* was A */
+  attribute_t   *max_y_attrs;     /* was HL */
+  attribute_t   *saved_attrs;     /* was stack */
+  attribute_t   *pattrs2;         /* was HL */
+  uint8_t        iters2;          /* was B' */
+  uint8_t        iters3;          /* was B */
+  uint8_t        pixels;          /* was C */
+  int            carry = 0;
 
   shape = &searchlight_shape[0];
   iters = 16; /* height */
   do
   {
-    A = state->searchlight.related;
-    pattrs = &attrs[0x240]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
+    use_full_window = state->searchlight.use_full_window;
 
-    // Conv: Was E & 31 => 4th to last row, or later
-//    if (A != 0 && (shape & 31) >= 22)
-//      pattrs = (pattrs & ~0xFF) | 32; // Conv: was L = 32; // FIXME. Needs pointer subtraction.
+    /* Screen attribute coords are x = 0..31, y = 0..23.
+     * Game window occupies attribute rows 2..17 and columns 7..29 (inclusive).
+     * Attribute row 18 is the row beyond the bottom edge of the game window. */
 
-    // SBC HL,DE
-    // RET C  // if (HL < DE) return; // what about carry?
-    if (pattrs < shape) // does this even make sense?
-      return;
+    x = (attrs - attrs_base) & 31; /* Conv: Hoisted. */ // '& 31' -> '% state->width'
 
-    // PUSH DE
-    pattrs = &attrs[0x20]; // screen attribute address (column 0 + top of game screen)
-    if (A != 0 && (E & 31) >= 7)
-      L = 32;
+    // screen attribute address (column 0 + bottom of game screen)
+    max_y_attrs = &attrs_base[32 * 18]; // was HL = 0x5A40;
+    if (use_full_window)
+    {
+      // Conv: was if ((E & 31) >= 22) L = 32;
+      // E & 31 => 4th to last row, or later
+      if (x >= 22) // 22 => 8 attrs away from the edge maybe?
+        max_y_attrs = &attrs_base[32 * 19]; // colors in bottom border
+    }
+    if (attrs >= max_y_attrs) /* Off the end of the game screen? */
+      goto exit; /* Conv: Original code just returned, jump to exit instead so I can force a screen refresh down there. */
 
-    // SBC HL,DE
-    // JR C,aef0  // if (HL < DE) goto aef0;
-    if (pattrs >= shape)
+    saved_attrs = attrs; // PUSH DE
+
+    pattrs2 = &attrs_base[32 * 2]; // screen attribute address (row 2, column 0)
+    if (use_full_window)
+    {
+      // Conv: was: if (E & 31) >= 7) L = 32;
+      if (x >= 7)
+        pattrs2 = &attrs_base[32 * 1]; // (row 1, column 0) // seems responsible for colouring in the top border
+    }
+    if (attrs < pattrs2)
     {
       shape += 2;
-      goto nextrow;
+      goto next_row;
     }
 
-    // EX DE,HL
-
-    iters2 = 2; /* iterations */
+    iters2 = 2; /* iterations */ /* bytes per row */
     do
     {
-      C = *shape; // Conv: Original uses A as temporary.
+      pixels = *shape; // Conv: Original uses A as temporary.
 
-      D = 7; // left edge?
-      E = 30; // right edge?
-      iters3 = 8; /* iterations */
+      iters3 = 8; /* iterations */ /* bits per byte */
       do
       {
-        uint8_t oldA;
-
-        oldA = state->searchlight.related;
-        A = L; // Conv: was interleaved
-        if (oldA != 0)
-          goto af0c;
-        if ((A & 31) >= 22)
-          goto af1b;
-        goto af18;
-
-af0c:
-        if ((A & 31) < E)
-          goto af18;
-
-        do
-          shape++;
-        while (--iters2);
-
-        goto nextrow;
-
-af18:
-        if (A < D)
+        x = (attrs - attrs_base) & 31; // Conv: was interleaved; '& 31's hoisted from below; '& 31' -> '% state->width' as above
+        if (!use_full_window)
         {
-af1b:
-          RL(C); // no plot
+          if (x >= 22)
+            /* Don't render right of the game window. */
+            goto dont_plot;
         }
         else
         {
-          RL(C);
-          if (carry)
-            *pattrs = attribute_YELLOW_OVER_BLACK;
-          else
-            *pattrs = attribute_BRIGHT_BLUE_OVER_BLACK;
+          if (x >= 30) // Conv: Constant 30 was in E.
+          {
+            /* Don't render right of the game window. */
+            do
+              shape++;
+            while (--iters2);
+
+            goto next_row;
+          }
         }
-        pattrs++;
+
+        /* Plot */
+
+        if (x < 7) // Conv: Constant 7 was in D.
+        {
+          /* Don't render left of the game window. */
+dont_plot:
+          RL(pixels);
+        }
+        else
+        {
+          RL(pixels);
+          if (carry)
+            *attrs = attribute_YELLOW_OVER_BLACK;
+          else
+            *attrs = attribute_BRIGHT_BLUE_OVER_BLACK;
+        }
+        attrs++;
       }
       while (--iters3);
 
@@ -5303,12 +5312,13 @@ af1b:
     }
     while (--iters2);
 
-nextrow:
-    // POP HL
-    pattrs += state->width;
-    // EX DE,HL
+next_row:
+    attrs = saved_attrs + state->width;
   }
   while (--iters);
+
+exit:
+  state->speccy->kick(state->speccy);
 }
 
 /* ----------------------------------------------------------------------- */
