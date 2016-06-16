@@ -3209,11 +3209,11 @@ void byte_A13E_common(tgestate_t *state,
  * $A420: Character sits.
  *
  * \param[in] state  Pointer to game state.
- * \param[in] A      (was A)
+ * \param[in] x      (was A)
  * \param[in] target Pointer to target. (was HL)
  */
 void character_sits(tgestate_t *state,
-                    uint8_t     A,
+                    uint8_t     x,
                     xy_t       *target)
 {
   uint8_t  index; /* was A */
@@ -3221,10 +3221,10 @@ void character_sits(tgestate_t *state,
   room_t   room;  /* was C */
 
   assert(state    != NULL);
-  //ASSERT_..._VALID(A);
+  //ASSERT_..._VALID(x);
   assert(target != NULL);
 
-  index = A - 18;
+  index = x - 18;
   /* First three characters. */
   bench = &roomdef_25_breakfast[roomdef_25_BENCH_D];
   if (index >= 3)
@@ -3237,7 +3237,7 @@ void character_sits(tgestate_t *state,
   /* Poke object. */
   bench[index * 3] = interiorobject_PRISONER_SAT_MID_TABLE;
 
-  if (A < 21)
+  if (x < 21)
     room = room_25_BREAKFAST;
   else
     room = room_23_BREAKFAST;
@@ -3249,23 +3249,23 @@ void character_sits(tgestate_t *state,
  * $A444: Character sleeps.
  *
  * \param[in] state  Pointer to game state.
- * \param[in] A      (was A)
+ * \param[in] x      (was A)
  * \param[in] target Pointer to target. (was HL)
  */
 void character_sleeps(tgestate_t *state,
-                      uint8_t     A,
+                      uint8_t     x,
                       xy_t       *target)
 {
   room_t room; /* was C */
 
   assert(state  != NULL);
-  //ASSERT_..._VALID(A);
+  //ASSERT_..._VALID(x);
   assert(target != NULL);
 
   /* Poke object. */
-  *beds[A - 7] = interiorobject_OCCUPIED_BED;
+  *beds[x - 7] = interiorobject_OCCUPIED_BED;
 
-  if (A < 10)
+  if (x < 10)
     room = room_3_HUT2RIGHT;
   else
     room = room_5_HUT3RIGHT;
