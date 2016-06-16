@@ -8927,10 +8927,10 @@ end_bit:
 #endif
 
   if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc.
-    character_behaviour_end_2(state, vischar, A, log2scale);
+    character_behaviour_impeded(state, vischar, A, log2scale);
   else if (move_character_x(state, vischar, log2scale) == 0 &&
            move_character_y(state, vischar, log2scale) == 0)
-    // character couldn't move?
+    /* Character couldn't move. */
     bribes_solitary_food(state, vischar);
   else
     character_behaviour_set_input(state, vischar, A); /* was fallthrough */
@@ -8956,32 +8956,30 @@ void character_behaviour_set_input(tgestate_t *state,
 }
 
 /**
- * $C9FF: Unknown end part.
+ * $C9FF: Called when a character is impeded.
  *
  * \param[in] state     Pointer to game state.
  * \param[in] vischar   Pointer to visible character.   (was IY)
- * \param[in] flags     Flags (of another character...) (was A)
+ * \param[in] new_input Flags (of another character...) (was A)
  * \param[in] log2scale Log2Scale factor (replaces self-modifying code in original).
  */
-void character_behaviour_end_2(tgestate_t *state,
-                               vischar_t  *vischar,
-                               uint8_t     flags,
-                               int         log2scale)
+void character_behaviour_impeded(tgestate_t *state,
+                                 vischar_t  *vischar,
+                                 uint8_t     new_input,
+                                 int         log2scale)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(flags);
+  // assert(new_input);
   // assert(log2scale);
 
-  /* Note: Unusual y,x order but it matches the original code. */
+  /* Note: The y,x order here looks unusual but it matches the original code. */
   if (move_character_y(state, vischar, log2scale) == 0 &&
       move_character_x(state, vischar, log2scale) == 0)
-  {
-    character_behaviour_set_input(state, vischar, flags); // likely: couldn't move, so .. do something
-    return;
-  }
-
-  bribes_solitary_food(state, vischar);
+    /* Character couldn't move. */
+    character_behaviour_set_input(state, vischar, new_input);
+  else
+    bribes_solitary_food(state, vischar);
 }
 
 /* ----------------------------------------------------------------------- */

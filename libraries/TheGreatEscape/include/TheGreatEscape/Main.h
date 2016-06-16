@@ -493,10 +493,10 @@ void character_behaviour(tgestate_t *state,
 void character_behaviour_set_input(tgestate_t *state,
                                    vischar_t  *vischar,
                                    uint8_t     new_input);
-void character_behaviour_end_2(tgestate_t *state,
-                               vischar_t  *vischar,
-                               uint8_t     A,
-                               int         log2scale);
+void character_behaviour_impeded(tgestate_t *state,
+                                 vischar_t  *vischar,
+                                 uint8_t     new_input,
+                                 int         log2scale);
 
 uint8_t move_character_x(tgestate_t *state,
                          vischar_t  *vischar,
