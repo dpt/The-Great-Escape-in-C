@@ -7925,7 +7925,7 @@ c592:
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->target
       // PUSH HL
-      sub_CB2D(state, vischar, &vischar->target);
+      ran_out_of_list(state, vischar, &vischar->target);
       // POP HL
       // DE = HL + 2; // -> vischar->p04
       goto c592;
@@ -9227,17 +9227,17 @@ void get_next_target_and_handle_it(tgestate_t *state,
   if (get_next_target_flags != 255) /* Didn't hit end of list case. */
     sub_CB61(state, vischar, target, new_target, get_next_target_flags);
   else
-    sub_CB2D(state, vischar, target); // was fallthrough
+    ran_out_of_list(state, vischar, target); // was fallthrough
 }
 
 /**
- * $CB2D: (unknown) sub_CB2D
+ * $CB2D: (unknown) ran_out_of_list
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target)
+void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
 {
   character_t character; /* was A */
   uint8_t     x;         /* was A */
@@ -9247,7 +9247,7 @@ void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target)
   assert(target   != NULL);
 
   /* If not the hero's vischar ... */
-  if (target != &state->vischars[0].target) /* was (L != 0x02) */
+  if (target != &state->vischars[0].target) /* Conv: was (L != 0x02) */
   {
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
@@ -9288,7 +9288,7 @@ cb50:
   else
     target->y++;
 
-  // Conv: 'A = 0' removed as it has no effect.
+  // Conv: 'A = 0' removed as it has no effect. [Present in DOS version]
 }
 
 // $CB5F,2 Unreferenced bytes.

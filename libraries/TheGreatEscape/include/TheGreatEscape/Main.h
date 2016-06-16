@@ -511,7 +511,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 void get_next_target_and_handle_it(tgestate_t *state,
                                    vischar_t  *vischar,
                                    xy_t       *target);
-void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target);
+void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target);
 void sub_CB61(tgestate_t *state,
               vischar_t  *vischar,
               xy_t       *pushed_HL,
