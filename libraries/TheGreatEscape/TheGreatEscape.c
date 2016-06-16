@@ -5006,133 +5006,150 @@ void searchlight_movement(searchlight_movement_t *slstate)
  */
 void nighttime(tgestate_t *state)
 {
-  uint8_t  map_y;               /* was D */
-  uint8_t  map_x;               /* was E */
-  uint8_t  H;                   /* was H */
-  uint8_t  L;                   /* was L */
-  uint8_t  iters;               /* was B */
-  uint8_t  A;                   /* was A */
-  uint8_t  Adash;               /* was A' */
-  uint8_t  C;                   /* was C */
-  uint16_t y;                   /* was HL */
-  uint16_t x;                   /* was BC */
-  uint8_t *HL;                  /* was HL */
-  attribute_t *attrs;           /* was HL */
-  searchlight_movement_t *slstate;            /* was HL */
+  uint8_t                 map_y;           /* was D */
+  uint8_t                 map_x;           /* was E */
+  uint8_t                 H;               /* was H */
+  uint8_t                 L;               /* was L */
+  uint8_t                 caught_y;        /* was H */
+  uint8_t                 caught_x;        /* was L */
+  int                     iters;           /* was B */
+  uint8_t                 y;               /* was A' */
+  attribute_t            *attrs;           /* was BC */
+  searchlight_movement_t *slstate;         /* was HL */
+  uint8_t                 use_full_window; /* was A */
+  uint8_t                 B, C;
 
   assert(state != NULL);
 
-  if (state->searchlight_state == searchlight_STATE_SEARCHING)
-    goto not_tracking;
-
-  if (state->room_index > room_0_OUTDOORS)
+  if (state->searchlight_state != searchlight_STATE_SEARCHING)
   {
-    /* If the hero goes indoors then the searchlight loses track. */
-    state->searchlight_state = searchlight_STATE_SEARCHING;
-    return;
-  }
-
-  /* The hero is outdoors. */
-
-  /* If the searchlight previously caught the hero, then track him. */
-
-  if (state->searchlight_state == searchlight_STATE_CAUGHT)
-  {
-    map_x = state->map_position.x + 4;
-    map_y = state->map_position.y;
-    L = state->searchlight.caught_coord.x; /* Conv: Fused load split apart. */
-    H = state->searchlight.caught_coord.y;
-
-    /* If the highlight doesn't need to move, quit. */
-    if (L == map_x && H == map_y)
-      return;
-
-    /* Move searchlight left/right to focus on the hero. */
-    // Bug? Possibly missing L != E test surrounding the block.
-    if (L < map_x)
-      L++;
-    else
-      L--;
-
-    /* Move searchlight up/down to focus on the hero. */
-    if (H != map_y)
+    if (state->room_index > room_0_OUTDOORS)
     {
-      if (H < map_y)
-        H++;
-      else
-        H--;
+      /* If the hero goes indoors then the searchlight loses track. */
+      state->searchlight_state = searchlight_STATE_SEARCHING;
+      return;
     }
 
-    state->searchlight.caught_coord.x = L; // Conv: Fused store split apart.
-    state->searchlight.caught_coord.y = H;
+    /* The hero is outdoors. */
+
+    /* If the searchlight previously caught the hero then track him. */
+
+    if (state->searchlight_state == searchlight_STATE_CAUGHT)
+    {
+      map_x    = state->map_position.x + 4;
+      map_y    = state->map_position.y;
+      caught_x = state->searchlight.caught_coord.x; // Conv: Reordered
+      caught_y = state->searchlight.caught_coord.y;
+
+      if (caught_x == map_x)
+      {
+        /* If the highlight doesn't need to move then quit. */
+        if (caught_y == map_y)
+          return;
+      }
+      else
+      {
+        /* Move the searchlight left/right to focus on the hero. */
+        if (caught_x < map_x)
+          caught_x++;
+        else
+          caught_x--;
+      }
+
+      /* Move searchlight up/down to focus on the hero. */
+      if (caught_y != map_y)
+      {
+        if (caught_y < map_y)
+          caught_y++;
+        else
+          caught_y--;
+      }
+
+      state->searchlight.caught_coord.x = caught_x; // Conv: Fused store split apart.
+      state->searchlight.caught_coord.y = caught_y;
+    }
+
+    map_x = state->map_position.x;
+    map_y = state->map_position.y;
+    /* This casts caught_coord into a searchlight_movement_t knowing that
+     * only the coord members will be accessed. */
+    slstate = (searchlight_movement_t *) &state->searchlight.caught_coord;
+    iters = 1; // 1 iteration
+    // PUSH BC
+    // PUSH HL
+    goto middle_bit;
   }
 
-  map_x = state->map_position.x;
-  map_y = state->map_position.y;
-  HL = &state->searchlight.caught_coord.y; // offset of 1 compensates for the HL-- ahead
-  iters = 1; // 1 iteration
-  // PUSH BC
-  // PUSH HL
-  goto ae3f;
-
-not_tracking:
+  /* When not tracking the hero all three spotlights are cycled through. */
 
   slstate = &state->searchlight.states[0];
   iters = 3; // 3 iterations == three searchlights
   do
   {
     // PUSH BC
-
     // PUSH HL
     searchlight_movement(slstate);
     // POP HL
-
     // PUSH HL
     searchlight_caught(state, slstate);
     // POP HL
-
     // PUSH HL
+
     map_x = state->map_position.x;
     map_y = state->map_position.y;
-    // Original: if (E + 23 < slstate->x || slstate->x + 16 < E)
-    if (map_x < slstate->xy.x - 23 || map_x >= slstate->xy.x + 16) // E-22 .. E+15
-      goto next;
-    // Original: if (D + 16 < slstate->y || slstate->y + 16 < D)
-    if (map_y < slstate->xy.y - 16 || map_y >= slstate->xy.y + 16) // D-16 .. D+15
-      goto next;
-    //HL++;
 
-ae3f:
-    A = 0;
-    //Adash = A;
-    //HL--; // -> slstate->x OR -> state->searchlight.caught_coord.x
-    iters = 0x00;
-    Adash = *HL; // -> slstate->x OR -> state->searchlight.caught_coord.x
-    if (Adash < map_x)
+    /* Would the searchlight intersect with the game window? */
+
+    // if (slstate->xy.x >= map_x + 23 || slstate->xy.x < map_x - 16) equivalent?
+    if (map_x + 23 < slstate->xy.x || slstate->xy.x + 16 < map_x)
+      goto next;
+
+    //if (slstate->xy.y >= map_y + 16 || slstate->xy.y < map_y - 16) equivalent?
+    if (map_y + 16 < slstate->xy.y || slstate->xy.y + 16 < map_y)
+      goto next;
+
+  middle_bit:
+    // if searchlight.use_full_window == 0:
+    //   the light is clipped to the left side of the window
+    use_full_window = 0; // flag
+    // EX AF,AF'
+
+    // HL -> slstate->x OR -> state->searchlight.caught_coord.x
+    B = 0;
+    if (slstate->xy.x < map_x)
     {
-      iters = 0xFF;
-      A = ~A; // this looks like it's always ~0
+      B = 255; // -ve
+      use_full_window = ~use_full_window; // toggle flag 0 <-> 255
+    }
+    C = slstate->xy.x; // x
+    // now BC is ready here
+
+    // HL -> slstate->y OR -> state->searchlight.caught_coord.y
+    y = slstate->xy.y;
+    H = 0;
+    if (y < map_y)
+      H = 255; // -ve
+    L = y;
+    // now HL is ready here
+
+    {
+      // Conv: cast the original game vars into proper signed offsets
+
+      int column;
+      int row;
+
+      column = (int16_t) ((B << 8) | C);
+      row    = (int16_t) ((H << 8) | L);
+
+      // HL must be row, BC must be column
+      attrs = &state->speccy->attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
     }
 
-    C = A;
-    A = *++HL; // -> slstate->y
-    H = 0x00;
-    A -= map_y;
-    if (A < 0)
-      H = 0xFF; // -ve
-    L = A;
-    // HL must be row, BC must be column
-    y = (H << 8) | L;
-    x = (iters << 8) | C;
-    attrs = &state->speccy->attributes[0x46 + y * state->width + x]; // 0x46 = address of top-left game window attribute
-    // EX DE,HL
+    state->searchlight.use_full_window = use_full_window;
+    searchlight_plot(state, attrs); // DE turned into HL from EX above
 
-    state->searchlight.use_full_window = A;
-    searchlight_plot(state, attrs); // was DE
-
-next:
+  next:
     // POP HL
-
     // POP BC
     slstate++;
   }
