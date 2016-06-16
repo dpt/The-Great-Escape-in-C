@@ -2898,7 +2898,7 @@ void set_hero_target(tgestate_t *state, xy_t target)
 
   vischar->flags &= ~vischar_FLAGS_BIT6;
   vischar->target = target;
-  sub_A3BB(state, vischar);
+  set_target(state, vischar);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3052,18 +3052,18 @@ store_to_vischar:
   vischar->flags &= ~vischar_FLAGS_BIT6;
   store_target(target, &vischar->target);
 
-  sub_A3BB(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
+  set_target(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
 }
 
 /**
- * $A3BB: sub_A3BB.
+ * $A3BB: set_target.
  *
  * Called by set_character_target, set_hero_target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL) (e.g. $8003 in original)
  */
-void sub_A3BB(tgestate_t *state, vischar_t *vischar)
+void set_target(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t    A;      /* was A */
   tinypos_t *pos;    /* was DE */
@@ -3082,7 +3082,7 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
   pos->x = target->x;
   pos->y = target->y;
 
-  if (A == 255)
+  if (A == 255) /* End of door list. */
   {
     state->IY = vischar;
     sub_CB23(state, vischar, &vischar->target);

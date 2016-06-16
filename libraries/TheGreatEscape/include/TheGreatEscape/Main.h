@@ -257,7 +257,7 @@ void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *target);
 void set_character_target(tgestate_t *state,
                           character_t character,
                           xy_t        target);
-void sub_A3BB(tgestate_t *state, vischar_t *vischar);
+void set_target(tgestate_t *state, vischar_t *vischar);
 
 INLINE void store_target(xy_t target, xy_t *ptarget);
 

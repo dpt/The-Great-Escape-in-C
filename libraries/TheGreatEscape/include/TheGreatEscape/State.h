@@ -223,7 +223,7 @@ struct tgestate
   /** $A13E: (unknown) (flag: 0 or 255).
    *
    * Set to 0xFF when move_characters is entered, and only then.
-   * Set to 0x00 in sub_A3BB and follow_suspicious_character.
+   * Set to 0x00 in set_target and follow_suspicious_character.
    */
   uint8_t         entered_move_characters;
 
