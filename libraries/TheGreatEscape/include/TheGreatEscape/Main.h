@@ -512,11 +512,11 @@ void get_next_target_and_handle_it(tgestate_t *state,
                                    vischar_t  *vischar,
                                    xy_t       *target);
 void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target);
-void sub_CB61(tgestate_t *state,
-              vischar_t  *vischar,
-              xy_t       *pushed_HL,
-              const xy_t *new_target,
-              uint8_t     A);
+void handle_target(tgestate_t *state,
+                   vischar_t  *vischar,
+                   xy_t       *pushed_HL,
+                   const xy_t *new_target,
+                   uint8_t     A);
 
 INLINE uint16_t multiply_by_1(uint8_t A);
 

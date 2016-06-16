@@ -9225,7 +9225,7 @@ void get_next_target_and_handle_it(tgestate_t *state,
 
   get_next_target_flags = get_next_target(state, target, &new_target);
   if (get_next_target_flags != 255) /* Didn't hit end of list case. */
-    sub_CB61(state, vischar, target, new_target, get_next_target_flags);
+    handle_target(state, vischar, target, new_target, get_next_target_flags);
   else
     ran_out_of_list(state, vischar, target); // was fallthrough
 }
@@ -9294,7 +9294,7 @@ cb50:
 // $CB5F,2 Unreferenced bytes.
 
 /**
- * $CB61: (unknown) sub_CB61
+ * $CB61: (unknown) handle_target
  *
  * Only ever called by get_next_target_and_handle_it.
  *
@@ -9304,11 +9304,11 @@ cb50:
  * \param[in] new_target Pointer to target.            (was HL)
  * \param[in] A          flags of some sort
  */
-void sub_CB61(tgestate_t *state,
-              vischar_t  *vischar,
-              xy_t       *pushed_HL,
-              const xy_t *new_target,
-              uint8_t     A)
+void handle_target(tgestate_t *state,
+                   vischar_t  *vischar,
+                   xy_t       *pushed_HL,
+                   const xy_t *new_target,
+                   uint8_t     A)
 {
   assert(state        != NULL);
   ASSERT_VISCHAR_VALID(vischar);

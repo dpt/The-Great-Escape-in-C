@@ -193,7 +193,7 @@ enum vischar_flags
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
   // vischar_FLAGS_BIT6:
-  // set by set_target (get_next_target A == 128 case), spawn_character (get_next_target A == 128 case), sub_CB61 (get_next_target A == 128 case)
+  // set by set_target (get_next_target A == 128 case), spawn_character (get_next_target A == 128 case), handle_target (get_next_target A == 128 case)
   // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
