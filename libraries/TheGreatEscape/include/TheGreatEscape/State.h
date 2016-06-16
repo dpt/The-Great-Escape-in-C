@@ -41,7 +41,10 @@ struct tgestate
   /** $68A0: Index of the current room, or 0 when outside. */
   room_t          room_index;
 
-  /** $68A1: Holds the current door id. */
+  /** $68A1: Holds the current door id (and possibly a door_LOCKED flag).
+   *
+   * Read by is_door_locked, door_handling_interior.
+   */
   door_t          current_door;
 
   /**
@@ -185,7 +188,7 @@ struct tgestate
   /** $8215: Items which the hero is holding. */
   item_t          items_held[2];
 
-  /** $8217: Character index. */
+  /** $8217: Current character index. */
   character_t     character_index;
 
   /** $A12F: Game counter.
@@ -222,8 +225,8 @@ struct tgestate
 
   /** $A13E: (unknown) (flag: 0 or 255).
    *
-   * Set to 0xFF when move_characters is entered, and only then.
-   * Set to 0x00 in set_target and follow_suspicious_character.
+   * Set to 0xFF only when move_characters is entered.
+   * Set to 0x00 in set_target, follow_suspicious_character and spawn_character.
    */
   uint8_t         entered_move_characters;
 
@@ -278,13 +281,14 @@ struct tgestate
   struct
   {
     /** $AD29: Searchlight movement data. */
-    searchlight_movement_t states[3];
+    searchlight_movement_t  states[3];
 
-    /** $AE75: (unknown) */
-    uint8_t             related;
+    /** $AE75: Flag which affects clipping in searchlight_plot. If non-zero
+     * then the full game window is used. */
+    uint8_t                 related;
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    xy_t                caught_coord;
+    xy_t                    caught_coord;
   }
   searchlight;
 

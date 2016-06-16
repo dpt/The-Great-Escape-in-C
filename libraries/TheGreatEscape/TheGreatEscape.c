@@ -371,6 +371,9 @@ void setup_doors(tgestate_t *state)
   pdoor++;
   ASSERT_DOORS_VALID(pdoor);
 
+  /* Ensure that no flag bits remain. */
+  assert(state->room_index < room__LIMIT);
+
   room = state->room_index << 2; /* Shunt left for comparison in loop. */
   door_index = 0;
   door_pos = &door_positions[0];
@@ -395,7 +398,7 @@ void setup_doors(tgestate_t *state)
 /**
  * $6A12: Turn a door index into a doorpos pointer.
  *
- * \param[in] door Index of door + lock flag in bit 7.
+ * \param[in] door Index of door + lock flag in bit 7. (was A)
  *
  * \return Pointer to doorpos. (was HL)
  */
@@ -821,7 +824,7 @@ const doorpos_t door_positions[door_MAX * 2] =
   { ROOMDIR(room_5_HUT3RIGHT,             TL), { 0xA4, 0xBD,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x2E, 24 } },
 
-  { ROOMDIR(room_21_CORRIDOR,             TL), { 0xFC, 0xCA,  6 } }, // 20
+  { ROOMDIR(room_21_CORRIDOR,             TL), { 0xFC, 0xCA,  6 } }, // 20 // current_door when in solitary
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1C, 0x24, 24 } },
 
   { ROOMDIR(room_20_REDCROSS,             TL), { 0xFC, 0xDA,  6 } },
@@ -881,7 +884,7 @@ const doorpos_t door_positions[door_MAX * 2] =
   { ROOMDIR(room_16_CORRIDOR,             TL), { 0x3E, 0x2E, 24 } },
   { ROOMDIR(room_13_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
 
-  { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } }, // 60
+  { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } }, // 60 // strange outdoor-to-outdoor door definition. unused?
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x30, 24 } },
 
   { ROOMDIR(room_13_CORRIDOR,             TL), { 0x4A, 0x28, 24 } },
@@ -3087,7 +3090,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
     state->IY = vischar;
     get_next_target_and_handle_it(state, vischar, &vischar->target);
   }
-  else if (A == 128)
+  else if (A == 128) /* Did a door thing. */
   {
     vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
@@ -3181,10 +3184,14 @@ void byte_A13E_common(tgestate_t *state,
 
   if (character >= character_20_PRISONER_1)
   {
+    /* All prisoners */
+
     A = character - 13;
   }
   else
   {
+    /* All hostiles */
+
     A = 13;
     if (character & (1 << 0)) /* Odd numbered characters? */
     {
@@ -3267,7 +3274,7 @@ void character_sleeps(tgestate_t *state,
 }
 
 /**
- * $A462: Common end of character sits/sleeps.
+ * $A462: Make characters disappear, repainting the screen if required.
  *
  * \param[in] state  Pointer to game state.
  * \param[in] room   Room index.            (was C)
@@ -3296,7 +3303,7 @@ void character_sit_sleep_common(tgestate_t *state,
 
   if (state->room_index != room)
   {
-    /* Sit/sleep in a room presently not visible. */
+    /* Character is sitting or sleeping in a room presently not visible. */
 
     characterstruct_t *cs;
 
@@ -3306,7 +3313,7 @@ void character_sit_sleep_common(tgestate_t *state,
   }
   else
   {
-    /* Room is visible - force a refresh. */
+    /* Character is visible - force a repaint. */
 
     vischar_t *vc;
 
@@ -3390,7 +3397,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4A9: Set target 0x000E.
+ * $A4A9: Set target to 0x000E.
  *
  * \param[in] state Pointer to game state.
  */
@@ -3406,7 +3413,7 @@ void set_target_0x000E(tgestate_t *state)
 }
 
 /**
- * $A4B7: Set target 0x048E.
+ * $A4B7: Set target to 0x048E.
  *
  * \param[in] state Pointer to game state.
  */
@@ -3422,7 +3429,7 @@ void set_target_0x048E(tgestate_t *state)
 }
 
 /**
- * $A4C5: Set target 0x0010.
+ * $A4C5: Set target to 0x0010.
  *
  * \param[in] state Pointer to game state.
  */
@@ -5307,7 +5314,9 @@ nextrow:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AF8F: Stuff is touching. Also assigns saved_pos to specified vischar's pos and sets the sprite_index.
+ * $AF8F: Test for characters meeting obstacles like doors and map bounds.
+ *
+ * Also assigns saved_pos to specified vischar's pos and sets the sprite_index.
  *
  * \param[in] state        Pointer to game state.
  * \param[in] vischar      Pointer to visible character. (was IY)
@@ -5328,22 +5337,22 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
 
-  /* If hero is player controlled, then check for door transitions. */
+  /* If hero is player controlled then check for door transitions. */
   if (vischar == &state->vischars[0] && state->automatic_player_counter > 0)
     door_handling(state, vischar);
 
   /* If non-player character or hero is not cutting the fence. */
   if (vischar > &state->vischars[0] || ((state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE)) != vischar_FLAGS_CUTTING_WIRE))
   {
-    if (bounds_check(state, vischar)) // if within bounds?
-      return 1; // NZ
+    if (bounds_check(state, vischar))
+      return 1; /* Within wall bounds. */
   }
 
   if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
     if (collision(state, vischar))
       return 1; // NZ
 
-  // noncolliding characters and items only at this point
+  /* At this point we handle non-colliding characters and items only. */
 
   vischar->counter_and_flags &= ~vischar_BYTE7_TOUCH; // clear
   vischar->mi.pos           = state->saved_pos;
@@ -5572,12 +5581,12 @@ void accept_bribe(tgestate_t *state, vischar_t *vischar)
 
   draw_all_items(state);
 
-  /* Iterate over hostile + visible non-player characters. */
+  /* Iterate over visible hostiles. */
   iters    = vischars_LENGTH - 1;
   vischar2 = &state->vischars[1];
   do
   {
-    if (vischar2->character <= character_19_GUARD_DOG_4)
+    if (vischar2->character <= character_19_GUARD_DOG_4) /* All hostiles. */
       vischar2->flags = vischar_FLAGS_SAW_BRIBE; // hostile will look for bribed character?
     vischar2++;
   }
@@ -5590,12 +5599,13 @@ void accept_bribe(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B14C: Check the character is inside of permitted areas.
+ * $B14C: Affirms that the specified character is touching/inside of
+ * wall/fence bounds.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  *
- * \return 0 => outwith bounds, 1 => within
+ * \return 1 => within wall bounds, 0 => outwith
  */
 int bounds_check(tgestate_t *state, vischar_t *vischar)
 {
@@ -5608,7 +5618,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
   if (state->room_index > room_0_OUTDOORS)
     return interior_bounds_check(state, vischar);
 
-  iters = NELEMS(walls); // count of walls + fences
+  iters = NELEMS(walls); /* All walls and fences. */
   wall  = &walls[0];
   do
   {
@@ -8186,13 +8196,13 @@ void move_characters(tgestate_t *state)
   // PUSH HL_pos
   // HL += 3; // point at charstr->target
 
-  /* No target? Not yet understood. */
+  /* Not yet understood. No target? */
   if (charstr->target.x == 0) /* temp was A */
     // POP HL_pos
     return;
 
-  A = get_next_target(state, &charstr->target, &HLtarget); // "move towards" ?
-  if (A == 0xFF)
+  A = get_next_target(state, &charstr->target, &HLtarget);
+  if (A == 0xFF) /* Hit end of list case. */
   {
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8204,6 +8214,7 @@ void move_characters(tgestate_t *state)
 
       /* Characters 1..11. */
 back:
+      /* These ops modify the locations[] table. */
       HLtarget->x = A = HLtarget->x ^ (1 << 7);
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
@@ -8217,7 +8228,7 @@ back:
     }
     else
     {
-      /* Commandant. */
+      /* Commandant only. */
 
       // sampled HL = $7617 (characterstruct + 5)
       A = HLtarget->x & characterstruct_BYTE5_MASK; // location
@@ -8919,11 +8930,11 @@ end_bit:
 #else
   /* Replacement code passes down a log2scale factor. */
   if (state->room_index > room_0_OUTDOORS)
-    log2scale = 1;
+    log2scale = 1; /* Indoors. */
   else if (Cdash & vischar_FLAGS_DOOR_THING)
-    log2scale = 4;
+    log2scale = 4; /* Outdoors + door thing. */
   else
-    log2scale = 8;
+    log2scale = 8; /* Outdoors. */
 #endif
 
   if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc.
@@ -9125,7 +9136,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     else if (flags_lower6 == vischar_FLAGS_PERSUE ||
              flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
-      // perhaps: when hostiles are distracted food remains undiscovered?
+      /* Perhaps when hostiles are distracted food remains undiscovered? */
       return;
     }
 
@@ -9233,6 +9244,8 @@ void get_next_target_and_handle_it(tgestate_t *state,
 /**
  * $CB2D: (unknown) ran_out_of_list
  *
+ * Called by spawn_character, get_next_target_and_handle_it.
+ *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
@@ -9291,12 +9304,12 @@ cb50:
   // Conv: 'A = 0' removed as it has no effect. [Present in DOS version]
 }
 
-// $CB5F,2 Unreferenced bytes.
+// $CB5F,2 Unreferenced bytes. [Absent in DOS version]
 
 /**
  * $CB61: (unknown) handle_target
  *
- * Only ever called by get_next_target_and_handle_it.
+ * Only ever called by get_next_target_and_handle_it. Consider merging this into it.
  *
  * \param[in] state      Pointer to game state.
  * \param[in] vischar    Pointer to visible character. (was IY)
@@ -9543,7 +9556,7 @@ uint8_t random_nibble(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CB98: The hero has been sent to solitary.
+ * $CB98: Send the hero to solitary.
  *
  * \param[in] state Pointer to game state.
  */
@@ -9626,6 +9639,10 @@ next:
 
   /* Move the hero to solitary. */
   state->vischars[0].room = room_24_SOLITARY;
+
+  /* From reading the door_positions[] table this is the door inbetween
+   * room_21_CORRIDOR and room_0_OUTDOORS. I'd have expected this to be 49
+   * which is the door between room_22_REDKEY and room_24_SOLITARY. */
   state->current_door = 20;
 
   decrease_morale(state, 35);
@@ -9656,7 +9673,7 @@ next:
  * $CC37: Guards follow suspicious character.
  *
  * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character (only ever a supporting character). (was IY / HL)
+ * \param[in] vischar Pointer to visible character (hostile only). (was IY / HL)
  */
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
@@ -9695,8 +9712,10 @@ void guards_follow_suspicious_character(tgestate_t *state,
     hero_map_pos = &state->hero_map_position;
     /* Conv: Dupe tinypos ptr factored out. */
 
-    direction = vischar->direction; // direction
+    direction = vischar->direction; /* This character's direction. */
     /* Conv: Avoided shifting 'direction' here. Propagated shift into later ops. */
+
+    /* Guess: This is orienting the hostile to face the hero. */
 
     if ((direction & 1) == 0) /* TL or BR */
     {
@@ -9738,7 +9757,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CCAB: Guards persue prisoners.
+ * $CCAB: Hostiles persue prisoners.
  *
  * For all visible, hostile characters, at height < 32, set the bribed/persue
  * flag.
@@ -9993,7 +10012,7 @@ static const uint8_t _d00e[] = { 0x02, 0x06,0x07,0xFF, 0x00,0x00,0x00,0x88, 0x00
 static const uint8_t _d01a[] = { 0x02, 0x07,0x04,0xFF, 0x00,0x00,0x00,0x08, 0x00,0x00,0x00,0x0A };
 
 /**
- * $CDF2: (unknown)
+ * $CDF2: Animation states.
  */
 const uint8_t *animations[24] =
 {

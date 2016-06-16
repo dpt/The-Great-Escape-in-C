@@ -168,7 +168,8 @@ enum input_flags
   input_LEFT_FIRE                      = input_LEFT  + input_FIRE,
   input_RIGHT_FIRE                     = input_RIGHT + input_FIRE,
 
-  input_KICK                           = 1 << 7, // input kicking flag
+  /* input_KICK is a flag set to force an update. */
+  input_KICK                           = 1 << 7,
 };
 
 /**
@@ -189,7 +190,7 @@ enum vischar_flags
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
-  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling
+  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling. reset by set_hero_target. set by set_target. seems related to door entering.
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
   // vischar_FLAGS_DOOR_THING:
@@ -197,13 +198,13 @@ enum vischar_flags
   // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
-  vischar_BYTE2_BIT7                   = 1 << 7, // target mask
+  vischar_BYTE2_BIT7                   = 1 << 7, // not yet understood
 
   vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
-  vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero hits an obstacle
-  vischar_BYTE7_TOUCH                  = 1 << 6, // set while touch() entered
-  vischar_BYTE7_LOCATABLE              = 1 << 7, // stops locate_vischar_or_itemstruct considering a vischar
+  vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero hits an obstacle X, but cleared on Y obstacle?
+  vischar_BYTE7_TOUCH                  = 1 << 6, // set when touch() sees a character touching. stops the map moving
+  vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
   vischar_BYTE12_BIT7                  = 1 << 7, // up/down flag
 
@@ -224,8 +225,8 @@ enum itemstruct_flags
 
   itemstruct_ROOM_NONE                 = 0x3F,
   itemstruct_ROOM_MASK                 = 0x3F,
-  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /**< Set when the item is nearby. Cleared when? */
-  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /**< Set when the item is nearby. */
+  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /**< Set when the item is nearby. Cleared by mark_nearby_items and locate_vischar_or_itemstruct. */
+  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /**< Set when the item is nearby. Cleared by mark_nearby_items. Enables find_nearby_item for the item. follow_suspicious_character uses it on item_FOOD to trigger guard dog stuff. */
 };
 
 /**
@@ -414,7 +415,7 @@ typedef struct pos
 pos_t;
 
 /**
- * Holds a smaller scale version of pos_t
+ * Holds a smaller scale version of pos_t.
  */
 typedef struct tinypos
 {
@@ -461,7 +462,7 @@ typedef struct vischar
   const uint8_t  *anim;
 
   /** $800C */
-  uint8_t         b0C; // up/down flag
+  uint8_t         b0C; // animation index + up/down flag
 
   /** $800D movement */
   // compared to flags?
