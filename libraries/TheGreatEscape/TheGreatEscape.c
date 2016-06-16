@@ -3208,6 +3208,10 @@ void byte_A13E_common(tgestate_t *state,
 /**
  * $A420: Character sits.
  *
+ * This is called with x = 18,19,20,21,22,23.
+ * - 18..20 go to room_25_BREAKFAST
+ * - 21..23 go to room_23_BREAKFAST
+ *
  * \param[in] state  Pointer to game state.
  * \param[in] x      (was A)
  * \param[in] target Pointer to target. (was HL)
@@ -3220,8 +3224,8 @@ void character_sits(tgestate_t *state,
   uint8_t *bench; /* was HL */
   room_t   room;  /* was C */
 
-  assert(state    != NULL);
-  //ASSERT_..._VALID(x);
+  assert(state  != NULL);
+  assert(x >= 18 && x <= 23);
   assert(target != NULL);
 
   index = x - 18;
@@ -3248,6 +3252,10 @@ void character_sits(tgestate_t *state,
 /**
  * $A444: Character sleeps.
  *
+ * This is called with x = 7,8,9,10,11,12.
+ * -  7..9  go to room_3_HUT2RIGHT
+ * - 10..12 go to room_5_HUT3RIGHT
+ *
  * \param[in] state  Pointer to game state.
  * \param[in] x      (was A)
  * \param[in] target Pointer to target. (was HL)
@@ -3259,7 +3267,7 @@ void character_sleeps(tgestate_t *state,
   room_t room; /* was C */
 
   assert(state  != NULL);
-  //ASSERT_..._VALID(x);
+  assert(x >= 7 && x <= 12);
   assert(target != NULL);
 
   /* Poke object. */
@@ -4094,7 +4102,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
   assert(state    != NULL);
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
-  // assert(pos);
+  // assert(x);
   ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   x_offset = x & 3; // self modify (local)
