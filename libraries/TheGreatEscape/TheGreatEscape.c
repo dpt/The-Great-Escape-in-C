@@ -3085,7 +3085,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
   if (A == 255) /* End of door list. */
   {
     state->IY = vischar;
-    sub_CB23(state, vischar, &vischar->target);
+    get_next_target_and_handle_it(state, vischar, &vischar->target);
   }
   else if (A == 128)
   {
@@ -5559,7 +5559,7 @@ void accept_bribe(tgestate_t *state, vischar_t *vischar)
 
   vischar->flags = 0;
 
-  sub_CB23(state, vischar, &vischar->target);
+  get_next_target_and_handle_it(state, vischar, &vischar->target);
 
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
@@ -8824,7 +8824,7 @@ set_p04:
       // hero is under automatic control
 
       vischar2->flags = 0;
-      sub_CB23(state, vischar2, &vischar2->target);
+      get_next_target_and_handle_it(state, vischar2, &vischar2->target);
       return;
     }
     else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
@@ -8841,7 +8841,7 @@ set_p04:
         vischar2->flags  = 0;
         vischar2->target.x = 0xFF;
         vischar2->target.y = 0x00;
-        sub_CB23(state, vischar2, &vischar2->target);
+        get_next_target_and_handle_it(state, vischar2, &vischar2->target);
         return;
       }
     }
@@ -8867,7 +8867,7 @@ set_p04:
 
       /* Bribed character was not visible. */
       vischar2->flags = 0;
-      sub_CB23(state, vischar2, &vischar2->target);
+      get_next_target_and_handle_it(state, vischar2, &vischar2->target);
       return;
 
 bribed_visible:
@@ -9182,7 +9182,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     {
       /* Hero's vischar only. */
       vischarHL->flags &= ~vischar_FLAGS_BIT6;
-      sub_CB23(state, vischarHL, &vischarHL->target);
+      get_next_target_and_handle_it(state, vischarHL, &vischarHL->target);
     }
 
     // POP HL_tinypos
@@ -9202,28 +9202,30 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->target.y++;
   }
 
-  sub_CB23(state, vischar, &vischar->target); // was fallthrough
+  get_next_target_and_handle_it(state, vischar, &vischar->target); // was fallthrough
 }
 
 /**
- * $CB23: (unknown) sub_CB23
+ * $CB23: (unknown) get_next_target_and_handle_it
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *target)
+void get_next_target_and_handle_it(tgestate_t *state,
+                                   vischar_t  *vischar,
+                                   xy_t       *target)
 {
-  uint8_t A;
+  uint8_t get_next_target_flags; /* was A */
   xy_t   *new_target;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(target);
 
-  A = get_next_target(state, target, &new_target);
-  if (A != 0xFF)
-    sub_CB61(state, vischar, target, new_target, A);
+  get_next_target_flags = get_next_target(state, target, &new_target);
+  if (get_next_target_flags != 255) /* Didn't hit end of list case. */
+    sub_CB61(state, vischar, target, new_target, get_next_target_flags);
   else
     sub_CB2D(state, vischar, target); // was fallthrough
 }
@@ -9269,7 +9271,7 @@ cb46:
   if (target->x == 0)
     return;
 
-  sub_CB23(state, vischar, target); // re-enter
+  get_next_target_and_handle_it(state, vischar, target); // re-enter
   return; // exit via
 
 cb50:
@@ -9294,7 +9296,7 @@ cb50:
 /**
  * $CB61: (unknown) sub_CB61
  *
- * Only ever called by sub_CB23.
+ * Only ever called by get_next_target_and_handle_it.
  *
  * \param[in] state      Pointer to game state.
  * \param[in] vischar    Pointer to visible character. (was IY)

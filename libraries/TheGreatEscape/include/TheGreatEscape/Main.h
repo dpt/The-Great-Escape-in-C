@@ -508,7 +508,9 @@ uint8_t move_character_y(tgestate_t *state,
 
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
-void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *target);
+void get_next_target_and_handle_it(tgestate_t *state,
+                                   vischar_t  *vischar,
+                                   xy_t       *target);
 void sub_CB2D(tgestate_t *state, vischar_t *vischar, xy_t *target);
 void sub_CB61(tgestate_t *state,
               vischar_t  *vischar,
