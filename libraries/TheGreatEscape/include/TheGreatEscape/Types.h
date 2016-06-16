@@ -203,7 +203,7 @@ enum vischar_flags
   vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
   vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero hits an obstacle X, but cleared on Y obstacle?
-  vischar_BYTE7_TOUCH                  = 1 << 6, // set when touch() sees a character touching. stops the map moving
+  vischar_BYTE7_TOUCHING               = 1 << 6, // set when touch() sees a character touching. stops the map moving
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
   vischar_BYTE12_BIT7                  = 1 << 7, // up/down flag

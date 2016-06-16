@@ -4414,7 +4414,7 @@ void move_map(tgestate_t *state)
   if (state->room_index > room_0_OUTDOORS)
     return; /* Can't move the map when indoors. */
 
-  if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCH)
+  if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCHING)
     return; // don't move the map if touch() is entered?
 
   anim = state->vischars[0].anim;
@@ -5333,7 +5333,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   // assert(Adash);
 
   stashed_sprite_index = sprite_index;
-  vischar->counter_and_flags |= vischar_BYTE7_TOUCH | vischar_BYTE7_LOCATABLE; // wild guess: clamp character in position?
+  vischar->counter_and_flags |= vischar_BYTE7_TOUCHING | vischar_BYTE7_LOCATABLE; // wild guess: clamp character in position?
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
 
@@ -5354,7 +5354,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 
   /* At this point we handle non-colliding characters and items only. */
 
-  vischar->counter_and_flags &= ~vischar_BYTE7_TOUCH; // clear
+  vischar->counter_and_flags &= ~vischar_BYTE7_TOUCHING; // clear
   vischar->mi.pos           = state->saved_pos;
   vischar->mi.sprite_index  = stashed_sprite_index; // left/right flip flag / sprite offset
 
