@@ -4415,7 +4415,7 @@ void move_map(tgestate_t *state)
     return; /* Can't move the map when indoors. */
 
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCHING)
-    return; // don't move the map if touch() is entered?
+    return; /* Can't move the map when touch() saw contact. */
 
   anim = state->vischars[0].anim;
   b0C = state->vischars[0].b0C;
