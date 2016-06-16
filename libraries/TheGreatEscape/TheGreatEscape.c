@@ -3076,7 +3076,7 @@ void sub_A3BB(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  A = sub_C651(state, &vischar->target, &target);
+  A = get_next_target(state, &vischar->target, &target);
 
   pos = &vischar->p04;
   pos->x = target->x;
@@ -7919,7 +7919,7 @@ c592:
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->p04
-    A = sub_C651(state, &charstr->target, &target);
+    A = get_next_target(state, &charstr->target, &target);
     if (A == 255)
     {
       // POP HL // HL = DE
@@ -8054,9 +8054,9 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  *
  * \return 0/128/255.
  */
-uint8_t sub_C651(tgestate_t *state,
-                 xy_t       *target,
-                 xy_t      **target_out)
+uint8_t get_next_target(tgestate_t *state,
+                        xy_t       *target,
+                        xy_t      **target_out)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
@@ -8191,7 +8191,7 @@ void move_characters(tgestate_t *state)
     // POP HL_pos
     return;
 
-  A = sub_C651(state, &charstr->target, &HLtarget); // "move towards" ?
+  A = get_next_target(state, &charstr->target, &HLtarget); // "move towards" ?
   if (A == 0xFF)
   {
     character = state->character_index;
@@ -9221,7 +9221,7 @@ void sub_CB23(tgestate_t *state, vischar_t *vischar, xy_t *target)
   ASSERT_VISCHAR_VALID(vischar);
   assert(target);
 
-  A = sub_C651(state, target, &new_target);
+  A = get_next_target(state, target, &new_target);
   if (A != 0xFF)
     sub_CB61(state, vischar, target, new_target, A);
   else
@@ -9341,7 +9341,7 @@ uint16_t multiply_by_1(uint8_t A)
 /**
  * $CB79: Return the A'th element of table_7738.
  *
- * Used by the routines at sub_C651 and bribes_solitary_food.
+ * Used by the routines at get_next_target and bribes_solitary_food.
  *
  * \param[in] A Index.
  *
@@ -9455,7 +9455,7 @@ const uint8_t *element_A_of_table_7738(uint8_t A)
 /**
  * $CB85: Pseudo-random number generator.
  *
- * Leaf. Only ever used by sub_C651.
+ * Leaf. Only ever used by get_next_target.
  *
  * \return Pseudo-random number from 0..15.
  */

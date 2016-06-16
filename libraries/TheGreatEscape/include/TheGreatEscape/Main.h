@@ -457,9 +457,9 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
-uint8_t sub_C651(tgestate_t *state,
-                 xy_t       *target,
-                 xy_t      **target_out);
+uint8_t get_next_target(tgestate_t *state,
+                        xy_t       *target,
+                        xy_t      **target_out);
 
 void move_characters(tgestate_t *state);
 
