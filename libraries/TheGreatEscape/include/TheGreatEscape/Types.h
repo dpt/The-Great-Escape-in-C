@@ -189,10 +189,10 @@ enum vischar_flags
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
-  vischar_FLAGS_BIT6                   = 1 << 6, // affects scaling
+  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
-  // vischar_FLAGS_BIT6:
+  // vischar_FLAGS_DOOR_THING:
   // set by set_target (get_next_target A == 128 case), spawn_character (get_next_target A == 128 case), handle_target (get_next_target A == 128 case)
   // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)

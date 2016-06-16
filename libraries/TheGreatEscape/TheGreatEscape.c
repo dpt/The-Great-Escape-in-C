@@ -2896,7 +2896,7 @@ void set_hero_target(tgestate_t *state, xy_t target)
 
   vischar = &state->vischars[0];
 
-  vischar->flags &= ~vischar_FLAGS_BIT6;
+  vischar->flags &= ~vischar_FLAGS_DOOR_THING;
   vischar->target = target;
   set_target(state, vischar);
 }
@@ -3049,7 +3049,7 @@ void set_character_target(tgestate_t *state,
 
   // FUTURE: Move this chunk into the body of the loop above.
 store_to_vischar:
-  vischar->flags &= ~vischar_FLAGS_BIT6;
+  vischar->flags &= ~vischar_FLAGS_DOOR_THING;
   store_target(target, &vischar->target);
 
   set_target(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
@@ -3089,7 +3089,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
   }
   else if (A == 128)
   {
-    vischar->flags |= vischar_FLAGS_BIT6;
+    vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
 }
 
@@ -7932,7 +7932,7 @@ c592:
     }
     else if (A == 128)
     {
-      vischar->flags |= vischar_FLAGS_BIT6;
+      vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
     // POP DE // -> vischar->p04
     // sampled HL is $7913 (a door_positions tinypos)
@@ -8909,7 +8909,7 @@ end_bit:
   /* Original code self modifies move_character_x/y routines. */
   if (state->room_index > room_0_OUTDOORS)
     HLdash = &multiply_by_1;
-  else if (Cdash & vischar_FLAGS_BIT6)
+  else if (Cdash & vischar_FLAGS_DOOR_THING)
     HLdash = &multiply_by_4;
   else
     HLdash = &multiply_by_8;
@@ -8920,7 +8920,7 @@ end_bit:
   /* Replacement code passes down a log2scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     log2scale = 1;
-  else if (Cdash & vischar_FLAGS_BIT6)
+  else if (Cdash & vischar_FLAGS_DOOR_THING)
     log2scale = 4;
   else
     log2scale = 8;
@@ -9142,7 +9142,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  if (flags_all & vischar_FLAGS_BIT6)
+  if (flags_all & vischar_FLAGS_DOOR_THING)
   {
     /* Results in character entering. */
 
@@ -9181,7 +9181,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     if (vischarHL == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
     {
       /* Hero's vischar only. */
-      vischarHL->flags &= ~vischar_FLAGS_BIT6;
+      vischarHL->flags &= ~vischar_FLAGS_DOOR_THING;
       get_next_target_and_handle_it(state, vischarHL, &vischarHL->target);
     }
 
@@ -9317,7 +9317,7 @@ void handle_target(tgestate_t *state,
   // assert(A);
 
   if (A == (1 << 7))
-    vischar->flags |= vischar_FLAGS_BIT6;
+    vischar->flags |= vischar_FLAGS_DOOR_THING;
 
   pushed_HL[1] = *new_target;
 
