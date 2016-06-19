@@ -1,20 +1,11 @@
 #ifndef SPRITES_H
 #define SPRITES_H
 
-#include "TheGreatEscape/SpriteBitmaps.h"
+#include <stdint.h>
 
 /**
- * A sprite (a bitmap + mask pair);
+ * Identifiers for character sprites.
  */
-typedef struct sprite
-{
-  uint8_t        width; /* in bytes + 1 */
-  uint8_t        height;
-  const uint8_t *bitmap;
-  const uint8_t *mask;
-}
-sprite_t;
-
 enum
 {
   sprite_STOVE,
@@ -55,10 +46,29 @@ enum
   sprite_COMMANDANT_FACING_TOWARDS_2,
   sprite_COMMANDANT_FACING_TOWARDS_3,
   sprite_COMMANDANT_FACING_TOWARDS_4,
-  sprite__LIMIT
+  sprite__LIMIT, /* == 38 */
+
+  sprite_FLAG_FLIP = 1 << 7 /**< Left/right flip flag. */
 };
 
-extern const sprite_t sprites[sprite__LIMIT];
+/**
+ * Holds a sprite index.
+ */
+typedef uint8_t spriteindex_t;
+
+/**
+ * A spritedef defines a bitmap + mask pair;
+ */
+typedef struct spritedef
+{
+  uint8_t        width; /* in bytes + 1 */
+  uint8_t        height;
+  const uint8_t *bitmap;
+  const uint8_t *mask;
+}
+spritedef_t;
+
+extern const spritedef_t sprites[sprite__LIMIT];
 
 #endif /* SPRITES_H */
 

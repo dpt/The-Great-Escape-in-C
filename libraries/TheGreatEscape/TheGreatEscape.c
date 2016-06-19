@@ -64,6 +64,7 @@
 #include "TheGreatEscape/Music.h"
 #include "TheGreatEscape/RoomDefs.h"
 #include "TheGreatEscape/Rooms.h"
+#include "TheGreatEscape/SpriteBitmaps.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/StaticGraphics.h"
@@ -1338,9 +1339,9 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff)
 
   uint8_t *const screen = &state->speccy->screen[0];
 
-  attribute_t    *attrs;  /* was HL */
-  attribute_t     attr;   /* was A */
-  const sprite_t *sprite; /* was HL */
+  attribute_t       *attrs;  /* was HL */
+  attribute_t        attr;   /* was A */
+  const spritedef_t *sprite; /* was HL */
 
   /* Wipe item. */
   screen_wipe(state, 2, 16, screen + dstoff);
@@ -6130,7 +6131,7 @@ void action_poison(tgestate_t *state)
  */
 void action_uniform(tgestate_t *state)
 {
-  const sprite_t *guard_sprite; /* was HL */
+  const spritedef_t *guard_sprite; /* was HL */
 
   assert(state != NULL);
 
@@ -10436,7 +10437,7 @@ invisible:
  *
  * Used by draw_item and setup_item_plotting.
  */
-const sprite_t item_definitions[item__LIMIT] =
+const spritedef_t item_definitions[item__LIMIT] =
 {
   { 2, 11, bitmap_wiresnips, mask_wiresnips },
   { 2, 13, bitmap_shovel,    mask_shovelkey },
@@ -10531,7 +10532,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask1 = *maskptr++;
       mask2 = *maskptr++;
 
-      if (state->sprite_index & spriteindex_FLIP)
+      if (state->sprite_index & sprite_FLAG_FLIP)
         flip_24_masked_pixels(state, &mask2, &mask1, &mask0, &bm2, &bm1, &bm0);
 
       foremaskptr = state->foreground_mask_pointer;
@@ -10657,7 +10658,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask1 = *maskptr++;
       mask0 = *maskptr++;
 
-      if (state->sprite_index & spriteindex_FLIP)
+      if (state->sprite_index & sprite_FLAG_FLIP)
         flip_24_masked_pixels(state, &mask0, &mask1, &mask2, &bm0, &bm1, &bm2);
 
       foremaskptr = state->foreground_mask_pointer;
@@ -10839,7 +10840,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     mask0 = *maskptr++;
     mask1 = *maskptr++;
 
-    if (state->sprite_index & spriteindex_FLIP)
+    if (state->sprite_index & sprite_FLAG_FLIP)
       flip_16_masked_pixels(state, &mask0, &mask1, &bm0, &bm1);
 
     // I'm assuming foremaskptr to be a foreground mask pointer based on it being
@@ -10974,7 +10975,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     mask1 = *maskptr++;
     mask0 = *maskptr++;
 
-    if (state->sprite_index & spriteindex_FLIP)
+    if (state->sprite_index & sprite_FLAG_FLIP)
       flip_16_masked_pixels(state, &mask1, &mask0, &bm1, &bm0);
 
     foremaskptr = state->foreground_mask_pointer;
@@ -11191,25 +11192,25 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide
   };
 
-  pos_t          *pos;            /* was HL */
-  tinypos_t      *tinypos;        /* was DE */
-  const sprite_t *sprite;         /* was BC */
-  spriteindex_t   sprite_index;   /* was A */
-  const sprite_t *sprite2;        /* was DE */
-  uint16_t        clipped_width;  /* was BC */
-  uint16_t        clipped_height; /* was DE */
-  const size_t   *enables;        /* was HL */
-  uint8_t         self_E4C0;      /* was $E4C0 */
-  uint8_t         offset;         /* was A' */
-  uint8_t         Cdash;          /* was C' */
-  uint8_t         iters;          /* was B' */
-  uint8_t         E;              /* was E */
-  uint8_t         instr;          /* was A */
-  uint8_t         A;              /* was A */
-  uint16_t        x;              /* was HL */
-  uint8_t        *maskbuf;        /* was HL */
-  uint16_t        y;              /* was DE */
-  uint16_t        skip;           /* was DE */
+  pos_t             *pos;            /* was HL */
+  tinypos_t         *tinypos;        /* was DE */
+  const spritedef_t *sprite;         /* was BC */
+  spriteindex_t      sprite_index;   /* was A */
+  const spritedef_t *sprite2;        /* was DE */
+  uint16_t           clipped_width;  /* was BC */
+  uint16_t           clipped_height; /* was DE */
+  const size_t      *enables;        /* was HL */
+  uint8_t            self_E4C0;      /* was $E4C0 */
+  uint8_t            offset;         /* was A' */
+  uint8_t            Cdash;          /* was C' */
+  uint8_t            iters;          /* was B' */
+  uint8_t            E;              /* was E */
+  uint8_t            instr;          /* was A */
+  uint8_t            A;              /* was A */
+  uint16_t           x;              /* was HL */
+  uint8_t           *maskbuf;        /* was HL */
+  uint16_t           y;              /* was DE */
+  uint16_t           skip;           /* was DE */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -11248,7 +11249,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
-  sprite2 = &sprite[sprite_index & ~spriteindex_FLIP]; // sprite pointer
+  sprite2 = &sprite[sprite_index & ~sprite_FLAG_FLIP]; // sprite pointer
 
   vischar->width_bytes = sprite2->width;  // width in bytes
   vischar->height      = sprite2->height; // height in rows

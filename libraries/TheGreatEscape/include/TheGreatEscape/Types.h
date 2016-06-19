@@ -281,19 +281,6 @@ enum escapeitem_flags
   escapeitem_UNIFORM                   = 1 << 3
 };
 
-/**
- * Identifiers of sprite indices.
- */
-enum spriteindex_flags
-{
-  spriteindex_FLIP                     = 1 << 7 /**< Left/right flip flag. */
-};
-
-/**
- * Holds a sprite index.
- */
-typedef uint8_t spriteindex_t;
-
 /* ----------------------------------------------------------------------- */
 
 /* CONSTANTS
@@ -429,9 +416,9 @@ tinypos_t;
  */
 typedef struct movableitem
 {
-  pos_t           pos;
-  const sprite_t *sprite;
-  spriteindex_t   sprite_index;
+  pos_t              pos;
+  const spritedef_t *sprite;
+  spriteindex_t      sprite_index;
 }
 movableitem_t;
 
@@ -672,8 +659,8 @@ mask_t;
  */
 typedef struct character_class_data
 {
-  const uint8_t **animbase;
-  const sprite_t *sprite;
+  const uint8_t    **animbase;
+  const spritedef_t *sprite;
 }
 character_class_data_t;
 

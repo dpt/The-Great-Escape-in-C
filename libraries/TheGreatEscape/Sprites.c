@@ -7,9 +7,9 @@
 /**
  * $CE22: Sprites: objects which can move.
  *
- * This include STOVE, CRATE, PRISONER, CRAWL, DOG, GUARD and COMMANDANT.
+ * This includes STOVE, CRATE, PRISONER, CRAWL, DOG, GUARD and COMMANDANT.
  */
-const sprite_t sprites[sprite__LIMIT] =
+const spritedef_t sprites[sprite__LIMIT] =
 {
   { 3, 22, bitmap_stove,                            mask_stove                         },
   { 4, 24, bitmap_crate,                            mask_crate                         },

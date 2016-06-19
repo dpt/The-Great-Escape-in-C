@@ -563,7 +563,7 @@ uint8_t item_visible(tgestate_t *state,
                      uint16_t   *clipped_width,
                      uint16_t   *clipped_height);
 
-extern const sprite_t item_definitions[item__LIMIT];
+extern const spritedef_t item_definitions[item__LIMIT];
 
 /* $E000 onwards */
 
