@@ -324,7 +324,7 @@ void setup_movable_item(tgestate_t          *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $69C9: Reset akk non-player visible characters.
+ * $69C9: Reset all non-player visible characters.
  *
  * \param[in] state Pointer to game state.
  */
