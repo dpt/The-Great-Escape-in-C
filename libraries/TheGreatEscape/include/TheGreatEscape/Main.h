@@ -567,7 +567,7 @@ extern const spritedef_t item_definitions[item__LIMIT];
 
 /* $E000 onwards */
 
-const size_t masked_sprite_plotter_16_enables[2 * 3];
+extern const size_t masked_sprite_plotter_16_enables[2 * 3];
 
 void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar);
 
