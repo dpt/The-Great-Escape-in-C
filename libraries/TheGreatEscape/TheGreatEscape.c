@@ -5212,7 +5212,7 @@ void searchlight_caught(tgestate_t                   *state,
 void searchlight_plot(tgestate_t *state, attribute_t *attrs)
 {
   /**
-   * $AF3E: Circle shaped bitmap.
+   * $AF3E: Searchlight circle shape.
    */
   static const uint8_t searchlight_shape[2 * 16] =
   {
@@ -5239,41 +5239,40 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
   attribute_t *const attrs_base = &state->speccy->attributes[0];
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs_base);
 
-  const uint8_t *shape;           /* was DE' */
-  uint8_t        iters;           /* was C' */
+  const uint8_t *shape;       /* was DE' */
+  uint8_t        iters;       /* was C' */
   uint8_t        use_full_window; /* was A */
-  ptrdiff_t      x;               /* was A */
-  attribute_t   *max_y_attrs;     /* was HL */
-  attribute_t   *saved_attrs;     /* was stack */
-  attribute_t   *pattrs2;         /* was HL */
-  uint8_t        iters2;          /* was B' */
-  uint8_t        iters3;          /* was B */
-  uint8_t        pixels;          /* was C */
+  attribute_t   *max_y_attrs; /* was HL */
+  attribute_t   *saved_attrs; /* was stack */
+  attribute_t   *pattrs2;     /* was HL */
+  uint8_t        iters2;      /* was B' */
   int            carry = 0;
 
   shape = &searchlight_shape[0];
   iters = 16; /* height */
   do
   {
-    use_full_window = state->searchlight.use_full_window;
+    ptrdiff_t x; /* was A */
 
-    /* Screen attribute coords are x = 0..31, y = 0..23.
+    use_full_window = state->searchlight.use_full_window; // a clipping flag maybe?
+
+    /* Screen coords are x = 0..31, y = 0..23.
      * Game window occupies attribute rows 2..17 and columns 7..29 (inclusive).
      * Attribute row 18 is the row beyond the bottom edge of the game window. */
 
-    x = (attrs - attrs_base) & 31; /* Conv: Hoisted. */ // '& 31' -> '% state->width'
+    x = (attrs - attrs_base) & 31; // '& 31' -> '% state->width'  Conv: hoisted
 
-    // screen attribute address (column 0 + bottom of game screen)
-    max_y_attrs = &attrs_base[32 * 18]; // was HL = 0x5A40;
+    // pattrs1 must be y limit
+    max_y_attrs = &attrs_base[32 * 18]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
     if (use_full_window)
     {
-      // Conv: was if ((E & 31) >= 22) L = 32;
+      // Conv: was: if ((E & 31) >= 22) L = 32;
       // E & 31 => 4th to last row, or later
       if (x >= 22) // 22 => 8 attrs away from the edge maybe?
         max_y_attrs = &attrs_base[32 * 19]; // colors in bottom border
     }
-    if (attrs >= max_y_attrs) /* Off the end of the game screen? */
-      goto exit; /* Conv: Original code just returned, jump to exit instead so I can force a screen refresh down there. */
+    if (attrs >= max_y_attrs) // gone off the end of the game screen?
+      goto exit; // Conv: Original code just returned, goto exit instead so I can force a screen refresh down there.
 
     saved_attrs = attrs; // PUSH DE
 
@@ -5290,26 +5289,29 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
       goto next_row;
     }
 
-    iters2 = 2; /* iterations */ /* bytes per row */
+    iters2 = 2; /* iterations */ // bytes per row
     do
     {
+      uint8_t iters3; /* was B */
+      uint8_t pixels; /* was C */
+
       pixels = *shape; // Conv: Original uses A as temporary.
 
-      iters3 = 8; /* iterations */ /* bits per byte */
+      iters3 = 8; /* iterations */ // bits per byte
       do
       {
         x = (attrs - attrs_base) & 31; // Conv: was interleaved; '& 31's hoisted from below; '& 31' -> '% state->width' as above
         if (!use_full_window)
         {
           if (x >= 22)
-            /* Don't render right of the game window. */
+            // don't render right of the game window
             goto dont_plot;
         }
         else
         {
-          if (x >= 30) // Conv: Constant 30 was in E.
+          if (x >= 30) // Conv: Constant 30 was in E
           {
-            /* Don't render right of the game window. */
+            // don't render right of the game window
             do
               shape++;
             while (--iters2);
@@ -5318,13 +5320,12 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
           }
         }
 
-        /* Plot */
-
-        if (x < 7) // Conv: Constant 7 was in D.
+        // plot
+        if (x < 7) // Conv: Constant 7 was in D
         {
-          /* Don't render left of the game window. */
-dont_plot:
-          RL(pixels);
+          // don't render left of the game window
+        dont_plot:
+          RL(pixels); // no plot
         }
         else
         {
