@@ -1028,6 +1028,8 @@ void process_player_input_fire(tgestate_t *state, input_t input)
 /**
  * $7AF0: Use item 'B'.
  *
+ * TODO: Fold into process_player_input_fire.
+ *
  * \param[in] state Pointer to game state.
  */
 void use_item_B(tgestate_t *state)
@@ -1039,6 +1041,8 @@ void use_item_B(tgestate_t *state)
 
 /**
  * $7AF5: Use item 'A'.
+ *
+ * TODO: Fold into process_player_input_fire.
  *
  * \param[in] state Pointer to game state.
  */
