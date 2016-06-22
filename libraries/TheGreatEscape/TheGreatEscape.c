@@ -5371,7 +5371,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(Adash);
+  assert((sprite_index & ~sprite_FLAG_FLIP) < sprite__LIMIT);
 
   stashed_sprite_index = sprite_index;
   vischar->counter_and_flags |= vischar_BYTE7_TOUCHING | vischar_BYTE7_LOCATABLE; // wild guess: clamp character in position?
