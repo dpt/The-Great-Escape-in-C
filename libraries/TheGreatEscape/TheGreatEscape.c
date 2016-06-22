@@ -4240,7 +4240,7 @@ uint8_t *plot_tile(tgestate_t             *state,
 
   assert(state           != NULL);
   //assert(tile_index < 220); // ideally the constant should be elsewhere
-  assert(psupertileindex != NULL);
+  ASSERT_SUPERTILE_PTR_VALID(psupertileindex);
   assert(scr             != NULL);
 
   supertileindex = *psupertileindex; /* get supertile index */
