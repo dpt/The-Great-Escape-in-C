@@ -284,9 +284,9 @@ void hero_sits(tgestate_t *state);
 void hero_sleeps(tgestate_t *state);
 void hero_sit_sleep_common(tgestate_t *state, uint8_t *HL);
 
-void set_target_0x000E(tgestate_t *state);
-void set_target_0x048E(tgestate_t *state);
-void set_target_0x0010(tgestate_t *state);
+void set_target_0x0E00(tgestate_t *state);
+void set_target_0x8E04(tgestate_t *state);
+void set_target_0x1000(tgestate_t *state);
 
 void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
                                      xy_t       *target);

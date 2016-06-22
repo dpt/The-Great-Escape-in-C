@@ -303,27 +303,6 @@ enum morale
 };
 
 /**
- * Identifiers of map targets.
- */
-enum targets
-{
-  target_0005                        = 0x0005, /* used in wake_up */
-  target_000E                        = 0x000E, /* used at exercise time (prior) */
-  target_0010                        = 0x0010,
-  target_001A                        = 0x001A, /* used in go_to_roll_call */
-  target_0026                        = 0x0026, /* used in event_search_light */
-  target_002A                        = 0x002A, /* used at wake up time */
-  target_002B                        = 0x002B,
-  target_002C                        = 0x002C,
-  target_002D                        = 0x002D, /* used at roll call */
-  target_012C                        = 0x012C, /* used at night time */
-  target_0285                        = 0x0285, /* used at bed time */
-  target_0390                        = 0x0390, /* used at breakfast time */
-  target_03A6                        = 0x03A6, /* used in event_time_for_bed */
-  target_048E                        = 0x048E, /* used at exercise time */
-};
-
-/**
  * Identifiers of map locations.
  *
  * These are /ranges/ of locations.

@@ -2532,8 +2532,8 @@ void event_night_time(tgestate_t *state)
 
   if (state->hero_in_bed == 0)
   {
-    const xy_t target = { 0x2C, 0x01 }; /* target_012C */ /* was BC */
-    set_hero_target(state, target);
+    const xy_t target_2C01 = { 0x2C, 0x01 }; /* was BC */
+    set_hero_target(state, target_2C01);
   }
   set_day_or_night(state, 0xFF);
 }
@@ -2589,7 +2589,7 @@ void event_go_to_breakfast_time(tgestate_t *state)
 
   state->bell = bell_RING_40_TIMES;
   queue_message_for_display(state, message_BREAKFAST_TIME);
-  set_target_0x0010(state);
+  set_target_0x1000(state);
 }
 
 void event_end_of_breakfast(tgestate_t *state)
@@ -2611,7 +2611,7 @@ void event_go_to_exercise_time(tgestate_t *state)
   state->gates_and_doors[0] = 0; /* Index into door_positions + clear locked flag. */
   state->gates_and_doors[1] = 1;
 
-  set_target_0x000E(state);
+  set_target_0x0E00(state);
 }
 
 void event_exercise_time(tgestate_t *state)
@@ -2619,7 +2619,7 @@ void event_exercise_time(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  set_target_0x048E(state);
+  set_target_0x8E04(state);
 }
 
 void event_go_to_time_for_bed(tgestate_t *state)
@@ -2694,16 +2694,16 @@ void event_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target = { 0xA6, 0x03 }; /* target_03A6 */ /* was C,A */
-  set_guards_target(state, target);
+  const xy_t target_A603 = { 0xA6, 0x03 }; /* was C,A */
+  set_guards_target(state, target_A603);
 }
 
 void event_search_light(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target = { 0x26, 0x00 }; /* target_0026 */ /* was C,A */
-  set_guards_target(state, target);
+  const xy_t target_2600 = { 0x26, 0x00 }; /* was A',C */
+  set_guards_target(state, target_2600);
 }
 
 /**
@@ -2778,8 +2778,8 @@ void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
-  const xy_t target002A = { 0x2A, 0x00 }; /* target_002A */ /* was BC */
-  set_hero_target(state, target002A);
+  const xy_t target_2A00 = { 0x2A, 0x00 }; /* was BC */
+  set_hero_target(state, target_2A00);
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -2798,9 +2798,9 @@ void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t target0005 = { 0x05, 0x00 }; /* target_0005 */ /* was C,A' (hi,lo) */
+  xy_t target_0500 = { 0x05, 0x00 }; /* was A',C */
   // .x is incremented by set_prisoners_and_guards_target_B (but it's unclear why)
-  set_prisoners_and_guards_target_B(state, &target0005);
+  set_prisoners_and_guards_target_B(state, &target_0500);
 
   /* Update all the bed objects to be empty. */
   // FIXME: This writes to a possibly shared structure, so ought to be moved into the state somehow.
@@ -2840,8 +2840,8 @@ void end_of_breakfast(tgestate_t *state)
   }
 
   state->hero_in_breakfast = 0;
-  const xy_t target = { 0x90, 0x03 }; /* target_0390 */ /* was BC */
-  set_hero_target(state, target);
+  const xy_t target_9003 = { 0x90, 0x03 }; /* was BC */
+  set_hero_target(state, target_9003);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -2859,8 +2859,8 @@ void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t target0390 = { 0x90, 0x30 }; /* target_0390 */ /* was C,A' (hi,lo) */
-  set_prisoners_and_guards_target_B(state, &target0390);
+  xy_t target_9003_also = { 0x90, 0x03 }; /* was A',C */
+  set_prisoners_and_guards_target_B(state, &target_9003_also);
 
   /* Update all the benches to be empty. */
   // FIXME: Writing to shared state.
@@ -2916,11 +2916,11 @@ void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target = { 0x85, 0x02 }; /* target_0285 */ /* was BC */
-  set_hero_target(state, target);
+  const xy_t target_8502 = { 0x85, 0x02 }; /* was BC */
+  set_hero_target(state, target_8502);
 
-  xy_t target0285 = { 0x85, 0x02 }; /* target_0285 */ /* was C,A' (hi,lo) */
-  set_prisoners_and_guards_target_B(state, &target0285);
+  xy_t target_8502_also = { 0x85, 0x02 }; /* was A',C */
+  set_prisoners_and_guards_target_B(state, &target_8502_also);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3056,7 +3056,7 @@ store_to_vischar:
   vischar->flags &= ~vischar_FLAGS_DOOR_THING;
   store_target(target, &vischar->target);
 
-  set_target(state, vischar); // 2nd arg a guess for now -- check // was fallthrough
+  set_target(state, vischar); // was fallthrough
 }
 
 /**
@@ -3155,8 +3155,8 @@ void byte_A13E_is_zero(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    xy_t target2 = { 0x2C, 0x00 }; /* target_002C */ /* was BC */
-    set_hero_target(state, target2);
+    xy_t target_2C00 = { 0x2C, 0x00 }; /* was BC */
+    set_hero_target(state, target_2C00);
   }
   else
   {
@@ -3406,51 +3406,51 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4A9: Set target to 0x000E.
+ * $A4A9: Set target to (0x0E, 0x00).
  *
  * \param[in] state Pointer to game state.
  */
-void set_target_0x000E(tgestate_t *state)
+void set_target_0x0E00(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target = { 0x0E, 0x00 }; /* target_000E */
-  set_hero_target(state, target);
+  const xy_t target_0E00 = { 0x0E, 0x00 };
+  set_hero_target(state, target_0E00);
 
-  xy_t loc000E = { 0x0E, 0x00 }; /* target_000E */ /* was C,A' */
-  set_prisoners_and_guards_target_B(state, &loc000E);
+  xy_t target_0E00_also = { 0x0E, 0x00 }; /* was A',C */
+  set_prisoners_and_guards_target_B(state, &target_0E00_also);
 }
 
 /**
- * $A4B7: Set target to 0x048E.
+ * $A4B7: Set target to (0x8E, 0x04).
  *
  * \param[in] state Pointer to game state.
  */
-void set_target_0x048E(tgestate_t *state)
+void set_target_0x8E04(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t target = { 0x8E, 0x04 }; /* target_048E */
-  set_hero_target(state, target);
+  xy_t target_8E04 = { 0x8E, 0x04 };
+  set_hero_target(state, target_8E04);
 
-  xy_t loc0010 = { 0x10, 0x00 }; /* target_0010 */ /* was C,A' */
-  set_prisoners_and_guards_target_B(state, &loc0010);
+  xy_t target_8E04_also = { 0x8E, 0x04 }; /* was A',C */
+  set_prisoners_and_guards_target_B(state, &target_8E04_also);
 }
 
 /**
- * $A4C5: Set target to 0x0010.
+ * $A4C5: Set target to (0x10, 0x00).
  *
  * \param[in] state Pointer to game state.
  */
-void set_target_0x0010(tgestate_t *state)
+void set_target_0x1000(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t target = { 0x10, 0x00 }; /* target_0010 */
-  set_hero_target(state, target);
+  xy_t target_1000 = { 0x10, 0x00 };
+  set_hero_target(state, target_1000);
 
-  xy_t loc0010 = { 0x10, 0x00 }; /* target_0010 */ /* was C,A' */
-  set_prisoners_and_guards_target_B(state, &loc0010);
+  xy_t target_1000_also = { 0x10, 0x00 }; /* was A',C */
+  set_prisoners_and_guards_target_B(state, &target_1000_also);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3493,8 +3493,8 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    const xy_t target2 = { 0x2B, 0x00 }; /* target_002B */ /* was BC */
-    set_hero_target(state, target2);
+    const xy_t target_2B00 = { 0x2B, 0x00 }; /* was BC */
+    set_hero_target(state, target_2B00);
   }
   else
   {
@@ -3546,11 +3546,11 @@ void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t loc001A = { 0x1A, 0x00 }; /* target_001A */ /* was C,A' */
-  set_prisoners_and_guards_target(state, &loc001A);
+  xy_t target_1A00 = { 0x1A, 0x00 }; /* was A',C */
+  set_prisoners_and_guards_target(state, &target_1A00);
 
-  const xy_t target = { 0x2D, 0x00 }; /* target_002D */
-  set_hero_target(state, target);
+  const xy_t target_2D00 = { 0x2D, 0x00 };
+  set_hero_target(state, target_2D00);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8606,8 +8606,8 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
 
   state->automatic_player_counter = 0; // force automatic control
 
-  const xy_t target2 = { 0x00, 0x25 }; /* target_2500 */ /* was BC */
-  set_hero_target(state, target2); // original jump was $A344, but have moved it
+  const xy_t target_2500 = { 0x25, 0x00 }; /* was BC */
+  set_hero_target(state, target_2500); // original jump was $A344, but have moved it
 }
 
 /**
