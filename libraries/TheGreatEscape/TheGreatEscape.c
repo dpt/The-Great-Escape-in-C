@@ -5427,7 +5427,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
   character_t tmpA;
   uint8_t     input;
   uint8_t     direction;
-  uint16_t    directionBC;  /* was BC */
+  uint16_t    new_direction; /* was BC */
 
   // FIXME get input_vischar from state.
 
@@ -5568,9 +5568,9 @@ b0d0:
         input_DOWN | input_RIGHT | input_KICK
       };
 
-      directionBC = input_vischar->direction;
-      input_vischar->input = new_inputs[directionBC]; // sampled IY = $8000, $8040, $80E0
-      if ((directionBC & 1) == 0) /* TL or BR */
+      new_direction = input_vischar->direction;
+      input_vischar->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
+      if ((new_direction & 1) == 0) /* TL or BR */
         input_vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
       else
         input_vischar->counter_and_flags |= vischar_BYTE7_IMPEDED;
