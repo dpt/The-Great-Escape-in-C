@@ -1760,10 +1760,10 @@ void snipping_wire(tgestate_t *state)
    */
   static const uint8_t new_inputs[4] =
   {
-    input_UP   | input_LEFT  | input_KICK,
-    input_UP   | input_RIGHT | input_KICK,
-    input_DOWN | input_RIGHT | input_KICK,
-    input_DOWN | input_LEFT  | input_KICK
+    input_UP   + input_LEFT  + input_KICK,
+    input_UP   + input_RIGHT + input_KICK,
+    input_DOWN + input_RIGHT + input_KICK,
+    input_DOWN + input_LEFT  + input_KICK
   };
 
   vischar_t *hero = &state->vischars[0]; /* new, for conciseness */
@@ -5562,10 +5562,10 @@ b0d0:
       /** $B0F8: New inputs. */
       static const uint8_t new_inputs[4] =
       {
-        input_DOWN | input_LEFT  | input_KICK,
-        input_UP   | input_LEFT  | input_KICK,
-        input_UP   | input_RIGHT | input_KICK,
-        input_DOWN | input_RIGHT | input_KICK
+        input_DOWN + input_LEFT  + input_KICK,
+        input_UP   + input_LEFT  + input_KICK,
+        input_UP   + input_RIGHT + input_KICK,
+        input_DOWN + input_RIGHT + input_KICK
       };
 
       new_direction = input_vischar->direction;
