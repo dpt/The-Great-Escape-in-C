@@ -383,7 +383,7 @@ void setup_doors(tgestate_t *state)
   {
     // Not sure what this is doing.
     // Seems to be toggling lock/unlock flags in state->doors[].
-    if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_ROOM) == room)
+    if ((door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) == room)
       /* Current room. */
       *pdoor++ = door_index ^ door_LOCKED;
     door_index ^= door_LOCKED;
@@ -5800,7 +5800,7 @@ found:
   if (is_door_locked(state))
     return;
 
-  vischar->room = (door_pos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // sampled HL = $792E (in door_positions[])
+  vischar->room = (door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in door_positions[])
   if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) >= direction_BOTTOM_RIGHT) /* BR or BL */
     /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
@@ -6020,7 +6020,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if (is_door_locked(state) == 0)
       return; /* The door was locked. */
 
-    vischar->room = (room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // the mask's not strictly necessary
+    vischar->room = (room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // the mask's not strictly necessary
 
     doorpos = &door->pos;
     if (state->current_door & door_LOCKED)
@@ -8334,7 +8334,7 @@ character_12_or_higher:
       // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
       // => door_positions.room_and_flags
 
-      DEcharstr->room = (HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2;
+      DEcharstr->room = (HLdoorpos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2;
 
       // Stuff reading from door_positions.
       if ((HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < 2)
@@ -9214,7 +9214,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     // POP AF
 
     doorpos = get_door_position(A); // door related
-    vischar->room = (doorpos->room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
+    vischar->room = (doorpos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
     if ((doorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
       /* TOP_LEFT or TOP_RIGHT */
