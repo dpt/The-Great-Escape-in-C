@@ -9650,16 +9650,16 @@ void solitary(tgestate_t *state)
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
       item_t     item_and_flags; /* was A */
-      tinypos_t *tinypos;        /* was HL */
+      tinypos_t *itempos;        /* was HL */
       uint8_t    area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
-      tinypos = &pitemstruct->pos;
+      itempos = &pitemstruct->pos;
       area = 0; /* iterate 0,1,2 */
       do
         /* If the item is within the camp bounds then it will be discovered.
          */
-        if (within_camp_bounds(area, tinypos) == 0)
+        if (within_camp_bounds(area, itempos) == 0)
           goto discovered;
       while (++area != 3);
 
