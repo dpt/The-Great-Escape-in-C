@@ -8482,30 +8482,32 @@ void character_event(tgestate_t *state, xy_t *target)
   /* $C7F9 */
   static const charactereventmap_t eventmap[24] =
   {
-    { 0xA6,  0 },
-    { 0xA7,  0 },
-    { 0xA8,  1 },
-    { 0xA9,  1 },
-    { 0x05,  0 },
-    { 0x06,  1 },
-    { 0x85,  3 },
-    { 0x86,  3 },
-    { 0x0E,  2 },
-    { 0x0F,  2 },
-    { 0x8E,  0 },
-    { 0x8F,  1 },
-    { 0x10,  5 },
-    { 0x11,  5 },
-    { 0x90,  0 },
-    { 0x91,  1 },
-    { 0xA0,  0 },
-    { 0xA1,  1 },
-    { 0x2A,  7 },
-    { 0x2C,  8 }, /* sleeps */
-    { 0x2B,  9 }, /* sits */
-    { 0xA4,  6 },
-    { 0x24, 10 }, /* released from solitary .. walking out? */
-    { 0x25,  4 }  /* morale related .. re-enables player control after solitary released? */
+    // I suspect that the high values here have their top bit set for something.
+    // I'm writing them with it split out to see if it elucidates.
+    { 38 + 128,  0 },
+    { 39 + 128,  0 },
+    { 40 + 128,  1 },
+    { 41 + 128,  1 },
+    {  5,        0 },
+    {  6,        1 },
+    {  5 + 128,  3 },
+    {  6 + 128,  3 },
+    { 14,        2 },
+    { 15,        2 },
+    { 14 + 128,  0 },
+    { 15 + 128,  1 },
+    { 16,        5 },
+    { 17,        5 },
+    { 16 + 128,  0 },
+    { 17 + 128,  1 },
+    { 32 + 128,  0 },
+    { 33 + 128,  1 },
+    { 42,        7 },
+    { 44,        8 }, /* sleeps */
+    { 43,        9 }, /* sits */
+    { 36 + 128,  6 },
+    { 36,       10 }, /* released from solitary .. walking out? */
+    { 37,        4 }  /* morale related .. re-enables player control after solitary released? */
   };
 
   /* $C829 */
