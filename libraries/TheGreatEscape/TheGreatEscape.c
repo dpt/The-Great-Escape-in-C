@@ -5979,15 +5979,15 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   door_t           current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
   const doorpos_t *door;           /* was HL' */
-  const tinypos_t *tinypos;        /* was HL' */
+  const tinypos_t *doorpos;        /* was HL' */
   pos_t           *pos;            /* was DE' */
-  uint8_t          coord;          /* was A */
+  uint8_t          x;              /* was A */
+  uint8_t          y;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  pdoors = &state->doors[0];
-  for (;;)
+  for (pdoors = &state->doors[0]; ; pdoors++)
   {
     current_door = *pdoors;
     if (current_door == door_NONE)
@@ -5998,41 +5998,37 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     door = get_door_position(current_door);
     room_and_flags = door->room_and_flags;
 
-    // Conv: Cdash removed
-    // 3 => input_UP+input_DOWN
-    // input_t tested against a direction_t
-    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION)) // used B' // could be a check for facing the same direction as the door?
-      goto next;
+    /* Does the character face the same direction as the door? */
+    // Here a presumed input_t is being tested against a direction_t. So have I misjudged what vischar->input is?
+    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION))
+      continue;
 
-    tinypos = &door->pos;
+    doorpos = &door->pos;
     // registers renamed here
     pos = &state->saved_pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
 
     // Conv: Unrolled.
-    coord = tinypos->x;
-    if (((coord - 3) >= pos->x) || (coord + 3) < pos->x)
-      goto next; // -3 .. +2
-    coord = tinypos->y;
-    if (((coord - 3) >= pos->y) || (coord + 3) < pos->y)
-      goto next; // -3 .. +2
+    x = doorpos->x;
+    if (x - 3 >= pos->x || x + 3 < pos->x) // -3 .. +2
+      continue;
+    y = doorpos->y;
+    if (y - 3 >= pos->y || y + 3 < pos->y) // -3 .. +2
+      continue;
 
-    door++; // Conv: Original just incremented HL'.
+    // HL points to door->pos[1]
 
     if (is_door_locked(state) == 0)
       return; /* The door was locked. */
 
-    vischar->room = (room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2;
+    vischar->room = (room_and_flags & doorpos_FLAGS_MASK_ROOM) >> 2; // the mask's not strictly necessary
 
-    tinypos = &door->pos; // looks odd
+    doorpos = &door->pos;
     if (state->current_door & door_LOCKED)
-      tinypos = &door[-2].pos;
+      doorpos = &door[-2].pos; // seems odd
 
-    transition(state, tinypos); // exit via
+    transition(state, doorpos); // exit via
 
     return; // with banked registers...
-
-next:
-    pdoors++;
   }
 }
 
