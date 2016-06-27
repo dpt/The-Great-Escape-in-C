@@ -7401,77 +7401,88 @@ int vischar_visible(tgestate_t *state,
                     uint16_t   *clipped_width,
                     uint16_t   *clipped_height)
 {
-  const uint8_t *mpr1;   /* was HL */
-  uint8_t        A;      /* was A */
-  uint16_t       width;  /* was BC */
-  uint16_t       height; /* was DE */
-  uint16_t       foo1;   /* was HL */
-  uint16_t       foo2;   /* was HL */
+  int8_t   A1;                  /* was A */
+  int8_t   A2;                  /* was A */
+  uint16_t new_width;           /* was BC */
+  uint16_t scaled_height_thing; /* was HL */
+  uint16_t DE;                  /* was DE */
+  uint16_t new_height;          /* was DE */
+  uint16_t scry;                /* was ? */
+  uint8_t  clamped_height;      /* was A */
+  uint8_t  Ay;                  /* was A */
+  uint16_t maxy;                /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
+  /* Conv: Jump to exit for invisible case turned into immediate returns. */
+
   /* Width part. */
 
-  mpr1 = &state->map_position_related.x;
-  A = state->map_position.x + state->tb_columns - *mpr1;
-  if (A > 0)
+  /* Conv: Re-read of map_position_related removed. */
+  A1 = state->map_position.x + state->tb_columns - state->map_position_related.x;
+  if (A1 <= 0)
+    return 0xFF; /* Not visible. */
+
+  // => if (state->map_position_related.x <= state->map_position.x + state->tb_columns)
+  if (A1 < vischar->width_bytes)
   {
-    if (A < vischar->width_bytes)
-    {
-      width = A;
-    }
+    // A1 must be the clipped width at this point
+    new_width = A1;
+  }
+  else
+  {
+    // A2 is signed for this part.
+    A2 = state->map_position_related.x + vischar->width_bytes - state->map_position.x;
+    if (A2 <= 0) // off the left hand side?
+      return 0xFF; /* Not visible. */
+
+    if (A2 < vischar->width_bytes)
+      new_width = ((vischar->width_bytes - A2) << 8) | A2; // to grok // packed offset + width?
     else
-    {
-      // FIXME. Signed calc will break here.
-      A = *mpr1 + vischar->width_bytes - state->map_position.x; // width_bytes == width in bytes
-      if (A <= 0)
-        goto invisible;
-
-      if (A < vischar->width_bytes)
-        width = ((-A + vischar->width_bytes) << 8) | A; // to grok // packed offset + width?
-      else
-        width = vischar->width_bytes;
-    }
-
-    /* Height part. */
-
-    foo1 = (state->map_position.y + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
-    height = vischar->scry; // fused
-    if (foo1 < height)
-      goto invisible;
-    if ((foo1 >> 8) != 0)
-      goto invisible;
-    A = foo1 & 0xFF;
-    if (A < vischar->height)
-    {
-      height = A;
-    }
-    else
-    {
-      foo2 = vischar->height + height; // height == height in rows
-      height = state->map_position.y * 8;
-      if (foo2 < height)
-        goto invisible;
-      if ((foo2 >> 8) != 0)
-        goto invisible;
-      A = foo2 & 0xFF;
-      if (A < vischar->height)
-        height = ((vischar->height - A) << 8) | A;
-      else
-        height = vischar->height;
-    }
-
-    *clipped_width  = width;
-    *clipped_height = height;
-
-    return 0; // return Z (vischar is visible)
+      new_width = vischar->width_bytes;
   }
 
-invisible:
-  return 0xFF; // return NZ (vischar is not visible)
+  /* Height part. */
+
+  scaled_height_thing = (state->map_position.y + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
+  scry = vischar->scry; // fused
+  scaled_height_thing -= scry;
+  if ((int16_t) scaled_height_thing <= 0) // signedness
+    return 0xFF; /* Not visible. */
+
+  if ((scaled_height_thing >> 8) != 0)
+    return 0xFF; /* Not visible. */
+
+  clamped_height = scaled_height_thing & 0xFF;
+  if (clamped_height < vischar->height)
+  {
+    new_height = clamped_height;
+  }
+  else
+  {
+    maxy = vischar->height + scry; // height == height in rows
+    DE = state->map_position.y * 8;
+    maxy -= DE; // signedness
+    if ((int16_t) maxy <= 0)
+      return 0xFF; /* Not visible. */
+
+    if ((maxy >> 8) != 0) // ie. (maxy >= 256)
+      return 0xFF; /* Not visible. */
+
+    Ay = maxy & 0xFF;
+    if (Ay < vischar->height)
+      new_height = ((vischar->height - Ay) << 8) | Ay;
+    else
+      new_height = vischar->height;
+  }
+
+  *clipped_width  = new_width;
+  *clipped_height = new_height;
+
+  return 0; /* Visible */
 }
 
 /* ----------------------------------------------------------------------- */
