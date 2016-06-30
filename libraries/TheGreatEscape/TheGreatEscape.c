@@ -1513,18 +1513,20 @@ uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp)
 
   offset = slp - screen;
 
+  assert(offset < 0x8000);
+
   offset += 0x0100;
   if (offset & 0x0700)
     return screen + offset; /* line count didn't rollover */
 
   if ((offset & 0xFF) >= 0xE0)
-    delta = 0xFF20;
+    delta = 0xFF20; /* -224 */
   else
-    delta = 0xF820;
+    delta = 0xF820; /* -2016 */
 
   offset += delta;
 
-  return screen + offset;
+  return screen + (int16_t) offset;
 }
 
 /* ----------------------------------------------------------------------- */
