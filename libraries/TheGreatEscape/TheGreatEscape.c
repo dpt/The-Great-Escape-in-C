@@ -9412,46 +9412,300 @@ uint16_t multiply_by_1(uint8_t A)
  *
  * \return Pointer to whatever this table is. (was DE)
  */
+
+// get_next_target tells me that if (val & ~door_LOCKED) < 40 then it's a
+// door else other values are +40.
+//
+// How does 40 relate to door_MAX?
+//
+// Highest door used here: 35, lowest: 0.
+// Highest not-door used here: 77, lowest: 9.
+
 const uint8_t *element_A_of_table_7738(uint8_t A)
 {
-  static const uint8_t data_7795[] = { 0x48, 0x49, 0x4A, 0xFF };
-  static const uint8_t data_7799[] = { 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0xFF };
-  static const uint8_t data_77A0[] = { 0x56, 0x1F, 0x1D, 0x20, 0x1A, 0x23, 0x99, 0x96, 0x95, 0x94, 0x97, 0x52, 0x17, 0x8A, 0x0B, 0x8B, 0x0C, 0x9B, 0x1C, 0x9D, 0x8D, 0x33, 0x5F, 0x80, 0x81, 0x64, 0x01, 0x00, 0x04, 0x10, 0x85, 0x33, 0x07, 0x91, 0x86, 0x08, 0x12, 0x89, 0x55, 0x0E, 0x22, 0xA2, 0x21, 0xA1, 0xFF };
-  static const uint8_t data_77CD[] = { 0x53, 0x54, 0xFF };
-  static const uint8_t data_77D0[] = { 0x87, 0x33, 0x34, 0xFF };
-  static const uint8_t data_77D4[] = { 0x89, 0x55, 0x36, 0xFF };
-  static const uint8_t data_77D8[] = { 0x56, 0xFF };
-  static const uint8_t data_77DA[] = { 0x57, 0xFF };
-  static const uint8_t data_77DC[] = { 0x58, 0xFF };
-  static const uint8_t data_77DE[] = { 0x5C, 0x5D, 0xFF };
-  static const uint8_t data_77E1[] = { 0x33, 0x5F, 0x80, 0x81, 0x60, 0xFF };
-  static const uint8_t data_77E7[] = { 0x34, 0x0A, 0x14, 0x93, 0xFF };
-  static const uint8_t data_77EC[] = { 0x38, 0x34, 0x0A, 0x14, 0xFF };
-  static const uint8_t data_77F1[] = { 0x68, 0xFF };
-  static const uint8_t data_77F3[] = { 0x69, 0xFF };
-  static const uint8_t data_77F5[] = { 0x6A, 0xFF };
-  static const uint8_t data_77F7[] = { 0x6C, 0xFF };
-  static const uint8_t data_77F9[] = { 0x6D, 0xFF };
-  static const uint8_t data_77FB[] = { 0x31, 0xFF };
-  static const uint8_t data_77FD[] = { 0x33, 0xFF };
-  static const uint8_t data_77FF[] = { 0x39, 0xFF };
-  static const uint8_t data_7801[] = { 0x59, 0xFF };
-  static const uint8_t data_7803[] = { 0x70, 0xFF };
-  static const uint8_t data_7805[] = { 0x71, 0xFF };
-  static const uint8_t data_7807[] = { 0x72, 0xFF };
-  static const uint8_t data_7809[] = { 0x73, 0xFF };
-  static const uint8_t data_780B[] = { 0x74, 0xFF };
-  static const uint8_t data_780D[] = { 0x75, 0xFF };
-  static const uint8_t data_780F[] = { 0x36, 0x0A, 0x97, 0x98, 0x52, 0xFF };
-  static const uint8_t data_7815[] = { 0x18, 0x17, 0x8A, 0x36, 0xFF };
-  static const uint8_t data_781A[] = { 0x34, 0x33, 0x07, 0x5C, 0xFF };
-  static const uint8_t data_781F[] = { 0x34, 0x33, 0x07, 0x91, 0x5D, 0xFF };
-  static const uint8_t data_7825[] = { 0x34, 0x33, 0x55, 0x09, 0x5C, 0xFF };
-  static const uint8_t data_782B[] = { 0x34, 0x33, 0x55, 0x09, 0x5D, 0xFF };
-  static const uint8_t data_7831[] = { 0x11, 0xFF };
-  static const uint8_t data_7833[] = { 0x6B, 0xFF };
-  static const uint8_t data_7835[] = { 0x91, 0x6E, 0xFF };
-  static const uint8_t data_7838[] = { 0x5A, 0xFF };
+#define DOOR(d) (d)
+#define NOTDOOR(d) (d + 40)
+  static const uint8_t data_7795[] =
+  {
+    NOTDOOR(32), // 0x48
+    NOTDOOR(33), // 0x49
+    NOTDOOR(34), // 0x4A
+    door_NONE
+  };
+  static const uint8_t data_7799[] =
+  {
+    NOTDOOR(35), // 0x4B
+    NOTDOOR(36), // 0x4C
+    NOTDOOR(37), // 0x4D
+    NOTDOOR(38), // 0x4E
+    NOTDOOR(39), // 0x4F
+    NOTDOOR(40), // 0x50
+    door_NONE
+  };
+  static const uint8_t data_77A0[] =
+  {
+    NOTDOOR(46), // 0x56
+    DOOR(31),
+    DOOR(29),
+    DOOR(32),
+    DOOR(26),
+    DOOR(35),
+    DOOR(25 | door_LOCKED),
+    DOOR(22 | door_LOCKED),
+    DOOR(21 | door_LOCKED),
+    DOOR(20 | door_LOCKED),
+    DOOR(23 | door_LOCKED),
+    NOTDOOR(42), // 0x52
+    DOOR(23),
+    DOOR(10 | door_LOCKED),
+    DOOR(11),
+    DOOR(11 | door_LOCKED),
+    DOOR(12),
+    DOOR(27 | door_LOCKED),
+    DOOR(28),
+    DOOR(29 | door_LOCKED),
+    DOOR(13 | door_LOCKED),
+    NOTDOOR(11), // 0x33
+    NOTDOOR(55), // 0x5F
+    DOOR(0 | door_LOCKED),
+    DOOR(1 | door_LOCKED),
+    NOTDOOR(60), // 0x64
+    DOOR(1),
+    DOOR(0),
+    DOOR(4),
+    DOOR(16),
+    DOOR(5 | door_LOCKED),
+    NOTDOOR(11), // 0x33
+    DOOR(7),
+    DOOR(17 | door_LOCKED),
+    DOOR(6 | door_LOCKED),
+    DOOR(8),
+    DOOR(18),
+    DOOR(9 | door_LOCKED),
+    NOTDOOR(45), // 0x55
+    DOOR(14),
+    DOOR(34),
+    DOOR(34 | door_LOCKED),
+    DOOR(33),
+    DOOR(33 | door_LOCKED),
+    door_NONE
+  };
+  static const uint8_t data_77CD[] =
+  {
+    NOTDOOR(43), // 0x53
+    NOTDOOR(44), // 0x54
+    door_NONE
+  };
+  static const uint8_t data_77D0[] =
+  {
+    DOOR(7 | door_LOCKED),
+    NOTDOOR(11), // 0x33
+    NOTDOOR(12), // 0x34
+    door_NONE
+  };
+  static const uint8_t data_77D4[] =
+  {
+    DOOR(9 | door_LOCKED),
+    NOTDOOR(45), // 0x55
+    NOTDOOR(14), // 0x36
+    door_NONE
+  };
+  static const uint8_t data_77D8[] =
+  {
+    NOTDOOR(46), // 0x56
+    door_NONE
+  };
+  static const uint8_t data_77DA[] =
+  {
+    NOTDOOR(47), // 0x57
+    door_NONE
+  };
+  static const uint8_t data_77DC[] =
+  {
+    NOTDOOR(48), // 0x58
+    door_NONE
+  };
+  static const uint8_t data_77DE[] =
+  {
+    NOTDOOR(52), // 0x5C
+    NOTDOOR(53), // 0x5D
+    door_NONE
+  };
+  static const uint8_t data_77E1[] =
+  {
+    NOTDOOR(11), // 0x33
+    NOTDOOR(55), // 0x5F
+    DOOR(0 | door_LOCKED),
+    DOOR(1 | door_LOCKED),
+    NOTDOOR(56), // 0x60
+    door_NONE
+  };
+  static const uint8_t data_77E7[] =
+  {
+    NOTDOOR(12), // 0x34
+    DOOR(10),
+    DOOR(20),
+    DOOR(19 | door_LOCKED),
+    door_NONE
+  };
+  static const uint8_t data_77EC[] =
+  {
+    NOTDOOR(16), // 0x38
+    NOTDOOR(12), // 0x34
+    DOOR(10),
+    DOOR(20),
+    door_NONE
+  };
+  static const uint8_t data_77F1[] =
+  {
+    NOTDOOR(64), // 0x68
+    door_NONE
+  };
+  static const uint8_t data_77F3[] =
+  {
+    NOTDOOR(65), // 0x69
+    door_NONE
+  };
+  static const uint8_t data_77F5[] =
+  {
+    NOTDOOR(66), // 0x6A
+    door_NONE
+  };
+  static const uint8_t data_77F7[] =
+  {
+    NOTDOOR(68), // 0x6C
+    door_NONE
+  };
+  static const uint8_t data_77F9[] =
+  {
+    NOTDOOR(69), // 0x6D
+    door_NONE
+  };
+  static const uint8_t data_77FB[] =
+  {
+    NOTDOOR(9), // 0x31
+    door_NONE
+  };
+  static const uint8_t data_77FD[] =
+  {
+    NOTDOOR(11), // 0x33
+    door_NONE
+  };
+  static const uint8_t data_77FF[] =
+  {
+    NOTDOOR(17), // 0x39
+    door_NONE
+  };
+  static const uint8_t data_7801[] =
+  {
+    NOTDOOR(49), // 0x59
+    door_NONE
+  };
+  static const uint8_t data_7803[] =
+  {
+    NOTDOOR(72), // 0x70
+    door_NONE
+  };
+  static const uint8_t data_7805[] =
+  {
+    NOTDOOR(73), // 0x71
+    door_NONE
+  };
+  static const uint8_t data_7807[] =
+  {
+    NOTDOOR(74), // 0x72
+    door_NONE
+  };
+  static const uint8_t data_7809[] =
+  {
+    NOTDOOR(75), // 0x73
+    door_NONE
+  };
+  static const uint8_t data_780B[] =
+  {
+    NOTDOOR(76), // 0x74
+    door_NONE
+  };
+  static const uint8_t data_780D[] =
+  {
+    NOTDOOR(77), // 0x75
+    door_NONE
+  };
+  static const uint8_t data_780F[] =
+  {
+    NOTDOOR(14), // 0x36
+    DOOR(10),
+    DOOR(23 | door_LOCKED),
+    DOOR(24 | door_LOCKED),
+    NOTDOOR(42), // 0x52
+    door_NONE
+  };
+  static const uint8_t data_7815[] =
+  {
+    DOOR(24),
+    DOOR(23),
+    DOOR(10 | door_LOCKED),
+    NOTDOOR(14), // 0x36
+    door_NONE
+  };
+  static const uint8_t data_781A[] =
+  {
+    NOTDOOR(12), // 0x34
+    NOTDOOR(11), // 0x33
+    DOOR(7),
+    NOTDOOR(52), // 0x5C
+    door_NONE
+  };
+  static const uint8_t data_781F[] =
+  {
+    NOTDOOR(12), // 0x34
+    NOTDOOR(11), // 0x33
+    DOOR(7),
+    DOOR(17 | door_LOCKED),
+    NOTDOOR(53), // 0x5D
+    door_NONE
+  };
+  static const uint8_t data_7825[] =
+  {
+    NOTDOOR(12), // 0x34
+    NOTDOOR(11), // 0x33
+    NOTDOOR(45), // 0x55
+    DOOR(9),
+    NOTDOOR(52), // 0x5C
+    door_NONE
+  };
+  static const uint8_t data_782B[] =
+  {
+    NOTDOOR(12), // 0x34
+    NOTDOOR(11), // 0x33
+    NOTDOOR(45), // 0x55
+    DOOR(9),
+    NOTDOOR(53), // 0x5C
+    door_NONE
+  };
+  static const uint8_t data_7831[] =
+  {
+    DOOR(17),
+    door_NONE
+  };
+  static const uint8_t data_7833[] =
+  {
+    NOTDOOR(67), // 0x6B
+    door_NONE
+  };
+  static const uint8_t data_7835[] =
+  {
+    DOOR(17 | door_LOCKED),
+    NOTDOOR(70), // 0x6E
+    door_NONE
+  };
+  static const uint8_t data_7838[] =
+  {
+    NOTDOOR(50), // 0x5A
+    door_NONE
+  };
+#undef DOOR
+#undef NOT_DOOR
 
   /**
    * $7738: (unknown)
