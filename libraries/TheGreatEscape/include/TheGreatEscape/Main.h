@@ -479,7 +479,7 @@ charevnt_handler_t charevnt_handler_10_hero_released_from_solitary;
 charevnt_handler_t charevnt_handler_1;
 charevnt_handler_t charevnt_handler_2;
 charevnt_handler_t charevnt_handler_0;
-void set_target_ffxx(tgestate_t *state, xy_t *charptr, uint8_t y);
+void set_target_ffxx(tgestate_t *state, xy_t *target, uint8_t y);
 charevnt_handler_t charevnt_handler_3_check_var_A13E;
 charevnt_handler_t charevnt_handler_5_check_var_A13E_anotherone;
 charevnt_handler_t charevnt_handler_7;

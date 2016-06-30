@@ -8602,7 +8602,7 @@ void charevnt_handler_6(tgestate_t *state,
   assert(target != NULL);
 
   // POP target (HL)
-  // (popped) sampled charptr = $80C2 (x2), $8042  // likely target
+  // (popped) sampled target = $80C2 (x2), $8042
   target->x = 0x03;
   target->y = 0x15;
 }

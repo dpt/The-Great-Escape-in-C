@@ -564,7 +564,7 @@ charactereventmap_t;
  * Defines a character event handler.
  */
 typedef void (charevnt_handler_t)(tgestate_t *state,
-                                  xy_t       *charptr);
+                                  xy_t       *target);
 
 /**
  * Defines a door's room, direction and position.
