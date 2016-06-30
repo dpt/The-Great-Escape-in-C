@@ -777,7 +777,7 @@ uint8_t *const beds[beds_LENGTH] =
  * Used by setup_doors, get_door_position, door_handling and
  * bribes_solitary_food.
  */
-const doorpos_t door_positions[door_MAX * 2] =
+/*const*/ doorpos_t door_positions[door_MAX * 2] =
 {
   /* Shorthands for directions. */
 #define TL direction_TOP_LEFT
