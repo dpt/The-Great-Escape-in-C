@@ -6654,6 +6654,11 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   /* Conv: Reordered. */
   vischar->scrx = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
   vischar->scry = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
+
+  assert(vischar->scrx >= 0);
+  assert(vischar->scrx <= 0x500);
+  assert(vischar->scry >= 0);
+  assert(vischar->scry <= 0x800);
 }
 
 /* ----------------------------------------------------------------------- */
