@@ -7892,6 +7892,7 @@ found_empty_slot:
   Z = collision(state, vischar);
   if (Z == 0)
     Z = bounds_check(state, vischar);
+    // if Z == 1 then within wall bounds
 
   // POP DE (charstr2)
   // POP HL (vischar)
@@ -7957,7 +7958,7 @@ c592:
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->p04
     A = get_next_target(state, &charstr->target, &target);
-    if (A == 255)
+    if (A == 255) // end of door list
     {
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->target
@@ -7967,13 +7968,13 @@ c592:
       // DE = HL + 2; // -> vischar->p04
       goto c592;
     }
-    else if (A == 128)
+    else if (A == (1 << 7)) // did a door thing
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
     // POP DE // -> vischar->p04
     // sampled HL is $7913 (a door_positions tinypos)
-    memcpy(&vischar->p04, target, sizeof(tinypos_t)); // so target must be wrong!
+    memcpy(&vischar->p04, target, sizeof(tinypos_t)); // location is an xy not a tinypos so target must be wrong!
     // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
@@ -8084,12 +8085,16 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 
 /**
  * $C651: Gets a new target.
+
+ if location->x is 0xff then it picks a location from state->locations[] indexed by location->y but with the bottom three bits randomised
+ else ...
+
  *
  * \param[in] state      Pointer to game state.
  * \param[in] target     Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
  * \param[in] target_out Pointer to recieve new target. (was HL)
  *
- * \return 0/128/255.
+ * \return 0/128/255 = (ok/through a door/hit end of list)
  */
 uint8_t get_next_target(tgestate_t *state,
                         xy_t       *target,
@@ -8097,75 +8102,71 @@ uint8_t get_next_target(tgestate_t *state,
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
-  uint8_t        x;   /* was A */
-  uint8_t        A;   /* was A */
-  uint8_t        y;   /* was A or C */
-  const uint8_t *DE;
-  int16_t        HL2; // signed
-  const uint8_t *HL3;
+  uint8_t          x;       /* was A */
+  door_t           door;    /* was A */
+  uint8_t          y;       /* was A or C */
+  const uint8_t   *pdoors;  /* was DE */
+  int16_t          index;   // signed /* was H */
+  const uint8_t   *pdoor;   /* was HL */
+  const doorpos_t *doorpos; /* was HL */
 
   assert(state      != NULL);
   assert(target     != NULL);
   assert(target_out != NULL);
 
+  *target_out = NULL; // Conv: Added.
+
   x = target->x; // read low byte only
-  if (x == 0xFF)
+  if (x == 0xFF) // Perhaps this means that there's no specific route? Just wander around?
   {
-//    INC HL        ; {  A = *++HL & characterstruct_BYTE6_MASK_HI;
-//    LD A,(HL)     ;
-//    AND $F8       ; }
-//    LD (HL),A     ;   *HL = A;
-//    CALL $CB85    ;   random_nibble();
-//    AND $07       ;   A &= characterstruct_BYTE6_MASK_LO;
-//    ADD A,(HL)    ;   A += *HL;
-//    LD (HL),A     ; {  *HL = A; %>
+    // Conv: In the original code *HL is used as a temporary.
 
-    // Conv: In original code, *HL is used as a temporary.
-
-    /* Randomise the bottom 3 bits of target's high byte. */
+    /* Randomise the bottom 3 bits of location's high byte. */
+    // Q. Significance of these three bottommost bits?
     y = (target->y & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
-    target->x = x;
     target->y = y;
   }
   else
   {
     // PUSH HL
     y = target->y;
-    DE = element_A_of_table_7738(x);
+    pdoors = element_A_of_table_7738(x); // perhaps these are character routes, door-to-door
 
-    HL2 = 0; // was H = 0;
-    if (y == 0xFF) // if high byte is 0xFF
-      HL2 = 0xFF00; // was H--; // H = 0 - 1 => 0xFF
-    HL2 |= y; // was L = A;
-    HL3 = DE + HL2;
+    index = 0x00; // was H = 0;
+    if (y == 0xFF) // flip direction?
+      index = 0xFF; // was H--; // H = 0 - 1 => 0xFF // making HL -ve?
+    index = (index << 8) | y; // was L = A;
+    pdoor = pdoors + index;
     // EX DE,HL
-    A = *HL3; // was A = *DE
+    door = *pdoor; // was A = *DE
     // POP HL // was interleaved
-    if (A == 0xFF) // end of list?
+    if (door == door_NONE) /* end of list? */
     {
+      printf("get_next_target: end of list case\n");
       *target_out = target;
       return 255; /* Conv: Was a goto to a return. */
     }
-
-    if ((A & 0x7F) < 40)
+    else if ((door & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
     {
-      A = *HL3;
-      if (target->x & (1 << 7))
-        A ^= (1 << 7); // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general
-      // toggling A but then doing nothing with it?
-      // sampled HL = 7617 (character_structs.target)  762c (charstructs again)
-      transition(state, (tinypos_t *) target); // expects a tinypos, not a target!
+      // door = *pdoor; // removed redundant reload
+      if (target->x & vischar_BYTE2_BIT7) // sure this is location-x? because it looks like it might be retesting 'door' so it get wiped. yeah, sure it is. could just be 'x' i think.
+        door ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
+      // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
+      doorpos = get_door_position(door);
       // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (doorpos again)
-      *target_out = target + 1; // FIXME increment by a *byte* and return // so this IS returning a tinypos
-      return (1 << 7);
+      *target_out = &doorpos->pos; // so this IS returning a tinypos in door_positions
+      return 1 << 7;
     }
-
-    y = *HL3 - 40;
+    else
+    {
+      y = door - 40; // removed redundant reload
+    }
   }
 
-  // sample A=$38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
+  assert(y < NELEMS(state->locations));
+
+  // sampled A = $38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
   *target_out = &state->locations[y];
-  // need to be able to pass back HL (target)
 
   return 0;
 }
@@ -8384,7 +8385,7 @@ character_12_or_higher:
     if (A == 0xFF)
       return;
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      HLtarget->y++;
+      HLtarget->y++; // writes into door_positions
     else
       HLtarget->y--;
   }
