@@ -992,7 +992,7 @@ uint8_t *const beds[beds_LENGTH] =
 /* ----------------------------------------------------------------------- */
 
 /**
- * $7AC9: Check for 'pick up', 'drop' and 'use' input.
+ * $7AC9: Check for 'pick up', 'drop' and 'use' inputs.
  *
  * \param[in] state Pointer to game state.
  * \param[in] input User input event.
@@ -1010,10 +1010,10 @@ void process_player_input_fire(tgestate_t *state, input_t input)
     drop_item(state);
     break;
   case input_LEFT_FIRE:
-    use_item_A(state);
+    use_item_common(state, state->items_held[0]); /* Conv: Inlined. */
     break;
   case input_RIGHT_FIRE:
-    use_item_B(state);
+    use_item_common(state, state->items_held[1]); /* Conv: Inlined. */
     break;
   case input_FIRE:
     break;
@@ -1023,34 +1023,6 @@ void process_player_input_fire(tgestate_t *state, input_t input)
   }
 
   return;
-}
-
-/**
- * $7AF0: Use item 'B'.
- *
- * TODO: Fold into process_player_input_fire.
- *
- * \param[in] state Pointer to game state.
- */
-void use_item_B(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  use_item_common(state, state->items_held[1]);
-}
-
-/**
- * $7AF5: Use item 'A'.
- *
- * TODO: Fold into process_player_input_fire.
- *
- * \param[in] state Pointer to game state.
- */
-void use_item_A(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  use_item_common(state, state->items_held[0]);
 }
 
 /**
