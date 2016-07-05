@@ -21,7 +21,6 @@
 #import "ZXSpectrum/ZXSpectrum.h"
 #import "TheGreatEscape/TheGreatEscape.h"
 
-#define SCALE 2.5f
 #import "speckey.h"
 
 #import "TheGreatEscapeView.h"
@@ -39,6 +38,7 @@ static speckeyfield_t keys;
   tgestate_t   *game;
   
   unsigned int *pixels;
+  float         scale;
   pthread_t     thread;
 }
 
@@ -107,29 +107,34 @@ static void *tge_thread(void *arg)
     &key_handler,
   };
 
+  /* Configuration of The Great Escape instance. */
   static const tgeconfig_t tgeconfig =
   {
-    256 / 8, 192 / 8
+    256 / 8,
+    192 / 8
   };
+
+
+  zx     = NULL;
+  game   = NULL;
+  pixels = NULL;
+  scale  = 1.0f;
 
 
   NSWindow *w = [self window];
 
-  NSRect contentRect;
-  contentRect.origin.x    = 0.0;
-  contentRect.origin.y    = 0.0;
-  contentRect.size.width  = tgeconfig.width  * 8 * SCALE;
-  contentRect.size.height = tgeconfig.height * 8 * SCALE;
+  /* Enforce a 4:3 aspect ratio for the window. */
+  [w setContentAspectRatio:NSMakeSize(4.0, 3.0)];
+
+
+
+  NSRect contentRect = NSMakeRect(0, 0, tgeconfig.width  * 8 * scale, tgeconfig.height * 8 * scale);
 
   [w setFrame:[w frameRectForContentRect:contentRect] display:YES];
 
   [self setFrame:NSMakeRect(0, 0, contentRect.size.width, contentRect.size.height)];
 
 
-  zx     = NULL;
-  game   = NULL;
-  pixels = NULL;
-  
   zx = ZXSpectrum_create(&zxconfig);
   if (zx == NULL)
     goto failure;
@@ -170,15 +175,17 @@ failure:
   
   // Configure the view
   glShadeModel(GL_FLAT); // Selects flat shading
-  
+  glDisable(GL_DEPTH_TEST); // Don't update the depth buffer.
+
   glMatrixMode(GL_PROJECTION); // Applies subsequent matrix operations to the projection matrix stack
   glLoadIdentity(); // Replace the current matrix with the identity matrix
-  //  glOrtho(0, 640, 480, 0, 0, 1); // Multiply the current matrix with an orthographic matrix
-  glDisable(GL_DEPTH_TEST); // Don't update the depth buffer.
-  
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   //  glTranslatef(0.375, 0.375, 0);
+
+  // Set up constant values
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 // -----------------------------------------------------------------------------
@@ -188,15 +195,29 @@ failure:
 //  /* redraw just the region we've invalidated */
 //  [self setNeedsDisplayInRect:NSMakeRect(0, 0, 1000, 1000)];
 //}
-//
-//- (void)reshape
-//{
-//  // Convert up to window space, which is in pixel units.
-//  NSRect baseRect = [self convertRectToBase:[self bounds]];
-//
+
+- (void)reshape
+{
+  // Convert up to window space, which is in pixel units.
+  NSRect baseRect = [self convertRectToBacking:[self bounds]];
+
 //  // Now the result is glViewport()-compatible.
 //  glViewport(0, 0, (GLsizei) baseRect.size.width, (GLsizei) baseRect.size.height);
-//}
+
+  GLsizei w,h;
+
+  w = baseRect.size.width;
+  h = baseRect.size.height;
+
+  scale = (double) w / 256;
+
+  glViewport(0, 0, w, h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0, w, 0, h, 0.1, 1);
+  glPixelZoom(1, -1);
+  glRasterPos3f(0, h - 1, -0.3);
+}
 
 // -----------------------------------------------------------------------------
 
@@ -220,19 +241,21 @@ failure:
 
 - (void)drawRect:(NSRect)dirtyRect
 {
-  static float zsx =  SCALE;
-  static float zsy = -SCALE;
+  if (scale == 0.0f)
+    return;
+
+  float zsx =  scale;
+  float zsy = -scale;
 
   (void) dirtyRect;
-  
+
   // Clear the background
-  glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+  // Do this every frame or you'll see junk in the border.
   glClear(GL_COLOR_BUFFER_BIT);
-  
+
   if (pixels)
   {
     // Draw the image
-    glRasterPos2f(-1.0f, 1.0f);
     glPixelZoom(zsx, zsy);
     glDrawPixels(256, 192, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   }
@@ -253,6 +276,28 @@ failure:
 - (BOOL)becomeFirstResponder
 {
   return YES;
+}
+
+- (IBAction)zoom:(id)sender
+{
+  NSInteger tag;
+  NSSize    size;
+
+  /* Menu tag is 1..4 for 1x..4x scale. */
+  tag = [sender tag];
+  if (tag < 1)
+    tag = 1;
+  else if (tag > 4)
+    tag = 4;
+
+  scale = 1.0f * tag;
+
+  size.width  = 256 * scale; // FIXME: Pull these dimensions from somewhere central.
+  size.height = 192 * scale;
+
+  [[self window] setContentSize:size];
+
+  [self setFrame:NSMakeRect(0, 0, size.width, size.height)];
 }
 
 - (void)keyDown:(NSEvent*)event

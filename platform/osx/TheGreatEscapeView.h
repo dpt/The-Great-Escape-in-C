@@ -10,6 +10,8 @@
 
 @interface TheGreatEscapeView : NSOpenGLView
 
+- (IBAction)zoom:(id)sender;
+
 - (void)keyUp:(NSEvent*)event;
 - (void)keyDown:(NSEvent*)event;
 
