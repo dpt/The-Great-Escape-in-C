@@ -31,6 +31,7 @@
 		556D1A1E1B13617B0036AED0 /* Menu.c in Sources */ = {isa = PBXBuildFile; fileRef = 556D1A1D1B13617B0036AED0 /* Menu.c */; };
 		556D1A221B1379CF0036AED0 /* Text.c in Sources */ = {isa = PBXBuildFile; fileRef = 556D1A211B1379CF0036AED0 /* Text.c */; };
 		556D1A251B137A4C0036AED0 /* Messages.c in Sources */ = {isa = PBXBuildFile; fileRef = 556D1A241B137A4C0036AED0 /* Messages.c */; };
+		558CE3D11D2A7A5C002B9202 /* speckey.c in Sources */ = {isa = PBXBuildFile; fileRef = 558CE3CF1D2A7A5C002B9202 /* speckey.c */; };
 		558FC65E1A0ECC7F00A4F50F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 554808E117E117CF00387328 /* main.m */; };
 		558FC67C1A0EE13000A4F50F /* ZXScreen.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6791A0EE13000A4F50F /* ZXScreen.c */; };
 		558FC67D1A0EE13000A4F50F /* ZXSpectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC67B1A0EE13000A4F50F /* ZXSpectrum.c */; };
@@ -78,6 +79,8 @@
 		556D1A211B1379CF0036AED0 /* Text.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Text.c; sourceTree = "<group>"; };
 		556D1A231B137A300036AED0 /* Messages.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Messages.h; path = TheGreatEscape/Messages.h; sourceTree = "<group>"; };
 		556D1A241B137A4C0036AED0 /* Messages.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Messages.c; sourceTree = "<group>"; };
+		558CE3CF1D2A7A5C002B9202 /* speckey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = speckey.c; sourceTree = "<group>"; };
+		558CE3D01D2A7A5C002B9202 /* speckey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speckey.h; sourceTree = "<group>"; };
 		558FC6781A0EE11F00A4F50F /* ZXSpectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZXSpectrum.h; sourceTree = "<group>"; };
 		558FC6791A0EE13000A4F50F /* ZXScreen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ZXScreen.c; path = ../../libraries/ZXSpectrum/ZXScreen.c; sourceTree = "<group>"; };
 		558FC67A1A0EE13000A4F50F /* ZXScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZXScreen.h; path = ../../libraries/ZXSpectrum/ZXScreen.h; sourceTree = "<group>"; };
@@ -179,6 +182,8 @@
 			children = (
 				554808E717E117CF00387328 /* AppDelegate.h */,
 				554808E817E117CF00387328 /* AppDelegate.m */,
+				558CE3D01D2A7A5C002B9202 /* speckey.h */,
+				558CE3CF1D2A7A5C002B9202 /* speckey.c */,
 				55F0CA5E19E9E24D0033FC17 /* TheGreatEscapeView.h */,
 				55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */,
 				554808EA17E117CF00387328 /* MainMenu.xib */,
@@ -420,6 +425,7 @@
 				558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */,
 				558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */,
 				558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */,
+				558CE3D11D2A7A5C002B9202 /* speckey.c in Sources */,
 				558FC67D1A0EE13000A4F50F /* ZXSpectrum.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
