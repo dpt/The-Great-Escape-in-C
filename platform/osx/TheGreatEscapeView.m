@@ -302,31 +302,37 @@ failure:
 
 - (void)keyDown:(NSEvent*)event
 {
-  NSString *chars = [event characters];
-  
-  if ([chars length] > 0)
-  {
-    unichar u = [chars characterAtIndex:0];
-    
-    if (u < 256)
-      keys = set_speckey(keys, u);
-  }
-  
+  NSEventModifierFlags  modifierFlags;
+  NSString             *chars;
+
+  modifierFlags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  if (modifierFlags != 0)
+    return;
+
+  chars = [event characters];
+  if ([chars length] == 0)
+    return;
+
+  keys = set_speckey(keys, [chars characterAtIndex:0]);
+
   // NSLog(@"Key pressed: %@", event);
 }
 
 - (void)keyUp:(NSEvent*)event
 {
-  NSString *chars = [event characters];
-  
-  if ([chars length] > 0)
-  {
-    unichar u = [chars characterAtIndex:0];
-    
-    if (u < 256)
-      keys = clear_speckey(keys, u);
-  }
-  
+  NSEventModifierFlags  modifierFlags;
+  NSString             *chars;
+
+  modifierFlags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  if (modifierFlags != 0)
+    return;
+
+  chars = [event characters];
+  if ([chars length] == 0)
+    return;
+
+  keys = clear_speckey(keys, [chars characterAtIndex:0]);
+
   // NSLog(@"Key released: %@", event);
 }
 
