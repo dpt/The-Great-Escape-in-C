@@ -9,6 +9,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "ZXSpectrum/Keyboard.h"
 
 zxkeyset_t zxkeyset_assign(zxkeyset_t keystate,
@@ -18,10 +22,26 @@ zxkeyset_t zxkeyset_assign(zxkeyset_t keystate,
   return (keystate & (~1ULL << index)) | ((unsigned long long) on_off << index);
 }
 
+static uint32_t __inline my_clz(uint32_t value)
+{
+#ifdef _WIN32
+	DWORD leading_zero = 0;
+
+	if (_BitScanReverse(&leading_zero, value))
+		return 31 - leading_zero;
+	else
+		return 32;
+#else
+	return value ? __builtin_clz(value) : 32;
+#endif
+}
+
 int zxkeyset_for_port(uint16_t port, zxkeyset_t keystate)
 {
-  int clz = __builtin_clz(~port << 16);
-  return (~keystate >> clz * 5) & 0x1F;
+  int nzeroes;
+
+  nzeroes = my_clz(~port << 16);
+  return (~keystate >> nzeroes * 5) & 0x1F;
 }
 
 /**
