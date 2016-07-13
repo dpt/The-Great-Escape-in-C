@@ -4,7 +4,7 @@
  * These tiles are used to draw fixed screen elements such as medals.
  */
 
-#include "ZXSpectrum/ZXSpectrum.h"
+#include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/StaticTiles.h"
 

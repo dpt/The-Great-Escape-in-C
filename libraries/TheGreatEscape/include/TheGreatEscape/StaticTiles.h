@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "ZXSpectrum/ZXSpectrum.h"
+#include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/Tiles.h"
 

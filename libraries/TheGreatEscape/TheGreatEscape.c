@@ -45,7 +45,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "ZXSpectrum/ZXSpectrum.h"
+#include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 

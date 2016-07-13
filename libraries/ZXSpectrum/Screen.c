@@ -6,10 +6,8 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 
-#include "ZXScreen.h"
+#include "ZXSpectrum/Screen.h"
 
 // Spectrum screen memory has the arrangement:
 // 0b010BBLLLRRRCCCCC (B = band, L = line, R = row, C = column)
@@ -21,7 +19,7 @@
  * returns the linear offset. */
 static int rows[192];
 
-void ZXScreen_initialise(void)
+void zxscreen_initialise(void)
 {
   static int initialised = 0;
   
@@ -160,7 +158,7 @@ do { \
   *poutput++ = pal[(input >> (shift + 0)) & 1]; \
 } while (0)
 
-void ZXScreen_convert(const void *vscr, unsigned int *poutput)
+void zxscreen_convert(const void *vscr, unsigned int *poutput)
 {
   const unsigned int *pattrs;
   int                 x,y;

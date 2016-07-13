@@ -18,23 +18,23 @@
 
 #import <GLUT/glut.h>
 
-#import "ZXSpectrum/ZXSpectrum.h"
-#import "TheGreatEscape/TheGreatEscape.h"
+#import "ZXSpectrum/Spectrum.h"
+#import "ZXSpectrum/Keyboard.h"
 
-#import "speckey.h"
+#import "TheGreatEscape/TheGreatEscape.h"
 
 #import "TheGreatEscapeView.h"
 
 // -----------------------------------------------------------------------------
 
 // move this into state
-static speckeyfield_t keys;
+static zxkeyset_t keys;
 
 #pragma mark - UIView
 
 @interface TheGreatEscapeView()
 {
-  ZXSpectrum_t *zx;
+  zxspectrum_t *zx;
   tgestate_t   *game;
   
   unsigned int *pixels;
@@ -64,7 +64,7 @@ static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 
 static int key_handler(uint16_t port, void *opaque)
 {
-  return port_to_keyfield(port, keys);
+  return zxkeyset_for_port(port, keys);
 }
 
 // -----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ static void *tge_thread(void *arg)
 
 - (void)awakeFromNib
 {
-  const ZXSpectrum_config_t zxconfig =
+  const zxconfig_t zxconfig =
   {
     (__bridge void *)(self),
     &draw_handler,
@@ -135,7 +135,7 @@ static void *tge_thread(void *arg)
   [self setFrame:NSMakeRect(0, 0, contentRect.size.width, contentRect.size.height)];
 
 
-  zx = ZXSpectrum_create(&zxconfig);
+  zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
     goto failure;
   
@@ -150,7 +150,7 @@ static void *tge_thread(void *arg)
   
 failure:
   tge_destroy(game);
-  ZXSpectrum_destroy(zx);
+  zxspectrum_destroy(zx);
 }
 
 // -----------------------------------------------------------------------------
@@ -313,7 +313,7 @@ failure:
   if ([chars length] == 0)
     return;
 
-  keys = set_speckey(keys, [chars characterAtIndex:0]);
+  keys = zxkeyset_setchar(keys, [chars characterAtIndex:0]);
 
   // NSLog(@"Key pressed: %@", event);
 }
@@ -331,7 +331,7 @@ failure:
   if ([chars length] == 0)
     return;
 
-  keys = clear_speckey(keys, [chars characterAtIndex:0]);
+  keys = zxkeyset_clearchar(keys, [chars characterAtIndex:0]);
 
   // NSLog(@"Key released: %@", event);
 }
@@ -350,8 +350,8 @@ failure:
    * bool command = ([event modifierFlags] & NSCommandKeyMask) != 0;
    */
 
-  keys = assign_speckey(keys, speckey_CAPS_SHIFT,   shift);
-  keys = assign_speckey(keys, speckey_SYMBOL_SHIFT, alt);
+  keys = zxkeyset_assign(keys, zxkey_CAPS_SHIFT,   shift);
+  keys = zxkeyset_assign(keys, zxkey_SYMBOL_SHIFT, alt);
 
   // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }

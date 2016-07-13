@@ -10,22 +10,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ZXSpectrum/ZXSpectrum.h"
+#include "ZXSpectrum/Screen.h"
 
-#include "ZXScreen.h"
+#include "ZXSpectrum/Spectrum.h"
 
-typedef struct ZXSpectrumPrivate
+typedef struct zxspectrum_private
 {
-  ZXSpectrum_t        pub;
-  ZXSpectrum_config_t config;
+  zxspectrum_t        pub;
+  zxconfig_t          config;
   
   unsigned int       *screen; /* Converted screen */
 }
-ZXSpectrumPrivate_t;
+zxspectrum_private_t;
 
-static uint8_t zx_in(ZXSpectrum_t *state, uint16_t address)
+static uint8_t zx_in(zxspectrum_t *state, uint16_t address)
 {
-  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
   switch (address)
   {
@@ -48,7 +48,7 @@ static uint8_t zx_in(ZXSpectrum_t *state, uint16_t address)
   }
 }
 
-static void zx_out(ZXSpectrum_t *state, uint16_t address, uint8_t byte)
+static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
 {
   switch (address)
   {
@@ -61,27 +61,27 @@ static void zx_out(ZXSpectrum_t *state, uint16_t address, uint8_t byte)
   }
 }
 
-static void zx_kick(ZXSpectrum_t *state)
+static void zx_kick(zxspectrum_t *state)
 {
-  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
   
-  ZXScreen_convert(prv->pub.screen, prv->screen);
+  zxscreen_convert(prv->pub.screen, prv->screen);
 
   prv->config.draw(prv->screen, prv->config.opaque);
 }
 
-static void zx_sleep(ZXSpectrum_t *state,
+static void zx_sleep(zxspectrum_t *state,
                      sleeptype_t   sleeptype,
                      int           duration)
 {
-  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) state;
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
   prv->config.sleep(duration, sleeptype, prv->config.opaque);
 }
 
-ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config)
+zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 {
-  ZXSpectrumPrivate_t *prv;
+  zxspectrum_private_t *prv;
   
   prv = malloc(sizeof(*prv));
   if (prv == NULL)
@@ -103,17 +103,17 @@ ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config)
     return NULL;
   }
   
-  ZXScreen_initialise();
+  zxscreen_initialise();
 
   return &prv->pub;
 }
 
-void ZXSpectrum_destroy(ZXSpectrum_t *doomed)
+void zxspectrum_destroy(zxspectrum_t *doomed)
 {
   if (doomed == NULL)
     return;
   
-  ZXSpectrumPrivate_t *prv = (ZXSpectrumPrivate_t *) doomed;
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
 
   free(prv->screen);
   free(prv);

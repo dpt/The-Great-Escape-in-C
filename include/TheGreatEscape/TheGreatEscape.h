@@ -31,7 +31,7 @@ extern "C"
 #endif
   
   
-#include "ZXSpectrum/ZXSpectrum.h"
+#include "ZXSpectrum/Spectrum.h"
 
 
 /* Exports go here... */
@@ -52,7 +52,7 @@ typedef struct tgestate tgestate_t;
 /**
  * Create a game instance.
  */
-TGE_API tgestate_t *tge_create(ZXSpectrum_t      *speccy,
+TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
                                const tgeconfig_t *config);
 
 /**

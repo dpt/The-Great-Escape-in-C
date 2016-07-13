@@ -2,11 +2,16 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013-2015. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2016. <dave@davespace.co.uk>
  */
 
 #ifndef ZXSPECTRUM_H
 #define ZXSPECTRUM_H
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include <stdint.h>
 
@@ -71,7 +76,7 @@ enum
 /**
  * The current state of the machine.
  */
-typedef struct ZXSpectrum ZXSpectrum_t;
+typedef struct zxspectrum zxspectrum_t;
 
 /**
  * Indicates what type of operation is in progress when doing sleep (e.g. waiting for a menu, playing a sound).
@@ -88,27 +93,27 @@ sleeptype_t;
 /**
  * The current state of the machine.
  */
-struct ZXSpectrum
+struct zxspectrum
 {
   /**
    * IN
    */
-  uint8_t (*in)(ZXSpectrum_t *state, uint16_t address);
+  uint8_t (*in)(zxspectrum_t *state, uint16_t address);
 
   /**
    * OUT
    */
-  void (*out)(ZXSpectrum_t *state, uint16_t address, uint8_t byte);
+  void (*out)(zxspectrum_t *state, uint16_t address, uint8_t byte);
   
   /**
    * Call the implementer when screen or attributes have changed.
    */
-  void (*kick)(ZXSpectrum_t *state /*, changedbox */);
+  void (*kick)(zxspectrum_t *state /*, changedbox */);
 
   /**
    * Call the implementer when we need to sleep.
    */
-  void (*sleep)(ZXSpectrum_t *state, sleeptype_t type, int duration);
+  void (*sleep)(zxspectrum_t *state, sleeptype_t type, int duration);
 
 
   uint8_t     screen[SCREEN_LENGTH];
@@ -119,7 +124,7 @@ struct ZXSpectrum
 /**
  * The configuration of the machine.
  */
-typedef struct ZXSpectrum_config
+typedef struct zxconfig
 {
   void *opaque;
   
@@ -132,21 +137,25 @@ typedef struct ZXSpectrum_config
   /** Called when a key is tested. */
   int (*key)(uint16_t port, void *opaque);
 }
-ZXSpectrum_config_t;
+zxconfig_t;
 
 /**
  * Create a logical ZX Spectrum.
  *
  * \return New ZXSpectrum.
  */
-ZXSpectrum_t *ZXSpectrum_create(const ZXSpectrum_config_t *config);
+zxspectrum_t *zxspectrum_create(const zxconfig_t *config);
  
 /**
  * Destroy a logical ZX Spectrum.
  *
  * \param[in] doomed Doomed ZXSpectrum.
  */
-void ZXSpectrum_destroy(ZXSpectrum_t *doomed);
+void zxspectrum_destroy(zxspectrum_t *doomed);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ZXSPECTRUM_H */
 

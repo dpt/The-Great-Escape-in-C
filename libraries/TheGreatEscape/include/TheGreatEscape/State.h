@@ -27,7 +27,7 @@ struct tgestate
   int             st_columns; /* supertiles columns (normally 7) */
   int             st_rows;    /* supertiles rows (normally 5) */
 
-  ZXSpectrum_t   *speccy;
+  zxspectrum_t   *speccy;
 
   jmp_buf         jmpbuf_main;
 
