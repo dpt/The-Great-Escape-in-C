@@ -22,13 +22,13 @@ static int rows[192];
 void zxscreen_initialise(void)
 {
   static int initialised = 0;
-  
+
   int i;
   // int band, line, row;
-  
+
   if (initialised)
     return;
-  
+
   for (i = 0; i < 192; i++)
   {
     // band = (i >> 6) & 3;
@@ -37,12 +37,12 @@ void zxscreen_initialise(void)
     //
     // rows[i] = (band << 6) | (row << 3) | (line >> 0);
     // rows[i] = (i & ~63) | ((i & 56) >> 3) | ((i & 7) << 3); // 8 ops
-  
+
     /* Transpose fields using XOR. */
     unsigned int x = (i ^ (i >> 3)) & 7; // XOR temporary
     rows[i] = i ^ (x | (x << 3));
   }
-  
+
   initialised = 1;
 }
 
@@ -112,7 +112,7 @@ static const unsigned int palette[66 + 65] =
   GRd, GRd, CYd, GRd, YLd, GRd, WHd, CYd,
   CYd, YLd, CYd, WHd, YLd, YLd, WHd, BKd,
   WHd, WHd,
-  
+
   /* Zeroth bright entry is shared. */
        BKb, BLb, BKb, RDb, BKb, MGb, BKb,
   GRb, BKb, CYb, BKb, YLb, BKb, WHb, BLb,
@@ -166,20 +166,20 @@ void zxscreen_convert(const void *vscr, unsigned int *poutput)
   unsigned int        input;
   unsigned int        attrs;
   const unsigned int *pal;
-  
+
   pattrs = (const unsigned int *) vscr + 8 * 192;
   for (y = 0; y < 192; y++)
   {
     /* Transpose fields using XOR. */
     unsigned int xt = (y ^ (y >> 3)) & 7;
     int ny = y ^ (xt | (xt << 3));
-    
+
     pinput = (const unsigned int *) vscr + (ny << 3);
     for (x = 0; x < 8; x++)
     {
       input = *pinput++;
       attrs = *pattrs++;
-      
+
       WRITE8PIX(0);
       WRITE8PIX(8);
       WRITE8PIX(16);
