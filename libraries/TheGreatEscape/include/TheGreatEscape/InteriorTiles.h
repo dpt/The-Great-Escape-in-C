@@ -8,7 +8,7 @@
  */
 enum interior_object_tile
 {
-  interiorobjecttile_MAX = 194,
+  interiorobjecttile__LIMIT = 194,
   interiorobjecttile_ESCAPE = 255
 };
 
@@ -17,7 +17,7 @@ enum interior_object_tile
  */
 typedef enum interior_object_tile objecttile_t;
 
-extern const tile_t interior_tiles[interiorobjecttile_MAX];
+extern const tile_t interior_tiles[interiorobjecttile__LIMIT];
 
 #endif /* INTERIOR_TILES_H */
 
