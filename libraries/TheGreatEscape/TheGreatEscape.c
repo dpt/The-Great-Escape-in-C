@@ -8142,7 +8142,7 @@ uint8_t get_next_target(tgestate_t *state,
     // POP HL // was interleaved
     if (door == door_NONE) /* end of list? */
     {
-      printf("get_next_target: end of list case\n");
+      //printf("get_next_target: end of list case\n");
       *target_out = target;
       return 255; /* Conv: Was a goto to a return. */
     }
@@ -8384,6 +8384,7 @@ character_12_or_higher:
     A = HLtarget->x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
     if (A == 0xFF)
       return;
+    //printf("%p\n", &HLtarget->y);
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
       HLtarget->y++; // writes into door_positions
     else
