@@ -46,6 +46,16 @@ void zxscreen_initialise(void)
   initialised = 1;
 }
 
+#ifdef _WIN32
+#define BK_ 0x00000000
+#define RD_ 0x00010000
+#define GR_ 0x00000100
+#define YL_ 0x00010100
+#define BL_ 0x00000001
+#define MG_ 0x00010001
+#define CY_ 0x00000101
+#define WH_ 0x00010101
+#else
 #define BK_ 0x00000000
 #define RD_ 0x00000001
 #define GR_ 0x00000100
@@ -54,6 +64,7 @@ void zxscreen_initialise(void)
 #define MG_ 0x00010001
 #define CY_ 0x00010100
 #define WH_ 0x00010101
+#endif
 
 #define NORMAL(C) (C * 0xCD)
 #define BRIGHT(C) (C * 0xFF)
