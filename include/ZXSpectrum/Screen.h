@@ -8,7 +8,12 @@
 #ifndef ZXSPECTRUM_SCREEN_H
 #define ZXSPECTRUM_SCREEN_H
 
-/**
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+  /**
  * Build conversion tables.
  *
  * Can be called multiple times.
@@ -22,5 +27,9 @@ void zxscreen_initialise(void);
  * \param[in] output Output screen pixels.
  */
 void zxscreen_convert(const void *screen, unsigned int *output);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ZXSPECTRUM_SCREEN_H */

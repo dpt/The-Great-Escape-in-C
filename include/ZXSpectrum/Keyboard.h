@@ -8,7 +8,12 @@
 #ifndef ZXSPECTRUM_KEYBOARD_H
 #define ZXSPECTRUM_KEYBOARD_H
 
-/**
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+  /**
  * One code for all 40 Spectrum keys.
  */
 typedef enum zxkey
@@ -93,5 +98,9 @@ zxkeyset_t zxkeyset_setchar(zxkeyset_t keystate, int c);
  * Mark the given character c as a released key.
  */
 zxkeyset_t zxkeyset_clearchar(zxkeyset_t keystate, int c);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ZXSPECTRUM_KEYBOARD_H */
