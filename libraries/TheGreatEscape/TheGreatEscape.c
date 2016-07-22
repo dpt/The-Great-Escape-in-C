@@ -1515,7 +1515,7 @@ void main_loop(tgestate_t *state)
   message_display(state);
   process_player_input(state);
   in_permitted_area(state);
-  called_from_main_loop_3(state);
+  restore_tiles(state);
   move_characters(state);
   follow_suspicious_character(state);
   purge_visible_characters(state);
@@ -7467,13 +7467,11 @@ int vischar_visible(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BB98: (unknown) Called from main loop 3.
- *
- * Plots tiles. Checks that characters are visible.
+ * $BB98: Re-paints any tiles occupied by visible characters.
  *
  * \param[in] state Pointer to game state.
  */
-void called_from_main_loop_3(tgestate_t *state)
+void restore_tiles(tgestate_t *state)
 {
   uint8_t    iters;     /* was B */
   vischar_t *vischar;   /* was IY */
@@ -7644,7 +7642,7 @@ next:
 /**
  * $BCAA: Turn a map ref into a tile set pointer.
  *
- * Called from called_from_main_loop_3.
+ * Called from restore_tiles.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] x_shift Unknown. (was H)

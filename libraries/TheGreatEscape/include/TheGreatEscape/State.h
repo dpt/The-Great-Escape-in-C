@@ -137,7 +137,7 @@ struct tgestate
   tinypos_t       tinypos_stash;
 
   /** $81B5: (unknown) */
-  // assigned in called_from_main_loop_3, setup_item_plotting, setup_vischar_plotting
+  // assigned in restore_tiles, setup_item_plotting, setup_vischar_plotting
   xy_t            map_position_related;
 
   /**

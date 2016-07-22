@@ -441,7 +441,7 @@ int vischar_visible(tgestate_t *state,
                     uint16_t   *clipped_width,
                     uint16_t   *clipped_height);
 
-void called_from_main_loop_3(tgestate_t *state);
+void restore_tiles(tgestate_t *state);
 
 const tile_t *select_tile_set(tgestate_t *state,
                               uint8_t     x_shift,
