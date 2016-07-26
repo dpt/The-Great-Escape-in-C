@@ -1,8 +1,37 @@
+# .gitignore for The-Great-Escape-in-C
+#
+# See https://www.gitignore.io/
+#
+
+### C ###
+# Prerequisites
+*.d
+
+# Object files
 *.o
 *.a
-*.d
-*.pyc
-xcuserdata
-TheGreatEscape_html
-*.sync-conflict-*
-*.dia
+
+
+### Python ###
+*.py[cod]
+
+
+### Xcode ###
+*.xccheckout
+build/
+xcuserdata/
+
+
+### Visual Studio ###
+*.obj
+*.pdb
+*.suo
+*.user
+Debug/
+Release/
+
+# Visual C++ cache files
+*.sdf
+
+# Visual Studio profiler
+*.psess
