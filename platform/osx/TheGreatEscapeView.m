@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/10/2014.
-//  Copyright (c) 2014 David Thomas. All rights reserved.
+//  Copyright (c) 2014-2016 David Thomas. All rights reserved.
 //
 
 #import <ctype.h>
@@ -27,8 +27,6 @@
 
 // -----------------------------------------------------------------------------
 
-// move this into state
-static zxkeyset_t keys;
 
 #pragma mark - UIView
 
@@ -40,6 +38,7 @@ static zxkeyset_t keys;
   unsigned int *pixels;
   float         scale;
   pthread_t     thread;
+  zxkeyset_t    keys;
 }
 
 @end
@@ -64,7 +63,9 @@ static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 
 static int key_handler(uint16_t port, void *opaque)
 {
-  return zxkeyset_for_port(port, keys);
+  TheGreatEscapeView *viewptr = (__bridge id) opaque;
+
+  return zxkeyset_for_port(port, viewptr->keys);
 }
 
 // -----------------------------------------------------------------------------
