@@ -27,6 +27,12 @@
 
 // -----------------------------------------------------------------------------
 
+// Configuration
+//
+#define WIDTH  256
+#define HEIGHT 192
+
+// -----------------------------------------------------------------------------
 
 #pragma mark - UIView
 
@@ -95,7 +101,9 @@ static void *tge_thread(void *arg)
 - (void)setPixels:(unsigned int *)data
 {
   pixels = data;
-  [self setNeedsDisplayInRect:NSMakeRect(0, 0, 1000, 1000)];
+
+  // Odd: This refreshes the whole window no matter what size of rect is specified
+  [self setNeedsDisplayInRect:NSMakeRect(0, 0, WIDTH * scale, HEIGHT * scale)];
 }
 
 - (void)awakeFromNib
@@ -111,8 +119,8 @@ static void *tge_thread(void *arg)
   /* Configuration of The Great Escape instance. */
   static const tgeconfig_t tgeconfig =
   {
-    256 / 8,
-    192 / 8
+    WIDTH  / 8,
+    HEIGHT / 8
   };
 
 
@@ -124,12 +132,11 @@ static void *tge_thread(void *arg)
 
   NSWindow *w = [self window];
 
-  /* Enforce a 4:3 aspect ratio for the window. */
-  [w setContentAspectRatio:NSMakeSize(4.0, 3.0)];
+  /* Enforce a (4:3) aspect ratio for the window. */
+  [w setContentAspectRatio:NSMakeSize(WIDTH, HEIGHT)];
 
 
-
-  NSRect contentRect = NSMakeRect(0, 0, tgeconfig.width  * 8 * scale, tgeconfig.height * 8 * scale);
+  NSRect contentRect = NSMakeRect(0, 0, tgeconfig.width * 8 * scale, tgeconfig.height * 8 * scale);
 
   [w setFrame:[w frameRectForContentRect:contentRect] display:YES];
 
@@ -210,7 +217,7 @@ failure:
   w = baseRect.size.width;
   h = baseRect.size.height;
 
-  scale = (double) w / 256;
+  scale = (double) w / WIDTH;
 
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
@@ -258,7 +265,7 @@ failure:
   {
     // Draw the image
     glPixelZoom(zsx, zsy);
-    glDrawPixels(256, 192, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   }
   
   // Flush to screen
@@ -293,8 +300,8 @@ failure:
 
   scale = 1.0f * tag;
 
-  size.width  = 256 * scale; // FIXME: Pull these dimensions from somewhere central.
-  size.height = 192 * scale;
+  size.width  = WIDTH * scale; // FIXME: Pull these dimensions from somewhere central.
+  size.height = HEIGHT * scale;
 
   [[self window] setContentSize:size];
 
