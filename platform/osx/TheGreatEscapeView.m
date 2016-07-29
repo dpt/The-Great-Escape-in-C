@@ -358,8 +358,8 @@ failure:
    * bool command = ([event modifierFlags] & NSCommandKeyMask) != 0;
    */
 
-  keys = zxkeyset_assign(keys, zxkey_CAPS_SHIFT,   shift);
-  keys = zxkeyset_assign(keys, zxkey_SYMBOL_SHIFT, alt);
+  zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
+  zxkeyset_assign(&keys, zxkey_SYMBOL_SHIFT, alt);
 
   // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }

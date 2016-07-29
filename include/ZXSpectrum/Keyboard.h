@@ -80,10 +80,10 @@ typedef unsigned long long zxkeyset_t;
 /**
  * Mark or unmark the given key.
  */
-zxkeyset_t zxkeyset_assign(zxkeyset_t keystate,
-                           zxkey_t    index,
-                           bool       on_off);
-
+void zxkeyset_assign(zxkeyset_t *keystate,
+                     zxkey_t     index,
+                     bool        on_off);
+  
 /**
  * Extract the current key state for the specified port and return it.
  */

@@ -5,6 +5,7 @@
  * Copyright (c) David Thomas, 2016. <dave@davespace.co.uk>
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,11 +16,13 @@
 
 #include "ZXSpectrum/Keyboard.h"
 
-zxkeyset_t zxkeyset_assign(zxkeyset_t keystate,
-                           zxkey_t    index,
-                           bool       on_off)
+void zxkeyset_assign(zxkeyset_t *keystate,
+                     zxkey_t     index,
+                     bool        on_off)
 {
-  return (keystate & (~1ULL << index)) | ((unsigned long long) on_off << index);
+  assert(index < zxkey__LIMIT);
+
+  *keystate = (*keystate & (~1ULL << index)) | ((unsigned long long) on_off << index);
 }
 
 static uint32_t __inline my_clz(uint32_t value)
