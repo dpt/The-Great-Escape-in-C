@@ -7,54 +7,56 @@
  * which is in the bottom seven bits. The subsequent byte is the value to
  * repeat. */
 
-#define _____ /* A spacer for laying out tables. */
+/* Spacers for laying out tables. */
+#define _____ /* 0x00 - transparent tile */
+#define XXXXX /* 0x01 - opaque tile */
 
 /* $E55F */
 static const uint8_t exterior_mask_0[] =
 {
   0x2A,
   0xA0, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x07, 0x08, 0x09, 0x01, 0x0A, 0xA2, 0x00, _____ _____
-  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x85, 0x01, _____ _____ _____ 0x0B, 0x9F, 0x00, _____
-  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x0C, 0x9C, 0x00,
-  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x8A, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ 0x0D, 0x0E, 0x99,
-  0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x8D, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x0F, 0x10,
-  0x96, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x90, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x11,
-  0x94, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x92, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x92, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x94, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x90, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x96, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x8E, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x8C, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9A, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x8A, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x00, _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9E, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x18,
-  0x86, 0x00, _____ _____ _____ _____ 0x05, 0x06, 0x04, 0xA1, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x84, 0x00, _____ _____ 0x05, 0x06, 0x04, 0xA3, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x00, 0x00, 0x05, 0x06, 0x04, 0xA5, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x05, 0x03, 0x04, 0xA7, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0xA9, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
+  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x85, 0x01, XXXXX XXXXX XXXXX 0x0B, 0x9F, 0x00, _____
+  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x0C, 0x9C, 0x00,
+  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x8A, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x0D, 0x0E, 0x99,
+  0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x8D, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x0F, 0x10,
+  0x96, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x90, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x11,
+  0x94, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x92, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x92, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x94, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x90, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x96, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x8E, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x8C, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9A, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x8A, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x00, _____ _____ _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x9E, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x18,
+  0x86, 0x00, _____ _____ _____ _____ 0x05, 0x06, 0x04, 0xA1, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x84, 0x00, _____ _____ 0x05, 0x06, 0x04, 0xA3, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x00, 0x00, 0x05, 0x06, 0x04, 0xA5, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x05, 0x03, 0x04, 0xA7, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0xA9, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E5FF */
 static const uint8_t exterior_mask_1[] =
 {
   0x12,
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x91, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x91, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E61E */
@@ -85,51 +87,51 @@ static const uint8_t exterior_mask_3[] =
   0x1A,
   0x88, 0x00, _____ _____ _____ _____ _____ _____ 0x05, 0x4C, 0x90, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
   0x86, 0x00, _____ _____ _____ _____ 0x05, 0x06, 0x04, 0x32, 0x30, 0x4C, 0x8E, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x84, 0x00, _____ _____ 0x05, 0x06, 0x04, 0x84, 0x01, _____ _____ 0x32, 0x30, 0x4C, 0x8C, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x00, 0x00, 0x05, 0x06, 0x04, 0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x4C, 0x8A, 0x00, _____ _____ _____ _____ _____ _____ _____ _____
-  0x00, 0x06, 0x04, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x4C, 0x88, 0x00, _____ _____ _____ _____ _____ _____
-  0x02, 0x90, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x4C, 0x86, 0x00, 0x02, _____ _____ _____
-  0x92, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x4C, 0x84, 0x00, _____ _____
-  0x02, 0x94, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x4C, 0x00, 0x00,
-  0x02, 0x96, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x32, 0x30, 0x00,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x98, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12
+  0x84, 0x00, _____ _____ 0x05, 0x06, 0x04, 0x84, 0x01, XXXXX XXXXX 0x32, 0x30, 0x4C, 0x8C, 0x00, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
+  0x00, 0x00, 0x05, 0x06, 0x04, 0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x4C, 0x8A, 0x00, _____ _____ _____ _____ _____ _____ _____ _____
+  0x00, 0x06, 0x04, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x4C, 0x88, 0x00, _____ _____ _____ _____ _____ _____
+  0x02, 0x90, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x4C, 0x86, 0x00, 0x02, _____ _____ _____
+  0x92, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x4C, 0x84, 0x00, _____ _____
+  0x02, 0x94, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x4C, 0x00, 0x00,
+  0x02, 0x96, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x32, 0x30, 0x00,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x98, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12
 };
 
 /* $E74B */
 static const uint8_t exterior_mask_4[] =
 {
   0x0D,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x8C, 0x01  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x8C, 0x01  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E758 */
 static const uint8_t exterior_mask_5[] =
 {
   0x0E,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8C, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ 0x12,
-  0x02, 0x8D, 0x01, _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
-  0x02, 0x8D, 0x01  _____ _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8C, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x02, 0x8D, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x02, 0x8D, 0x01  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E77F */
@@ -138,23 +140,23 @@ static const uint8_t exterior_mask_6[] =
   0x08,
   0x5B, 0x5A, 0x86, 0x00, _____ _____ _____ _____
   0x01, 0x01, 0x5B, 0x5A, 0x84, 0x00, _____ _____
-  0x84, 0x01, _____ _____ 0x5B, 0x5A, 0x00, 0x00,
-  0x86, 0x01, _____ _____ _____ _____ 0x5B, 0x5A,
-  0xD8, 0x01  _____ _____ _____ _____ _____ _____
+  0x84, 0x01, XXXXX XXXXX 0x5B, 0x5A, 0x00, 0x00,
+  0x86, 0x01, XXXXX XXXXX XXXXX XXXXX 0x5B, 0x5A,
+  0xD8, 0x01  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E796 */
 static const uint8_t exterior_mask_7[] =
 {
   0x09,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12,
-  0x88, 0x01, _____ _____ _____ _____ _____ _____ 0x12
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12,
+  0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX 0x12
 };
 
 /* $E7AF */
@@ -185,7 +187,7 @@ static const uint8_t exterior_mask_9[] =
   0x0A,
   0x83, 0x00, _____ 0x05, 0x06, 0x30, 0x4C, 0x83, 0x00, _____
   0x00, 0x05, 0x06, 0x04, 0x01, 0x01, 0x32, 0x30, 0x4C, 0x00,
-  0x34, 0x04, 0x86, 0x01, _____ _____ _____ _____ 0x32, 0x33,
+  0x34, 0x04, 0x86, 0x01, XXXXX XXXXX XXXXX XXXXX 0x32, 0x33,
   0x83, 0x00, _____ 0x40, 0x01, 0x01, 0x3F, 0x83, 0x00, _____
   0x02, 0x46, 0x47, 0x48, 0x49, 0x42, 0x41, 0x45, 0x44, 0x12,
   0x34, 0x01, 0x01, 0x46, 0x4B, 0x43, 0x44, 0x01, 0x01, 0x33,
@@ -197,9 +199,9 @@ static const uint8_t exterior_mask_9[] =
 static const uint8_t exterior_mask_10[] =
 {
   0x08,
-  0x35, 0x86, 0x01, _____ _____ _____ _____ 0x36,
-  0x90, 0x01, _____ _____ _____ _____ _____ _____
-  _____ _____ _____ _____ _____ _____ _____ _____
+  0x35, 0x86, 0x01, XXXXX XXXXX XXXXX XXXXX 0x36,
+  0x90, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
   0x88, 0x00, _____ _____ _____ _____ _____ _____
   0x3C, 0x86, 0x00, _____ _____ _____ _____ 0x39,
   0x3C, 0x00, 0x02, 0x36, 0x35, 0x12, 0x00, 0x39,
@@ -287,9 +289,9 @@ static const uint8_t interior_mask_16[] =
   0x09,
   0x86, 0x00, _____ _____ _____ _____ 0x5D, 0x5C, 0x54,
   0x84, 0x00, _____ _____ 0x5D, 0x5C, 0x01, 0x01, 0x01,
-  0x00, 0x00, 0x5D, 0x5C, 0x85, 0x01, _____ _____ _____
-  0x5D, 0x5C, 0x87, 0x01, _____ _____ _____ _____ _____
-  0x2B, 0x88, 0x01  _____ _____ _____ _____ _____ _____
+  0x00, 0x00, 0x5D, 0x5C, 0x85, 0x01, XXXXX XXXXX XXXXX
+  0x5D, 0x5C, 0x87, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x2B, 0x88, 0x01  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E9B9 */
@@ -297,8 +299,8 @@ static const uint8_t interior_mask_17[] =
 {
   0x05,
   0x00, 0x00, 0x5D, 0x5C, 0x67,
-  0x5D, 0x5C, 0x83, 0x01, _____
-  0x3C, 0x84, 0x01  _____ _____
+  0x5D, 0x5C, 0x83, 0x01, XXXXX
+  0x3C, 0x84, 0x01  XXXXX XXXXX
 };
 
 /* $E9C6 */
@@ -314,10 +316,10 @@ static const uint8_t interior_mask_19[] =
 {
   0x0A,
   0x86, 0x00, _____ _____ _____ _____ 0x5D, 0x5C, 0x46, 0x47,
-  0x84, 0x00, _____ _____ 0x5D, 0x5C, 0x83, 0x01, _____ 0x39,
-  0x00, 0x00, 0x5D, 0x5C, 0x86, 0x01, _____ _____ _____ _____
-  0x5D, 0x5C, 0x88, 0x01, _____ _____ _____ _____ _____ _____
-  0x4A, 0x89, 0x01  _____ _____ _____ _____ _____ _____ _____
+  0x84, 0x00, _____ _____ 0x5D, 0x5C, 0x83, 0x01, XXXXX 0x39,
+  0x00, 0x00, 0x5D, 0x5C, 0x86, 0x01, XXXXX XXXXX XXXXX XXXXX
+  0x5D, 0x5C, 0x88, 0x01, XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
+  0x4A, 0x89, 0x01  XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX
 };
 
 /* $E9E6 */
@@ -325,8 +327,8 @@ static const uint8_t interior_mask_20[] =
 {
   0x06,
   0x5D, 0x5C, 0x01, 0x47, 0x6A, 0x00,
-  0x4A, 0x84, 0x01, _____ _____ 0x6B,
-  0x00, 0x84, 0x01, _____ _____ 0x5F
+  0x4A, 0x84, 0x01, XXXXX XXXXX 0x6B,
+  0x00, 0x84, 0x01, XXXXX XXXXX 0x5F
 };
 
 /* $E9F5 */
@@ -369,7 +371,7 @@ static const uint8_t interior_mask_24[] =
   0x05,
   0x01, 0x5E, 0x4C, 0x00, 0x00,
   0x01, 0x01, 0x32, 0x30, 0x00,
-  0x84, 0x01, _____ _____ 0x5F
+  0x84, 0x01, XXXXX XXXXX 0x5F
 };
 
 /* $EA43 */
