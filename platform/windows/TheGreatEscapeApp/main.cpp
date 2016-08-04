@@ -16,7 +16,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// these will need to be passed in rather than hard-coded
+// TODO: these will need to be passed in rather than hard-coded
 #define WIDTH  256
 #define HEIGHT 192
 
@@ -34,13 +34,15 @@ typedef struct gamewin
   BITMAPINFO    bitmapinfo;
 
   zxspectrum_t *zx;
-  tgestate_t   *game;
+  tgestate_t   *tge;
 
   HANDLE        thread;
   DWORD         threadId;
 
   zxkeyset_t    keys;
   unsigned int *pixels;
+
+  bool          quit;
 }
 gamewin_t;
 
@@ -78,14 +80,14 @@ static int key_handler(uint16_t port, void *opaque)
 
 static DWORD WINAPI gamewin_thread(LPVOID lpParam)
 {
-  tgestate_t *game = (tgestate_t *) lpParam;
+  gamewin_t *game = (gamewin_t *) lpParam;
 
-  tge_setup(game);
+  tge_setup(game->tge);
 
   // we arrive here once the menu screen has run its course
 
-  for (;;)
-    tge_main(game);
+  while (!game->quit)
+    tge_main(game->tge);
 
   return NULL;
 }
@@ -99,7 +101,7 @@ static int CreateGame(gamewin_t *gamewin)
   };
 
   zxconfig_t        zxconfig;
-  zxspectrum_tw    *zx;
+  zxspectrum_t     *zx;
   tgestate_t       *tge;
   HANDLE            thread;
   DWORD             threadId;
@@ -121,7 +123,7 @@ static int CreateGame(gamewin_t *gamewin)
   thread = CreateThread(NULL,           // default security attributes
                         0,              // use default stack size
                         gamewin_thread, // thread function name
-                        tge,            // argument to thread function
+                        gamewin,        // argument to thread function
                         0,              // use default creation flags
                         &threadId);     // returns the thread identifier
   if (thread == NULL)
@@ -141,13 +143,15 @@ static int CreateGame(gamewin_t *gamewin)
   bmih->biClrImportant  = 0;
 
   gamewin->zx       = zx;
-  gamewin->game     = tge;
+  gamewin->tge      = tge;
 
   gamewin->thread   = thread;
   gamewin->threadId = threadId;
 
   gamewin->keys     = 0;
   gamewin->pixels   = NULL;
+
+  gamewin->quit     = false;
 
   return 0;
 
@@ -158,9 +162,14 @@ failure:
 
 static void DestroyGame(gamewin_t *doomed)
 {
-  TerminateThread(doomed->thread, 0);
+  // TODO: quit nicely if we're on the main menu...
 
-  tge_destroy(doomed->game);
+  doomed->quit = true;
+
+  WaitForSingleObject(doomed->thread, INFINITE);
+  CloseHandle(doomed->thread);
+
+  tge_destroy(doomed->tge);
   zxspectrum_destroy(doomed->zx);
 }
 
