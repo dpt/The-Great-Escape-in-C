@@ -430,7 +430,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
                                  vischar_t    **pvischar,
                                  itemstruct_t **pitemstruct);
 
-void mask_stuff(tgestate_t *state);
+void render_mask_buffer(tgestate_t *state);
 
 uint16_t multiply(uint8_t value, uint8_t shift);
 

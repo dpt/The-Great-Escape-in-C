@@ -132,7 +132,7 @@ struct tgestate
    * $81B2: (unknown) Used by masked sprite plotters.
    *
    * Written by setup_item_plotting, setup_vischar_plotting.
-   * Read by mask_stuff, guards_follow_suspicious_character.
+   * Read by render_mask_buffer, guards_follow_suspicious_character.
    */
   tinypos_t       tinypos_stash;
 

@@ -6895,7 +6895,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       found = setup_vischar_plotting(state, vischar);
       if (found)
       {
-        mask_stuff(state);
+        render_mask_buffer(state);
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
           searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
@@ -6909,7 +6909,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       found = setup_item_plotting(state, itemstruct, index);
       if (found)
       {
-        mask_stuff(state);
+        render_mask_buffer(state);
         masked_sprite_plotter_16_wide_searchlight(state);
       }
     }
@@ -7017,18 +7017,18 @@ next:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B916: Mask stuff.
+ * $B916: Render the mask buffer.
  *
  * \param[in] state Pointer to game state.
  */
-void mask_stuff(tgestate_t *state)
+void render_mask_buffer(tgestate_t *state)
 {
   uint8_t       iters; /* was B */
   const mask_t *pmask; /* was HL */
 
   assert(state != NULL);
 
-  /* Clear the mask buffer. */
+  /* Clear the whole mask buffer. */
   memset(&state->mask_buffer[0], 0xFF, NELEMS(state->mask_buffer));
 
   if (state->room_index > room_0_OUTDOORS)
