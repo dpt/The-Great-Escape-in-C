@@ -44,7 +44,7 @@ int zxkeyset_for_port(uint16_t port, zxkeyset_t keystate)
   int nzeroes;
 
   nzeroes = my_clz(~port << 16);
-  return (~keystate >> nzeroes * 5) & 0x1F;
+  return (~keystate >> (nzeroes * 5)) & 0x1F;
 }
 
 /**
