@@ -3,9 +3,14 @@
 #include "TheGreatEscape/Masks.h"
 #include "TheGreatEscape/Types.h"
 
-/* Mask encoding: A top-bit-set byte indicates a repetition, the count of
+/* Mask encoding: First byte is the width.
+ *
+ * A top-bit-set byte indicates a repetition, the count of
  * which is in the bottom seven bits. The subsequent byte is the value to
- * repeat. */
+ * repeat.
+ *
+ * The repetition count is +1, so <0x83> <0x01> expands to <0x01> <0x01>.
+ */
 
 /* Spacers for laying out tables. */
 #define _____ /* 0x00 - transparent tile */
