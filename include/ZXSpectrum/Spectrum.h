@@ -126,6 +126,7 @@ struct zxspectrum
  */
 typedef struct zxconfig
 {
+  /** An opaque pointer passed into callbacks. */
   void *opaque;
   
   /** Called when there's a new frame to draw. */
