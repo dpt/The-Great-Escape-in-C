@@ -295,6 +295,7 @@ input_t input_routine(tgestate_t *state)
     &inputroutine_kempston,
     &inputroutine_sinclair,
     &inputroutine_protek,
+    /* &inputroutine_fuller -- Present in the game but never used */
   };
 
   assert(state != NULL);
