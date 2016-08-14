@@ -14,6 +14,8 @@
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
+#include "resource.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // TODO: these will need to be passed in rather than hard-coded
@@ -295,12 +297,12 @@ BOOL RegisterGameWindowClass(HINSTANCE hInstance)
   wcx.cbClsExtra    = 0; // no extra bytes after this class
   wcx.cbWndExtra    = 0;
   wcx.hInstance     = hInstance;
-  wcx.hIcon         = LoadIcon(NULL, IDI_APPLICATION); // default application icon
+  wcx.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
   wcx.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcx.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
   wcx.lpszMenuName  = NULL;
   wcx.lpszClassName = szGameWindowClassName;
-  wcx.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+  wcx.hIconSm       = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
   atom = RegisterClassEx(&wcx);
   if (!atom)
