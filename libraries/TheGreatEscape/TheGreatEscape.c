@@ -7047,7 +7047,7 @@ void render_mask_buffer(tgestate_t *state)
   {
     /* Outdoors */
 
-    iters = 59; // Bug? This count if 59 doesn't match NELEMS(exterior_mask_data); which is 58.
+    iters = NELEMS(exterior_mask_data); // Bug? Was 59 (one too large).
     pmask = &exterior_mask_data[0]; // off by - 2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
 
