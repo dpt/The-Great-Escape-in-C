@@ -10858,14 +10858,14 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 >= 0)
+      if (self_E161 >= 8)
       {
         RR(mask0);
         RR(mask1);
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 >= 0)
+      if (self_E161 >= 16)
       {
         RR(mask0);
         RR(mask1);
