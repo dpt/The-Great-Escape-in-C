@@ -362,6 +362,15 @@ typedef uint8_t gametime_t;
 typedef uint8_t eventtime_t;
 
 /**
+ * Holds an X,Y position (16-bit).
+ */
+typedef struct bigxy
+{
+  uint16_t x, y;
+}
+bigxy_t;
+
+/**
  * Holds an X,Y position.
  */
 typedef struct xy
@@ -442,8 +451,8 @@ typedef struct vischar
   /** $800F movable item (position, current character sprite set, sprite_index) */
   movableitem_t   mi;
 
-  /** $8018,$801A screen x,y coord */
-  uint16_t        scrx, scry;
+  /** $8018,$801A 16-bit screen x,y coord */
+  bigxy_t         screenpos;
 
   /** $801C current room index */
   room_t          room;

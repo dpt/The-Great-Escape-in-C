@@ -136,9 +136,12 @@ struct tgestate
    */
   tinypos_t       tinypos_stash;
 
-  /** $81B5: (unknown) */
-  // assigned in restore_tiles, setup_item_plotting, setup_vischar_plotting
-  xy_t            map_position_related;
+  /** $81B5: The current visible character's (or item's) screen position.
+   *
+   * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
+   * Read by render_mask_buffer.
+   */
+  xy_t            screenpos;
 
   /**
    * $81B7: Used by masked sprite plotters to flip characters left/right.

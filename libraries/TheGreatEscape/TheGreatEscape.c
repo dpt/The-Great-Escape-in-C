@@ -1820,8 +1820,8 @@ void in_permitted_area(tgestate_t *state)
     pos_to_tinypos(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].scrx >= 0x06C8 ||
-        state->vischars[0].scry >= 0x0448)
+    if (state->vischars[0].screenpos.x >= 0x06C8 ||
+        state->vischars[0].screenpos.y >= 0x0448)
     {
       escaped(state);
       return;
@@ -5927,8 +5927,8 @@ void reset_outdoors(tgestate_t *state)
 
   /* Centre the screen on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position.x = (state->vischars[0].scrx >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[0].scry >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.x = (state->vischars[0].screenpos.x >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[0].screenpos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
 
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
@@ -6652,13 +6652,13 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->scrx = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
-  vischar->scry = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
+  vischar->screenpos.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
+  vischar->screenpos.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
 
-  assert(vischar->scrx >= 0);
-  assert(vischar->scrx <= 0x500);
-  assert(vischar->scry >= 0);
-  assert(vischar->scry <= 0x800);
+  assert(vischar->screenpos.x >= 0);
+  assert(vischar->screenpos.x <= 0x500);
+  assert(vischar->screenpos.y >= 0);
+  assert(vischar->screenpos.y <= 0x800);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7078,11 +7078,16 @@ void render_mask_buffer(tgestate_t *state)
     // PUSH BC
     // PUSH HLeb
 
-    x = state->map_position_related.x;
+    // pmask->bounds is a visual position on the map image
+    // pmask->pos is a map position
+    // so we can cull masks if not on-screen
+    // and we can cull masks if behind player
+
+    x = state->screenpos.x;
     if (x - 1 >= pmask->bounds.x1 || x + 2 <= pmask->bounds.x0) // $EC03, $EC02
       goto pop_next;
 
-    y = state->map_position_related.y;
+    y = state->screenpos.y;
     if (y - 1 >= pmask->bounds.y1 || y + 3 <= pmask->bounds.y0) // $EC05, $EC04
       goto pop_next;
 
@@ -7102,7 +7107,7 @@ void render_mask_buffer(tgestate_t *state)
 
     /* Clipping. */
     // likely clip_x1 is a width and clip_y1 is a height
-    mpr1 = state->map_position_related.x;
+    mpr1 = state->screenpos.x;
     if (mpr1 >= pmask->bounds.x0) // must be $EC02
     {
       clip_x0 = mpr1 - pmask->bounds.x0;
@@ -7117,7 +7122,7 @@ void render_mask_buffer(tgestate_t *state)
       clip_x1 = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - mpr1));
     }
 
-    mpr2 = state->map_position_related.y;
+    mpr2 = state->screenpos.y;
     if (mpr2 >= pmask->bounds.y0)
     {
       clip_y0 = mpr2 - pmask->bounds.y0;
@@ -7140,9 +7145,9 @@ void render_mask_buffer(tgestate_t *state)
 
       x = y = 0;
       if (clip_y0 == 0)
-        y = -state->map_position_related.y + pmask->bounds.y0;
+        y = -state->screenpos.y + pmask->bounds.y0;
       if (clip_x0 == 0)
-        x = -state->map_position_related.x + pmask->bounds.x0;
+        x = -state->screenpos.x + pmask->bounds.x0;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
@@ -7401,7 +7406,7 @@ int vischar_visible(tgestate_t *state,
   /* Width part. */
 
   /* Conv: Re-read of map_position_related removed. */
-  A1 = state->map_position.x + state->tb_columns - state->map_position_related.x;
+  A1 = state->map_position.x + state->tb_columns - state->screenpos.x;
   if (A1 <= 0)
     return 0xFF; /* Not visible. */
 
@@ -7414,7 +7419,7 @@ int vischar_visible(tgestate_t *state,
   else
   {
     // A2 is signed for this part.
-    A2 = state->map_position_related.x + vischar->width_bytes - state->map_position.x;
+    A2 = state->screenpos.x + vischar->width_bytes - state->map_position.x;
     if (A2 <= 0) // off the left hand side?
       return 0xFF; /* Not visible. */
 
@@ -7427,7 +7432,7 @@ int vischar_visible(tgestate_t *state,
   /* Height part. */
 
   scaled_height_thing = (state->map_position.y + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
-  scry = vischar->scry; // fused
+  scry = vischar->screenpos.y; // fused
   scaled_height_thing -= scry;
   if ((int16_t) scaled_height_thing <= 0) // signedness
     return 0xFF; /* Not visible. */
@@ -7503,14 +7508,17 @@ void restore_tiles(tgestate_t *state)
     if (vischar->flags == 0xFF)
       goto next; /* Likely: No character. */
 
-    state->map_position_related.y = vischar->scry >> 3; // divide by 8
-    state->map_position_related.x = vischar->scrx >> 3; // divide by 8
+    /* set the visible character's screen space position */
+    state->screenpos.y = vischar->screenpos.y >> 3; // divide by 8 (16-to-8)
+    state->screenpos.x = vischar->screenpos.x >> 3; // divide by 8 (16-to-8)
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
       goto next; /* invisible */
 
-    A = ((clipped_height >> 3) & 0x1F) + 2;
-    signedA = A + state->map_position_related.y - state->map_position.y;
+    // $BBD3
+    A = ((clipped_height >> 3) & 0x1F) + 2; // the masking might not really be required
+
+    signedA = A + state->screenpos.y - state->map_position.y;
     if (signedA >= 0)
     {
       signedA -= 17;
@@ -7555,12 +7563,12 @@ void restore_tiles(tgestate_t *state)
     C = clipped_width & 0xFF;
 
     if (B == 0)
-      B = state->map_position_related.x - HL->x;
+      B = state->screenpos.x - HL->x;
     else
       B = 0; // was interleaved
 
-    if (D == 0) // (yes, D)
-      C = state->map_position_related.y - HL->y;
+    if (D == 0) // This is testing D. I expected it to be testing C but might be misunderstanding something.
+      C = state->screenpos.y - HL->y;
     else
       C = 0; // was interleaved
 
@@ -7782,14 +7790,14 @@ void purge_visible_characters(tgestate_t *state)
     if (state->room_index != vischar->room)
       goto reset; /* this character is not in the current room */
 
-    lo = vischar->scry >> 8;
-    hi = vischar->scry & 0xFF;
+    lo = vischar->screenpos.y >> 8;
+    hi = vischar->screenpos.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
     if (hi <= y || hi > MIN(y + EDGE + 25, 255)) // Conv: C -> A
       goto reset;
 
-    lo = vischar->scrx >> 8;
-    hi = vischar->scrx & 0xFF;
+    lo = vischar->screenpos.x >> 8;
+    hi = vischar->screenpos.x & 0xFF;
     divide_by_8(&lo, &hi);
     if (hi <= x || hi > MIN(x + EDGE + 33, 255)) // Conv: C -> A
       goto reset;
@@ -10509,8 +10517,8 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    */
   /* $8213 = A; */
 
-  state->tinypos_stash        = itemstr->pos;
-  state->map_position_related = itemstr->screenpos;
+  state->tinypos_stash = itemstr->pos;
+  state->screenpos     = itemstr->screenpos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->tinypos_stash + 5;
@@ -10559,9 +10567,9 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (state->map_position_related.y - state->map_position.y) * 192; // temp: HL
+    y = (state->screenpos.y - state->map_position.y) * 192; // temp: HL
 
-  x = state->map_position_related.x - state->map_position.x; // X axis
+  x = state->screenpos.x - state->map_position.x; // X axis
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
@@ -10645,7 +10653,7 @@ uint8_t item_visible(tgestate_t *state,
   /* Width part */
 
   // Seems to be doing (map_position_x + state->tb_columns <= px[0])
-  px = &state->map_position_related.x;
+  px = &state->screenpos.x;
   map_position = state->map_position;
 
   xoff = map_position.x + state->tb_columns - px[0];
@@ -10769,7 +10777,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->scrx & 7)) < 4)
+  if ((x = (vischar->screenpos.x & 7)) < 4)
   {
     uint8_t self_E161, self_E143;
 
@@ -11061,7 +11069,7 @@ void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->scrx & 7)) < 4)
+  if ((x = (vischar->screenpos.x & 7)) < 4)
     masked_sprite_plotter_16_wide_right(state, x);
   else
     masked_sprite_plotter_16_wide_left(state, x); /* i.e. fallthrough */
@@ -11515,8 +11523,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // DE now points to state->map_position_related.x
 
   // unrolled over original
-  state->map_position_related.x = vischar->scrx >> 3;
-  state->map_position_related.y = vischar->scry >> 3;
+  state->screenpos.x = vischar->screenpos.x >> 3;
+  state->screenpos.y = vischar->screenpos.y >> 3;
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
@@ -11585,9 +11593,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (vischar->scry - (state->map_position.y * 8)) * 24;
+    y = (vischar->screenpos.y - (state->map_position.y * 8)) * 24;
 
-  x = state->map_position_related.x - state->map_position.x; // signed subtract + extend to 16-bit
+  x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
   state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
@@ -11597,7 +11605,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE  // get clipped_height
   // PUSH DE
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->scry & 7) * 4; // i *think* its clipped_height -- check
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->screenpos.y & 7) * 4; // i *think* its clipped_height -- check
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
