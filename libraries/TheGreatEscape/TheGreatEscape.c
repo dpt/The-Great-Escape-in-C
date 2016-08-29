@@ -12107,4 +12107,4 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-// vim: ts=8 sts=2 sw=2 et
+// vim: ts=8 sts=2 sw=2 et:
