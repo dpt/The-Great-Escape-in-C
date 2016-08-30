@@ -5991,7 +5991,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     // HL points to door->pos[1]
 
-    if (is_door_locked(state) == 0)
+    if (is_door_locked(state))
       return; /* The door was locked. */
 
     vischar->room = (room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // the mask's not strictly necessary
