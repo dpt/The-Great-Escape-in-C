@@ -1016,9 +1016,7 @@ void process_player_input_fire(tgestate_t *state, input_t input)
     use_item_common(state, state->items_held[1]); /* Conv: Inlined. */
     break;
   case input_FIRE:
-    break;
   default:
-    assert("Non-fire input" == NULL);
     break;
   }
 
