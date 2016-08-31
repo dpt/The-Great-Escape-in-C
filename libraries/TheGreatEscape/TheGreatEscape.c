@@ -1576,11 +1576,15 @@ void check_morale(tgestate_t *state)
  */
 void keyscan_break(tgestate_t *state)
 {
+  int space;
+  int shift;
+
   assert(state != NULL);
 
   /* Is shift-space (break) pressed? */
-  if ((state->speccy->in(state->speccy, port_KEYBOARD_SPACESYMSHFTMNB) & 0x01) != 0 ||
-      (state->speccy->in(state->speccy, port_KEYBOARD_SHIFTZXCV)       & 0x01) != 0)
+  space = (state->speccy->in(state->speccy, port_KEYBOARD_SPACESYMSHFTMNB) & 0x01) == 0;
+  shift = (state->speccy->in(state->speccy, port_KEYBOARD_SHIFTZXCV)       & 0x01) == 0;
+  if (!space || !shift)
     return; /* not pressed */
 
   screen_reset(state);
