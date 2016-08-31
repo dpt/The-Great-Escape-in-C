@@ -22,7 +22,8 @@ void zxkeyset_assign(zxkeyset_t *keystate,
 {
   assert(index < zxkey__LIMIT);
 
-  *keystate = (*keystate & (~1ULL << index)) | ((unsigned long long) on_off << index);
+  *keystate &= ~(1ULL << index);
+  *keystate |= (unsigned long long) on_off << index;
 }
 
 static uint32_t __inline my_clz(uint32_t value)
