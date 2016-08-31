@@ -349,13 +349,14 @@ failure:
   /* Unlike keyDown and keyUp, flagsChanged is a single event delivered when any
    * one of the modifier key states change, down or up. */
 
-  bool shift = ([event modifierFlags] & NSShiftKeyMask) != 0;
-  bool alt   = ([event modifierFlags] & NSAlternateKeyMask) != 0;
+  NSEventModifierFlags modifierFlags = [event modifierFlags];
+  bool shift = (modifierFlags & NSShiftKeyMask) != 0;
+  bool alt   = (modifierFlags & NSAlternateKeyMask) != 0;
 
   /* For reference:
    *
-   * bool control = ([event modifierFlags] & NSControlKeyMask) != 0;
-   * bool command = ([event modifierFlags] & NSCommandKeyMask) != 0;
+   * bool control = (modifierFlags & NSControlKeyMask) != 0;
+   * bool command = (modifierFlags & NSCommandKeyMask) != 0;
    */
 
   zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
