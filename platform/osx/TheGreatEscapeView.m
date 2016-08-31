@@ -313,7 +313,8 @@ failure:
   NSEventModifierFlags  modifierFlags;
   NSString             *chars;
 
-  modifierFlags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  // Ignore any modifiers except for shift.
+  modifierFlags = [event modifierFlags] & (NSDeviceIndependentModifierFlagsMask & ~NSShiftKeyMask);
   if (modifierFlags != 0)
     return;
 
@@ -331,7 +332,8 @@ failure:
   NSEventModifierFlags  modifierFlags;
   NSString             *chars;
 
-  modifierFlags = [event modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  // Ignore any modifiers except for shift.
+  modifierFlags = [event modifierFlags] & (NSDeviceIndependentModifierFlagsMask & ~NSShiftKeyMask);
   if (modifierFlags != 0)
     return;
 
