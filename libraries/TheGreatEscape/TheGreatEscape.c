@@ -10159,7 +10159,7 @@ int is_item_discoverable_interior(tgestate_t *state,
 
   assert(state != NULL);
   assert((room >= 0 && room < room__LIMIT) || (room == room_NONE));
-  assert(pitem != NULL);
+  /* pitem may be NULL */
 
   itemstr = &state->item_structs[0];
   iters   = item__LIMIT;
