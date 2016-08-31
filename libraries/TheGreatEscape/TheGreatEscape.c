@@ -2145,7 +2145,7 @@ void interior_delay_loop(tgestate_t *state)
 {
   assert(state != NULL);
 
-  state->speccy->sleep(state->speccy, sleeptype_DELAY, 0xFFF);
+  state->speccy->sleep(state->speccy, sleeptype_DELAY, 4096 * 16);
 
 //  volatile int BC = 0xFFF;
 //  while (--BC)
