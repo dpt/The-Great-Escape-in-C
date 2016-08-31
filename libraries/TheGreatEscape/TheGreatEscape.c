@@ -173,6 +173,8 @@ void enter_room(tgestate_t *state)
   state->game_window_offset.y = 0;
   setup_room(state);
   plot_interior_tiles(state);
+  state->map_position.x = 0x74;
+  state->map_position.y = 0xEA;
   set_hero_sprite_for_room(state);
   reset_position(state, &state->vischars[0]);
   setup_movable_items(state);
