@@ -11690,7 +11690,7 @@ void divide_by_8_with_rounding(uint8_t *plow, uint8_t *phigh)
   t = *plow + 4; /* Like adding 0.5. */
   *plow = (uint8_t) t; /* Store modulo 256. */
   if (t >= 0x100)
-    (*phigh)++;
+    (*phigh)++; /* Carry. */
 
   divide_by_8(plow, phigh);
 }
