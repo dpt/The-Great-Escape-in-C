@@ -7384,10 +7384,10 @@ void mask_against_tile(tileindex_t index, uint8_t *dst)
  *
  * \return 0 => visible, 0xFF => invisible. (was A)
  */
-int vischar_visible(tgestate_t *state,
-                    vischar_t  *vischar,
-                    uint16_t   *clipped_width,
-                    uint16_t   *clipped_height)
+int vischar_visible(tgestate_t      *state,
+                    const vischar_t *vischar,
+                    uint16_t         *clipped_width,
+                    uint16_t         *clipped_height)
 {
   int8_t   A1;                  /* was A */
   int8_t   A2;                  /* was A */

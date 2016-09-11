@@ -436,10 +436,10 @@ uint16_t multiply(uint8_t value, uint8_t shift);
 
 void mask_against_tile(tileindex_t index, uint8_t *dst);
 
-int vischar_visible(tgestate_t *state,
-                    vischar_t  *vischar,
-                    uint16_t   *clipped_width,
-                    uint16_t   *clipped_height);
+int vischar_visible(tgestate_t      *state,
+                    const vischar_t *vischar,
+                    uint16_t        *clipped_width,
+                    uint16_t        *clipped_height);
 
 void restore_tiles(tgestate_t *state);
 
