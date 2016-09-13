@@ -7476,43 +7476,44 @@ int vischar_visible(tgestate_t      *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BB98: Re-paints any tiles occupied by visible characters.
+ * $BB98: Paints any tiles occupied by visible characters with tiles from tile_buf.
  *
  * \param[in] state Pointer to game state.
  */
 void restore_tiles(tgestate_t *state)
 {
-  uint8_t    iters;     /* was B */
-  vischar_t *vischar;   /* was IY */
-  uint8_t    A;         /* was A */
-  int8_t     signedA;   /* was A */
-  uint8_t    self_BC5F; /* was $BC5F */
-  uint8_t    self_BC61; /* was $BC61 */
-  uint8_t    self_BC89; /* was $BC89 */
-  uint8_t    self_BC8E; /* was $BC8E */
-  uint8_t    self_BC95; /* was $BC95 */
-  uint8_t    B, C;      /* was B, C */
-  uint8_t    D, E;      /* was D, E */
-  uint8_t    H, L;      /* was H, L */
-  uint16_t   DE2;
-  uint16_t   HL2;
+  uint8_t             iters;                  /* was B */
+  const vischar_t    *vischar;                /* was IY */
+  uint8_t             height;                 /* was A / $BC5F */
+  int8_t              heightsigned;           /* was A */
+  uint8_t             width;                  /* was $BC61 */
+  uint8_t             tilebuf_stride;         /* was $BC8E */
+  uint8_t             windowbuf_stride;       /* was $BC95 */
+  uint8_t             width_counter, height_counter;  /* was B, C */
+  uint16_t            clipped_width;          /* was BC */
+  uint16_t            clipped_height;         /* was DE */
+  const xy_t         *map_position;           /* was HL */
+  uint8_t            *windowbuf;              /* was HL */
+  uint8_t            *windowbuf2;             /* was DE */
+  uint8_t             x, y;                   /* was H', L' */
+  const tileindex_t  *tilebuf;                /* was HL/DE */
+  tileindex_t         tile;                   /* was A */
+  const tile_t       *tileset;                /* was BC */
+  uint8_t             tile_counter;           /* was B' */
+  const tilerow_t    *tilerow;                /* was HL' */
 
   assert(state != NULL);
 
-  iters   = vischars_LENGTH;
-  vischar = &state->vischars[0]; // added
+  iters     = vischars_LENGTH;
   state->IY = &state->vischars[0];
   do
   {
-    uint16_t clipped_width;  /* was BC */
-    uint16_t clipped_height; /* was DE */
+    vischar = state->IY; /* Conv: Added local copy of IY. */
 
-    // PUSH BC // i.e. iters
+    if (vischar->flags == vischar_FLAGS_EMPTY_SLOT)
+      goto next;
 
-    if (vischar->flags == 0xFF)
-      goto next; /* Likely: No character. */
-
-    /* set the visible character's screen space position */
+    /* Get the visible character's position in screen space. */
     state->screenpos.y = vischar->screenpos.y >> 3; // divide by 8 (16-to-8)
     state->screenpos.x = vischar->screenpos.x >> 3; // divide by 8 (16-to-8)
 
@@ -7520,131 +7521,105 @@ void restore_tiles(tgestate_t *state)
       goto next; /* invisible */
 
     // $BBD3
-    A = ((clipped_height >> 3) & 0x1F) + 2; // the masking might not really be required
+    height = ((clipped_height >> 3) & 0x1F) + 2; // the masking will only be required if the top byte of clipped_height contains something
 
-    signedA = A + state->screenpos.y - state->map_position.y;
-    if (signedA >= 0)
+    heightsigned = height + state->screenpos.y - state->map_position.y;
+    if (heightsigned >= 0)
     {
-      signedA -= 17;
-      if (signedA > 0)
+      heightsigned -= 17;
+      if (heightsigned > 0)
       {
-        clipped_height = signedA;
-        signedA = A - clipped_height;
-        if (signedA < 0) // if carry
-          goto next;
-        if (signedA != 0)
-          goto bbf8;
-        goto next;
+        clipped_height = heightsigned; // original code assigns low byte only - could be an issue
+        heightsigned = height - clipped_height;
+        if (heightsigned < 0) // if carry
+        {
+          goto next; // not visible?
+        }
+        else if (heightsigned != 0) // ie. > 0
+        {
+          height = heightsigned;
+          goto clamp_height;
+        }
+        else
+        {
+          assert(heightsigned == 0);
+
+          goto next; // not visible?
+        }
       }
     }
 
-  bbf8:
-    if (A > 5)
-      A = 5;
+clamp_height: // was $BBF8
+    if (height > 5) // note: this is height, not heightsigned (preceding POP removed)
+      height = 5; // outer loop counter // height
 
-    // ADDED / CONV
-    B = clipped_width >> 8;
-    C = clipped_width & 0xFF;
-    D = clipped_height >> 8;
-    E = clipped_height & 0xFF; // looks a bit wrong to take this from clipped_height when E is modified inbetween
+    width            = clipped_width & 0xFF; // was self modify // inner loop counter // width
+    tilebuf_stride   = state->tb_columns - width; // was self modify
+    windowbuf_stride = tilebuf_stride + 7 * state->tb_columns; // was self modify // == (8 * state->tb_columns - C)
 
-    self_BC5F = A; // self modify // outer loop counter
+    map_position = &state->map_position;
 
-    self_BC61 = C; // self modify // inner loop counter
-    self_BC89 = C; // self modify
+    /* Work out x,y offsets into the tile buffer. */
 
-    A = 24 - C;
-    self_BC8E = A; // self modify // DE stride
-
-    A += 7 * 24;
-    self_BC95 = A; // self modify // HL stride
-
-    xy_t *HL;
-    int carry = 0;
-
-    HL = &state->map_position;
-
-    C = clipped_width & 0xFF;
-
-    if (B == 0)
-      B = state->screenpos.x - HL->x;
+    if ((clipped_width >> 8) == 0)
+      x = state->screenpos.x - map_position->x;
     else
-      B = 0; // was interleaved
+      x = 0; // was interleaved
 
-    if (D == 0) // This is testing D. I expected it to be testing C but might be misunderstanding something.
-      C = state->screenpos.y - HL->y;
+    if ((clipped_height >> 8) == 0)
+      y = state->screenpos.y - map_position->y;
     else
-      C = 0; // was interleaved
+      y = 0; // was interleaved
 
-    H = C;
-    A = 0; // can push forward to reduce later ops
-    SRL(H);
-    RR(A); // was RRA, but same effect
-    // A = carry << 7; carry = 0; // when A = 0
-    E = A;
+    windowbuf = &state->window_buf[y * state->tb_columns * 8 + x];
+    ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
 
-    D = H;
-    SRL(H);
-    RR(A); // was RRA, but same effect
-    L = A;
+    tilebuf = &state->tile_buf[x + y * state->tb_columns];
+    ASSERT_TILE_BUF_PTR_VALID(tilebuf);
 
-    DE2 = (D << 8) | E;
-    HL2 = (H << 8) | L;
-
-    UNFINISHED;
-#if 0
-    HL += DE + B + &state->window_buf[0]; // screen buffer start address
-    // EX DE, HL
-    // PUSH BC
-
-    // POP HLdash
-
-    // at this point C => row, B => column
-
-    HLtilebuf = &state->tile_buf[B + C * 24]; // visible tiles array // was $F0F8
-    // EX DE, HL
-    C = self_BC5F; /* iterations */ // self modified
+    height_counter = height;
     do
     {
-      B = self_BC61; /* iterations */ // self modified
+      width_counter = width;
       do
       {
-        uint8_t Bdash; /* was B' */
+        ASSERT_TILE_BUF_PTR_VALID(tilebuf);
 
-        // PUSH HL
-        A = *DE;
+        tile = *tilebuf;
+        windowbuf2 = windowbuf;
 
-        // POP DEdash // visible tiles array pointer
-        // PUSH HLdash
-        select_tile_set(state, Hdash, Ldash); // call using banked registers
-        HLdash = A * 8 + BCdash;
-        Bdash = 8; /* iterations */
+        tileset = select_tile_set(state, x, y);
+
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2);
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2 + 7 * state->tb_columns);
+
+        /* Copy the tile into the window buffer. */
+        tilerow = &tileset[tile].row[0];
+        tile_counter = 8;
         do
         {
-          *DEdash = *HLdash++;
-          DEdash += state->tb_columns; // 24
+          *windowbuf2 = *tilerow++;
+          windowbuf2 += state->tb_columns;
         }
-        while (--Bdash);
-        // POP HLdash
-        Hdash++; // ie. HLdash += 256
+        while (--tile_counter);
 
-        DE++;
-        HLtilebuf++;
+        /* Move to next column. */
+        x++;
+        tilebuf++;
+        windowbuf++;
       }
-      while (--B);
+      while (--width_counter);
 
-      Hdash -= self_BC89; // self modified
-      Ldash++;
-
-      DE += self_BC8E; // self modified
-      HLtilebuf += self_BC95; // self modified
+      /* Reset x offset. Advance to next row. */
+      x -= width;
+      y++;
+      tilebuf   += tilebuf_stride;
+      windowbuf += windowbuf_stride;
     }
-    while (--C);
-#endif
+    while (--height_counter);
 
 next:
-    // POP BC
-    vischar++;
+    state->IY++;
   }
   while (--iters);
 }
@@ -7656,19 +7631,22 @@ next:
  *
  * Called from restore_tiles.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] x_shift Unknown. (was H)
- * \param[in] y_shift Unknown. (was L)
+ * \param[in] state Pointer to game state.
+ * \param[in] x     X offset - added to map_position.x. (was H)
+ * \param[in] y     Y offset - added to map_position.y. (was L)
+ *
+ * \return Tile set pointer. (was BC)
  */
 const tile_t *select_tile_set(tgestate_t *state,
-                              uint8_t     x_shift,
-                              uint8_t     y_shift)
+                              uint8_t     x,
+                              uint8_t     y)
 {
-  const tile_t *tileset; /* was BC */
+  const tile_t    *tileset;    /* was BC */
+  uint8_t          row_offset; /* was L */
+  uint8_t          offset;     /* was Adash */
+  supertileindex_t tile;       /* was Adash */
 
   assert(state != NULL);
-  // assert(x_shift);
-  // assert(y_shift);
 
   if (state->room_index != room_0_OUTDOORS)
   {
@@ -7676,15 +7654,12 @@ const tile_t *select_tile_set(tgestate_t *state,
   }
   else
   {
-    uint8_t          temp; /* was L */
-    uint8_t          pos;  /* was Adash */
-    supertileindex_t tile; /* was Adash */
-
     /* Convert map position to an index into 7x5 supertile refs array. */
-    temp = ((((state->map_position.y & 3) + y_shift) >> 2) & 0x3F) * state->st_columns; // vertical // Conv: constant columns 7 made variable
-    pos  = ((((state->map_position.x & 3) + x_shift) >> 2) & 0x3F) + temp; // horizontal + vertical
+    // the '& 0x3F' should be redundant after the >> 2
+    row_offset = ((((state->map_position.y & 3) + y) >> 2) & 0x3F) * state->st_columns; // vertical // Conv: constant columns 7 made variable
+    offset     = ((((state->map_position.x & 3) + x) >> 2) & 0x3F) + row_offset; // combines horizontal + vertical
 
-    tile = state->map_buf[pos]; /* (7x5) supertile refs */
+    tile = state->map_buf[offset]; /* (7x5) supertile refs */
     tileset = &exterior_tiles_1[0];
     if (tile >= 45)
     {

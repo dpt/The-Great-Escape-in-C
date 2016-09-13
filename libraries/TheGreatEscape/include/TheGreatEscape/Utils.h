@@ -24,8 +24,6 @@
  */
 #define NEVER_RETURNS assert("Unexpected return." == NULL); return
 
-#define UNFINISHED assert("Unfinished conversion here!" == NULL)
-
 /* ----------------------------------------------------------------------- */
 
 /* Z80 instruction simulator macros. */
