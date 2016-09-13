@@ -369,8 +369,11 @@ static void tge_initialise(tgestate_t *state)
   memcpy(state->locations, locations, sizeof(locations));
 
   /* $7CFC */
+  memset(&state->messages.queue[0], 0, message_queue_LENGTH);
+  state->messages.queue[0] = message_QUEUE_END;
+  state->messages.queue[1] = message_QUEUE_END;
   state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
-  state->messages.display_index = 0x80; // flag?
+  state->messages.display_index = 1 << 7; // message_NEXT
   state->messages.queue_pointer = &state->messages.queue[2];
 
   /* $A13C */

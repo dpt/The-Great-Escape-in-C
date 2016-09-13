@@ -179,7 +179,7 @@ void next_message(tgestate_t *state)
 
   assert(state != NULL);
 
-  qp = &state->messages.queue[0];
+  qp = &state->messages.queue[2];
   if (state->messages.queue_pointer == qp)
     return;
 
@@ -190,7 +190,7 @@ void next_message(tgestate_t *state)
   state->messages.current_character = message;
 
   /* Discard the first element. */
-  memmove(state->messages.queue, state->messages.queue + 2, 16);
+  memmove(&state->messages.queue[0], &state->messages.queue[2], 16);
   state->messages.queue_pointer -= 2;
   state->messages.display_index = 0;
 }
