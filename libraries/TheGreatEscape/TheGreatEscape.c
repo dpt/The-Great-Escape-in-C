@@ -10550,8 +10550,8 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   x = state->screenpos.x - state->map_position.x; // X axis
 
-  state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
-  ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
+  state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
 
   maskbuf = &state->mask_buffer[0];
 
@@ -10794,10 +10794,10 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         flip_24_masked_pixels(state, &mask2, &mask1, &mask0, &bm2, &bm1, &bm0);
 
       foremaskptr = state->foreground_mask_pointer;
-      screenptr   = state->screen_pointer; // moved compared to the other routines
+      screenptr   = state->window_buf_pointer; // moved compared to the other routines
 
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
-      ASSERT_SCREEN_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
       /* Shift bitmap. */
 
@@ -10876,7 +10876,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         *screenptr = x;
 
       screenptr += state->tb_columns - 3;
-      state->screen_pointer = screenptr;
+      state->window_buf_pointer = screenptr;
     }
     while (--iters);
   }
@@ -10920,10 +10920,10 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         flip_24_masked_pixels(state, &mask0, &mask1, &mask2, &bm0, &bm1, &bm2);
 
       foremaskptr = state->foreground_mask_pointer;
-      screenptr   = state->screen_pointer;
+      screenptr   = state->window_buf_pointer;
 
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
-      ASSERT_SCREEN_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
       /* Shift bitmap. */
 
@@ -11020,7 +11020,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       screenptr++;
 
       screenptr += state->tb_columns - 3;
-      state->screen_pointer = screenptr;
+      state->window_buf_pointer = screenptr;
     }
     while (--iters);
   }
@@ -11159,8 +11159,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->screen_pointer; // moved relative to the 24 version
-    ASSERT_SCREEN_PTR_VALID(screenptr);
+    screenptr = state->window_buf_pointer; // moved relative to the 24 version
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
     x = MASK(bm0, mask0);
     foremaskptr++;
@@ -11181,7 +11181,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
       *screenptr = x;
 
     screenptr += state->tb_columns - 2;
-    state->screen_pointer = screenptr;
+    state->window_buf_pointer = screenptr;
   }
   while (--iters);
 }
@@ -11300,8 +11300,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->screen_pointer; // this line is moved relative to the 24 version
-    ASSERT_SCREEN_PTR_VALID(screenptr);
+    screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
     x = MASK(bm2, mask2);
     foremaskptr++;
@@ -11322,7 +11322,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
       *screenptr = x;
 
     screenptr += 22; // stride (24 - 2)
-    state->screen_pointer = screenptr;
+    state->window_buf_pointer = screenptr;
   }
   while (--iters);
 }
@@ -11576,8 +11576,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
-  state->screen_pointer = &state->window_buf[x + y]; // screen buffer start address
-  ASSERT_SCREEN_PTR_VALID(state->screen_pointer);
+  state->window_buf_pointer = &state->window_buf[x + y]; // screen buffer start address
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
 
   maskbuf = &state->mask_buffer[0];
 
