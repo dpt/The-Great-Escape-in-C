@@ -395,9 +395,9 @@ static void tge_initialise(tgestate_t *state)
          sizeof(game_window_start_offsets));
 
   // temporary
-  memset(state->tile_buf, 0x55, (state->tb_columns * state->tb_rows)); 
-  memset(state->window_buf, 0x55, ((state->columns + 1) * state->rows * 8));
-  memset(state->map_buf, 0x55, (state->st_columns * state->st_rows));
+  memset(state->tile_buf,   0x55,  state->columns * state->rows);
+  memset(state->window_buf, 0x55, (state->columns * state->rows * 8));
+  memset(state->map_buf,    0x55,  state->st_columns * state->st_rows);
 }
 
 /**
@@ -435,13 +435,12 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
   assert(state->width  == 32);
   assert(state->height == 24);
 
-  /* This is the size of the game window only. */
-  state->columns    = 23;
-  state->rows       = 16;
-  
-  state->tb_columns = state->columns + 1;
-  state->tb_rows    = state->rows    + 1; // perhaps not
-  
+  /* Set the size of the window buffer. The game screen is assumed to be one smaller in both
+   * dimensions. That is a 24x17 buffer is displayed through a 23x16 window on-screen. This allows
+   * for rolling/scrolling. */
+  state->columns    = 24;
+  state->rows       = 17;
+
   /* This is held separately, rather than computed from columns and rows, as
    * it's wider than I expected it to be. */
   state->st_columns = 7;
@@ -449,9 +448,9 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
   
   /* Allocate buffers. */
   
-  game_window_start_offsets = calloc(1, (size_t) (state->rows * 8) * sizeof(*game_window_start_offsets));
-  tile_buf                  = calloc(1, (size_t) (state->tb_columns * state->tb_rows));
-  window_buf                = calloc(1, (size_t) ((state->columns + 1) * state->rows * 8));
+  game_window_start_offsets = calloc(1, (size_t) ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets));
+  tile_buf                  = calloc(1, (size_t) (state->columns * state->rows));
+  window_buf                = calloc(1, (size_t) (state->columns * state->rows * 8));
   map_buf                   = calloc(1, (size_t) (state->st_columns * state->st_rows));
 
   if (game_window_start_offsets == NULL ||

@@ -90,13 +90,13 @@ static void wipe_game_window(tgestate_t *state)
   uint8_t         iters;    /* was A */
 
   poffsets = &state->game_window_start_offsets[0]; /* points to offsets */
-  iters = state->rows * 8;
+  iters = (state->rows - 1) * 8;
   do
   {
     uint8_t *const p = screen + *poffsets++;
 
     ASSERT_SCREEN_PTR_VALID(p);
-    memset(p, 0, state->columns);
+    memset(p, 0, state->columns - 1); /* 23 columns (not 24 like the back buffer) */
   }
   while (--iters);
 }

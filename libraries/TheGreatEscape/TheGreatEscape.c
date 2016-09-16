@@ -430,7 +430,7 @@ void wipe_visible_tiles(tgestate_t *state)
 {
   assert(state != NULL);
 
-  memset(state->tile_buf, 0, state->columns * (state->rows + 1)); /* was 24 * 17 */
+  memset(state->tile_buf, 0, state->columns * state->rows); /* was 24 * 17 */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -550,7 +550,7 @@ void setup_room(tgestate_t *state)
   {
     expand_object(state,
                   proomdef[0], /* object index */
-                  &state->tile_buf[proomdef[2] * state->tb_columns + proomdef[1]]); /* HL[2] = row, HL[1] = column */
+                  &state->tile_buf[proomdef[2] * state->columns + proomdef[1]]); /* HL[2] = row, HL[1] = column */
     proomdef += 3;
   }
 }
@@ -588,8 +588,9 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
   assert(index >= 0 && index < interiorobject__LIMIT);
   assert(output != NULL); // assert within tilebuf?
 
-  columns     = state->columns + 1; // Conv: Added.
-  // note: columns ought to be 24 here
+  columns     = state->columns; // Conv: Added.
+
+  assert(columns == 24);
 
   obj         = interior_object_defs[index];
 
@@ -712,8 +713,8 @@ void plot_interior_tiles(tgestate_t *state)
 
   assert(state != NULL);
 
-  rows       = state->rows;
-  columns    = state->columns + 1;
+  rows       = state->rows - 1; // 16
+  columns    = state->columns; // 24
 
   window_buf = state->window_buf;
   tiles_buf  = state->tile_buf;
@@ -2431,13 +2432,13 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
   assert(attrs >= attribute_BLUE_OVER_BLACK && attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
 
   attributes = &state->speccy->attributes[0x0047];
-  rows   = state->rows; /* e.g. 23 */
-  stride = state->width - state->columns; /* e.g. 9 */
+  rows   = state->rows - 1;
+  stride = state->width - (state->columns - 1); /* e.g. 32 - 23 = 9 */
   do
   {
     uint8_t iters;
 
-    iters = state->columns; /* e.g. 23 */
+    iters = state->columns - 1; /* e.g. 23 */
     do
       *attributes++ = attrs;
     while (--iters);
@@ -4112,7 +4113,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
     t = *vistiles = *tiles; // A = tile index
     plot_tile_then_advance(state, t, tiles, window);
     vistiles += 4; // stride
-    tiles += state->columns;
+    tiles += state->columns - 1;
   }
   while (--iters);
 
@@ -4137,7 +4138,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
 
       t = *vistiles = *tiles; // A = tile index
       plot_tile_then_advance(state, t, tiles, window);
-      tiles += state->columns;
+      tiles += state->columns - 1;
       vistiles += 4; // stride
     }
     while (--iters);
@@ -4162,7 +4163,7 @@ void plot_vertical_tiles_common(tgestate_t       *state,
     t = *vistiles = *tiles; // A = tile index
     plot_tile_then_advance(state, t, tiles, window);
     vistiles += 4; // stride
-    tiles += state->columns;
+    tiles += state->columns - 1;
   }
   while (--iters);
 }
@@ -4187,7 +4188,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
 {
   assert(state != NULL);
 
-  return plot_tile(state, tile_index, psupertileindex, scr) + (state->columns * 8 - 1); // -1 compensates the +1 in plot_tile
+  return plot_tile(state, tile_index, psupertileindex, scr) + (state->columns + 1) * 8 - 1; // -1 compensates the +1 in plot_tile
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4724,7 +4725,7 @@ void zoombox_fill(tgestate_t *state)
   uint8_t  *prev_dst;   /* was stack */
 
   /* Conv: Simplified calculation to use a single multiply. */
-  offset = state->zoombox.y * state->tb_columns * 8 + state->zoombox.x;
+  offset = state->zoombox.y * state->columns * 8 + state->zoombox.x;
   src = &state->window_buf[offset + 1];
   ASSERT_WINDOW_BUF_PTR_VALID(src);
   dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
@@ -4732,7 +4733,7 @@ void zoombox_fill(tgestate_t *state)
 
   hz_count  = state->zoombox.width;
   hz_count1 = hz_count;
-  src_skip  = state->tb_columns - hz_count;
+  src_skip  = state->columns - hz_count;
 
   iters = state->zoombox.height; /* iterations */
   do
@@ -7410,7 +7411,7 @@ int vischar_visible(tgestate_t      *state,
   /* Width part. */
 
   /* Conv: Re-read of map_position_related removed. */
-  A1 = state->map_position.x + state->tb_columns - state->screenpos.x;
+  A1 = state->map_position.x + state->columns - state->screenpos.x;
   if (A1 <= 0)
     return 0xFF; /* Not visible. */
 
@@ -7435,7 +7436,7 @@ int vischar_visible(tgestate_t      *state,
 
   /* Height part. */
 
-  scaled_height_thing = (state->map_position.y + state->tb_rows) * 8; // CHECK if tb_rows is always 17. if so, good.
+  scaled_height_thing = (state->map_position.y + state->rows) * 8;
   scry = vischar->screenpos.y; // fused
   scaled_height_thing -= scry;
   if ((int16_t) scaled_height_thing <= 0) // signedness
@@ -7526,7 +7527,7 @@ void restore_tiles(tgestate_t *state)
     heightsigned = height + state->screenpos.y - state->map_position.y;
     if (heightsigned >= 0)
     {
-      heightsigned -= 17;
+      heightsigned -= 17; // likely window_buf height
       if (heightsigned > 0)
       {
         clipped_height = heightsigned; // original code assigns low byte only - could be an issue
@@ -7554,8 +7555,8 @@ clamp_height: // was $BBF8
       height = 5; // outer loop counter // height
 
     width            = clipped_width & 0xFF; // was self modify // inner loop counter // width
-    tilebuf_stride   = state->tb_columns - width; // was self modify
-    windowbuf_stride = tilebuf_stride + 7 * state->tb_columns; // was self modify // == (8 * state->tb_columns - C)
+    tilebuf_stride   = state->columns - width; // was self modify
+    windowbuf_stride = tilebuf_stride + 7 * state->columns; // was self modify // == (8 * state->tb_columns - C)
 
     map_position = &state->map_position;
 
@@ -7571,10 +7572,10 @@ clamp_height: // was $BBF8
     else
       y = 0; // was interleaved
 
-    windowbuf = &state->window_buf[y * state->tb_columns * 8 + x];
+    windowbuf = &state->window_buf[y * state->columns * 8 + x];
     ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
 
-    tilebuf = &state->tile_buf[x + y * state->tb_columns];
+    tilebuf = &state->tile_buf[x + y * state->columns];
     ASSERT_TILE_BUF_PTR_VALID(tilebuf);
 
     height_counter = height;
@@ -7591,7 +7592,7 @@ clamp_height: // was $BBF8
         tileset = select_tile_set(state, x, y);
 
         ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2);
-        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2 + 7 * state->tb_columns);
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2 + 7 * state->columns);
 
         /* Copy the tile into the window buffer. */
         tilerow = &tileset[tile].row[0];
@@ -7599,7 +7600,7 @@ clamp_height: // was $BBF8
         do
         {
           *windowbuf2 = *tilerow++;
-          windowbuf2 += state->tb_columns;
+          windowbuf2 += state->columns;
         }
         while (--tile_counter);
 
@@ -10371,6 +10372,7 @@ void mark_nearby_items(tgestate_t *state)
     xy_t screenpos = itemstruct->screenpos; /* new */
 
     /* Conv: Ranges adjusted. */
+    // todo: 25, 17 need updating to be state->tb_columns etc.
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
         (screenpos.x >= map_xy.x - 1 && screenpos.x <= map_xy.x + 25 - 1) &&
         (screenpos.y >= map_xy.y     && screenpos.y <= map_xy.y + 17    ))
@@ -10635,7 +10637,7 @@ uint8_t item_visible(tgestate_t *state,
   px = &state->screenpos.x;
   map_position = state->map_position;
 
-  xoff = map_position.x + state->tb_columns - px[0];
+  xoff = map_position.x + state->columns - px[0];
   if (xoff > 0)
   {
 #define WIDTH_BYTES 3
@@ -10657,7 +10659,7 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Height part */
 
-    yoff = map_position.y + state->tb_rows - px[1]; // px[1] == map_position_related.y
+    yoff = map_position.y + state->rows - px[1]; // px[1] == map_position_related.y
     if (yoff > 0)
     {
 #define HEIGHT 2
@@ -10875,7 +10877,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       if (state->enable_E1BF)
         *screenptr = x;
 
-      screenptr += state->tb_columns - 3;
+      screenptr += state->columns - 3;
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11019,7 +11021,7 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
         *screenptr = x;
       screenptr++;
 
-      screenptr += state->tb_columns - 3;
+      screenptr += state->columns - 3;
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11180,7 +11182,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     if (state->enable_E340)
       *screenptr = x;
 
-    screenptr += state->tb_columns - 2;
+    screenptr += state->columns - 2;
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);
@@ -11321,7 +11324,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     if (state->enable_E3EC)
       *screenptr = x;
 
-    screenptr += 22; // stride (24 - 2)
+    screenptr += state->columns - 2;
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);

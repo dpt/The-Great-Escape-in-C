@@ -20,10 +20,7 @@ struct tgestate
 
   int             columns;    /* game window width in UDGs e.g. 23 */
   int             rows;       /* game window height in UDGs e.g. 16 */
-  
-  int             tb_columns; // 24
-  int             tb_rows;    // 17
-  
+
   int             st_columns; /* supertiles columns (normally 7) */
   int             st_rows;    /* supertiles rows (normally 5) */
 
@@ -355,7 +352,7 @@ struct tgestate
   /* replacing direct access to $F0F8 .. $F28F. 24 x 17. */
   tileindex_t    *tile_buf;
 
-  /* replacing direct access to $F290 .. $FE8F. 24 x 16 x 8. */
+  /* replacing direct access to $F290 .. $FE8F. 24 x 17 x 8. */
   uint8_t        *window_buf; // tilerow_t?
 
   // $FE90 - 200 bytes unaccounted for
