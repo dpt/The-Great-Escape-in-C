@@ -7349,27 +7349,27 @@ uint16_t multiply(uint8_t left, uint8_t right)
 
 /**
  * $BADC: Masks tiles (placed in a stride-of-4 arrangement) by the specified
- * index exterior_tiles (set zero).
+ * index mask_tiles (set zero).
  *
  * Leaf.
  *
- * \param[in] index Mask tile index. // a tileindex_t? (was A)
- * \param[in] dst   Pointer to source/destination. (was HL)
+ * \param[in] index Mask tile index.                (was A)
+ * \param[in] dst   Pointer to a tile to be masked. (was HL)
  */
-void mask_against_tile(tileindex_t index, uint8_t *dst)
+void mask_against_tile(tileindex_t index, tilerow_t *dst)
 {
-  const tilerow_t *row; // tile_t *t; or tilerow? /* was HL' */
+  const tilerow_t *row;   /* was HL' */
   uint8_t          iters; /* was B */
 
   assert(index < 111);
   assert(dst != NULL); // which buffer does this point to?
 
-  row = &exterior_tiles_0[index].row[0];
+  row = &mask_tiles[index].row[0];
   iters = 8;
   do
   {
     *dst &= *row++;
-    dst += 4; /* supertile stride */
+    dst += 4; /* supertile stride? */
   }
   while (--iters);
 }

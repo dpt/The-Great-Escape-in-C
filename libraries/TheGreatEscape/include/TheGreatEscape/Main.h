@@ -434,7 +434,7 @@ void render_mask_buffer(tgestate_t *state);
 
 uint16_t multiply(uint8_t left, uint8_t right);
 
-void mask_against_tile(tileindex_t index, uint8_t *dst);
+void mask_against_tile(tileindex_t index, tilerow_t *dst);
 
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
