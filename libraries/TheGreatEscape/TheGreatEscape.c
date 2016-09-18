@@ -7318,8 +7318,11 @@ void render_mask_buffer(tgestate_t *state)
  */
 uint16_t multiply(uint8_t left, uint8_t right)
 {
+  uint16_t expected_result; /* Conv: added */
   uint8_t  iters;  /* was B */
   uint16_t result; /* was HL */
+
+  expected_result = left * right; /* Conv: added */
 
   /* sampled val,shift = $1A,$4 / $42,$8 / $1A,$2A */
 
@@ -7337,7 +7340,7 @@ uint16_t multiply(uint8_t left, uint8_t right)
   }
   while (--iters);
 
-  assert(result == left * right);
+  assert(result == expected_result);
 
   return result;
 }
