@@ -7034,7 +7034,7 @@ void render_mask_buffer(tgestate_t *state)
   assert(state != NULL);
 
   /* Clear the whole mask buffer. */
-  memset(&state->mask_buffer[0], 0xFF, NELEMS(state->mask_buffer));
+  memset(&state->mask_buffer[0], 0xFF, sizeof(state->mask_buffer));
 
   if (state->room_index > room_0_OUTDOORS)
   {
