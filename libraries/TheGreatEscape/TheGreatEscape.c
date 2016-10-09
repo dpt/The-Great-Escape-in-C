@@ -6638,7 +6638,7 @@ void reset_position(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Save a copy of the vischar's position + offset. */
-  memcpy(&state->saved_pos, &vischar->mi.pos, sizeof(pos_t));
+  state->saved_pos = vischar->mi.pos;
 
   calc_vischar_screenpos(state, vischar);
 }
