@@ -6836,16 +6836,17 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   if (vischar > &state->vischars[0])
     return; /* Skip non-hero characters. */
 
-  buf = &state->mask_buffer[0x31]; // 0x31 = 32 + 17 ... but unsure if 32 is the right rowsize // could be 12*4+1
+  /* Start testing at approximately the middle of the character. */
+  buf = &state->mask_buffer[32 + 16 + 1]; /* x=1, y=12 */
   iters = 8;
   /* Bug: Original code does a fused load of BC, but doesn't use C after.
-   * Probably a leftover stride constant. */
+   * Probably a leftover stride constant for MASK_BUFFER_WIDTH. */
   // C = 4;
   do
   {
     if (*buf != 0)
       goto still_in_spotlight;
-    buf += 4; // stride is 4?
+    buf += MASK_BUFFER_WIDTH;
   }
   while (--iters);
 
@@ -7157,7 +7158,7 @@ void render_mask_buffer(tgestate_t *state)
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
 
-      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH + x];
+      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH * 8 + x];
 
       DE = mask_pointers[index];
 //      HL = byte_B839 | (byte_B83A << 8); // vertical bits // fused then split apart again immediately below
@@ -7348,8 +7349,9 @@ uint16_t multiply(uint8_t left, uint8_t right)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BADC: Masks tiles (placed in a stride-of-4 arrangement) by the specified
- * index mask_tiles (set zero).
+ * $BADC: Masks tiles by the specified index mask_tiles (set zero).
+ *
+ * Expects a buffer with a stride of 4.
  *
  * Leaf.
  *
@@ -7362,14 +7364,16 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
   uint8_t          iters; /* was B */
 
   assert(index < 111);
-  assert(dst != NULL); // which buffer does this point to?
+
+  assert(dst);
+  // ASSERT_MASK_BUF_PTR_VALID(dst); // we don't have access to state from here to compare
 
   row = &mask_tiles[index].row[0];
   iters = 8;
   do
   {
     *dst &= *row++;
-    dst += 4; /* supertile stride? */
+    dst += MASK_BUFFER_WIDTH; /* skip to next row */
   }
   while (--iters);
 }

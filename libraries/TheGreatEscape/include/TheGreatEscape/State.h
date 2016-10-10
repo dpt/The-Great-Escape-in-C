@@ -106,10 +106,12 @@ struct tgestate
   /** $8000: Array of visible characters. */
   vischar_t       vischars[vischars_LENGTH];
 
-#define MASK_BUFFER_WIDTH 32 // BUT is the buffer 32 wide? The draw buffer is only 24 wide!
+#define MASK_BUFFER_WIDTH  4
+#define MASK_BUFFER_HEIGHT 5
+#define MASK_BUFFER_LENGTH (MASK_BUFFER_WIDTH * 8 * MASK_BUFFER_HEIGHT)
   /** $8100: Mask buffer. */
   // TODO: Dynamically allocate.
-  uint8_t         mask_buffer[5 * MASK_BUFFER_WIDTH];
+  uint8_t         mask_buffer[MASK_BUFFER_LENGTH];
 
   /** $81A2: Pointer into window_buf[]. Used by masked sprite plotters. */
   uint8_t        *window_buf_pointer;

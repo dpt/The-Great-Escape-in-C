@@ -29,7 +29,7 @@ do {                                                  \
 #define ASSERT_MASK_BUF_PTR_VALID(p)                  \
 do {                                                  \
   assert(p >= &state->mask_buffer[0]);                \
-  assert(p < &state->mask_buffer[5 * MASK_BUFFER_WIDTH]); \
+  assert(p < &state->mask_buffer[MASK_BUFFER_LENGTH]); \
 } while (0)
 
 #define ASSERT_TILE_BUF_PTR_VALID(p)                  \
