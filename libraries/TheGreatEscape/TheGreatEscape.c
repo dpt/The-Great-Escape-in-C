@@ -7057,44 +7057,43 @@ void render_mask_buffer(tgestate_t *state)
     pmask = &exterior_mask_data[0]; // off by - 2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
 
-  uint8_t            A;           /* was A */
-  const uint8_t     *DE;          /* was DE */
-//  uint16_t           HL;          /* was HL */
-  uint16_t           count_of_something; /* was HL */
-  uint8_t *mask_buffer_pointer; /* was $81A0 */
+  uint8_t            A;                   /* was A */
+  const uint8_t     *mask_pointer;        /* was DE */
+//  uint16_t           HL;                  /* was HL */
+  uint16_t           mask_skip_count;     /* was HL */
+  uint8_t           *mask_buffer_pointer; /* was $81A0 */
 
   /* Mask against all. */
   do
   {
-    uint8_t x, y, height; /* was A/A/A */
-    uint8_t mpr1, mpr2;   /* was C/A */
+    uint8_t scrx, scry, height; /* was A/C, A, A */
 
     // moved from state
 
-    uint8_t clip_x0; /* was $B837 */ // x0 offset
-    uint8_t clip_y0; /* was $B838 */ // y0 offset
-    uint8_t clip_y1; /* was $B839 */ // y0 offset 2
-    uint8_t clip_x1; /* was $B83A */ // x0 offset 2
+    uint8_t clip_x0;      /* was $B837 */ // x0 offset
+    uint8_t clip_y0;      /* was $B838 */ // y0 offset
+    uint8_t clip_height;  /* was $B839 */ // y0 offset 2
+    uint8_t clip_width;   /* was $B83A */ // x0 offset 2
 
-//    uint8_t byte_B839; /* was $BA70 - self modified */
-//    uint8_t byte_B83A; /* was $BA72 - self modified */
-    uint8_t self_BA90; /* was $BA90 - self modified */
-    uint8_t skip;      /* was $BABA - self modified */
+//  uint8_t byte_B839;    /* was $BA70 - self modified */
+//  uint8_t byte_B83A;    /* was $BA72 - self modified */
+    uint8_t self_BA90;    /* was $BA90 - self modified */
+    uint8_t skip;         /* was $BABA - self modified */
 
     // PUSH BC
-    // PUSH HLeb
+    // PUSH HL
 
     // pmask->bounds is a visual position on the map image
     // pmask->pos is a map position
     // so we can cull masks if not on-screen
     // and we can cull masks if behind player
 
-    x = state->screenpos.x;
-    if (x - 1 >= pmask->bounds.x1 || x + 2 <= pmask->bounds.x0) // $EC03, $EC02
+    scrx = state->screenpos.x;
+    if (scrx - 1 >= pmask->bounds.x1 || scrx + 2 <= pmask->bounds.x0) // $EC03, $EC02
       goto pop_next;
 
-    y = state->screenpos.y;
-    if (y - 1 >= pmask->bounds.y1 || y + 3 <= pmask->bounds.y0) // $EC05, $EC04
+    scry = state->screenpos.y;
+    if (scry - 1 >= pmask->bounds.y1 || scry + 3 <= pmask->bounds.y0) // $EC05, $EC04
       goto pop_next;
 
     if (state->tinypos_stash.x <= pmask->pos.x) // $EC06
@@ -7109,41 +7108,39 @@ void render_mask_buffer(tgestate_t *state)
     if (height >= pmask->pos.height) // $EC08
       goto pop_next;
 
-    // redundant: HLeb -= 6;
+    /* Work out clipping offsets, widths and heights. */
 
-    /* Clipping. */
-    // likely clip_x1 is a width and clip_y1 is a height
-    mpr1 = state->screenpos.x;
-    if (mpr1 >= pmask->bounds.x0) // must be $EC02
+    scrx = state->screenpos.x; // dupe of earlier load
+    if (scrx >= pmask->bounds.x0) // must be $EC02
     {
-      clip_x0 = mpr1 - pmask->bounds.x0;
-      clip_x1 = MIN(pmask->bounds.x1 - mpr1, 3) + 1;
+      clip_x0 = scrx - pmask->bounds.x0;
+      clip_width = MIN(pmask->bounds.x1 - scrx, 3) + 1;
     }
     else // shape would start off the left hand side of the display ?
     {
-      uint8_t x0; // was B
+      uint8_t x0; /* was B */
 
       x0 = pmask->bounds.x0; // must be $EC02
       clip_x0 = 0;
-      clip_x1 = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - mpr1));
+      clip_width = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - scrx));
     }
 
-    mpr2 = state->screenpos.y;
-    if (mpr2 >= pmask->bounds.y0)
+    scry = state->screenpos.y; // dupe of earlier load
+    if (scry >= pmask->bounds.y0)
     {
-      clip_y0 = mpr2 - pmask->bounds.y0;
-      clip_y1 = MIN(pmask->bounds.y1 - mpr2, 4) + 1;
+      clip_y0 = scry - pmask->bounds.y0;
+      clip_height = MIN(pmask->bounds.y1 - scry, 4) + 1;
     }
     else
     {
-      uint8_t y0; // was B
+      uint8_t y0; /* was B */
 
       y0 = pmask->bounds.y0;
       clip_y0 = 0;
-      clip_y1 = MIN((pmask->bounds.y1 - y0) + 1, 5 - (y0 - mpr2));
+      clip_height = MIN((pmask->bounds.y1 - y0) + 1, 5 - (y0 - scry));
     }
 
-    // In the original code, HLeb is here decremented to point at member y0.
+    // In the original code, HL is here decremented to point at member y0.
 
     {
       uint8_t x, y;   /* was B, C */ // x,y are the correct way around here i think!
@@ -7160,138 +7157,138 @@ void render_mask_buffer(tgestate_t *state)
 
       mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH * 8 + x];
 
-      DE = mask_pointers[index];
-//      HL = byte_B839 | (byte_B83A << 8); // vertical bits // fused then split apart again immediately below
-//
-//      self_BA70 = (HL >> 0) & 0xFF; // self modify
-//      self_BA72 = (HL >> 8) & 0xFF; // self modify
-      self_BA90 = *DE - clip_x1; // self modify // *DE looks like a count
-      skip = MASK_BUFFER_WIDTH - clip_x1; // self modify
+      mask_pointer = mask_pointers[index];
+
+//      L = clip_height; H = clip_width; // fused then split apart again immediately below
+//      self_BA70 = L; // self modify
+//      self_BA72 = H; // self modify
+      self_BA90 = *mask_pointer - clip_width; // self modify // *mask_pointer is the mask's width
+      skip = MASK_BUFFER_WIDTH - clip_width; // self modify
     }
 
-    // skip count? == width * yskip + xskip + 1
-    count_of_something = multiply(clip_y0, *DE); // DE is the same count as fetched above // sets D to 0
-    count_of_something += clip_x0; // horz // was +DE, but D is zero
-    count_of_something++; /* iterations */
+    // mask skip count == width * yskip + xskip + 1
+    mask_skip_count = multiply(clip_y0, *mask_pointer); // *DE is the same mask width as fetched above // note: multiply zeroes D
+    mask_skip_count += clip_x0; // horz // was +DE, but D is zero
+    mask_skip_count++; /* iterations */
 
-    // is this skipping the initial cliped edge, for runs?
+    // skip the initial clipped edge
     do
     {
-    ba4d:
-      A = *DE; // DE -> $E560 upwards (in exterior_mask_data) // count byte
-      if (A & (1 << 7))
+more_to_skip:
+      A = *mask_pointer; // read count byte OR tile index
+      if (A & MASK_RUN_FLAG)
       {
-        A &= 0x7F;
-        DE++;
-        count_of_something -= A;
-        if (count_of_something < 0) // need a signed type?
-          goto ba69;
-        DE++;
-        if (count_of_something != 0) // still more to skip?
-          goto ba4d;
-
-        // start A
-        A = 0;
-        goto ba6c;
+        A &= ~MASK_RUN_FLAG;
+        mask_pointer++;
+        mask_skip_count -= A;
+        if ((int16_t) mask_skip_count < 0) // need a signed type?
+          goto skip_went_negative;
+        mask_pointer++;
+        if (mask_skip_count > 0) // still more to skip?
+        {
+          goto more_to_skip;
+        }
+        else
+        {
+          A = 0; // tile index or counter? -- trying to grok
+          goto skip_went_zero;
+        }
       }
-      DE++;
+      mask_pointer++;
     }
-    while (--count_of_something);
-    goto ba6c;
+    while (--mask_skip_count);
+    goto skip_went_zero;
 
-  ba69:
-    // start A
-    A = -(count_of_something & 0xFF);
+skip_went_negative:
+    A = -(mask_skip_count & 0xFF); // tile index or counter? -- trying to grok
 
-  ba6c:
+skip_went_zero:
     {
-      uint8_t *maskbufptr; /* was HL */
-      uint8_t  iters2;     /* was C */
+      uint8_t     *maskbufptr;     /* was HL */
+      uint8_t     iters2;          /* was C */
+      uint8_t     iters3;          /* was B */
+      uint8_t     counter_or_tile; /* was A */
+      uint8_t     counter;         /* was A' */
+      tileindex_t tile_index;      /* was A */
 
       maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
-      iters2 = clip_y1; // self modified // height
+      iters2 = clip_height; // self modified // height
       do
       {
-        uint8_t iters3; /* was B */
-        uint8_t counter; /* was A' */
-
-        iters3 = clip_x1; // self modified // looks more like a width than an x1
+        iters3 = clip_width; // self modified // looks more like a width than an x1
         do
         {
-          counter = *DE; // count byte
-          if (counter & (1 << 7))
+          // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
+          // AFAICT it's ensuring that A is always the tile and that A' is the counter
+
+          uint8_t Adash;
+
+          Adash = A;
+
+          A = *mask_pointer; // read count byte OR tile index
+          if (A & MASK_RUN_FLAG)
           {
-            counter &= 0x7F;
-            DE++;
-            A = *DE; // read next byte
+            A &= ~MASK_RUN_FLAG;
+            Adash = A; // update counter?
+            mask_pointer++;
+            A = *mask_pointer; // read next byte
           }
 
-          if (A != 0) // zero value must be an assumed totally blank mask tile
-            mask_against_tile(A, maskbufptr); // tile index, dst
-
+          if (A != 0) /* shortcut the totally blank tile 0 */
+            mask_against_tile(A, maskbufptr);
           maskbufptr++;
 
-          if (counter != 0 && --counter != 0)
-            DE--;
-          DE++;
+          A = Adash;
+
+          /* advance the mask pointer when the counter reaches zero */
+          if (A == 0 || --A == 0) /* Conv: written inverted over the original version */
+            mask_pointer++;
         }
         while (--iters3);
 
-        // PUSH BC
-
         // trailing skip?
+
         iters3 = self_BA90; // self modified
         if (iters3)
         {
           if (A)
-            goto baa3;
-
-        ba9b:
+            goto baa3; // must be continuing with a nonzero counter
           do
           {
-            A = *DE; // count byte
-            if (A & (1 << 7))
+ba9b:
+            A = *mask_pointer; // read count byte OR tile index
+            if (A & MASK_RUN_FLAG)
             {
-              A &= 0x7F;
-              DE++;
-
-            baa3:
+              A &= ~MASK_RUN_FLAG;
+              mask_pointer++;
+baa3:
               iters3 -= A;
-              if (iters3 < 0)
+              if ((int8_t) iters3 < 0)
                 goto bab6;
-              DE++;
-              if (iters3 != 0)
+              mask_pointer++;
+              if (iters3 > 0)
                 goto ba9b;
-
-              // EX AF,AF' // why not just jump instr earlier? // bank
               goto bab9;
             }
 
-            DE++;
+            mask_pointer++;
           }
           while (--iters3);
 
           A = 0;
-          // EX AF,AF' // why not just jump instr earlier? // bank
-
           goto bab9;
-
-        bab6:
+bab6:
           A = -A;
-          // EX AF,AF' // bank
         }
-
-      bab9:
+bab9:
         maskbufptr += skip; // self modified
-        // EX AF,AF'  // unbank
-        // POP BC
       }
       while (--iters2);
     }
 
-  pop_next:
-    // POP HLeb
+pop_next:
+    // POP HL
     // POP BC
     pmask++; // stride is 1 mask_t
   }
