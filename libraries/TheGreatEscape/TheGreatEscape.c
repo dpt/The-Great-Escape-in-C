@@ -3803,7 +3803,7 @@ void get_supertiles(tgestate_t *state)
   buf = &state->map_buf[0];
   do
   {
-    // ASSERT_MAP_PTR_VALID(tiles);
+    ASSERT_MAP_PTR_VALID(tiles);
     if (tiles >= &map[0] && (tiles + state->st_columns) < &map[MAPX * MAPY]) // conv: debugging
       memcpy(buf, tiles, state->st_columns);
     else
@@ -4222,7 +4222,7 @@ uint8_t *plot_tile(tgestate_t             *state,
   uint8_t           iters;          /* was A */
 
   assert(state           != NULL);
-  //assert(tile_index < 220); // ideally the constant should be elsewhere
+  assert(tile_index < 220); // ideally the constant should be elsewhere
   ASSERT_SUPERTILE_PTR_VALID(psupertileindex);
   assert(scr             != NULL);
 
@@ -7617,7 +7617,9 @@ clamp_height: // was $BBF8
         /* Move to next column. */
         x++;
         tilebuf++;
+        ASSERT_TILE_BUF_PTR_VALID(tilebuf);
         windowbuf++;
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
       }
       while (--width_counter);
 
@@ -7625,7 +7627,11 @@ clamp_height: // was $BBF8
       x -= width;
       y++;
       tilebuf   += tilebuf_stride;
+      if (height_counter > 1)
+        ASSERT_TILE_BUF_PTR_VALID(tilebuf);
       windowbuf += windowbuf_stride;
+      if (height_counter > 1)
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
     }
     while (--height_counter);
 
@@ -11084,6 +11090,9 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(state != NULL);
   // assert(x);
 
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+  ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
+
   x = (~x & 3) * 6; // jump table offset (on input, A is 0..3 => 3..0) // 6 = length of asm chunk
 
   self_E2DC = x; // self-modify: jump into mask rotate
@@ -11218,6 +11227,9 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
   assert(state != NULL);
   // assert(x);
+
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+  ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   x = (x - 4) * 6; // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
 
