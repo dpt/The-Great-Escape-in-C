@@ -636,7 +636,7 @@ default_item_location_t;
 typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
-  bounds_t  bounds;
+  bounds_t  bounds; /**< Where on the map the mask is positioned. */
   tinypos_t pos;
 }
 mask_t;

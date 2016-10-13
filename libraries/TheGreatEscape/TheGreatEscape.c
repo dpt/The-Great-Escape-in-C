@@ -211,12 +211,15 @@ void squash_stack_goto_main(tgestate_t *state)
  */
 void set_hero_sprite_for_room(tgestate_t *state)
 {
-  vischar_t *hero; /* was ? */
+  vischar_t *hero; /* was HL */
 
   assert(state != NULL);
 
   hero = &state->vischars[0];
   hero->input = input_KICK;
+
+  // vischar_DIRECTION_CRAWL is set, or cleared, here but not checked directly anywhere else so it must be an offset
+  // e.g byte_CDAA[]
 
   /* When in tunnel rooms force the hero sprite to 'prisoner' and set the
    * crawl flag appropriately. */
@@ -291,7 +294,7 @@ void setup_movable_item(tgestate_t          *state,
                         const movableitem_t *movableitem,
                         character_t          character)
 {
-  vischar_t *vischar1; /* was ? */
+  vischar_t *vischar1; /* was HL */
 
   assert(state       != NULL);
   assert(movableitem != NULL);
@@ -539,7 +542,7 @@ void setup_room(tgestate_t *state)
   pmask = &state->interior_mask_data[0]; /* Conv: Moved */
   while (iters--)
   {
-    /* Conv: Structures changed from 7 to 8 bytes wide. */
+    /* Conv: Structures were changed from 7 to 8 bytes wide. */
     memcpy(pmask, &interior_mask_data_source[*proomdef++], sizeof(*pmask));
     pmask++;
   }
@@ -1977,7 +1980,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   room_t *proom; /* was HL */
 
   assert(state != NULL);
-  // assert(room_and_flags); // FIXME devise precondition
+  // assert(room_and_flags); // FIXME devise a precondition
 
   // FUTURE: Just dereference proom once.
 
@@ -2148,6 +2151,7 @@ void interior_delay_loop(tgestate_t *state)
 
   state->speccy->sleep(state->speccy, sleeptype_DELAY, 4096 * 16);
 
+// Conv: Was:
 //  volatile int BC = 0xFFF;
 //  while (--BC)
 //    ;
@@ -5387,7 +5391,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 /**
  * $AFDF: (unknown) Definitely something to do with moving objects around. Collisions?
  *
- * \param[in] state   Pointer to game state.
+ * \param[in] state         Pointer to game state.
  * \param[in] input_vischar Pointer to visible character. (was IY)
  */
 int collision(tgestate_t *state, vischar_t *input_vischar)
@@ -5472,14 +5476,16 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
     character = vischar->character; // sampled HL = $80C0, $8040, $8000, $8020, $8060 // vischar_BYTE0
     if (character >= character_26_STOVE_1)
     {
+      /* Movable items: Stove 1, Stove 2 or Crate */
+
       // PUSH HL
       uint16_t *coord; /* was HL */
 
       coord = &vischar->mi.pos.y;
 
-      B = 7; // min y
-      C = 35; // max y
       tmpA = character;
+      B = 7; // min y (and min x too?)
+      C = 35; // max y
       A = input_vischar->direction; // interleaved
       if (tmpA == character_28_CRATE)
       {
@@ -5488,11 +5494,10 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
         C = 54; // max x
         A ^= 1; /* swap direction: left <=> right */
       }
-      // test direction?
-      if (A == 0)
+      if (A == 0) // test direction
       {
         A = *coord;
-        if (A != C)
+        if (A != C) // equivalent to the goto b0b8 it replaces
         {
           // Pattern: The [-2]+1 trick
           if (A >= C)
@@ -5531,9 +5536,9 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
 
 b0d0:
         input_vischar->counter_and_flags = (input_vischar->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
-        // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear.
+        // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
         //if (!Z)
-          return 1; /* odd -- returning with Z not set? */
+          return 1; /* odd -- returning with Z not set */
       }
     }
 
@@ -5564,7 +5569,7 @@ next:
   }
   while (--iters);
 
-  return 0; // return with Z set?
+  return 0; // return with Z set
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6587,7 +6592,7 @@ next:
 
 
 kicked:
-  vischar->input &= ~input_KICK; // sampled IY = $8020, $80A0, $8060, $80E0, $8080,
+  vischar->input &= ~input_KICK;
 
 end_bit:
   C = byte_CDAA[vischar->direction][vischar->input];
@@ -6729,7 +6734,7 @@ void reset_map_and_characters(tgestate_t *state)
   typedef struct character_reset_partial
   {
     room_t  room;
-    uint8_t x, y; // partial of a tinypos_t
+    uint8_t x, y; /* partial of a tinypos_t */
   }
   character_reset_partial_t;
 
@@ -6774,7 +6779,7 @@ void reset_map_and_characters(tgestate_t *state)
 
   /* Lock the gates. */
   gate = &state->gates_and_doors[0];
-  iters = 9;
+  iters = 9; // to explain: gates_and_doors is 11 long but this locks the first 9 only
   do
     *gate++ |= door_LOCKED;
   while (--iters);
@@ -7054,7 +7059,7 @@ void render_mask_buffer(tgestate_t *state)
     /* Outdoors */
 
     iters = NELEMS(exterior_mask_data); // Bug? Was 59 (one too large).
-    pmask = &exterior_mask_data[0]; // off by - 2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
+    pmask = &exterior_mask_data[0]; // offset by +2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
 
   uint8_t            A;                   /* was A */
@@ -7247,7 +7252,7 @@ skip_went_zero:
         }
         while (--iters3);
 
-        // trailing skip?
+        // trailing
 
         iters3 = self_BA90; // self modified
         if (iters3)
@@ -7553,6 +7558,7 @@ void restore_tiles(tgestate_t *state)
         }
       }
     }
+    // unsure about the else case here
 
 clamp_height: // was $BBF8
     if (height > 5) // note: this is height, not heightsigned (preceding POP removed)
@@ -9932,7 +9938,7 @@ next:
 
   state->morale_1 = 0xFF; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
-  state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_1]; // $8015 = sprite_prisoner_tl_4;
+  state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_1];
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
@@ -9970,19 +9976,19 @@ void guards_follow_suspicious_character(tgestate_t *state,
       state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_1])
     return;
 
-  /* If this character saw the bribe being used then ignore the hero's antics. */
+  /* If this character saw the bribe being used then ignore the hero. */
   if (vischar->flags == vischar_FLAGS_SAW_BRIBE)
     return;
 
   pos = &vischar->mi.pos; /* was HL += 15 */
-  tinypos = &state->tinypos_stash;
+  tinypos = &state->tinypos_stash; // find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering
   if (state->room_index == room_0_OUTDOORS)
   {
     tinypos_t *hero_map_pos;  /* was HL */
     int        dir;           /* Conv */
     uint8_t    direction;     /* was A / C */
 
-    pos_to_tinypos(pos, tinypos); // tinypos_stash becomes vischar pos
+    pos_to_tinypos(pos, tinypos); // tinypos_stash becomes vischar mi pos
 
     hero_map_pos = &state->hero_map_position;
     /* Conv: Dupe tinypos ptr factored out. */
@@ -10444,7 +10450,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         x = pos->x * 8;
         *pitemstr = (itemstruct_t *) itemstr;
 
-        state->IY = (vischar_t *) itemstr; // FIXME: Cast is a bodge.
+        state->IY = (vischar_t *) itemstr; // FIXME: Cast is a bodge. // Odd!
 
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
@@ -11310,7 +11316,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
-    x = MASK(bm2, mask2);
+    x = MASK(bm2, mask2); // 'x' should probably be another variable here
     foremaskptr++;
     if (state->enable_E3C5)
       *screenptr = x;
