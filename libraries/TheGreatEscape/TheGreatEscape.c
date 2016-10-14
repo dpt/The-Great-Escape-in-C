@@ -11066,10 +11066,11 @@ void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->screenpos.x & 7)) < 4)
-    masked_sprite_plotter_16_wide_right(state, x);
+  x = vischar->screenpos.x & 7;
+  if (x < 4)
+    masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
   else
-    masked_sprite_plotter_16_wide_left(state, x); /* i.e. fallthrough */
+    masked_sprite_plotter_16_wide_right(state, x);
 }
 
 /**
