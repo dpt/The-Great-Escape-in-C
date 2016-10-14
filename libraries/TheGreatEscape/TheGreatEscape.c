@@ -6494,20 +6494,21 @@ void called_from_main_loop_9(tgestate_t *state)
   // highest index = 0x17 (23 == max index in animations)
 
   uint8_t        iters;   /* was B */
-  vischar_t     *vischar; /* was IY */
   const uint8_t *anim;    /* was HL */
   uint8_t        A;       /* was A */
   uint8_t        C;       /* was C */
   const uint8_t *DE;      /* was HL */
   spriteindex_t  Adash;   /* was A' */
+  vischar_t     *vischar;     /* a cache of IY (Conv: added) */
 
   assert(state != NULL);
 
-  iters   = vischars_LENGTH;
-  vischar = &state->vischars[0];
+  iters     = vischars_LENGTH;
   state->IY = &state->vischars[0];
   do
   {
+    vischar = state->IY; /* Conv: Added local copy of IY. */
+
     if (vischar->flags == vischar_FLAGS_EMPTY_SLOT)
       goto next;
 
@@ -6575,8 +6576,6 @@ increment:
       vischar->b0C++;
     }
 
-    // HL = vischar;
-
     calc_vischar_screenpos_from_screenpos(state, vischar);
 
 pop_next:
@@ -6584,7 +6583,7 @@ pop_next:
       vischar->flags &= ~vischar_FLAGS_NO_COLLIDE; // $8001
 
 next:
-    vischar++;
+    state->IY++;
   }
   while (--iters);
 
@@ -8751,8 +8750,7 @@ void charevnt_handler_8_hero_sleeps(tgestate_t *state,
  */
 void follow_suspicious_character(tgestate_t *state)
 {
-  vischar_t *vischar; /* was IY */
-  uint8_t    iters;   /* was B */
+  uint8_t iters; /* was B */
 
   assert(state != NULL);
 
@@ -8773,11 +8771,14 @@ void follow_suspicious_character(tgestate_t *state)
   }
 
   /* Make supporting characters react (if flags are set). */
-  vischar = &state->vischars[1];
-  state->IY = &state->vischars[0];
-  iters   = vischars_LENGTH - 1;
+  state->IY = &state->vischars[1];
+  iters = vischars_LENGTH - 1;
   do
   {
+    vischar_t *vischar; /* was IY/new local copy */
+
+    vischar = state->IY; // cache
+
     if (vischar->flags != 0)
     {
       character_t character; /* was A */
@@ -8804,7 +8805,7 @@ void follow_suspicious_character(tgestate_t *state)
 
       character_behaviour(state, vischar);
     }
-    vischar++;
+    state->IY++;
   }
   while (--iters);
 
