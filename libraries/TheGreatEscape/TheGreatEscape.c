@@ -176,7 +176,7 @@ void enter_room(tgestate_t *state)
   state->map_position.x = 0x74;
   state->map_position.y = 0xEA;
   set_hero_sprite_for_room(state);
-  reset_position(state, &state->vischars[0]);
+  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
   setup_movable_items(state);
   zoombox(state);
   increase_score(state, 1);
@@ -323,7 +323,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
   vischar1->room              = state->room_index;
-  reset_position(state, vischar1);
+  calc_vischar_screenpos_from_mi_pos(state, vischar1);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3385,7 +3385,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   state->vischars[0].mi.pos.x = 0;
   state->vischars[0].mi.pos.y = 0;
 
-  reset_position(state, &state->vischars[0]);
+  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
 
   select_room_and_plot(state);
 }
@@ -5933,7 +5933,7 @@ void reset_outdoors(tgestate_t *state)
   assert(state != NULL);
 
   /* Reset hero. */
-  reset_position(state, &state->vischars[0]);
+  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
 
   /* Centre the screen on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
@@ -6577,7 +6577,7 @@ increment:
 
     // HL = vischar;
 
-    calc_vischar_screenpos(state, vischar);
+    calc_vischar_screenpos_from_screenpos(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -6632,12 +6632,12 @@ end_bit:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B71B: Reset position.
+ * $B71B: Reset position of the specified vischar.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void reset_position(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6645,18 +6645,18 @@ void reset_position(tgestate_t *state, vischar_t *vischar)
   /* Save a copy of the vischar's position + offset. */
   state->saved_pos = vischar->mi.pos;
 
-  calc_vischar_screenpos(state, vischar);
+  calc_vischar_screenpos_from_screenpos(state, vischar);
 }
 
 /**
- * $B729: Calculate screen position for vischars from saved_pos.
+ * $B729: Calculate screen position for the specified vischar from saved_pos.
  *
  * \see drop_item_tail_interior.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_screenpos_from_screenpos(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6665,10 +6665,8 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   vischar->screenpos.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
   vischar->screenpos.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
 
-  assert(vischar->screenpos.x >= 0);
-  assert(vischar->screenpos.x <= 0x500);
-  assert(vischar->screenpos.y >= 0);
-  assert(vischar->screenpos.y <= 0x800);
+  assert(vischar->screenpos.x <= 0x500); // guess
+  assert(vischar->screenpos.y <= 0x800); // guess
 }
 
 /* ----------------------------------------------------------------------- */
