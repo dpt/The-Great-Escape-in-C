@@ -5499,10 +5499,11 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
         A = *coord;
         if (A != C) // equivalent to the goto b0b8 it replaces
         {
-          // Pattern: The [-2]+1 trick
-          if (A >= C)
-            (*coord) -= 2;  // decrement by -2 then execute +1 anyway to avoid branch
-          (*coord)++;
+          // Conv: Replaced[-2]+1 trick
+          if (C > A)
+            (*coord)--;
+          else
+            (*coord)++;
         }
       }
       else if (A == 1)
