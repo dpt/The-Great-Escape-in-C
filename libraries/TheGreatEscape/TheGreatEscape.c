@@ -4934,28 +4934,28 @@ void searchlight_movement(searchlight_movement_t *slstate)
   if (--slstate->step == 0)
   {
     counter = slstate->counter; // sampled HL = $AD3B, $AD34, $AD2D
-    if (counter & (1 << 7)) // sign
+    if (counter & (1 << 7))
     {
       counter &= 0x7F;
       if (counter == 0)
       {
-        slstate->counter &= ~(1 << 7); // clear sign bit when magnitude hits zero
+        slstate->counter &= ~(1 << 7); /* clear sign bit when magnitude hits zero */
       }
       else
       {
-        slstate->counter--; // count down
-        counter--; // just a copy
+        slstate->counter--; /* count down */
+        counter--; /* just a copy */
       }
     }
     else
     {
-      slstate->counter = ++counter; // count up
+      slstate->counter = ++counter; /* count up */
     }
     ptr = slstate->ptr;
-    if (ptr[counter * 2] == 0xFF) // end of list?
+    if (ptr[counter * 2] == 0xFF) /* end of list? */
     {
-      slstate->counter--; // overshot? count down counter byte
-      slstate->counter |= 1 << 7; // go negative
+      slstate->counter--; /* overshot? count down counter byte */
+      slstate->counter |= 1 << 7; /* go negative */
       ptr -= 2;
       // A = *ptr; /* This is a flaw in original code: A is fetched but never used again. */
     }
@@ -4966,20 +4966,20 @@ void searchlight_movement(searchlight_movement_t *slstate)
   else
   {
     direction = slstate->direction;
-    if (slstate->counter & (1 << 7)) // if -ve
-      direction ^= 2; // up-down direction toggle
+    if (slstate->counter & (1 << 7)) /* test sign */
+      direction ^= 2; /* up-down direction toggle */
 
-    // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (direction <= direction_TOP_RIGHT) // direction_TOP_*
+    /* Conv: This is the [-2]+1 pattern which works out -1/+1. */
+    if (direction <= direction_TOP_RIGHT) /* direction_TOP_* */
       y--;
     else
       y++;
 
     if (direction != direction_TOP_LEFT &&
         direction != direction_BOTTOM_LEFT)
-      x += 2; // direction_*_RIGHT
+      x += 2; /* direction_*_RIGHT */
     else
-      x -= 2; // direction_*_LEFT
+      x -= 2; /* direction_*_LEFT */
 
     slstate->xy.y = y;
     slstate->xy.x = x;
