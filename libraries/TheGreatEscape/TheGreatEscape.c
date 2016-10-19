@@ -5786,7 +5786,7 @@ found:
     return;
 
   vischar->room = (door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in door_positions[])
-  if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) >= direction_BOTTOM_RIGHT) /* BR or BL */
+  if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
     /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
   else
