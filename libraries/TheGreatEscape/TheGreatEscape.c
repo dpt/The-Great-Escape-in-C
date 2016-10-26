@@ -6895,13 +6895,13 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   buf = &state->mask_buffer[32 + 16 + 1]; /* x=1, y=12 */
   iters = 8;
   /* Bug: Original code does a fused load of BC, but doesn't use C after.
-   * Probably a leftover stride constant for MASK_BUFFER_WIDTH. */
+   * Probably a leftover stride constant for MASK_BUFFER_WIDTHBYTES. */
   // C = 4;
   do
   {
     if (*buf != 0)
       goto still_in_spotlight;
-    buf += MASK_BUFFER_WIDTH;
+    buf += MASK_BUFFER_WIDTHBYTES;
   }
   while (--iters);
 
@@ -7084,7 +7084,7 @@ next:
  */
 void render_mask_buffer(tgestate_t *state)
 {
-  uint8_t       iters; /* was B */
+  uint8_t       iters; /* was A, B */
   const mask_t *pmask; /* was HL */
 
   assert(state != NULL);
@@ -7102,7 +7102,6 @@ void render_mask_buffer(tgestate_t *state)
       return; /* no masks */
 
     pmask = &state->interior_mask_data[0];
-    //peightbyte += 2; // skip count byte, then off by 2 bytes
   }
   else
   {
@@ -7115,7 +7114,7 @@ void render_mask_buffer(tgestate_t *state)
   uint8_t            A;                   /* was A */
   const uint8_t     *mask_pointer;        /* was DE */
 //  uint16_t           HL;                  /* was HL */
-  uint16_t           mask_skip_count;     /* was HL */
+  uint16_t           mask_skip;           /* was HL */
   uint8_t           *mask_buffer_pointer; /* was $81A0 */
 
   /* Mask against all. */
@@ -7125,8 +7124,8 @@ void render_mask_buffer(tgestate_t *state)
 
     // moved from state
 
-    uint8_t clip_x0;      /* was $B837 */ // x0 offset
-    uint8_t clip_y0;      /* was $B838 */ // y0 offset
+    uint8_t clip_x;      /* was $B837 */ // x0 offset
+    uint8_t clip_y;      /* was $B838 */ // y0 offset
     uint8_t clip_height;  /* was $B839 */ // y0 offset 2
     uint8_t clip_width;   /* was $B83A */ // x0 offset 2
 
@@ -7168,7 +7167,7 @@ void render_mask_buffer(tgestate_t *state)
     scrx = state->screenpos.x; // dupe of earlier load
     if (scrx >= pmask->bounds.x0) // must be $EC02
     {
-      clip_x0 = scrx - pmask->bounds.x0;
+      clip_x = scrx - pmask->bounds.x0;
       clip_width = MIN(pmask->bounds.x1 - scrx, 3) + 1;
     }
     else // shape would start off the left hand side of the display ?
@@ -7176,14 +7175,14 @@ void render_mask_buffer(tgestate_t *state)
       uint8_t x0; /* was B */
 
       x0 = pmask->bounds.x0; // must be $EC02
-      clip_x0 = 0;
+      clip_x = 0;
       clip_width = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - scrx));
     }
 
     scry = state->screenpos.y; // dupe of earlier load
     if (scry >= pmask->bounds.y0)
     {
-      clip_y0 = scry - pmask->bounds.y0;
+      clip_y = scry - pmask->bounds.y0;
       clip_height = MIN(pmask->bounds.y1 - scry, 4) + 1;
     }
     else
@@ -7191,7 +7190,7 @@ void render_mask_buffer(tgestate_t *state)
       uint8_t y0; /* was B */
 
       y0 = pmask->bounds.y0;
-      clip_y0 = 0;
+      clip_y = 0;
       clip_height = MIN((pmask->bounds.y1 - y0) + 1, 5 - (y0 - scry));
     }
 
@@ -7202,29 +7201,30 @@ void render_mask_buffer(tgestate_t *state)
       uint8_t index;  /* was A */
 
       x = y = 0;
-      if (clip_y0 == 0)
+      if (clip_y == 0)
         y = -state->screenpos.y + pmask->bounds.y0;
-      if (clip_x0 == 0)
+      if (clip_x == 0)
         x = -state->screenpos.x + pmask->bounds.x0;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
 
-      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_WIDTH * 8 + x];
+      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_ROWBYTES + x];
 
       mask_pointer = mask_pointers[index];
 
 //      L = clip_height; H = clip_width; // fused then split apart again immediately below
 //      self_BA70 = L; // self modify
 //      self_BA72 = H; // self modify
-      self_BA90 = *mask_pointer - clip_width; // self modify // *mask_pointer is the mask's width
-      skip = MASK_BUFFER_WIDTH - clip_width; // self modify
+      self_BA90 = mask_pointer[0] - clip_width; // self modify // *mask_pointer is the mask's width
+      skip = MASK_BUFFER_ROWBYTES - clip_width; // self modify
     }
 
-    // mask skip count == width * yskip + xskip + 1
-    mask_skip_count = multiply(clip_y0, *mask_pointer); // *DE is the same mask width as fetched above // note: multiply zeroes D
-    mask_skip_count += clip_x0; // horz // was +DE, but D is zero
-    mask_skip_count++; /* iterations */
+    // mask skip count == mask_width * clip_y + clip_x + 1
+    // *mask_pointer is the same mask width as fetched above
+    // note: multiply zeroes D
+    // Conv: Replaced call to multiply() with straight multiply.
+    mask_skip = clip_y * mask_pointer[0] + clip_x + 1;
 
     // skip the initial clipped edge
     do
@@ -7235,27 +7235,27 @@ more_to_skip:
       {
         A &= ~MASK_RUN_FLAG;
         mask_pointer++;
-        mask_skip_count -= A;
-        if ((int16_t) mask_skip_count < 0) // need a signed type?
+        mask_skip -= A;
+        if ((int16_t) mask_skip < 0) // need a signed type?
           goto skip_went_negative;
         mask_pointer++;
-        if (mask_skip_count > 0) // still more to skip?
+        if (mask_skip > 0) // still more to skip?
         {
           goto more_to_skip;
         }
         else
         {
-          A = 0; // tile index or counter? -- trying to grok
+          A = 0; // counter
           goto skip_went_zero;
         }
       }
       mask_pointer++;
     }
-    while (--mask_skip_count);
+    while (--mask_skip);
     goto skip_went_zero;
 
 skip_went_negative:
-    A = -(mask_skip_count & 0xFF); // tile index or counter? -- trying to grok
+    A = -(mask_skip & 0xFF); // counter
 
 skip_went_zero:
     {
@@ -7268,33 +7268,33 @@ skip_went_zero:
 
       maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
-      iters2 = clip_height; // self modified // height
+      iters2 = clip_height; // self modified
       do
       {
-        iters3 = clip_width; // self modified // looks more like a width than an x1
+        iters3 = clip_width; // self modified
         do
         {
           // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
           // AFAICT it's ensuring that A is always the tile and that A' is the counter
 
-          uint8_t Adash;
+          uint8_t Adash = 0xCC;
 
-          Adash = A;
+          SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
 
           A = *mask_pointer; // read count byte OR tile index
           if (A & MASK_RUN_FLAG)
           {
             A &= ~MASK_RUN_FLAG;
-            Adash = A; // update counter?
+            SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
             mask_pointer++;
-            A = *mask_pointer; // read next byte
+            A = *mask_pointer; // read next byte (tile)
           }
 
           if (A != 0) /* shortcut the totally blank tile 0 */
             mask_against_tile(A, maskbufptr);
           maskbufptr++;
 
-          A = Adash;
+          SWAP(uint8_t, A, Adash); // was A = Adash; // fetch counter
 
           /* advance the mask pointer when the counter reaches zero */
           if (A == 0 || --A == 0) /* Conv: written inverted over the original version */
@@ -7318,7 +7318,7 @@ ba9b:
               A &= ~MASK_RUN_FLAG;
               mask_pointer++;
 baa3:
-              iters3 -= A;
+              iters3 = A = iters3 - A;
               if ((int8_t) iters3 < 0)
                 goto bab6;
               mask_pointer++;
@@ -7354,6 +7354,7 @@ pop_next:
   // count_of_something = multiply(A, 8);
 }
 
+#if 0 // replaced the only call to this with an actual multiply
 /**
  * $BACD: Multiply the two input values returning a widened result.
  *
@@ -7397,13 +7398,14 @@ uint16_t multiply(uint8_t left, uint8_t right)
 
   return result;
 }
+#endif
 
 /* ----------------------------------------------------------------------- */
 
 /**
  * $BADC: AND a tile in the mask buffer against the specified mask tile.
  *
- * Expects a buffer with a stride of MASK_BUFFER_WIDTH.
+ * Expects a buffer with a stride of MASK_BUFFER_WIDTHBYTES.
  *
  * Leaf.
  *
@@ -7424,7 +7426,7 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
   do
   {
     *dst &= *row++;
-    dst += MASK_BUFFER_WIDTH; /* skip to next row */
+    dst += MASK_BUFFER_WIDTHBYTES; /* skip to next row */
   }
   while (--iters);
 }

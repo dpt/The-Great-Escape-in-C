@@ -106,11 +106,12 @@ struct tgestate
   /** $8000: Array of visible characters. */
   vischar_t       vischars[vischars_LENGTH];
 
-#define MASK_BUFFER_WIDTH  4
-#define MASK_BUFFER_HEIGHT 5
-#define MASK_BUFFER_LENGTH (MASK_BUFFER_WIDTH * 8 * MASK_BUFFER_HEIGHT)
   /** $8100: Mask buffer. */
-  // TODO: Dynamically allocate.
+#define MASK_BUFFER_WIDTHBYTES 4
+#define MASK_BUFFER_ROWBYTES   (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
+#define MASK_BUFFER_HEIGHT     5
+#define MASK_BUFFER_LENGTH     (MASK_BUFFER_ROWBYTES * MASK_BUFFER_HEIGHT)
+  // FUTURE: Dynamically allocate.
   uint8_t         mask_buffer[MASK_BUFFER_LENGTH];
 
   /** $81A2: Pointer into window_buf[]. Used by masked sprite plotters. */
