@@ -7348,9 +7348,9 @@ uint16_t multiply(uint8_t left, uint8_t right)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BADC: Masks tiles by the specified index mask_tiles (set zero).
+ * $BADC: AND a tile in the mask buffer against the specified mask tile.
  *
- * Expects a buffer with a stride of 4.
+ * Expects a buffer with a stride of MASK_BUFFER_WIDTH.
  *
  * Leaf.
  *
@@ -7360,10 +7360,9 @@ uint16_t multiply(uint8_t left, uint8_t right)
 void mask_against_tile(tileindex_t index, tilerow_t *dst)
 {
   const tilerow_t *row;   /* was HL' */
-  uint8_t          iters; /* was B */
+  uint8_t          iters; /* was B' */
 
   assert(index < 111);
-
   assert(dst);
   // ASSERT_MASK_BUF_PTR_VALID(dst); // we don't have access to state from here to compare
 
