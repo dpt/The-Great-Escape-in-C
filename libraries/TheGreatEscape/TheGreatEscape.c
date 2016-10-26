@@ -4427,7 +4427,7 @@ void move_map(tgestate_t *state)
   // PUSH AF
 
   /* Map clamping stuff. */
-  if (0)
+  if (/* DISABLES CODE */ (0))
   {
     // Equivalent
          if (direction == direction_TOP_LEFT)     { y = 0x7C; x = 0xC0; }
