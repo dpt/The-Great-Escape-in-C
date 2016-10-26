@@ -11991,8 +11991,7 @@ TGE_API void tge_setup(tgestate_t *state)
     0x00,                 // input
     direction_TOP_LEFT,   // direction
     { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_AWAY_1], 0 }, // mi
-    0x0000,               // scrx
-    0x0000,               // scry
+    { 0x0000, 0x0000 },   // scrx, scry
     room_0_OUTDOORS,      // room
     0x00,                 // unused
     0x00,                 // width_bytes
