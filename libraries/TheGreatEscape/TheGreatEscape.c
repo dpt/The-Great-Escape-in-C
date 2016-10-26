@@ -6012,8 +6012,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
       doorpos = &door[-2].pos; // seems odd
 
     transition(state, doorpos); // exit via
-
-    return; // with banked registers...
+    NEVER_RETURNS; // check
   }
 }
 
