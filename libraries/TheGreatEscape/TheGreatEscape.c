@@ -9310,7 +9310,8 @@ void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
 cb46:
   /* We arrive here if:
    * - vischar is the hero, or
-   * - character is character_0_COMMANDANT and (target low byte & 0x7F) == 36
+   * - character is character_0_COMMANDANT and (target low byte & 0x7F) == 36, or
+   * - character is >= character_12_GUARD_12
    */
 
   character_event(state, target);
@@ -9322,7 +9323,7 @@ cb46:
 
 cb50:
   /* We arrive here if:
-   * - vischar is not hero, and
+   * - vischar is not the hero, and
    *   - character is character_0_COMMANDANT and (target low byte & 0x7F) != 36, or
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
