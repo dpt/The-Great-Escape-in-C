@@ -362,7 +362,7 @@ void setup_doors(tgestate_t *state)
   uint8_t       iters;      /* was B */
   uint8_t       room;       /* was B */ // same type as door_t->room_and_flags
   doorindex_t   door_index; /* was C */
-  const door_t *door_pos;   /* was HL' */
+  const door_t *door;       /* was HL' */
   uint8_t       door_iters; /* was B' */
 
   assert(state != NULL);
@@ -382,19 +382,20 @@ void setup_doors(tgestate_t *state)
 
   room = state->room_index << 2; /* Shunt left for comparison in loop. */
   door_index = 0;
-  door_pos = &door_positions[0];
+  door = &door_positions[0];
   door_iters = NELEMS(door_positions);
   do
   {
     // Not sure what this is doing.
     // Seems to be toggling lock/unlock flags in state->doors[].
-    if ((door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) == room)
+    // It's storing a flag to say which direction to look in doors[] when moving between rooms.
+    if ((door->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) == room)
       /* Current room. */
       *pdoor++ = door_index ^ door_LOCKED;
     door_index ^= door_LOCKED;
     if (door_index < door_LOCKED) /* if flag not set (was JP M) */
       door_index++; // increment every two stops?
-    door_pos++;
+    door++;
   }
   while (--door_iters);
 }
@@ -408,7 +409,7 @@ void setup_doors(tgestate_t *state)
  *
  * \return Pointer to door_t. (was HL)
  */
-const door_t *get_door_position(doorindex_t door)
+const door_t *get_door_position(doorindex_t door)  // rename get_door
 {
   const door_t *pos; /* was HL */
 
@@ -794,13 +795,17 @@ uint8_t *const beds[beds_LENGTH] =
   /* Shorthand for a packed room and direction byte. */
 #define ROOMDIR(room, direction) (((room) << 2) | (direction))
 
-// odd stuff:
-// rooms 28, 2, 4, 13 come out at the same place? 0x2A,0x1C
-// rooms 34 and 48 come out at the same place?
-// rooms 3, 5, 23 ... 0x20,0x2E
-//
-// could these be deltas rather than absolute values?
-//
+  // room is a *destination* room index
+  // direction is the direction of the door in the current room
+  // pos is the position of the door in the current room
+
+  // odd stuff:
+  // rooms 28, 2, 4, 13 come out at the same place? 0x2A,0x1C
+  // rooms 34 and 48 come out at the same place?
+  // rooms 3, 5, 23 ... 0x20,0x2E
+  //
+  // could these be deltas rather than absolute values?
+
   { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x8A,  6 } }, // 0 // gates
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x8E,  6 } },
 
@@ -852,7 +857,7 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_1_HUT1RIGHT,             TR), { 0x2C, 0x34, 24 } },
   { ROOMDIR(room_28_HUT1LEFT,             BL), { 0x26, 0x1A, 24 } },
 
-  { ROOMDIR(room_3_HUT2RIGHT,             TR), { 0x24, 0x36, 24 } },
+  { ROOMDIR(room_3_HUT2RIGHT,             TR), { 0x24, 0x36, 24 } }, // 34 // top right door in HUT2LEFT
   { ROOMDIR(room_2_HUT2LEFT,              BL), { 0x26, 0x1A, 24 } },
 
   { ROOMDIR(room_5_HUT3RIGHT,             TR), { 0x24, 0x36, 24 } },
@@ -5968,7 +5973,7 @@ void reset_outdoors(tgestate_t *state)
  */
 void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 {
-  doorindex_t     *doors;          /* was HL */
+  doorindex_t     *pdoors;         /* was HL */
   doorindex_t      current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
   const door_t    *door;           /* was HL' */
@@ -5980,9 +5985,9 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  for (doors = &state->interior_doors[0]; ; doors++)
+  for (pdoors = &state->interior_doors[0]; ; pdoors++)
   {
-    current_door = *doors;
+    current_door = *pdoors;
     if (current_door == door_NONE)
       return; /* Reached end of list. */
 
@@ -5995,11 +6000,9 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if ((vischar->direction & vischar_DIRECTION_MASK) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION))
       continue;
 
+    /* Skip any door which is more than three units away. */
     doorpos = &door->pos;
-    // registers renamed here
     pos = &state->saved_pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
-
-    // Conv: Unrolled.
     x = doorpos->x;
     if (x - 3 >= pos->x || x + 3 < pos->x) // -3 .. +2
       continue;
@@ -6010,10 +6013,10 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if (is_door_locked(state))
       return; /* The door was locked. */
 
-    vischar->room = (room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // the mask's not strictly necessary
+    vischar->room = room_and_flags >> 2;
 
     doorpos = &door[1].pos;
-    if (state->current_door & door_LOCKED)
+    if (state->current_door & door_LOCKED) // can't be a locked flag...
       doorpos = &door[-1].pos;
 
     transition(state, doorpos); // exit via
@@ -6396,7 +6399,7 @@ doorindex_t *open_door(tgestate_t *state)
     {
       door_index = *gate & ~door_LOCKED;
 
-      /* Search doors[] for door_index. */
+      /* Search interior_doors[] for door_index. */
       door_ptr = &state->interior_doors[0];
       for (;;)
       {
