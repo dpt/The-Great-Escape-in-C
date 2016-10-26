@@ -416,7 +416,7 @@ extern const wall_t walls[24];
 void called_from_main_loop_9(tgestate_t *state);
 
 void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar);
-void calc_vischar_screenpos_from_screenpos(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar);
 
 void reset_game(tgestate_t *state);
 void reset_map_and_characters(tgestate_t *state);

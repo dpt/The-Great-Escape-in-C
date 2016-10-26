@@ -6576,7 +6576,7 @@ increment:
       vischar->b0C++;
     }
 
-    calc_vischar_screenpos_from_screenpos(state, vischar);
+    calc_vischar_screenpos(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -6631,7 +6631,7 @@ end_bit:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B71B: Reset position of the specified vischar.
+ * $B71B: Calculate screen position for the specified vischar from mi.pos.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
@@ -6644,7 +6644,7 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
   /* Save a copy of the vischar's position + offset. */
   state->saved_pos = vischar->mi.pos;
 
-  calc_vischar_screenpos_from_screenpos(state, vischar);
+  calc_vischar_screenpos(state, vischar);
 }
 
 /**
@@ -6655,7 +6655,7 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_screenpos_from_screenpos(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -7980,7 +7980,7 @@ c592:
   // DE -= 7;
   // EX DE,HL
   // PUSH HL
-  reset_position(state, vischar);
+  calc_vischar_screenpos_from_mi_pos(state, vischar);
   // POP HL
   character_behaviour(state, vischar);
   return 1; // exit via
