@@ -7489,7 +7489,7 @@ int vischar_visible(tgestate_t      *state,
 void restore_tiles(tgestate_t *state)
 {
   uint8_t             iters;                  /* was B */
-  const vischar_t    *vischar;                /* was IY */
+  const vischar_t    *vischar;                /* new local copy */
   uint8_t             height;                 /* was A / $BC5F */
   int8_t              heightsigned;           /* was A */
   uint8_t             width;                  /* was $BC61 */
