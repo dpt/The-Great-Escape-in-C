@@ -538,7 +538,7 @@ void setup_room(tgestate_t *state)
 
   /* Copy interior mask into state->interior_mask_data. */
   state->interior_mask_data_count = iters = *proomdef++; /* count of interior masks */
-  assert(iters < 8);
+  assert(iters <= MAX_INTERIOR_MASK_REFS);
   pmask = &state->interior_mask_data[0]; /* Conv: Moved */
   while (iters--)
   {
