@@ -5554,6 +5554,7 @@ b0d0:
       };
 
       new_direction = input_vischar->direction;
+      assert(new_direction < 4);
       input_vischar->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
       if ((new_direction & 1) == 0) /* TL or BR */
         input_vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
