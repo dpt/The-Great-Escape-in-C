@@ -3196,9 +3196,9 @@ void byte_A13E_common(tgestate_t *state,
 /**
  * $A420: Character sits.
  *
- * This is called with x = 18,19,20,21,22,23.
+ * This is called with x = 18,19,20,21,22.
  * - 18..20 go to room_25_BREAKFAST
- * - 21..23 go to room_23_BREAKFAST
+ * - 21..22 go to room_23_BREAKFAST
  *
  * \param[in] state  Pointer to game state.
  * \param[in] x      (was A)
@@ -3213,7 +3213,7 @@ void character_sits(tgestate_t *state,
   room_t   room;  /* was C */
 
   assert(state  != NULL);
-  assert(x >= 18 && x <= 23);
+  assert(x >= 18 && x <= 22);
   assert(target != NULL);
 
   index = x - 18;
@@ -3221,7 +3221,7 @@ void character_sits(tgestate_t *state,
   bench = &roomdef_25_breakfast[roomdef_25_BENCH_D];
   if (index >= 3)
   {
-    /* Second three characters. */
+    /* Last two characters. */
     bench = &roomdef_23_breakfast[roomdef_23_BENCH_A];
     index -= 3;
   }
