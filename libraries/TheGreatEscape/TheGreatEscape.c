@@ -9042,8 +9042,6 @@ uint8_t move_character_x(tgestate_t *state,
                          int         log2scale)
 {
   int16_t delta; /* was DE */
-  uint8_t D;
-  uint8_t E;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9051,28 +9049,20 @@ uint8_t move_character_x(tgestate_t *state,
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
+  assert(vischar == state->IY);
 
   delta = vischar->mi.pos.x - (vischar->p04.x << log2scale);
-  if (delta)
+
+  // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
+  if (delta >= 3)
+    return 8;
+  else if (delta <= -3)
+    return 4;
+  else
   {
-    /* Conv: Split. */
-    D = delta >> 8;
-    E = delta & 0xFF;
-
-    if (delta > 0) /* +ve */
-    {
-      if (D != 0   || E >= 3)
-        return 8;
-    }
-    else /* -ve */
-    {
-      if (D != 255 || E < 254)
-        return 4;
-    }
+    vischar->counter_and_flags |= vischar_BYTE7_IMPEDED;
+    return 0;
   }
-
-  vischar->counter_and_flags |= vischar_BYTE7_IMPEDED;
-  return 0;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9094,8 +9084,8 @@ uint8_t move_character_y(tgestate_t *state,
                          int         log2scale)
 {
   int16_t delta; /* was DE */
-  uint8_t D;
-  uint8_t E;
+//  uint8_t D;
+//  uint8_t E;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9103,28 +9093,19 @@ uint8_t move_character_y(tgestate_t *state,
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
+  assert(vischar == state->IY);
 
   delta = vischar->mi.pos.y - (vischar->p04.y << log2scale);
-  if (delta)
+  // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
+  if (delta >= 3)
+    return 5;
+  else if (delta <= -3)
+    return 7;
+  else
   {
-    /* Conv: Split. */
-    D = delta >> 8;
-    E = delta & 0xFF;
-
-    if (delta > 0) /* +ve */
-    {
-      if (D != 0   || E >= 3)
-        return 5;
-    }
-    else /* -ve */
-    {
-      if (D != 255 || E < 254)
-        return 7;
-    }
+    vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
+    return 0;
   }
-
-  vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
-  return 0;
 }
 
 /* ----------------------------------------------------------------------- */
