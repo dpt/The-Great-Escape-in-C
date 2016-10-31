@@ -8835,7 +8835,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   vischar_t *vischar2;          /* was HL */
   uint8_t    A;                 /* was A */
   uint8_t    Cdash;             /* was C' */
-  uint8_t    log2scale;         /* added */
+  uint8_t    scale;             /* Conv: added */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -8948,31 +8948,29 @@ bribed_visible:
 end_bit:
   Cdash = A = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-#if ORIGINAL
-  /* Original code self modifies move_character_x/y routines. */
-  if (state->room_index > room_0_OUTDOORS)
-    HLdash = &multiply_by_1;
-  else if (Cdash & vischar_FLAGS_DOOR_THING)
-    HLdash = &multiply_by_4;
-  else
-    HLdash = &multiply_by_8;
+  /* The original code self modifies the move_character_x/y routines. */
+//  if (state->room_index > room_0_OUTDOORS)
+//    HLdash = &multiply_by_1;
+//  else if (Cdash & vischar_FLAGS_DOOR_THING)
+//    HLdash = &multiply_by_4;
+//  else
+//    HLdash = &multiply_by_8;
+//
+//  self_CA13 = HLdash; // self-modify move_character_x:$CA13
+//  self_CA4B = HLdash; // self-modify move_character_y:$CA4B
 
-  self_CA13 = HLdash; // self-modify move_character_x:$CA13
-  self_CA4B = HLdash; // self-modify move_character_y:$CA4B
-#else
-  /* Replacement code passes down a log2scale factor. */
+  /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
-    log2scale = 1; /* Indoors. */
+    scale = 1; /* Indoors. */
   else if (Cdash & vischar_FLAGS_DOOR_THING)
-    log2scale = 4; /* Outdoors + door thing. */
+    scale = 4; /* Outdoors + door thing. */
   else
-    log2scale = 8; /* Outdoors. */
-#endif
+    scale = 8; /* Outdoors. */
 
   if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc.
-    character_behaviour_impeded(state, vischar, A, log2scale);
-  else if (move_character_x(state, vischar, log2scale) == 0 &&
-           move_character_y(state, vischar, log2scale) == 0)
+    character_behaviour_impeded(state, vischar, A, scale);
+  else if (move_character_x(state, vischar, scale) == 0 &&
+           move_character_y(state, vischar, scale) == 0)
     /* Character couldn't move. */
     bribes_solitary_food(state, vischar);
   else
@@ -9004,21 +9002,21 @@ void character_behaviour_set_input(tgestate_t *state,
  * \param[in] state     Pointer to game state.
  * \param[in] vischar   Pointer to visible character.   (was IY)
  * \param[in] new_input Flags (of another character...) (was A)
- * \param[in] log2scale Log2Scale factor (replaces self-modifying code in original).
+ * \param[in] scale     Scale factor (replaces self-modifying code in original).
  */
 void character_behaviour_impeded(tgestate_t *state,
                                  vischar_t  *vischar,
                                  uint8_t     new_input,
-                                 int         log2scale)
+                                 int         scale)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   // assert(new_input);
-  // assert(log2scale);
+  // assert(scale);
 
   /* Note: The y,x order here looks unusual but it matches the original code. */
-  if (move_character_y(state, vischar, log2scale) == 0 &&
-      move_character_x(state, vischar, log2scale) == 0)
+  if (move_character_y(state, vischar, scale) == 0 &&
+      move_character_x(state, vischar, scale) == 0)
     /* Character couldn't move. */
     character_behaviour_set_input(state, vischar, new_input);
   else
@@ -9030,29 +9028,27 @@ void character_behaviour_impeded(tgestate_t *state,
 /**
  * $CA11: Move character on the X axis.
  *
- * \param[in] state     Pointer to game state.
- * \param[in] vischar   Pointer to visible character. (was IY)
- * \param[in] log2scale Log2Scale factor (replaces self-modifying code in
- *                      original).
+ * \param[in] state   Pointer to game state.
+ * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] scale   Scale factor (replaces self-modifying code in original).
  *
  * \return 8/4/0 .. meaning?
  */
 uint8_t move_character_x(tgestate_t *state,
                          vischar_t  *vischar,
-                         int         log2scale)
+                         int         scale)
 {
   int16_t delta; /* was DE */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(log2scale);
+  assert(scale >= 1 && scale <= 8);
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = vischar->mi.pos.x - (vischar->p04.x << log2scale);
-
+  delta = vischar->mi.pos.x - vischar->p04.x * scale;
   // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
   if (delta >= 3)
     return 8;
@@ -9072,30 +9068,27 @@ uint8_t move_character_x(tgestate_t *state,
  *
  * Nearly identical to move_character_x.
  *
- * \param[in] state     Pointer to game state.
- * \param[in] vischar   Pointer to visible character. (was IY)
- * \param[in] log2scale Log2Scale factor (replaces self-modifying code in
- *                      original).
+ * \param[in] state   Pointer to game state.
+ * \param[in] vischar Pointer to visible character. (was IY)
+ * \param[in] scale   Scale factor (replaces self-modifying code in original).
  *
  * \return 5/7/0 .. meaning?
  */
 uint8_t move_character_y(tgestate_t *state,
                          vischar_t  *vischar,
-                         int         log2scale)
+                         int         scale)
 {
   int16_t delta; /* was DE */
-//  uint8_t D;
-//  uint8_t E;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(log2scale);
+  assert(scale >= 1 && scale <= 8);
 
   /* I'm assuming (until proven otherwise) that HL and IY point into the same
    * vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = vischar->mi.pos.y - (vischar->p04.y << log2scale);
+  delta = vischar->mi.pos.y - vischar->p04.y * scale;
   // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
   if (delta >= 3)
     return 5;

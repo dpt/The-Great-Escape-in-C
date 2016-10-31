@@ -496,15 +496,15 @@ void character_behaviour_set_input(tgestate_t *state,
 void character_behaviour_impeded(tgestate_t *state,
                                  vischar_t  *vischar,
                                  uint8_t     new_input,
-                                 int         log2scale);
+                                 int         scale);
 
 uint8_t move_character_x(tgestate_t *state,
                          vischar_t  *vischar,
-                         int         log2scale);
+                         int         scale);
 
 uint8_t move_character_y(tgestate_t *state,
                          vischar_t  *vischar,
-                         int         log2scale);
+                         int         scale);
 
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
