@@ -8947,7 +8947,7 @@ bribed_visible:
   A = vischar2->target.y = 0x00; // makes no sense - check again
   if (A == 0)
   {
-    character_behaviour_set_input(state, vischar, A);
+    character_behaviour_set_input(state, vischar, A /* new_input */);
     return; // exit via
   }
 
@@ -8980,7 +8980,7 @@ end_bit:
     /* Character couldn't move. */
     bribes_solitary_food(state, vischar);
   else
-    character_behaviour_set_input(state, vischar, A); /* was fallthrough */
+    character_behaviour_set_input(state, vischar, A /* new_input */); /* was fallthrough */
 }
 
 /**
@@ -9161,7 +9161,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 
     vischar->target.x = 0x00;
 
-    character_behaviour_set_input(state, vischar, 0); // character_behaviour:$C9F5;
+    character_behaviour_set_input(state, vischar, 0 /* new_input */); // character_behaviour:$C9F5;
     return;
   }
 
