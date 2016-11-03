@@ -8980,7 +8980,7 @@ bribed_visible:
 end_bit:
   Cdash = A = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-  /* The original code self modifies the move_character_x/y routines. */
+  /* The original code self modifies the vischar_at_pos_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
 //    HLdash = &multiply_by_1;
 //  else if (Cdash & vischar_FLAGS_DOOR_THING)
@@ -8988,8 +8988,8 @@ end_bit:
 //  else
 //    HLdash = &multiply_by_8;
 //
-//  self_CA13 = HLdash; // self-modify move_character_x:$CA13
-//  self_CA4B = HLdash; // self-modify move_character_y:$CA4B
+//  self_CA13 = HLdash; // self-modify vischar_at_pos_x:$CA13
+//  self_CA4B = HLdash; // self-modify vischar_at_pos_y:$CA4B
 
   /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
@@ -9001,8 +9001,8 @@ end_bit:
 
   if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc.
     character_behaviour_impeded(state, vischar, A, scale);
-  else if (move_character_x(state, vischar, scale) == 0 &&
-           move_character_y(state, vischar, scale) == 0)
+  else if (vischar_at_pos_x(state, vischar, scale) == 0 &&
+           vischar_at_pos_y(state, vischar, scale) == 0)
     /* Character couldn't move. */
     bribes_solitary_food(state, vischar);
   else
@@ -9047,8 +9047,8 @@ void character_behaviour_impeded(tgestate_t *state,
   // assert(scale);
 
   /* Note: The y,x order here looks unusual but it matches the original code. */
-  if (move_character_y(state, vischar, scale) == 0 &&
-      move_character_x(state, vischar, scale) == 0)
+  if (vischar_at_pos_y(state, vischar, scale) == 0 &&
+      vischar_at_pos_x(state, vischar, scale) == 0)
     /* Character couldn't move. */
     character_behaviour_set_input(state, vischar, new_input);
   else
@@ -9058,15 +9058,19 @@ void character_behaviour_impeded(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA11: Move character on the X axis.
+ * $CA11: How close is this vischar to its 'pos.x' coord?
+ *
+ * Note: Callers only ever test the return code against zero.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
- * \param[in] scale   Scale factor (replaces self-modifying code in original).
+ * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 8/4/0 .. meaning?
+ * \return 8 => x >  pos.x
+ *         4 => x <  pos.x
+ *         0 => x == pos.x
  */
-uint8_t move_character_x(tgestate_t *state,
+uint8_t vischar_at_pos_x(tgestate_t *state,
                          vischar_t  *vischar,
                          int         scale)
 {
@@ -9076,12 +9080,12 @@ uint8_t move_character_x(tgestate_t *state,
   ASSERT_VISCHAR_VALID(vischar);
   assert(scale >= 1 && scale <= 8);
 
-  /* I'm assuming (until proven otherwise) that HL and IY point into the same
-   * vischar on entry. */
+  /* I'm assuming here (until proven otherwise) that HL and IY point to the
+   * same vischar on entry. */
   assert(vischar == state->IY);
 
   delta = vischar->mi.pos.x - vischar->pos.x * scale;
-  // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
+  /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return 8;
   else if (delta <= -3)
@@ -9096,17 +9100,21 @@ uint8_t move_character_x(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA49: Move character on the Y axis.
+ * $CA49: How close is this vischar to its 'pos.y' coord?
  *
- * Nearly identical to move_character_x.
+ * Nearly identical to vischar_at_pos_x.
+ *
+ * Note: Callers only ever test the return code against zero.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
- * \param[in] scale   Scale factor (replaces self-modifying code in original).
+ * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 5/7/0 .. meaning?
+ * \return 5 => y >  pos.y
+ *         7 => y <  pos.y
+ *         0 => y == pos.y
  */
-uint8_t move_character_y(tgestate_t *state,
+uint8_t vischar_at_pos_y(tgestate_t *state,
                          vischar_t  *vischar,
                          int         scale)
 {
@@ -9116,12 +9124,12 @@ uint8_t move_character_y(tgestate_t *state,
   ASSERT_VISCHAR_VALID(vischar);
   assert(scale >= 1 && scale <= 8);
 
-  /* I'm assuming (until proven otherwise) that HL and IY point into the same
-   * vischar on entry. */
+  /* I'm assuming here (until proven otherwise) that HL and IY point to the
+   * same vischar on entry. */
   assert(vischar == state->IY);
 
   delta = vischar->mi.pos.y - vischar->pos.y * scale;
-  // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
+  /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return 5;
   else if (delta <= -3)

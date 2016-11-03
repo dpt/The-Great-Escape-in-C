@@ -498,11 +498,11 @@ void character_behaviour_impeded(tgestate_t *state,
                                  uint8_t     new_input,
                                  int         scale);
 
-uint8_t move_character_x(tgestate_t *state,
+uint8_t vischar_at_pos_x(tgestate_t *state,
                          vischar_t  *vischar,
                          int         scale);
 
-uint8_t move_character_y(tgestate_t *state,
+uint8_t vischar_at_pos_y(tgestate_t *state,
                          vischar_t  *vischar,
                          int         scale);
 
