@@ -372,11 +372,11 @@ void searchlight_plot(tgestate_t *state, attribute_t *DE);
 
 int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index);
 
-int collision(tgestate_t *state, vischar_t *vischar);
+int collision(tgestate_t *state);
 
 /* $B000 onwards */
 
-void accept_bribe(tgestate_t *state, vischar_t *vischar);
+void accept_bribe(tgestate_t *state);
 
 int bounds_check(tgestate_t *state, vischar_t *vischar);
 

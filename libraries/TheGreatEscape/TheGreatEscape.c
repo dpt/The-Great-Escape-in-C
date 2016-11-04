@@ -5374,7 +5374,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   }
 
   if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
-    if (collision(state, vischar))
+    if (collision(state))
       return 1; // NZ
 
   /* At this point we handle non-colliding characters and items only. */
@@ -5393,9 +5393,8 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
  * $AFDF: (unknown) Definitely something to do with moving objects around. Collisions?
  *
  * \param[in] state         Pointer to game state.
- * \param[in] input_vischar Pointer to visible character. (was IY)
  */
-int collision(tgestate_t *state, vischar_t *input_vischar)
+int collision(tgestate_t *state)
 {
   vischar_t  *vischar;      /* was HL */
   uint8_t     iters;        /* was B */
@@ -5413,10 +5412,8 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
   uint8_t     direction;
   uint16_t    new_direction; /* was BC */
 
-  // FIXME get input_vischar from state.
-
   assert(state != NULL);
-  assert(input_vischar != NULL);
+  ASSERT_VISCHAR_VALID(state->IY);
 
   vischar = &state->vischars[0];
   iters = vischars_LENGTH - 1;
@@ -5425,10 +5422,19 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
     if (vischar->flags & vischar_FLAGS_NO_COLLIDE) // sampled = $8001, $8021, ...
       goto next;
 
+    /*
+     * Check for contact between current vischar and saved_pos.
+     * +/-4 for x/y
+     */
+
     // PUSH BC, HL here
 
     // Check: Check this all over...
 
+// This is like:
+//      if (state->saved_pos.x > vischar->mi.pos.x + 4 ||
+//          state->saved_pos.x < vischar->mi.pos.x - 4)
+//        goto pop_next;
     x = vischar->mi.pos.x + 4;
     saved_x = state->saved_pos.x;
     if (saved_x != x)
@@ -5441,22 +5447,23 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
       if (saved_y > y || state->saved_pos.y < y - 8) // redundant reload of var
         goto pop_next;
 
+    // Check the heights are within 24 of each other
     delta = state->saved_pos.height - vischar->mi.pos.height; // Note: Signed result.
     if (delta < 0)
       delta = -delta; // absolute value
     if (delta >= 24)
       goto pop_next;
 
-    /* If specified vischar character has a bribe pending... */
+    /* If current vischar character has a bribe pending... */
     // Odd: 0x0F is *not* vischar_FLAGS_MASK, which is 0x3F
-    if ((input_vischar->flags & 0x0F) == vischar_FLAGS_BRIBE_PENDING) // sampled IY=$8020, $8040, $8060, $8000
+    if ((state->IY->flags & 0x0F) == vischar_FLAGS_BRIBE_PENDING) // sampled IY=$8020, $8040, $8060, $8000
     {
       /* and current vischar is not the hero... */
       if (vischar != &state->vischars[0])
       {
-        if (state->bribed_character == input_vischar->character)
+        if (state->bribed_character == state->IY->character)
         {
-          accept_bribe(state, input_vischar);
+          accept_bribe(state);
         }
         else
         {
@@ -5464,7 +5471,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
 
           // POP HL
           // POP BC
-          vischar = input_vischar + 1; // 1 byte == 2 bytes into struct => vischar->target
+          vischar = state->IY + 1; // 1 byte == 2 bytes into struct => vischar->target
           // but .. that's not needed
           solitary(state); // is this supposed to take a target?
           NEVER_RETURNS 0;
@@ -5487,7 +5494,7 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
       tmpA = character;
       B = 7; // min y (and min x too?)
       C = 35; // max y
-      A = input_vischar->direction; // interleaved
+      A = state->IY->direction; // interleaved
       if (tmpA == character_28_CRATE)
       {
         // crate must move on x axis only
@@ -5532,12 +5539,12 @@ int collision(tgestate_t *state, vischar_t *input_vischar)
     if (input)
     {
       direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
-      if (direction != input_vischar->direction)
+      if (direction != state->IY->direction)
       {
-        input_vischar->input = input_KICK;
+        state->IY->input = input_KICK;
 
 b0d0:
-        input_vischar->counter_and_flags = (input_vischar->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
+        state->IY->counter_and_flags = (state->IY->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
         // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
         //if (!Z)
           return 1; /* odd -- returning with Z not set */
@@ -5554,13 +5561,13 @@ b0d0:
         input_DOWN + input_RIGHT + input_KICK
       };
 
-      new_direction = input_vischar->direction;
+      new_direction = state->IY->direction;
       assert(new_direction < 4);
-      input_vischar->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
+      state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
       if ((new_direction & 1) == 0) /* TL or BR */
-        input_vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
+        state->IY->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
       else
-        input_vischar->counter_and_flags |= vischar_BYTE7_IMPEDED;
+        state->IY->counter_and_flags |= vischar_BYTE7_IMPEDED;
       goto b0d0;
     }
 
@@ -5581,22 +5588,21 @@ next:
  * $B107: Character accepts the bribe.
  *
  * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character. (was IY)
  */
-void accept_bribe(tgestate_t *state, vischar_t *vischar)
+void accept_bribe(tgestate_t *state)
 {
   item_t    *item;     /* was DE */
   uint8_t    iters;    /* was B */
   vischar_t *vischar2; /* was HL */
 
   assert(state != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
+  ASSERT_VISCHAR_VALID(state->IY);
 
   increase_morale_by_10_score_by_50(state);
 
-  vischar->flags = 0;
+  state->IY->flags = 0;
 
-  get_next_target_and_handle_it(state, vischar, &vischar->target);
+  get_next_target_and_handle_it(state, state->IY, &state->IY->target); /* FIXME these IYs. target should be HL? */
 
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
@@ -7892,7 +7898,7 @@ found_empty_slot:
     saved_pos->height = charstr2->pos.height;
   }
 
-  Z = collision(state, vischar);
+  Z = collision(state);
   if (Z == 0)
     Z = bounds_check(state, vischar);
     // if Z == 1 then within wall bounds
@@ -9138,7 +9144,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     if (flags_lower6 == vischar_FLAGS_BRIBE_PENDING)
     {
       if (vischar->character == state->bribed_character)
-        accept_bribe(state, vischar);
+        accept_bribe(state);
       else
         solitary(state); // failed to bribe?
       return; // exit via // factored out
