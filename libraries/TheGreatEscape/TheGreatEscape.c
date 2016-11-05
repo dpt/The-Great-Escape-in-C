@@ -6698,6 +6698,12 @@ void reset_game(tgestate_t *state)
   /* Reset score. */
   memset(&state->score_digits[0], 0, 5);
 
+  state->hero_in_breakfast        = 0;
+  state->red_flag                 = 0;
+  state->automatic_player_counter = 0;
+  state->morale_1                 = 0;
+  state->morale_2                 = 0;
+
   /* Reset morale. */
   state->morale = morale_MAX;
   plot_score(state);
