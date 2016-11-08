@@ -181,7 +181,7 @@ void next_message(tgestate_t *state)
 
   qp = &state->messages.queue[2];
   if (state->messages.queue_pointer == qp)
-    return;
+    return; /* Queue pointer is at the start - nothing to display. */
 
   assert(*qp < message__LIMIT);
 

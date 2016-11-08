@@ -317,7 +317,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->p04.height        = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
-  vischar1->anim              = animations[8]; /* -> 'tl_none' animation */
+  vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
   vischar1->animindex         = 0;
   vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
@@ -1858,7 +1858,7 @@ void in_permitted_area(tgestate_t *state)
       goto set_flag_red;
   }
 
-  /* If under automatic control then bypass all checks. */
+  /* If in solitary then bypass all checks. */
 
   if (state->in_solitary)
     goto set_flag_green;
@@ -6396,7 +6396,7 @@ door_t *open_door(tgestate_t *state)
     {
       door_index = *gate & ~door_LOCKED;
 
-      /* Search doors[] for C. */
+      /* Search doors[] for door_index. */
       door_ptr = &state->doors[0];
       for (;;)
       {
