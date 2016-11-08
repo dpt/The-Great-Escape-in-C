@@ -194,7 +194,7 @@ struct tgestate
   character_t     character_index;
 
   /** $A12F: Game counter.
-   * Used to wave flag, time lock picking and wire snipping lockouts. */
+   * Used to wave flag, time lock picking and wire cutting lockouts. */
   gametime_t      game_counter;
 
   /** $A130: Bell ringing. */

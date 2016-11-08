@@ -1635,7 +1635,7 @@ void process_player_input(tgestate_t *state)
     if (state->vischars[0].flags == vischar_FLAGS_PICKING_LOCK)
       picking_a_lock(state);
     else
-      snipping_wire(state);
+      cutting_wire(state);
 
     return;
   }
@@ -1730,11 +1730,11 @@ void picking_a_lock(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $9EB2: Locks the player out until the wire is snipped.
+ * $9EB2: Locks the player out until the fence is cut.
  *
  * \param[in] state Pointer to game state.
  */
-void snipping_wire(tgestate_t *state)
+void cutting_wire(tgestate_t *state)
 {
   /**
    * $9EE0: New inputs table.

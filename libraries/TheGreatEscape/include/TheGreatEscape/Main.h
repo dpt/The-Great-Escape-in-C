@@ -193,7 +193,7 @@ void process_player_input(tgestate_t *state);
 
 void picking_a_lock(tgestate_t *state);
 
-void snipping_wire(tgestate_t *state);
+void cutting_wire(tgestate_t *state);
 
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
