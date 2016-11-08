@@ -191,7 +191,7 @@ void keyscan_break(tgestate_t *state);
 
 void process_player_input(tgestate_t *state);
 
-void picking_a_lock(tgestate_t *state);
+void picking_lock(tgestate_t *state);
 
 void cutting_wire(tgestate_t *state);
 

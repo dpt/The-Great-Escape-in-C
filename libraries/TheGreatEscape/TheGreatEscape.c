@@ -1633,7 +1633,7 @@ void process_player_input(tgestate_t *state)
     state->automatic_player_counter = 31;
 
     if (state->vischars[0].flags == vischar_FLAGS_PICKING_LOCK)
-      picking_a_lock(state);
+      picking_lock(state);
     else
       cutting_wire(state);
 
@@ -1713,7 +1713,7 @@ void process_player_input(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void picking_a_lock(tgestate_t *state)
+void picking_lock(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -1767,7 +1767,7 @@ void cutting_wire(tgestate_t *state)
     hero->input = input_KICK;
     hero->mi.pos.height = 24;
 
-    /* Conv: The original code jumps into the tail end of picking_a_lock()
+    /* Conv: The original code jumps into the tail end of picking_lock()
      * above to do this. */
     hero->flags &= ~(vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE);
   }
