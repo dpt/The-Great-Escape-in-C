@@ -1560,7 +1560,7 @@ void check_morale(tgestate_t *state)
   queue_message_for_display(state, message_MORALE_IS_ZERO);
 
   /* Inhibit user input. */
-  state->morale_2 = 0xFF;
+  state->morale_exhausted = 0xFF;
 
   /* Immediately assume automatic control of hero. */
   state->automatic_player_counter = 0;
@@ -1622,9 +1622,8 @@ void process_player_input(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Is morale remaining? */
-  if (state->morale_1 || state->morale_2)
-    return; /* None remains - don't allow input. */
+  if (state->in_solitary || state->morale_exhausted)
+    return; /* Don't allow input. */
 
   if (state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE))
   {
@@ -1859,7 +1858,9 @@ void in_permitted_area(tgestate_t *state)
       goto set_flag_red;
   }
 
-  if (state->morale_1)
+  /* If under automatic control then bypass all checks. */
+
+  if (state->in_solitary)
     goto set_flag_green;
 
   locptr = &state->vischars[0].target;
@@ -2882,8 +2883,8 @@ void set_hero_target(tgestate_t *state, xy_t target)
   assert(state != NULL);
   // assert(target);
 
-  if (state->morale_1)
-    return;
+  if (state->in_solitary)
+    return; /* Ignore. */
 
   vischar = &state->vischars[0];
 
@@ -6701,8 +6702,8 @@ void reset_game(tgestate_t *state)
   state->hero_in_breakfast        = 0;
   state->red_flag                 = 0;
   state->automatic_player_counter = 0;
-  state->morale_1                 = 0;
-  state->morale_2                 = 0;
+  state->in_solitary              = 0;
+  state->morale_exhausted         = 0;
 
   /* Reset morale. */
   state->morale = morale_MAX;
@@ -8514,7 +8515,7 @@ void character_event(tgestate_t *state, xy_t *target)
     &charevnt_handler_1,
     &charevnt_handler_2,
     &charevnt_handler_3_check_var_A13E,
-    &charevnt_handler_4_zeroes_morale_1,
+    &charevnt_handler_4_solitary_ends,
     &charevnt_handler_5_check_var_A13E_anotherone,
     &charevnt_handler_6,
     &charevnt_handler_7,
@@ -8566,13 +8567,13 @@ void character_event(tgestate_t *state, xy_t *target)
 /**
  * $C83F:
  */
-void charevnt_handler_4_zeroes_morale_1(tgestate_t *state,
-                                        xy_t       *target)
+void charevnt_handler_4_solitary_ends(tgestate_t *state,
+                                      xy_t       *target)
 {
   assert(state  != NULL);
   assert(target != NULL);
 
-  state->morale_1 = 0; /* Enable player control */
+  state->in_solitary = 0; /* Enable player control */
   charevnt_handler_0(state, target);
 }
 
@@ -8818,7 +8819,7 @@ void follow_suspicious_character(tgestate_t *state)
   /* Inhibit hero automatic behaviour when the flag is red, or otherwise
    * inhibited. */
   if (!state->red_flag &&
-      (state->morale_1 || state->automatic_player_counter == 0))
+      (state->in_solitary || state->automatic_player_counter == 0))
   {
     state->IY = &state->vischars[0];
     character_behaviour(state, &state->vischars[0]);
@@ -9922,7 +9923,7 @@ next:
   queue_message_for_display(state, message_WAIT_FOR_RELEASE);
   queue_message_for_display(state, message_ANOTHER_DAY_DAWNS);
 
-  state->morale_1 = 0xFF; /* inhibit user input */
+  state->in_solitary = 0xFF; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
   state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_1];
   vischar = &state->vischars[0];

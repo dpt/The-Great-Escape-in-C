@@ -473,7 +473,7 @@ characterstruct_t *get_character_struct(tgestate_t *state,
 
 void character_event(tgestate_t *state, xy_t *target);
 
-charevnt_handler_t charevnt_handler_4_zeroes_morale_1;
+charevnt_handler_t charevnt_handler_4_solitary_ends;
 charevnt_handler_t charevnt_handler_6;
 charevnt_handler_t charevnt_handler_10_hero_released_from_solitary;
 charevnt_handler_t charevnt_handler_1;

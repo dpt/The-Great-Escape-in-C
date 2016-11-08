@@ -215,10 +215,13 @@ struct tgestate
    * input events. */
   uint8_t         automatic_player_counter;
 
-  /** $A13A: (unknown) -- if nonzero then player control is inhibited (process_player_input, set_hero_target) */
-  uint8_t         morale_1;
-  /** $A13B: (unknown) -- if nonzero then player control is inhibited */
-  uint8_t         morale_2;
+  /** $A13A: Set to 0xFF when sent to solitary, inhibiting player control. Zero otherwise.
+   If nonzero then player control is inhibited (process_player_input, set_hero_target). */
+  uint8_t         in_solitary;
+
+  /** $A13B: Set to 0xFF when morale hits zero, inhibiting player control. Zero otherwise. */
+  uint8_t         morale_exhausted;
+
   /** $A13C: Morale 'score'. Ranges morale_MIN..morale_MAX. */
   uint8_t         morale;
 
