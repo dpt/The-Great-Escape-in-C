@@ -206,7 +206,7 @@ enum vischar_flags
   vischar_BYTE7_TOUCHING               = 1 << 6, // set when touch() sees a character touching. stops the map moving
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
-  vischar_BYTE12_BIT7                  = 1 << 7, // up/down flag
+  vischar_ANIMINDEX_BIT7               = 1 << 7, // up/down flag
 
   // byte 14
   vischar_DIRECTION_MASK               = 0x03,
@@ -436,7 +436,7 @@ typedef struct vischar
   const uint8_t  *anim;
 
   /** $800C */
-  uint8_t         b0C; // animation index + up/down flag
+  uint8_t         animindex; // animation index + up/down flag
 
   /** $800D movement */
   // compared to flags?

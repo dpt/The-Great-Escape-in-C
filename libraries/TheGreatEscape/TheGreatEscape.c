@@ -318,7 +318,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> 'tl_none' animation */
-  vischar1->b0C               = 0;
+  vischar1->animindex         = 0;
   vischar1->input             = 0;
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
@@ -4396,7 +4396,7 @@ void move_map(tgestate_t *state)
   };
 
   const uint8_t *anim;              /* was DE */
-  uint8_t        b0C;               /* was C */
+  uint8_t        animindex;         /* was C */
   direction_t    direction;         /* was A */
   uint8_t        move_map_y;        /* was A */
   movemapfn_t   *pmovefn;           /* was HL */
@@ -4415,12 +4415,12 @@ void move_map(tgestate_t *state)
     return; /* Can't move the map when touch() saw contact. */
 
   anim = state->vischars[0].anim;
-  b0C = state->vischars[0].b0C;
+  animindex = state->vischars[0].animindex;
   direction = anim[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
   if (direction == 0xFF)
     return; /* Don't move. */
 
-  if (b0C & vischar_BYTE12_BIT7)
+  if (animindex & vischar_ANIMINDEX_BIT7)
     direction ^= 2; /* Exchange up and down. */
 
   pmovefn = movemapfns[direction];
@@ -6498,13 +6498,14 @@ void called_from_main_loop_9(tgestate_t *state)
   };
   // highest index = 0x17 (23 == max index in animations)
 
-  uint8_t        iters;   /* was B */
-  const uint8_t *anim;    /* was HL */
-  uint8_t        A;       /* was A */
-  uint8_t        C;       /* was C */
-  const uint8_t *DE;      /* was HL */
-  spriteindex_t  Adash;   /* was A' */
-  vischar_t     *vischar;     /* a cache of IY (Conv: added) */
+  uint8_t        iters;     /* was B */
+  const uint8_t *anim;      /* was HL */
+  uint8_t        animindex; /* was A */
+  uint8_t        A;         /* was A */
+  uint8_t        C;         /* was C */
+  const uint8_t *DE;        /* was HL */
+  spriteindex_t  Adash;     /* was A' */
+  vischar_t     *vischar;   /* a cache of IY (Conv: added) */
 
   assert(state != NULL);
 
@@ -6523,14 +6524,14 @@ void called_from_main_loop_9(tgestate_t *state)
       goto kicked;
 
     anim = vischar->anim;
-    A = vischar->b0C;
-    if (A & vischar_BYTE12_BIT7) // up/down flag
+    animindex = vischar->animindex;
+    if (animindex & vischar_ANIMINDEX_BIT7) // up/down flag
     {
-      A &= ~vischar_BYTE12_BIT7;
-      if (A == 0)
+      animindex &= ~vischar_ANIMINDEX_BIT7;
+      if (animindex == 0)
         goto end_bit;
 
-      anim += (A + 1) * 4 - 1; /* 4..512 + 1 */
+      anim += (animindex + 1) * 4 - 1; /* 4..512 + 1 */
       A = *anim++; // a spriteindex_t
 
       SWAP(uint8_t, A, Adash);
@@ -6552,14 +6553,14 @@ decrement:
       if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
 
-      vischar->b0C--;
+      vischar->animindex--;
     }
     else
     {
-      if (A == *anim)
+      if (animindex == *anim)
         goto end_bit;
 
-      anim += (A + 1) * 4;
+      anim += (animindex + 1) * 4;
 
 increment:
       SWAP(const uint8_t *, DE, anim);
@@ -6578,7 +6579,7 @@ increment:
       if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
 
-      vischar->b0C++;
+      vischar->animindex++;
     }
 
     calc_vischar_screenpos(state, vischar);
@@ -6605,7 +6606,7 @@ end_bit:
   vischar->anim = DE;
   if ((C & I) == 0)
   {
-    vischar->b0C = 0;
+    vischar->animindex = 0;
     DE += 2;
     vischar->direction = *DE;
     DE += 2; // point to groups of four
@@ -6617,7 +6618,7 @@ end_bit:
     const uint8_t *stacked;
 
     C = *DE; // count of four-byte groups
-    vischar->b0C = C | vischar_BYTE12_BIT7;
+    vischar->animindex = C | vischar_ANIMINDEX_BIT7;
     vischar->direction = *++DE;
     DE += 3; // point to groups of four
     stacked = DE;
@@ -11975,7 +11976,7 @@ TGE_API void tge_setup(tgestate_t *state)
     0x00,                 // counter_and_flags
     &animations[0],       // animbase
     animations[8],        // anim
-    0x00,                 // b0C
+    0x00,                 // animindex
     0x00,                 // input
     direction_TOP_LEFT,   // direction
     { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_AWAY_1], 0 }, // mi
