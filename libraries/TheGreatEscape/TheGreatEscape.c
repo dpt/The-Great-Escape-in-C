@@ -5986,8 +5986,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     room_and_flags = door->room_and_flags;
 
     /* Does the character face the same direction as the door? */
-    // Here a presumed input_t is being tested against a direction_t. So have I misjudged what vischar->input is?
-    if ((vischar->input & 3) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION))
+    if ((vischar->direction & vischar_DIRECTION_MASK) != (room_and_flags & doorpos_FLAGS_MASK_DIRECTION))
       continue;
 
     doorpos = &door->pos;
