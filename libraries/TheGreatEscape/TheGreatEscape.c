@@ -10805,21 +10805,21 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       bm3 = 0;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E143 >= 0)
+      if (self_E143 <= 0)
       {
         SRL(bm0);
         RR(bm1);
         RR(bm2);
         RR(bm3);
       }
-      if (self_E143 >= 8)
+      if (self_E143 <= 8)
       {
         SRL(bm0);
         RR(bm1);
         RR(bm2);
         RR(bm3);
       }
-      if (self_E143 >= 16)
+      if (self_E143 <= 16)
       {
         SRL(bm0);
         RR(bm1);
@@ -10832,21 +10832,21 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask3 = 0xFF;
       carry = 1;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E161 >= 0)
+      if (self_E161 <= 0)
       {
         RR(mask0);
         RR(mask1);
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 >= 8)
+      if (self_E161 <= 8)
       {
         RR(mask0);
         RR(mask1);
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 >= 16)
+      if (self_E161 <= 16)
       {
         RR(mask0);
         RR(mask1);
@@ -10859,25 +10859,29 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       x = MASK(bm0, mask0);
       foremaskptr++;
       if (state->enable_E188)
-        *screenptr++ = x;
+        *screenptr = x;
+      screenptr++;
 
-      x = MASK(bm0, mask1);
+      x = MASK(bm1, mask1);
       foremaskptr++;
       if (state->enable_E199)
-        *screenptr++ = x;
+        *screenptr = x;
+      screenptr++;
 
-      x = MASK(bm0, mask2);
+      x = MASK(bm2, mask2);
       foremaskptr++;
       if (state->enable_E1AA)
-        *screenptr++ = x;
+        *screenptr = x;
+      screenptr++;
 
-      x = MASK(bm0, mask3);
+      x = MASK(bm3, mask3);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E1BF)
         *screenptr = x;
 
       screenptr += state->columns - 3;
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -10931,28 +10935,28 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 
       bm3 = 0;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E204 >= 0)
+      if (self_E204 <= 0)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 >= 8)
+      if (self_E204 <= 8)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 >= 16)
+      if (self_E204 <= 16)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 >= 24)
+      if (self_E204 <= 24)
       {
         SLA(bm0);
         RL(bm1);
@@ -10965,28 +10969,28 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       mask3 = 0xFF;
       carry = 1;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E22A >= 0)
+      if (self_E22A <= 0)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A >= 8)
+      if (self_E22A <= 8)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A >= 16)
+      if (self_E22A <= 16)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A >= 24)
+      if (self_E22A <= 24)
       {
         RL(mask0);
         RL(mask1);
@@ -11019,9 +11023,9 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E290)
         *screenptr = x;
-      screenptr++;
 
       screenptr += state->columns - 3;
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11120,19 +11124,19 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
     carry = 1; // mask OFF
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E2DC >= 0)
+    if (self_E2DC <= 0)
     {
       RR(mask0);
       RR(mask1);
       RR(mask2);
     }
-    if (self_E2DC >= 6)
+    if (self_E2DC <= 6)
     {
       RR(mask0);
       RR(mask1);
       RR(mask2);
     }
-    if (self_E2DC >= 12)
+    if (self_E2DC <= 12)
     {
       RR(mask0);
       RR(mask1);
@@ -11144,19 +11148,19 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     bm2 = 0; // all bits clear => pixels OFF
     //carry = 0; in original code but never read in practice
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E2F4 >= 0)
+    if (self_E2F4 <= 0)
     {
       SRL(bm0);
       RR(bm1);
       RR(bm2);
     }
-    if (self_E2F4 >= 6)
+    if (self_E2F4 <= 6)
     {
       SRL(bm0);
       RR(bm1);
       RR(bm2);
     }
-    if (self_E2F4 >= 12)
+    if (self_E2F4 <= 12)
     {
       SRL(bm0);
       RR(bm1);
@@ -11254,25 +11258,25 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
     carry = 1; // mask OFF
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E39A >= 0)
+    if (self_E39A <= 0)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A >= 6)
+    if (self_E39A <= 6)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A >= 12)
+    if (self_E39A <= 12)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A >= 18)
+    if (self_E39A <= 18)
     {
       RL(mask0);
       RL(mask1);
@@ -11283,25 +11287,25 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     bm2 = 0; // all bits clear => pixels OFF
     // no carry reset in this variant?
-    if (self_E37D >= 0)
+    if (self_E37D <= 0)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D >= 6)
+    if (self_E37D <= 6)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D >= 12)
+    if (self_E37D <= 12)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D >= 18)
+    if (self_E37D <= 18)
     {
       SLA(bm0);
       RL(bm1);
