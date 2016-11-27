@@ -42,7 +42,7 @@ struct tgestate
    *
    * Read by is_door_locked, door_handling_interior.
    */
-  door_t          current_door;
+  doorindex_t     current_door;
 
   /**
    * $69AE: Movable items.
@@ -174,7 +174,7 @@ struct tgestate
   bounds_t        roomdef_object_bounds[4];
 
   /** $81D6: Doors. */
-  door_t          doors[4];
+  doorindex_t     doors[4];
 
    // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
 #define MAX_INTERIOR_MASK_REFS 7
@@ -252,7 +252,7 @@ struct tgestate
 
   /** $A143: Pointer to a door in gates_and_doors[] in which door_LOCKED is
    * cleared when picked. */
-  door_t         *ptr_to_door_being_lockpicked;
+  doorindex_t    *ptr_to_door_being_lockpicked;
 
   /** $A145: Game time when player control is restored.
    * e.g. when picking a lock or cutting wire. */
@@ -339,7 +339,7 @@ struct tgestate
   uint16_t       *game_window_start_offsets;
 
   /** $F05D: Gates and doors. */
-  door_t          gates_and_doors[11];
+  doorindex_t     gates_and_doors[11];
 
   /** $F06B: Key definitions. */
   keydefs_t       keydefs;

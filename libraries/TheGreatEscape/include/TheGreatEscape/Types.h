@@ -589,7 +589,7 @@ doorpos_t;
  * Holds a door index.
  * The top bit may be door_LOCKED, the rest is a door index.
  */
-typedef uint8_t door_t;
+typedef uint8_t doorindex_t;
 
 /**
  * Handles item actions.

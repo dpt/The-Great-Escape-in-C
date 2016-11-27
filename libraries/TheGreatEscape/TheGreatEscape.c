@@ -358,10 +358,10 @@ void reset_nonplayer_visible_characters(tgestate_t *state)
  */
 void setup_doors(tgestate_t *state)
 {
-  door_t          *pdoor;      /* was DE */
+  doorindex_t     *pdoor;      /* was DE */
   uint8_t          iters;      /* was B */
   uint8_t          room;       /* was B */ // same type as doorpos_t->room_and_flags
-  door_t           door_index; /* was C */
+  doorindex_t      door_index; /* was C */
   const doorpos_t *door_pos;   /* was HL' */
   uint8_t          door_iters; /* was B' */
 
@@ -408,7 +408,7 @@ void setup_doors(tgestate_t *state)
  *
  * \return Pointer to doorpos. (was HL)
  */
-const doorpos_t *get_door_position(door_t door)
+const doorpos_t *get_door_position(doorindex_t door)
 {
   const doorpos_t *pos; /* was HL */
 
@@ -5710,8 +5710,8 @@ uint16_t multiply_by_8(uint8_t A)
  */
 int is_door_locked(tgestate_t *state)
 {
-  door_t  cur;   /* was C */
-  door_t *door;  /* was HL */
+  doorindex_t  cur;   /* was C */
+  doorindex_t *door;  /* was HL */
   uint8_t iters; /* was B */
 
   assert(state != NULL);
@@ -5968,8 +5968,8 @@ void reset_outdoors(tgestate_t *state)
  */
 void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 {
-  door_t          *pdoors;         /* was HL */
-  door_t           current_door;   /* was A */
+  doorindex_t     *doors;          /* was HL */
+  doorindex_t      current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
   const doorpos_t *door;           /* was HL' */
   const tinypos_t *doorpos;        /* was HL' */
@@ -5980,9 +5980,9 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  for (pdoors = &state->doors[0]; ; pdoors++)
+  for (doors = &state->doors[0]; ; doors++)
   {
-    current_door = *pdoors;
+    current_door = *doors;
     if (current_door == door_NONE)
       return; /* Reached end of list. */
 
@@ -6261,7 +6261,7 @@ action_wiresnips_tail:
  */
 void action_lockpick(tgestate_t *state)
 {
-  door_t *pdoor; /* was HL */
+  doorindex_t *pdoor; /* was HL */
 
   assert(state != NULL);
 
@@ -6321,8 +6321,8 @@ void action_green_key(tgestate_t *state)
  */
 void action_key(tgestate_t *state, room_t room_of_key)
 {
-  door_t   *pdoor;   /* was HL */
-  message_t message; /* was B */
+  doorindex_t *pdoor;   /* was HL */
+  message_t    message; /* was B */
 
   assert(state != NULL);
   ASSERT_ROOM_VALID(room_of_key);
@@ -6355,15 +6355,15 @@ void action_key(tgestate_t *state, room_t room_of_key)
  *
  * \return Pointer to door in state->gates_and_doors[]. (was HL)
  */
-door_t *open_door(tgestate_t *state)
+doorindex_t *open_door(tgestate_t *state)
 {
-  door_t          *gate;       /* was HL */
+  doorindex_t     *gate;       /* was HL */
   uint8_t          iters;      /* was B */
   const doorpos_t *doorpos;    /* was HL' */
-  door_t           door_index; /* was C */
-  door_t          *door_ptr;   /* was DE */
+  doorindex_t      door_index; /* was C */
+  doorindex_t     *door_ptr;   /* was DE */
   pos_t           *pos;        /* was DE' */
-  door_t           door;       /* was A */
+  doorindex_t      door;       /* was A */
 
   assert(state != NULL);
 
@@ -8113,7 +8113,7 @@ uint8_t get_next_target(tgestate_t *state,
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
   uint8_t          x;       /* was A */
-  door_t           door;    /* was A */
+  doorindex_t      door;    /* was A */
   uint8_t          y;       /* was A or C */
   const uint8_t   *pdoors;  /* was DE */
   int16_t          index;   // signed /* was H */
@@ -9181,8 +9181,8 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     A = vischar->target.x;
 
     A = element_A_of_table_7738(A)[C];
-    if ((vischar->target.x) & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
-      A ^= door_LOCKED; // later given to get_door_position, so must be a door_t, so the flag must be the locked flag
+    if (vischar->target.x & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
+      A ^= door_LOCKED; // later given to get_door_position, so must be a doorindex_t, so the flag must be the locked flag
 
     // PUSH AF
     Astacked = vischar->target.x; // $8002, ...

@@ -132,7 +132,7 @@ void reset_nonplayer_visible_characters(tgestate_t *state);
 
 void setup_doors(tgestate_t *state);
 
-const doorpos_t *get_door_position(door_t door);
+const doorpos_t *get_door_position(doorindex_t door);
 
 void wipe_visible_tiles(tgestate_t *state);
 
@@ -407,7 +407,7 @@ INLINE void action_yellow_key(tgestate_t *state);
 INLINE void action_green_key(tgestate_t *state);
 void action_key(tgestate_t *state, room_t room_of_key);
 
-door_t *open_door(tgestate_t *state);
+doorindex_t *open_door(tgestate_t *state);
 
 void action_wiresnips(tgestate_t *state);
 
