@@ -358,12 +358,12 @@ void reset_nonplayer_visible_characters(tgestate_t *state)
  */
 void setup_doors(tgestate_t *state)
 {
-  doorindex_t     *pdoor;      /* was DE */
-  uint8_t          iters;      /* was B */
-  uint8_t          room;       /* was B */ // same type as doorpos_t->room_and_flags
-  doorindex_t      door_index; /* was C */
-  const doorpos_t *door_pos;   /* was HL' */
-  uint8_t          door_iters; /* was B' */
+  doorindex_t  *pdoor;      /* was DE */
+  uint8_t       iters;      /* was B */
+  uint8_t       room;       /* was B */ // same type as door_t->room_and_flags
+  doorindex_t   door_index; /* was C */
+  const door_t *door_pos;   /* was HL' */
+  uint8_t       door_iters; /* was B' */
 
   assert(state != NULL);
 
@@ -402,15 +402,15 @@ void setup_doors(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $6A12: Turn a door index into a doorpos pointer.
+ * $6A12: Turn a door index into a door_t pointer.
  *
  * \param[in] door Index of door + lock flag in bit 7. (was A)
  *
- * \return Pointer to doorpos. (was HL)
+ * \return Pointer to door_t. (was HL)
  */
-const doorpos_t *get_door_position(doorindex_t door)
+const door_t *get_door_position(doorindex_t door)
 {
-  const doorpos_t *pos; /* was HL */
+  const door_t *pos; /* was HL */
 
   assert((door & ~door_LOCKED) < door_MAX);
 
@@ -783,7 +783,7 @@ uint8_t *const beds[beds_LENGTH] =
  * Used by setup_doors, get_door_position, door_handling and
  * bribes_solitary_food.
  */
-/*const*/ doorpos_t door_positions[door_MAX * 2] =
+/*const*/ door_t door_positions[door_MAX * 2] =
 {
   /* Shorthands for directions. */
 #define TL direction_TOP_LEFT
@@ -5750,9 +5750,9 @@ int is_door_locked(tgestate_t *state)
  */
 void door_handling(tgestate_t *state, vischar_t *vischar)
 {
-  const doorpos_t *door_pos;  /* was HL */
-  direction_t      direction; /* was E */
-  uint8_t          iters;     /* was B */
+  const door_t *door_pos;  /* was HL */
+  direction_t   direction; /* was E */
+  uint8_t       iters;     /* was B */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -5811,25 +5811,25 @@ found:
  *
  * (saved_X,saved_Y) within (-2,+2) of HL[1..] scaled << 2
  *
- * \param[in] state   Pointer to game state.
- * \param[in] doorpos Pointer to doorpos_t. (was HL)
+ * \param[in] state Pointer to game state.
+ * \param[in] door  Pointer to door_t. (was HL)
  *
  * \return 1 if in range, 0 if not. (was carry flag)
  */
-int door_in_range(tgestate_t *state, const doorpos_t *doorpos)
+int door_in_range(tgestate_t *state, const door_t *door)
 {
   const int halfdist = 3;
 
   uint16_t x, y; /* was BC, BC */
 
   assert(state != NULL);
-  assert(doorpos != NULL);
+  assert(door  != NULL);
 
-  x = multiply_by_4(doorpos->pos.x);
+  x = multiply_by_4(door->pos.x);
   if (state->saved_pos.x < x - halfdist || state->saved_pos.x >= x + halfdist)
     return 0;
 
-  y = multiply_by_4(doorpos->pos.y);
+  y = multiply_by_4(door->pos.y);
   if (state->saved_pos.y < y - halfdist || state->saved_pos.y >= y + halfdist)
     return 0;
 
@@ -5971,7 +5971,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   doorindex_t     *doors;          /* was HL */
   doorindex_t      current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
-  const doorpos_t *door;           /* was HL' */
+  const door_t    *door;           /* was HL' */
   const tinypos_t *doorpos;        /* was HL' */
   pos_t           *pos;            /* was DE' */
   uint8_t          x;              /* was A */
@@ -6357,13 +6357,13 @@ void action_key(tgestate_t *state, room_t room_of_key)
  */
 doorindex_t *open_door(tgestate_t *state)
 {
-  doorindex_t     *gate;       /* was HL */
-  uint8_t          iters;      /* was B */
-  const doorpos_t *doorpos;    /* was HL' */
-  doorindex_t      door_index; /* was C */
-  doorindex_t     *door_ptr;   /* was DE */
-  pos_t           *pos;        /* was DE' */
-  doorindex_t      door;       /* was A */
+  doorindex_t  *gate;       /* was HL */
+  uint8_t       iters;      /* was B */
+  const door_t *door;       /* was HL' */
+  doorindex_t   door_index; /* was C */
+  doorindex_t  *door_ptr;   /* was DE */
+  pos_t        *pos;        /* was DE' */
+  doorindex_t   door2;      /* was A */
 
   assert(state != NULL);
 
@@ -6375,9 +6375,9 @@ doorindex_t *open_door(tgestate_t *state)
     iters = 5; // do the gate and door ranges overlap?
     do
     {
-      doorpos = get_door_position(*gate & ~door_LOCKED); // Conv: A used as temporary.
-      if (door_in_range(state, doorpos + 0) == 0 ||
-          door_in_range(state, doorpos + 1) == 0)
+      door = get_door_position(*gate & ~door_LOCKED); // Conv: A used as temporary.
+      if (door_in_range(state, door + 0) == 0 ||
+          door_in_range(state, door + 1) == 0)
         return NULL; /* Conv: goto removed. */
 
       gate++;
@@ -6400,10 +6400,10 @@ doorindex_t *open_door(tgestate_t *state)
       door_ptr = &state->doors[0];
       for (;;)
       {
-        door = *door_ptr;
-        if (door != door_NONE) // door_NONE => end of list
+        door2 = *door_ptr;
+        if (door2 != door_NONE) // door_NONE => end of list
         {
-          if ((door & ~door_LOCKED) == door_index)
+          if ((door2 & ~door_LOCKED) == door_index)
             goto found;
           door_ptr++;
         }
@@ -6416,12 +6416,12 @@ next:
     return NULL; // temporary, should do something else return 1;
 
 found:
-    doorpos = get_door_position(*door_ptr);
+    door = get_door_position(*door_ptr);
     /* Range check pattern (-2..+3). */
     pos = &state->saved_pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
-    if (pos->x <= doorpos->pos.x - 3 || pos->x > doorpos->pos.x + 3 ||
-        pos->y <= doorpos->pos.y - 3 || pos->y > doorpos->pos.y + 3)
+    if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
+        pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
       goto next;
 
     return NULL;
@@ -8112,13 +8112,13 @@ uint8_t get_next_target(tgestate_t *state,
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
-  uint8_t          x;       /* was A */
-  doorindex_t      door;    /* was A */
-  uint8_t          y;       /* was A or C */
-  const uint8_t   *pdoors;  /* was DE */
-  int16_t          index;   // signed /* was H */
-  const uint8_t   *pdoor;   /* was HL */
-  const doorpos_t *doorpos; /* was HL */
+  uint8_t        x;         /* was A */
+  doorindex_t    doorindex; /* was A */
+  uint8_t        y;         /* was A or C */
+  const uint8_t *pdoors;    /* was DE */
+  int16_t        index;     // signed /* was H */
+  const uint8_t *pdoor;     /* was HL */
+  const door_t  *door;      /* was HL */
 
   assert(state      != NULL);
   assert(target     != NULL);
@@ -8148,28 +8148,28 @@ uint8_t get_next_target(tgestate_t *state,
     index = (index << 8) | y; // was L = A;
     pdoor = pdoors + index;
     // EX DE,HL
-    door = *pdoor; // was A = *DE
+    doorindex = *pdoor; // was A = *DE
     // POP HL // was interleaved
-    if (door == door_NONE) /* end of list? */
+    if (doorindex == door_NONE) /* end of list? */
     {
       //printf("get_next_target: end of list case\n");
       *target_out = target;
       return 255; /* Conv: Was a goto to a return. */
     }
-    else if ((door & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
+    else if ((doorindex & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
     {
       // door = *pdoor; // removed redundant reload
       if (target->x & vischar_BYTE2_BIT7) // sure this is location-x? because it looks like it might be retesting 'door' so it get wiped. yeah, sure it is. could just be 'x' i think.
-        door ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
+        doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
-      doorpos = get_door_position(door);
-      // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (doorpos again)
-      *target_out = &doorpos->pos; // so this IS returning a tinypos in door_positions
+      door = get_door_position(doorindex);
+      // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (door_t again)
+      *target_out = &door->pos; // so this IS returning a tinypos in door_positions
       return 1 << 7;
     }
     else
     {
-      y = door - 40; // removed redundant reload
+      y = doorindex - 40; // removed redundant reload
     }
   }
 
@@ -8201,7 +8201,7 @@ void move_characters(tgestate_t *state)
   uint8_t            max;         /* was A' */
   pos_t             *HLpos;       /* was HL */
   tinypos_t         *DEtinypos;   /* was DE */
-  doorpos_t         *HLdoorpos;   /* was HL */
+  door_t            *HLdoorpos;   /* was HL */
   tinypos_t         *HLtinypos;   /* was HL */
   characterstruct_t *DEcharstr;   /* was DE */
 
@@ -8328,7 +8328,7 @@ character_12_or_higher:
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      HLdoorpos = (doorpos_t *) ((char *) HLtarget - 1); // ugly cast
+      HLdoorpos = (door_t *) ((char *) HLtarget - 1); // ugly cast
       assert(HLdoorpos >= &door_positions[0]);
       assert(HLdoorpos < &door_positions[door_MAX * 2]);
 
@@ -8353,7 +8353,7 @@ character_12_or_higher:
         DEtinypos->height = HLtinypos->height;
 //        DE += 3;
 //        DE--; // DE points to DEtinypos->height
-        // HL += 3 // HL points to next doorpos?
+        // HL += 3 // HL points to next door_t?
       }
       else
       {
@@ -9128,7 +9128,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   uint8_t          C;                       /* was C */
   uint8_t          A;                       /* was A */
   uint8_t          Astacked;                /* was A */
-  const doorpos_t *doorpos;                 /* was HL */
+  const door_t    *door;                    /* was HL */
   const tinypos_t *tinypos;                 /* was HL */
   vischar_t       *vischarHL;               /* was HL */
 
@@ -9193,15 +9193,15 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->target.x++;
     // POP AF
 
-    doorpos = get_door_position(A); // door related
-    vischar->room = (doorpos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
+    door = get_door_position(A); // door related
+    vischar->room = (door->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
-    if ((doorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
+    if ((door->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
       /* TOP_LEFT or TOP_RIGHT */
-      tinypos = &doorpos[1].pos; // was HL += 5; // next door pos
+      tinypos = &door[1].pos; // was HL += 5; // next door pos
     else
       /* BOTTOM_RIGHT or BOTTOM_LEFT */
-      tinypos = &doorpos[0].pos; // was HL -= 3; // current door pos
+      tinypos = &door[0].pos; // was HL -= 3; // current door pos
 
     // PUSH HL_tinypos
 

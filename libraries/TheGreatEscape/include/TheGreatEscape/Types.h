@@ -578,12 +578,12 @@ typedef void (charevnt_handler_t)(tgestate_t *state,
 /**
  * Defines a door's room, direction and position.
  */
-typedef struct doorpos
+typedef struct door
 {
   uint8_t   room_and_flags; // top 6 bits are a room_t, bottom 2 are a direction_t
   tinypos_t pos;
 }
-doorpos_t;
+door_t;
 
 /**
  * Holds a door index.

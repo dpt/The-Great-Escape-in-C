@@ -132,7 +132,7 @@ void reset_nonplayer_visible_characters(tgestate_t *state);
 
 void setup_doors(tgestate_t *state);
 
-const doorpos_t *get_door_position(doorindex_t door);
+const door_t *get_door_position(doorindex_t door);
 
 void wipe_visible_tiles(tgestate_t *state);
 
@@ -146,7 +146,7 @@ extern uint8_t *const beds[beds_LENGTH];
 
 /* $7000 onwards */
 
-extern /*const*/ doorpos_t door_positions[door_MAX * 2];
+extern /*const*/ door_t door_positions[door_MAX * 2];
 
 void process_player_input_fire(tgestate_t *state, input_t input);
 void use_item_B(tgestate_t *state);
@@ -386,7 +386,7 @@ int is_door_locked(tgestate_t *state);
 
 void door_handling(tgestate_t *state, vischar_t *vischar);
 
-int door_in_range(tgestate_t *state, const doorpos_t *doorpos);
+int door_in_range(tgestate_t *state, const door_t *door);
 
 INLINE uint16_t multiply_by_4(uint8_t A);
 
