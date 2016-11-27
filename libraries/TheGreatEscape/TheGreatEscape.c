@@ -6001,16 +6001,14 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if (y - 3 >= pos->y || y + 3 < pos->y) // -3 .. +2
       continue;
 
-    // HL points to door->pos[1]
-
     if (is_door_locked(state))
       return; /* The door was locked. */
 
     vischar->room = (room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // the mask's not strictly necessary
 
-    doorpos = &door->pos;
+    doorpos = &door[1].pos;
     if (state->current_door & door_LOCKED)
-      doorpos = &door[-2].pos; // seems odd
+      doorpos = &door[-1].pos;
 
     transition(state, doorpos); // exit via
     NEVER_RETURNS; // check
