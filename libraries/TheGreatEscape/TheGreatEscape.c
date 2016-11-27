@@ -368,7 +368,7 @@ void setup_doors(tgestate_t *state)
   assert(state != NULL);
 
   /* Wipe state->doors[] with 0xFF. (Could alternatively use memset().) */
-  pdoor = &state->doors[3];
+  pdoor = &state->interior_doors[3];
   iters = 4;
   do
     *pdoor-- = door_NONE;
@@ -5980,7 +5980,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  for (doors = &state->doors[0]; ; doors++)
+  for (doors = &state->interior_doors[0]; ; doors++)
   {
     current_door = *doors;
     if (current_door == door_NONE)
@@ -6397,7 +6397,7 @@ doorindex_t *open_door(tgestate_t *state)
       door_index = *gate & ~door_LOCKED;
 
       /* Search doors[] for door_index. */
-      door_ptr = &state->doors[0];
+      door_ptr = &state->interior_doors[0];
       for (;;)
       {
         door2 = *door_ptr;

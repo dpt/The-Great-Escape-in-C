@@ -173,8 +173,8 @@ struct tgestate
    * room objects). */
   bounds_t        roomdef_object_bounds[4];
 
-  /** $81D6: Doors. */
-  doorindex_t     doors[4];
+  /** $81D6: Indices of interior doors. */
+  doorindex_t     interior_doors[4];
 
    // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
 #define MAX_INTERIOR_MASK_REFS 7

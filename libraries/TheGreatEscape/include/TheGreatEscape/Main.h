@@ -81,8 +81,8 @@ do {                                                                  \
 
 #define ASSERT_DOORS_VALID(p)                                 \
 do {                                                          \
-  assert(p >= &state->doors[0]);                              \
-  assert(p < &state->doors[4]);                               \
+  assert(p >= &state->interior_doors[0]);                     \
+  assert(p < &state->interior_doors[4]);                      \
 } while (0)
 
 #define ASSERT_SUPERTILE_PTR_VALID(p)                            \
