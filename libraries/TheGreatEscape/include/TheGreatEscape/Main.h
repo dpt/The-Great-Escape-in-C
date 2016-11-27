@@ -146,7 +146,7 @@ extern uint8_t *const beds[beds_LENGTH];
 
 /* $7000 onwards */
 
-extern /*const*/ door_t door_positions[door_MAX * 2];
+extern /*const*/ door_t doors[door_MAX * 2];
 
 void process_player_input_fire(tgestate_t *state, input_t input);
 void use_item_B(tgestate_t *state);

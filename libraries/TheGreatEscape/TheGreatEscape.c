@@ -382,8 +382,8 @@ void setup_doors(tgestate_t *state)
 
   room = state->room_index << 2; /* Shunt left for comparison in loop. */
   door_index = 0;
-  door = &door_positions[0];
-  door_iters = NELEMS(door_positions);
+  door = &doors[0];
+  door_iters = NELEMS(doors);
   do
   {
     // Not sure what this is doing.
@@ -416,7 +416,7 @@ const door_t *get_door_position(doorindex_t door)  // rename get_door
   assert((door & ~door_LOCKED) < door_MAX);
 
   /* Conv: Mask before multiplication, avoiding overflow. */
-  pos = &door_positions[(door & ~door_LOCKED) * 2];
+  pos = &doors[(door & ~door_LOCKED) * 2];
   if (door & door_LOCKED)
     pos++;
 
@@ -784,7 +784,7 @@ uint8_t *const beds[beds_LENGTH] =
  * Used by setup_doors, get_door_position, door_handling and
  * bribes_solitary_food.
  */
-/*const*/ door_t door_positions[door_MAX * 2] =
+/*const*/ door_t doors[door_MAX * 2] =
 {
   /* Shorthands for directions. */
 #define TL direction_TOP_LEFT
@@ -2601,7 +2601,7 @@ void event_go_to_exercise_time(tgestate_t *state)
   queue_message_for_display(state, message_EXERCISE_TIME);
 
   /* Unlock the gates. */
-  state->gates_and_doors[0] = 0; /* Index into door_positions + clear locked flag. */
+  state->gates_and_doors[0] = 0; /* Index into doors + clear locked flag. */
   state->gates_and_doors[1] = 1;
 
   set_target_0x0E00(state);
@@ -2622,7 +2622,7 @@ void event_go_to_time_for_bed(tgestate_t *state)
   state->bell = bell_RING_40_TIMES;
 
   /* Lock the gates. */
-  state->gates_and_doors[0] = 0 | door_LOCKED; /* Index into door_positions + set locked flag. */
+  state->gates_and_doors[0] = 0 | door_LOCKED; /* Index into doors + set locked flag. */
   state->gates_and_doors[1] = 1 | door_LOCKED;
 
   queue_message_for_display(state, message_TIME_FOR_BED);
@@ -5769,15 +5769,15 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* Select a start position in door_positions based on the direction the
-   * hero is facing. */
-  door_pos = &door_positions[0];
+  /* Select a start position in doors based on the direction the hero is
+   * facing. */
+  door_pos = &doors[0];
   direction = vischar->direction;
   if (direction >= direction_BOTTOM_RIGHT) /* BOTTOM_RIGHT or BOTTOM_LEFT */
-    door_pos = &door_positions[1];
+    door_pos = &doors[1];
 
-  /* The first 16 (pairs of) entries in door_positions[] are the only ones
-   * with room_0_OUTDOORS as a destination, so only consider those. */
+  /* The first 16 (pairs of) entries in doors[] are the only ones with
+   * room_0_OUTDOORS as a destination, so only consider those. */
   iters = 16;
   do
   {
@@ -5798,7 +5798,7 @@ found:
   if (is_door_locked(state))
     return;
 
-  vischar->room = (door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in door_positions[])
+  vischar->room = (door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in doors[])
   if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
     /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
@@ -7986,7 +7986,7 @@ c592:
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
     // POP DE // -> vischar->p04
-    // sampled HL is $7913 (a door_positions tinypos)
+    // sampled HL is $7913 (a doors tinypos)
     memcpy(&vischar->p04, target, sizeof(tinypos_t)); // location is an xy not a tinypos so target must be wrong!
     // pointers incremented in original?
   }
@@ -8166,8 +8166,8 @@ uint8_t get_next_target(tgestate_t *state,
         doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
       door = get_door_position(doorindex);
-      // sampled HL = 78F6 (door_positions.room_and_flags)  79ea (door_t again)
-      *target_out = &door->pos; // so this IS returning a tinypos in door_positions
+      // sampled HL = 78F6 (doors.room_and_flags)  79ea (door_t again)
+      *target_out = &door->pos; // so this IS returning a tinypos in doors
       return 1 << 7;
     }
     else
@@ -8332,15 +8332,15 @@ character_12_or_higher:
       // => character_structs.room
 
       HLdoorpos = (door_t *) ((char *) HLtarget - 1); // ugly cast
-      assert(HLdoorpos >= &door_positions[0]);
-      assert(HLdoorpos < &door_positions[door_MAX * 2]);
+      assert(HLdoorpos >= &doors[0]);
+      assert(HLdoorpos < &doors[door_MAX * 2]);
 
       // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
-      // => door_positions.room_and_flags
+      // => doors.room_and_flags
 
       DEcharstr->room = (HLdoorpos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2;
 
-      // Stuff reading from door_positions.
+      // Stuff reading from doors.
       if ((HLdoorpos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < 2)
         // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
         HLtinypos = &HLdoorpos[1].pos;
@@ -8399,7 +8399,7 @@ character_12_or_higher:
       return;
     //printf("%p\n", &HLtarget->y);
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      HLtarget->y++; // writes into door_positions
+      HLtarget->y++; // writes into doors
     else
       HLtarget->y--;
   }
@@ -9915,7 +9915,7 @@ next:
   /* Move the hero to solitary. */
   state->vischars[0].room = room_24_SOLITARY;
 
-  /* From reading the door_positions[] table this is the door inbetween
+  /* From reading the doors[] table this is the door inbetween
    * room_21_CORRIDOR and room_0_OUTDOORS. I'd have expected this to be 49
    * which is the door between room_22_REDKEY and room_24_SOLITARY. */
   state->current_door = 20;
