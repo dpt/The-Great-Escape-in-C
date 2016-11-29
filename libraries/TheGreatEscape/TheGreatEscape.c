@@ -358,7 +358,7 @@ void reset_nonplayer_visible_characters(tgestate_t *state)
  */
 void setup_doors(tgestate_t *state)
 {
-  doorindex_t  *pdoor;      /* was DE */
+  doorindex_t  *pdoorindex; /* was DE */
   uint8_t       iters;      /* was B */
   uint8_t       room;       /* was B */ // same type as door_t->room_and_flags
   doorindex_t   door_index; /* was C */
@@ -367,34 +367,39 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->doors[] with 0xFF. (Could alternatively use memset().) */
-  pdoor = &state->interior_doors[3];
+  /* Wipe state->doors[] with 0xFF. */
+  // Alternative: memset(&state->interior_doors[0], door_NONE, 4);
+  pdoorindex = &state->interior_doors[3];
   iters = 4;
   do
-    *pdoor-- = door_NONE;
+    *pdoorindex-- = door_NONE;
   while (--iters);
 
-  pdoor++;
-  ASSERT_DOORS_VALID(pdoor);
+  pdoorindex++;
+  ASSERT_DOORS_VALID(pdoorindex);
 
   /* Ensure that no flag bits remain. */
   assert(state->room_index < room__LIMIT);
 
-  room = state->room_index << 2; /* Shunt left for comparison in loop. */
+  room       = state->room_index << 2; /* Shunt left to match comparison in loop. */
   door_index = 0;
-  door = &doors[0];
-  door_iters = NELEMS(doors);
+  door       = &doors[0];
+  door_iters = NELEMS(doors); /* Iterate over every individual door in doors[]. */
   do
   {
-    // Not sure what this is doing.
-    // Seems to be toggling lock/unlock flags in state->doors[].
-    // It's storing a flag to say which direction to look in doors[] when moving between rooms.
+    /* Save any door index which matches the current room. */
+    // Rooms are always square so should have no more than four doors but that is unchecked by this code.
     if ((door->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) == room)
       /* Current room. */
-      *pdoor++ = door_index ^ door_LOCKED;
-    door_index ^= door_LOCKED;
-    if (door_index < door_LOCKED) /* if flag not set (was JP M) */
-      door_index++; // increment every two stops?
+      *pdoorindex++ = door_index ^ door_REVERSE; // Store the index and the reverse flag.
+
+    /* On each step toggle the reverse flag. */
+    door_index ^= door_REVERSE;
+
+    /* Increment door_index once every two steps through the array. */
+    if (door_index < door_REVERSE) /* Conv: was JP M. */
+      door_index++;
+
     door++;
   }
   while (--door_iters);
@@ -413,11 +418,11 @@ const door_t *get_door_position(doorindex_t door)  // rename get_door
 {
   const door_t *pos; /* was HL */
 
-  assert((door & ~door_LOCKED) < door_MAX);
+  assert((door & ~door_REVERSE) < door_MAX);
 
-  /* Conv: Mask before multiplication, avoiding overflow. */
-  pos = &doors[(door & ~door_LOCKED) * 2];
-  if (door & door_LOCKED)
+  /* Conv: Mask before multiplication to avoid overflow. */
+  pos = &doors[(door & ~door_REVERSE) * 2];
+  if (door & door_REVERSE)
     pos++;
 
   return pos;
@@ -5721,12 +5726,12 @@ int is_door_locked(tgestate_t *state)
 
   assert(state != NULL);
 
-  cur   = state->current_door & ~door_LOCKED;
+  cur   = state->current_door & ~door_LOCKED; // or door_REVERSE?
   door  = &state->gates_and_doors[0];
   iters = NELEMS(state->gates_and_doors);
   do
   {
-    if ((*door & ~door_LOCKED) == cur)
+    if ((*door & ~door_LOCKED) == cur) // is definitely door_LOCKED, as 'door' is fetched from gates_and_doors[]
     {
       if ((*door & door_LOCKED) == 0)
         return 0; /* Door is open. */
@@ -6016,7 +6021,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     vischar->room = room_and_flags >> 2;
 
     doorpos = &door[1].pos;
-    if (state->current_door & door_LOCKED) // can't be a locked flag...
+    if (state->current_door & door_REVERSE)
       doorpos = &door[-1].pos;
 
     transition(state, doorpos); // exit via
@@ -6407,7 +6412,7 @@ loop:
       if (door2 == door_NONE)
         goto next;
 
-      if ((door2 & ~door_FLAG) == door_index) // door_LOCKED or door_FLAG? think _FLAG as it came from interior_doors[]
+      if ((door2 & ~door_REVERSE) == door_index) // door_LOCKED or door_REVERSE? think _FLAG as it came from interior_doors[]
         goto found;
 
       door_ptr++;
@@ -9190,7 +9195,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
 
     A = element_A_of_table_7738(A)[C];
     if (vischar->target.x & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
-      A ^= door_LOCKED; // later given to get_door_position, so must be a doorindex_t, so the flag must be the locked flag
+      A ^= door_REVERSE; // later given to get_door, so must be a doorindex_t, so the flag must be door_REVERSE
 
     // PUSH AF
     Astacked = vischar->target.x; // $8002, ...

@@ -38,7 +38,7 @@ struct tgestate
   /** $68A0: Index of the current room, or 0 when outside. */
   room_t          room_index;
 
-  /** $68A1: Holds the current door id (and possibly a door_LOCKED flag).
+  /** $68A1: Holds the current door id (and possibly a door_LOCKED/door_REVERSE flag).
    *
    * Read by is_door_locked, door_handling_interior.
    */
@@ -339,6 +339,7 @@ struct tgestate
   uint16_t       *game_window_start_offsets;
 
   /** $F05D: Gates and doors. */
+  // uses door_LOCKED to signify locked gates and doors.
   doorindex_t     gates_and_doors[11];
 
   /** $F06B: Key definitions. */
