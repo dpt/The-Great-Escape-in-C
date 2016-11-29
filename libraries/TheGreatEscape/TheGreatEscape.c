@@ -5717,7 +5717,7 @@ int is_door_locked(tgestate_t *state)
 {
   doorindex_t  cur;   /* was C */
   doorindex_t *door;  /* was HL */
-  uint8_t iters; /* was B */
+  uint8_t      iters; /* was B */
 
   assert(state != NULL);
 
@@ -6356,7 +6356,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
  *
  * \param[in] state Pointer to game state.
  *
- * \return Pointer to door in state->gates_and_doors[]. (was HL)
+ * \return Pointer to door in state->gates_and_doors[], or NULL. (was HL)
  */
 doorindex_t *open_door(tgestate_t *state)
 {
@@ -6381,13 +6381,13 @@ doorindex_t *open_door(tgestate_t *state)
       door = get_door_position(*gate & ~door_LOCKED); // Conv: A used as temporary.
       if (door_in_range(state, door + 0) == 0 ||
           door_in_range(state, door + 1) == 0)
-        return NULL; /* Conv: goto removed. */
+        return gate; /* Conv: goto removed. */
 
       gate++;
     }
     while (--iters);
 
-    return NULL;
+    return NULL; /* Not found */
   }
   else
   {
@@ -6401,23 +6401,28 @@ doorindex_t *open_door(tgestate_t *state)
 
       /* Search interior_doors[] for door_index. */
       door_ptr = &state->interior_doors[0];
-      for (;;)
-      {
-        door2 = *door_ptr;
-        if (door2 != door_NONE) // door_NONE => end of list
-        {
-          if ((door2 & ~door_LOCKED) == door_index)
-            goto found;
-          door_ptr++;
-        }
-      }
+
+loop:
+      door2 = *door_ptr;
+      if (door2 == door_NONE)
+        goto next;
+
+      if ((door2 & ~door_FLAG) == door_index) // door_LOCKED or door_FLAG? think _FLAG as it came from interior_doors[]
+        goto found;
+
+      door_ptr++;
+      // worrying lack of termination condition here - but i suppose every room has a door so it *must* find one
+      goto loop;
+
 next:
       gate++;
     }
     while (--iters);
 
-    return NULL; // temporary, should do something else return 1;
+    return NULL; /* Not found */
 
+
+    // FUTURE: Move this into the body of the loop.
 found:
     door = get_door_position(*door_ptr);
     /* Range check pattern (-2..+3). */
@@ -6427,7 +6432,7 @@ found:
         pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
       goto next;
 
-    return NULL;
+    return gate;
   }
 }
 
