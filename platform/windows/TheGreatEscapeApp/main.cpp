@@ -29,6 +29,10 @@ static const WCHAR szGameWindowTitle[]     = L"The Great Escape";
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static LONG g_window_adjust_x, g_window_adjust_y;
+
+///////////////////////////////////////////////////////////////////////////////
+
 typedef struct gamewin
 {
   HINSTANCE     instance;
@@ -279,6 +283,84 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       //     }
       //     break;
 
+    case WM_SIZING:
+    {
+      // http://playtechs.blogspot.co.uk/2007/10/forcing-window-to-maintain-particular.html
+
+      const int window_ratio_x = 256, window_ratio_y = 192;
+
+      int   edge = LOWORD(wParam);
+      RECT *rect = reinterpret_cast<RECT *>(lParam);
+      LONG width, height;
+      LONG newwidth, newheight;
+
+      width  = rect->right - rect->left;
+      height = rect->bottom - rect->top;
+
+      switch (edge)
+      {
+      case WMSZ_LEFT:
+      case WMSZ_RIGHT:
+      {
+        newheight = g_window_adjust_y + width * window_ratio_y / window_ratio_x;
+        rect->top = (rect->top + rect->bottom) / 2 - newheight / 2;
+        rect->bottom = rect->top + newheight;
+      }
+      break;
+
+      case WMSZ_TOP:
+      case WMSZ_BOTTOM:
+      {
+        newwidth = g_window_adjust_x + height * window_ratio_x / window_ratio_y;
+        rect->left = (rect->left + rect->right) / 2 - newwidth / 2;
+        rect->right = rect->left + newwidth;
+      }
+      break;
+
+      case WMSZ_TOPLEFT:
+      case WMSZ_TOPRIGHT:
+      case WMSZ_BOTTOMLEFT:
+      case WMSZ_BOTTOMRIGHT:
+      {
+        if (width * window_ratio_y > height * window_ratio_x)
+        {
+          // wider than high
+          newwidth = width;
+          newheight = g_window_adjust_y + (width - g_window_adjust_x) * window_ratio_y / window_ratio_x;
+        }
+        else
+        {
+          // higher than wide
+          newheight = height;
+          newwidth = g_window_adjust_x + (height - g_window_adjust_y) * window_ratio_x / window_ratio_y;
+        }
+
+        switch (edge)
+        {
+        case WMSZ_TOPLEFT:
+          rect->left = rect->right - newwidth;
+          rect->top = rect->bottom - newheight;
+          break;
+        case WMSZ_TOPRIGHT:
+          rect->top = rect->bottom - newheight;
+          rect->right = rect->left + newwidth;
+          break;
+        case WMSZ_BOTTOMLEFT:
+          rect->bottom = rect->top + newheight;
+          rect->left = rect->right - newwidth;
+          break;
+        case WMSZ_BOTTOMRIGHT:
+          rect->bottom = rect->top + newheight;
+          rect->right = rect->left + newwidth;
+          break;
+        }
+      }
+      break;
+      }
+
+      return TRUE;
+    }
+
     default:
       return DefWindowProc(hwnd, message, wParam, lParam);
   }
@@ -374,6 +456,14 @@ void DestroyGameWindow(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static void calculateWindowAdjustments(LONG width, LONG height)
+{
+  RECT rect = { 0, 0, width, height };
+  AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+  g_window_adjust_x = (rect.right - rect.left) - width;
+  g_window_adjust_y = (rect.bottom - rect.top) - height;
+}
+
 int WINAPI WinMain(__in     HINSTANCE hInstance,
                    __in_opt HINSTANCE hPrevInstance,
                    __in     LPSTR     lpszCmdParam,
@@ -386,6 +476,8 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
   rc = RegisterGameWindowClass(hInstance);
   if (!rc)
     return 0;
+
+  calculateWindowAdjustments(WIDTH, HEIGHT);
 
   rc = CreateGameWindow(hInstance, nCmdShow, &game1);
   if (!rc)
