@@ -2121,7 +2121,7 @@ uint8_t *get_prev_scanline(tgestate_t *state, uint8_t *addr)
   assert(addr  != NULL);
 
   uint8_t *const screen = &state->speccy->screen[0];
-  uint16_t       raddr = addr - screen;
+  ptrdiff_t      raddr = addr - screen;
 
   if ((raddr & 0x0700) != 0)
   {
