@@ -414,7 +414,7 @@ void setup_doors(tgestate_t *state)
  *
  * \return Pointer to door_t. (was HL)
  */
-const door_t *get_door_position(doorindex_t door)  // rename get_door
+const door_t *get_door(doorindex_t door)
 {
   const door_t *pos; /* was HL */
 
@@ -786,8 +786,7 @@ uint8_t *const beds[beds_LENGTH] =
 /**
  * $7A26: Door positions.
  *
- * Used by setup_doors, get_door_position, door_handling and
- * bribes_solitary_food.
+ * Used by setup_doors, get_door, door_handling and bribes_solitary_food.
  */
 /*const*/ door_t doors[door_MAX * 2] =
 {
@@ -6007,7 +6006,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     state->current_door = current_door;
 
-    door = get_door_position(current_door);
+    door = get_door(current_door);
     room_and_flags = door->room_and_flags;
 
     /* Does the character face the same direction as the door? */
@@ -6392,7 +6391,7 @@ doorindex_t *open_door(tgestate_t *state)
     iters = 5; // first five locked_doors include outdoor doors
     do
     {
-      door = get_door_position(*gate & ~door_LOCKED); // Conv: A used as temporary.
+      door = get_door(*gate & ~door_LOCKED); // Conv: A used as temporary.
       if (door_in_range(state, door + 0) == 0 ||
           door_in_range(state, door + 1) == 0)
         return gate; /* Conv: goto removed. */
@@ -6438,7 +6437,7 @@ next:
 
     // FUTURE: Move this into the body of the loop.
 found:
-    door = get_door_position(*door_ptr);
+    door = get_door(*door_ptr);
     /* Range check pattern (-2..+3). */
     pos = &state->saved_pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
@@ -8184,7 +8183,7 @@ uint8_t get_next_target(tgestate_t *state,
       if (target->x & vischar_BYTE2_BIT7) // sure this is location-x? because it looks like it might be retesting 'door' so it get wiped. yeah, sure it is. could just be 'x' i think.
         doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
-      door = get_door_position(doorindex);
+      door = get_door(doorindex);
       // sampled HL = 78F6 (doors.room_and_flags)  79ea (door_t again)
       *target_out = &door->pos; // so this IS returning a tinypos in doors
       return 1 << 7;
@@ -9215,7 +9214,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->target.x++;
     // POP AF
 
-    door = get_door_position(A); // door related
+    door = get_door(A); // door related
     vischar->room = (door->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
     if ((door->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
