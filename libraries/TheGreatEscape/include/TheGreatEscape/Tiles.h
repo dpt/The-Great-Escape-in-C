@@ -22,10 +22,6 @@ typedef struct
 }
 tile_t;
 
-extern const tile_t mask_tiles[111];
-extern const tile_t exterior_tiles_1[145];
-extern const tile_t exterior_tiles_2[220];
-extern const tile_t exterior_tiles_3[206];
 extern const tile_t interior_tiles[194];
 
 #endif /* TILES_H */

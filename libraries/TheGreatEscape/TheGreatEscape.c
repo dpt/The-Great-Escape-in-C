@@ -599,7 +599,7 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
 
   columns     = state->columns; // Conv: Added.
 
-  assert(columns == 24);
+  assert(columns == 24); // did i add this for any particular reason?
 
   obj         = interior_object_defs[index];
 
@@ -804,8 +804,8 @@ uint8_t *const beds[beds_LENGTH] =
   // pos is the position of the door in the current room
 
   // odd stuff:
-  // rooms 28, 2, 4, 13 come out at the same place? 0x2A,0x1C
-  // rooms 34 and 48 come out at the same place?
+  // rooms 28, 2, 4, 13 come out at the same place? 0x2A,0x1C -- maybe just doors in the same pos in different rooms
+  // rooms 34 and 48 come out at the same place? -- ditto
   // rooms 3, 5, 23 ... 0x20,0x2E
   //
   // could these be deltas rather than absolute values?
@@ -4249,11 +4249,11 @@ uint8_t *plot_tile(tgestate_t             *state,
   assert(supertileindex < supertileindex__LIMIT);
 
   if (supertileindex < 45)
-    tileset = &exterior_tiles_1[0];
+    tileset = &exterior_tiles[0];
   else if (supertileindex < 139 || supertileindex >= 204)
-    tileset = &exterior_tiles_2[0];
+    tileset = &exterior_tiles[145]; // set 2
   else
-    tileset = &exterior_tiles_3[0];
+    tileset = &exterior_tiles[145 + 220]; // set 3
 
   src = &tileset[tile_index].row[0];
   dst = scr;
@@ -4271,7 +4271,7 @@ uint8_t *plot_tile(tgestate_t             *state,
 /* ----------------------------------------------------------------------- */
 
 // Fixed constants for now.
-#define tile_buf_length      (24 * 17)
+#define tile_buf_length   (24 * 17)
 #define window_buf_length (24 * 8 * 17)
 
 /**
@@ -4756,7 +4756,7 @@ void zoombox_fill(tgestate_t *state)
 
   hz_count  = state->zoombox.width;
   hz_count1 = hz_count;
-  src_skip  = state->columns - hz_count;
+  src_skip  = state->columns - hz_count; // columns was 24
 
   iters = state->zoombox.height; /* iterations */
   do
@@ -7449,7 +7449,7 @@ int vischar_visible(tgestate_t      *state,
   /* Width part. */
 
   /* Conv: Re-read of map_position_related removed. */
-  A1 = state->map_position.x + state->columns - state->screenpos.x;
+  A1 = state->map_position.x + state->columns - state->screenpos.x; // columns was 24
   if (A1 <= 0)
     return 0xFF; /* Not visible. */
 
@@ -7706,12 +7706,12 @@ const tile_t *select_tile_set(tgestate_t *state,
     offset     = ((((state->map_position.x & 3) + x) >> 2) & 0x3F) + row_offset; // combines horizontal + vertical
 
     tile = state->map_buf[offset]; /* (7x5) supertile refs */
-    tileset = &exterior_tiles_1[0];
+    tileset = &exterior_tiles[0];
     if (tile >= 45)
     {
-      tileset = &exterior_tiles_2[0];
+      tileset = &exterior_tiles[145];
       if (tile >= 139 && tile < 204)
-        tileset = &exterior_tiles_3[0];
+        tileset = &exterior_tiles[145 + 220];
     }
   }
   return tileset;
@@ -10659,7 +10659,7 @@ uint8_t item_visible(tgestate_t *state,
   px = &state->screenpos.x;
   map_position = state->map_position;
 
-  xoff = map_position.x + state->columns - px[0];
+  xoff = map_position.x + state->columns - px[0]; // columns was 24
   if (xoff > 0)
   {
 #define WIDTH_BYTES 3
