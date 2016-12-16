@@ -5945,7 +5945,7 @@ void reset_outdoors(tgestate_t *state)
 
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
-  state->room_index = room_NONE;
+  state->room_index = room_0_OUTDOORS;
   get_supertiles(state);
   plot_all_tiles(state);
   setup_movable_items(state);
