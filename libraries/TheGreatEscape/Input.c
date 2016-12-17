@@ -266,7 +266,7 @@ static input_t inputroutine_sinclair(tgestate_t *state)
     left_right = input_LEFT;
 
   keybits &= 1 << 3; /* Set A to 8 or 0 */
-  if (keybits == 0)
+  if (keybits)
     fire = input_FIRE;
   else
     fire = 0;
