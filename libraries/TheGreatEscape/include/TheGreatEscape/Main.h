@@ -331,10 +331,10 @@ void plot_vertical_tiles_common(tgestate_t       *state,
                                 uint8_t           x,
                                 uint8_t          *window);
 
-uint8_t *plot_tile_then_advance(tgestate_t             *state,
-                                tileindex_t             tile_index,
-                                const supertileindex_t *psupertileindex,
-                                uint8_t                *scr);
+INLINE uint8_t *plot_tile_then_advance(tgestate_t             *state,
+                                       tileindex_t             tile_index,
+                                       const supertileindex_t *psupertileindex,
+                                       uint8_t                *scr);
 
 uint8_t *plot_tile(tgestate_t             *state,
                    tileindex_t             tile_index,
