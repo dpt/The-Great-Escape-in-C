@@ -76,6 +76,15 @@
 
 #include "TheGreatEscape/Main.h"
 
+// debug
+void check_map_buf(tgestate_t *state)
+{
+  for (int i = 0; i < state->st_columns * state->st_rows; i++)
+  {
+    assert(state->map_buf[i] < supertileindex__LIMIT);
+  }
+}
+
 /* ----------------------------------------------------------------------- */
 
 /**
@@ -3844,6 +3853,8 @@ void get_supertiles(tgestate_t *state)
     tiles += MAPX;
   }
   while (--iters);
+
+  check_map_buf(state);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4032,6 +4043,8 @@ void plot_all_tiles(tgestate_t *state)
   window   = &state->window_buf[0]; /* screen buffer start address */
   x        = state->map_position.x; /* map_position x */
 
+  check_map_buf(state);
+
   iters = state->columns; /* Conv: was 24 */
   do
   {
@@ -4141,6 +4154,8 @@ void plot_vertical_tiles_common(tgestate_t             *state,
   iters = -((offset >> 2) & 3) & 3;
   if (iters == 0)
     iters = 4; // 1..4
+
+  check_map_buf(state);
 
   do
   {
