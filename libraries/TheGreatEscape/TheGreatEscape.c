@@ -10482,10 +10482,10 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   assert(state   != NULL);
   assert(itemstr != NULL); // will need ASSERT_ITEMSTRUCT_VALID
-  ASSERT_ITEM_VALID(item);
 
   /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
   item &= 0x3F; // mask off item_FOUND
+  ASSERT_ITEM_VALID(item);
 
   /* Bug: The original game writes to this location but it's never
    * subsequently read from.
