@@ -11755,7 +11755,7 @@ void plot_game_window(tgestate_t *state)
   }
   else
   {
-    src = &state->window_buf[1] + state->game_window_offset.x;
+    src = &state->window_buf[0] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src);
     data = *src++;
     offsets = &state->game_window_start_offsets[0];
