@@ -85,10 +85,10 @@ do {                                                          \
   assert(p < &state->doors[4]);                               \
 } while (0)
 
-#define ASSERT_SUPERTILE_PTR_VALID(p)                           \
-do {                                                            \
-  assert(p >= &supertiles[0].tiles[0]);                         \
-  assert(p <= &supertiles[supertileindex__LIMIT - 1].tiles[0]); \
+#define ASSERT_SUPERTILE_PTR_VALID(p)                            \
+do {                                                             \
+  assert(p >= &supertiles[0].tiles[0]);                          \
+  assert(p <= &supertiles[supertileindex__LIMIT - 1].tiles[15]); \
 } while (0)
 
 #define ASSERT_MAP_PTR_VALID(p)                               \
