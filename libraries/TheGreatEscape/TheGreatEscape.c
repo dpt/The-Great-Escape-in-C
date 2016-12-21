@@ -4460,11 +4460,11 @@ void move_map(tgestate_t *state)
   // It gets passed into the move functions.
   // Is this a vertical index/offset only?
   pmove_map_y = &state->move_map_y;
-  if (direction >= direction_BOTTOM_RIGHT)
-    /* direction_BOTTOM_* */
+  if (direction <= direction_TOP_RIGHT)
+    /* direction_TOP_* */
     move_map_y = *pmove_map_y + 1;
   else
-    /* direction_TOP_* */
+    /* direction_BOTTOM_* */
     move_map_y = *pmove_map_y - 1;
   move_map_y &= 3;
   *pmove_map_y = move_map_y;
