@@ -3855,7 +3855,7 @@ void plot_topmost_tiles(tgestate_t *state)
   assert(state != NULL);
 
   vistiles = &state->tile_buf[0];   // $F0F8 = visible tiles array + 0
-  maptiles = &state->map_buf[8];    // $FF58
+  maptiles = &state->map_buf[0];    // $FF58
   y        = state->map_position.y; // map_position y
   window   = &state->window_buf[0]; // $F290
 
