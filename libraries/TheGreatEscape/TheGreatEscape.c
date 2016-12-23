@@ -3916,7 +3916,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
 
     // Conv: Fused accesses and increments.
     t = *vistiles++ = *tiles++; // A = tile index
-    plot_tile(state, t, maptiles, window);
+    window = plot_tile(state, t, maptiles, window);
   }
   while (--iters);
 
@@ -3940,7 +3940,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
       ASSERT_SUPERTILE_PTR_VALID(tiles);
 
       t = *vistiles++ = *tiles++; // A = tile index
-      plot_tile(state, t, maptiles, window);
+      window = plot_tile(state, t, maptiles, window);
     }
     while (--iters);
 
@@ -3969,7 +3969,7 @@ void plot_horizontal_tiles_common(tgestate_t       *state,
     ASSERT_SUPERTILE_PTR_VALID(tiles);
 
     t = *vistiles++ = *tiles++; // Adash = tile index
-    plot_tile(state, t, maptiles, window);
+    window = plot_tile(state, t, maptiles, window);
   }
   while (--iters);
 }
