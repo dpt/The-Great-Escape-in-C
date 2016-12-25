@@ -569,10 +569,10 @@ extern const spritedef_t item_definitions[item__LIMIT];
 
 extern const size_t masked_sprite_plotter_16_enables[2 * 3];
 
-void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar);
+void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar);
 
-void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state);
-void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar);
+void masked_sprite_plotter_16_wide_item(tgestate_t *state);
+void masked_sprite_plotter_16_wide_vischar(tgestate_t *state, vischar_t *vischar);
 void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x);
 void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x);
 

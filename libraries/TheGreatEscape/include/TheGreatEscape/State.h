@@ -310,8 +310,8 @@ struct tgestate
   attribute_t     item_attributes[item__LIMIT];
 
   /** $E121 .. $E363: (Formerly) Self-modified locations. */
-  uint8_t         self_E121; // masked_sprite_plotter_24_wide: height loop in right shift case = clipped_height & 0xFF
-  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide: height loop in left shift case = clipped_height & 0xFF
+  uint8_t         self_E121; // masked_sprite_plotter_24_wide_vischar: height loop in right shift case = clipped_height & 0xFF
+  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide_vischar: height loop in left shift case = clipped_height & 0xFF
   uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left: height loop = clipped height & 0xFF
   uint8_t         self_E363; // masked_sprite_plotter_16_wide_right: height loop = clipped height & 0xFF
 

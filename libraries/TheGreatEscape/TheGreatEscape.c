@@ -6919,9 +6919,9 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
           searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
-          masked_sprite_plotter_24_wide(state, vischar);
+          masked_sprite_plotter_24_wide_vischar(state, vischar);
         else
-          masked_sprite_plotter_16_wide(state, vischar);
+          masked_sprite_plotter_16_wide_vischar(state, vischar);
       }
     }
     else
@@ -6930,7 +6930,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
       if (found)
       {
         render_mask_buffer(state);
-        masked_sprite_plotter_16_wide_searchlight(state);
+        masked_sprite_plotter_16_wide_item(state);
       }
     }
   }
@@ -10747,7 +10747,7 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
+void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t        x;           /* was A */
   uint8_t        iters;       /* was B */
@@ -11034,22 +11034,22 @@ void masked_sprite_plotter_24_wide(tgestate_t *state, vischar_t *vischar)
 }
 
 /**
- * $E29F: Entry point for masked_sprite_plotter_16_wide_left which assumes A == 0. (+ no vischar passed).
+ * $E29F: Sprite plotter entry point for items only.
  *
  * \param[in] state Pointer to game state.
  */
-void masked_sprite_plotter_16_wide_searchlight(tgestate_t *state)
+void masked_sprite_plotter_16_wide_item(tgestate_t *state)
 {
   masked_sprite_plotter_16_wide_left(state, 0 /* x */);
 }
 
 /**
- * $E2A2: Sprite plotter. Used for characters and objects.
+ * $E2A2: Sprite plotter entry point for vischars only.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_16_wide(tgestate_t *state, vischar_t *vischar)
+void masked_sprite_plotter_16_wide_vischar(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t x;
 
@@ -11201,7 +11201,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 /**
  * $E34E: Sprite plotter. Shifts left/right (unsure). Used for characters and objects. Counterpart of above routine.
  *
- * Only called by masked_sprite_plotter_16_wide.
+ * Only called by masked_sprite_plotter_16_wide_vischar.
  *
  * \param[in] state Pointer to game state.
  * \param[in] x     X offset. (was A)
@@ -11462,8 +11462,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
     /* These two addresses are present here in the original game but are
      * unreferenced. */
-    // masked_sprite_plotter_16_wide
-    // masked_sprite_plotter_24_wide
+    // masked_sprite_plotter_16_wide_vischar
+    // masked_sprite_plotter_24_wide_vischar
   };
 
   pos_t             *pos;            /* was HL */
@@ -11549,8 +11549,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   }
   else
   {
-    state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide (shift right case)
-    state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide (shift left case)
+    state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift right case)
+    state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift left case)
 
     A = 4;
     enables = &masked_sprite_plotter_24_enables[0];
