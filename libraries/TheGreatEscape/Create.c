@@ -406,6 +406,9 @@ static void tge_initialise(tgestate_t *state)
   state->moraleflag_screen_address =
       &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
 
+  /** $A263 */
+  state->red_cross_parcel_current_contents = item_NONE;
+
   /* $AD29 */
   memcpy(state->searchlight.states,
          searchlight_states,
