@@ -214,6 +214,29 @@ static void tge_initialise(tgestate_t *state)
   };
 
   /**
+   * $DD69: Default item attributes.
+   */
+  static const attribute_t item_attributes[item__LIMIT] =
+  {
+    attribute_YELLOW_OVER_BLACK,
+    attribute_CYAN_OVER_BLACK,
+    attribute_CYAN_OVER_BLACK,
+    attribute_WHITE_OVER_BLACK,
+    attribute_GREEN_OVER_BLACK,
+    attribute_BRIGHT_RED_OVER_BLACK,
+    attribute_GREEN_OVER_BLACK,
+    attribute_WHITE_OVER_BLACK,
+    attribute_PURPLE_OVER_BLACK,
+    attribute_BRIGHT_RED_OVER_BLACK,
+    attribute_YELLOW_OVER_BLACK,
+    attribute_GREEN_OVER_BLACK,
+    attribute_CYAN_OVER_BLACK,
+    attribute_WHITE_OVER_BLACK,
+    attribute_WHITE_OVER_BLACK,
+    attribute_GREEN_OVER_BLACK,
+  };
+
+  /**
    * $EDD3: Game screen start addresses.
    *
    * Absolute addresses in the original code. These are now offsets.
@@ -387,6 +410,11 @@ static void tge_initialise(tgestate_t *state)
   memcpy(state->searchlight.states,
          searchlight_states,
          sizeof(searchlight_states));
+
+  /* $DD69 */
+  memcpy(state->item_attributes,
+         item_attributes,
+         sizeof(item_attributes));
 
   /* $EDD3 */
   // Future: recalculate these
