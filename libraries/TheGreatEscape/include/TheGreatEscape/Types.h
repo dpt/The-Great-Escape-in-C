@@ -235,7 +235,7 @@ enum itemstruct_flags
 enum door_flags
 {
   door_REVERSE                         = 1 << 7, /* Used to reverse door transitions. */
-  door_LOCKED                          = 1 << 7, /* Used to lock doors. Seems to be only relevant for gates_and_doors[]. */
+  door_LOCKED                          = 1 << 7, /* Used to lock doors. Seems to be only relevant for locked_doors[]. */
   door_NONE                            = 0xFF
 };
 

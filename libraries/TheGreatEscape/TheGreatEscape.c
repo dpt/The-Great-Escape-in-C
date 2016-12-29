@@ -811,9 +811,11 @@ uint8_t *const beds[beds_LENGTH] =
   //
   // could these be deltas rather than absolute values?
 
+  // 0 - gate - initially locked
   { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x8A,  6 } }, // 0 // gates
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x8E,  6 } },
 
+  // 1 - gate - initially locked
   { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x7A,  6 } }, // gates
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x7E,  6 } },
 
@@ -847,12 +849,15 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_20_REDCROSS,             TL), { 0xFC, 0xDA,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1A, 0x22, 24 } },
 
+  // 12 - initially locked
   { ROOMDIR(room_15_UNIFORM,              TR), { 0xF7, 0xE3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x26, 0x19, 24 } },
 
+  // 13 - initially locked
   { ROOMDIR(room_13_CORRIDOR,             TR), { 0xDF, 0xE3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
 
+  // 14 - initially locked
   { ROOMDIR(room_8_CORRIDOR,              TR), { 0x97, 0xD3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x15, 24 } },
 
@@ -877,12 +882,14 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_19_FOOD,                 TR), { 0x22, 0x42, 24 } },
   { ROOMDIR(room_23_BREAKFAST,            BL), { 0x22, 0x1C, 24 } },
 
+  // 22 - initially locked
   { ROOMDIR(room_18_RADIO,                TR), { 0x24, 0x36, 24 } },
   { ROOMDIR(room_19_FOOD,                 BL), { 0x38, 0x22, 24 } },
 
   { ROOMDIR(room_21_CORRIDOR,             TR), { 0x2C, 0x36, 24 } },
   { ROOMDIR(room_22_REDKEY,               BL), { 0x22, 0x1C, 24 } },
 
+  // 24 - initially locked
   { ROOMDIR(room_22_REDKEY,               TR), { 0x2C, 0x36, 24 } },
   { ROOMDIR(room_24_SOLITARY,             BL), { 0x2A, 0x26, 24 } },
 
@@ -904,6 +911,7 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } }, // 60 // strange outdoor-to-outdoor door definition. unused?
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x30, 24 } },
 
+  // 31 - initially locked
   { ROOMDIR(room_13_CORRIDOR,             TL), { 0x4A, 0x28, 24 } },
   { ROOMDIR(room_11_PAPERS,               BR), { 0x1A, 0x22, 24 } },
 
@@ -913,6 +921,7 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_10_LOCKPICK,             TL), { 0x36, 0x35, 24 } },
   { ROOMDIR(room_8_CORRIDOR,              BR), { 0x17, 0x26, 24 } },
 
+  // 34 - initially locked
   { ROOMDIR(room_9_CRATE,                 TL), { 0x36, 0x1C, 24 } },
   { ROOMDIR(room_8_CORRIDOR,              BR), { 0x1A, 0x22, 24 } },
 
@@ -2606,8 +2615,8 @@ void event_go_to_exercise_time(tgestate_t *state)
   queue_message_for_display(state, message_EXERCISE_TIME);
 
   /* Unlock the gates. */
-  state->gates_and_doors[0] = 0; /* Index into doors + clear locked flag. */
-  state->gates_and_doors[1] = 1;
+  state->locked_doors[0] = 0; /* Index into doors + clear locked flag. */
+  state->locked_doors[1] = 1;
 
   set_target_0x0E00(state);
 }
@@ -2627,8 +2636,8 @@ void event_go_to_time_for_bed(tgestate_t *state)
   state->bell = bell_RING_40_TIMES;
 
   /* Lock the gates. */
-  state->gates_and_doors[0] = 0 | door_LOCKED; /* Index into doors + set locked flag. */
-  state->gates_and_doors[1] = 1 | door_LOCKED;
+  state->locked_doors[0] = 0 | door_LOCKED; /* Index into doors + set locked flag. */
+  state->locked_doors[1] = 1 | door_LOCKED;
 
   queue_message_for_display(state, message_TIME_FOR_BED);
   go_to_time_for_bed(state);
@@ -5726,12 +5735,12 @@ int is_door_locked(tgestate_t *state)
 
   assert(state != NULL);
 
-  cur   = state->current_door & ~door_LOCKED; // or door_REVERSE?
-  door  = &state->gates_and_doors[0];
-  iters = NELEMS(state->gates_and_doors);
+  cur   = state->current_door & ~door_LOCKED; // probably door_REVERSE
+  door  = &state->locked_doors[0];
+  iters = NELEMS(state->locked_doors);
   do
   {
-    if ((*door & ~door_LOCKED) == cur) // is definitely door_LOCKED, as 'door' is fetched from gates_and_doors[]
+    if ((*door & ~door_LOCKED) == cur) // is definitely door_LOCKED, as 'door' is fetched from locked_doors[]
     {
       if ((*door & door_LOCKED) == 0)
         return 0; /* Door is open. */
@@ -6361,7 +6370,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
  *
  * \param[in] state Pointer to game state.
  *
- * \return Pointer to door in state->gates_and_doors[], or NULL. (was HL)
+ * \return Pointer to door in state->locked_doors[], or NULL. (was HL)
  */
 doorindex_t *open_door(tgestate_t *state)
 {
@@ -6379,8 +6388,8 @@ doorindex_t *open_door(tgestate_t *state)
   {
     /* Outdoors. */
 
-    gate = &state->gates_and_doors[0]; // gate indices
-    iters = 5; // do the gate and door ranges overlap?
+    gate = &state->locked_doors[0];
+    iters = 5; // first five locked_doors include outdoor doors
     do
     {
       door = get_door_position(*gate & ~door_LOCKED); // Conv: A used as temporary.
@@ -6398,8 +6407,8 @@ doorindex_t *open_door(tgestate_t *state)
   {
     /* Indoors. */
 
-    gate = &state->gates_and_doors[2]; // door flags // why start at offset 2?
-    iters = 8;
+    gate = &state->locked_doors[2];
+    iters = 8; // locked_doors 2..8 include indoor doors // bug: iters should be 7
     do
     {
       door_index = *gate & ~door_LOCKED;
@@ -6799,9 +6808,9 @@ void reset_map_and_characters(tgestate_t *state)
   roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL_SW_NE;
   roomdef_50_blocked_tunnel[2] = 0x34; /* Reset boundary. */
 
-  /* Lock the gates. */
-  gate = &state->gates_and_doors[0];
-  iters = 9; // to explain: gates_and_doors is 11 long but this locks the first 9 only
+  /* Lock the gates and doors. */
+  gate = &state->locked_doors[0];
+  iters = 9;
   do
     *gate++ |= door_LOCKED;
   while (--iters);

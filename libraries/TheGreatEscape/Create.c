@@ -373,6 +373,23 @@ static void tge_initialise(tgestate_t *state)
     0x1727,
   };
 
+  /* $F05D: Locked gates and doors. */
+  static const doorindex_t locked_doors[] =
+  {
+    /* The doorindex_t indices here are those as passed to get_door. */
+     0 | door_LOCKED, // outside-outside
+     1 | door_LOCKED, // outside-outside
+    13 | door_LOCKED, // inside-outside
+    12 | door_LOCKED, // inside-outside
+    14 | door_LOCKED, // inside-outside
+    34 | door_LOCKED, // inside-inside
+    24 | door_LOCKED, // inside-inside
+    31 | door_LOCKED, // inside-inside
+    22 | door_LOCKED, // inside-inside
+    0, // unused afaict
+    0, // unused afaict
+  };
+
   /* Initialise in structure order. */
 
   // Future: Table drive this copying.
@@ -424,6 +441,11 @@ static void tge_initialise(tgestate_t *state)
   memcpy(state->game_window_start_offsets,
          game_window_start_offsets,
          sizeof(game_window_start_offsets));
+
+  /* $F05D */
+  memcpy(state->locked_doors,
+         locked_doors,
+         sizeof(locked_doors));
 
   // temporary
   memset(state->tile_buf,   0x55,  state->columns * state->rows);

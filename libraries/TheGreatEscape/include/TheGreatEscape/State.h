@@ -250,7 +250,7 @@ struct tgestate
    * plotted. */
   uint8_t        *moraleflag_screen_address;
 
-  /** $A143: Pointer to a door in gates_and_doors[] in which door_LOCKED is
+  /** $A143: Pointer to a door in locked_doors[] in which door_LOCKED is
    * cleared when picked. */
   doorindex_t    *ptr_to_door_being_lockpicked;
 
@@ -338,9 +338,9 @@ struct tgestate
   /** $EDD3: Start addresses for game screen (usually 128). */
   uint16_t       *game_window_start_offsets;
 
-  /** $F05D: Gates and doors. */
-  // uses door_LOCKED to signify locked gates and doors.
-  doorindex_t     gates_and_doors[11];
+  /** $F05D: Locked gates and doors.
+   * This uses door_LOCKED to signify locked gates and doors. */
+  doorindex_t     locked_doors[11];
 
   /** $F06B: Key definitions. */
   keydefs_t       keydefs;
