@@ -10315,42 +10315,51 @@ const default_item_location_t default_item_locations[item__LIMIT] =
 
 // struct animation
 // {
-//   uint8_t count;
-//   uint8_t A;
-//   uint8_t B;
-//   uint8_t C;
-//   anim_t  anim[UNKNOWN]; // the array is of length 'count'
+//   uint8_t count;     // how many anims in anim[]
+//   uint8_t A;         // unknown yet
+//   uint8_t B;         // unknown yet
+//                      // A+B differ when changing direction
+//   uint8_t direction; // selects map movement routine in move_map:
+//                      // 0x00 = player moves down-right (map is shifted up-left)
+//                      // 0x01 = player moves down-left  (map is shifted up-right)
+//                      // 0x02 = player moves up-left    (map is shifted down-right)
+//                      // 0x03 = player moves up-right   (map is shifted down-left)
+//                      // 0xFF = don't move the map
+//                      // perhaps a direction_t if interpretation of this field is "which direction to move the map"
+//   anim_t  anim[UNKNOWN];
+//                      // each anim has x/y/z - a triple of delta values used for movement
+//                      // z's are always zero as no movement changes height
 // };
 
-static const uint8_t anim_A[] = { 1, 0x4,0x4,0xFF,  0, 0, 0, _|0xA };
-static const uint8_t anim_B[] = { 1, 0x5,0x5,0xFF,  0, 0, 0, F|0xA };
-static const uint8_t anim_C[] = { 1, 0x6,0x6,0xFF,  0, 0, 0, F|0x8 };
-static const uint8_t anim_D[] = { 1, 0x7,0x7,0xFF,  0, 0, 0, _|0x8 };
+static const uint8_t anim_crawlwait_tl[] = { 1, 0x4,0x4,0xFF,  0, 0, 0, _|0xA };
+static const uint8_t anim_crawlwait_tr[] = { 1, 0x5,0x5,0xFF,  0, 0, 0, F|0xA };
+static const uint8_t anim_crawlwait_br[] = { 1, 0x6,0x6,0xFF,  0, 0, 0, F|0x8 };
+static const uint8_t anim_crawlwait_bl[] = { 1, 0x7,0x7,0xFF,  0, 0, 0, _|0x8 };
 
-static const uint8_t anim_E[] = { 4, 0x0,0x0,0x02,  2, 0, 0, _|0x0,  2, 0, 0, _|0x1,  2, 0, 0, _|0x2,  2, 0, 0, _|0x3 };
-static const uint8_t anim_F[] = { 4, 0x1,0x1,0x03,  0, 2, 0, F|0x0,  0, 2, 0, F|0x1,  0, 2, 0, F|0x2,  0, 2, 0, F|0x3 };
-static const uint8_t anim_G[] = { 4, 0x2,0x2,0x00, -2, 0, 0, _|0x4, -2, 0, 0, _|0x5, -2, 0, 0, _|0x6, -2, 0, 0, _|0x7 };
-static const uint8_t anim_H[] = { 4, 0x3,0x3,0x01,  0,-2, 0, F|0x4,  0,-2, 0, F|0x5,  0,-2, 0, F|0x6,  0,-2, 0, F|0x7 };
+static const uint8_t anim_walk_tl[]      = { 4, 0x0,0x0,0x02,  2, 0, 0, _|0x0,  2, 0, 0, _|0x1,  2, 0, 0, _|0x2,  2, 0, 0, _|0x3 };
+static const uint8_t anim_walk_tr[]      = { 4, 0x1,0x1,0x03,  0, 2, 0, F|0x0,  0, 2, 0, F|0x1,  0, 2, 0, F|0x2,  0, 2, 0, F|0x3 };
+static const uint8_t anim_walk_br[]      = { 4, 0x2,0x2,0x00, -2, 0, 0, _|0x4, -2, 0, 0, _|0x5, -2, 0, 0, _|0x6, -2, 0, 0, _|0x7 };
+static const uint8_t anim_walk_bl[]      = { 4, 0x3,0x3,0x01,  0,-2, 0, F|0x4,  0,-2, 0, F|0x5,  0,-2, 0, F|0x6,  0,-2, 0, F|0x7 };
 
-static const uint8_t anim_I[] = { 1, 0x0,0x0,0xFF,  0, 0, 0, _|0x0 };
-static const uint8_t anim_J[] = { 1, 0x1,0x1,0xFF,  0, 0, 0, F|0x0 };
-static const uint8_t anim_K[] = { 1, 0x2,0x2,0xFF,  0, 0, 0, _|0x4 };
-static const uint8_t anim_L[] = { 1, 0x3,0x3,0xFF,  0, 0, 0, F|0x4 };
+static const uint8_t anim_wait_tl[]      = { 1, 0x0,0x0,0xFF,  0, 0, 0, _|0x0 };
+static const uint8_t anim_wait_tr[]      = { 1, 0x1,0x1,0xFF,  0, 0, 0, F|0x0 };
+static const uint8_t anim_wait_br[]      = { 1, 0x2,0x2,0xFF,  0, 0, 0, _|0x4 };
+static const uint8_t anim_wait_bl[]      = { 1, 0x3,0x3,0xFF,  0, 0, 0, F|0x4 };
 
-static const uint8_t anim_M[] = { 2, 0x0,0x1,0xFF,  0, 0, 0, _|0x0,  0, 0, 0, F|0x0 };
-static const uint8_t anim_N[] = { 2, 0x1,0x2,0xFF,  0, 0, 0, F|0x0,  0, 0, 0, _|0x4 };
-static const uint8_t anim_O[] = { 2, 0x2,0x3,0xFF,  0, 0, 0, _|0x4,  0, 0, 0, F|0x4 };
-static const uint8_t anim_P[] = { 2, 0x3,0x0,0xFF,  0, 0, 0, F|0x4,  0, 0, 0, _|0x0 };
+static const uint8_t anim_turn_tl[]      = { 2, 0x0,0x1,0xFF,  0, 0, 0, _|0x0,  0, 0, 0, F|0x0 };
+static const uint8_t anim_turn_tr[]      = { 2, 0x1,0x2,0xFF,  0, 0, 0, F|0x0,  0, 0, 0, _|0x4 };
+static const uint8_t anim_turn_br[]      = { 2, 0x2,0x3,0xFF,  0, 0, 0, _|0x4,  0, 0, 0, F|0x4 };
+static const uint8_t anim_turn_bl[]      = { 2, 0x3,0x0,0xFF,  0, 0, 0, F|0x4,  0, 0, 0, _|0x0 };
 
-static const uint8_t anim_Q[] = { 2, 0x4,0x4,0x02,  2, 0, 0, _|0xA,  2, 0, 0, _|0xB };
-static const uint8_t anim_R[] = { 2, 0x5,0x5,0x03,  0, 2, 0, F|0xA,  0, 2, 0, F|0xB };
-static const uint8_t anim_S[] = { 2, 0x6,0x6,0x00, -2, 0, 0, F|0x8, -2, 0, 0, F|0x9 };
-static const uint8_t anim_T[] = { 2, 0x7,0x7,0x01,  0,-2, 0, _|0x8,  0,-2, 0, _|0x9 };
+static const uint8_t anim_crawl_tl[]     = { 2, 0x4,0x4,0x02,  2, 0, 0, _|0xA,  2, 0, 0, _|0xB };
+static const uint8_t anim_crawl_tr[]     = { 2, 0x5,0x5,0x03,  0, 2, 0, F|0xA,  0, 2, 0, F|0xB };
+static const uint8_t anim_crawl_br[]     = { 2, 0x6,0x6,0x00, -2, 0, 0, F|0x8, -2, 0, 0, F|0x9 };
+static const uint8_t anim_crawl_bl[]     = { 2, 0x7,0x7,0x01,  0,-2, 0, _|0x8,  0,-2, 0, _|0x9 };
 
-static const uint8_t anim_U[] = { 2, 0x4,0x5,0xFF,  0, 0, 0, _|0xA,  0, 0, 0, F|0xA };
-static const uint8_t anim_V[] = { 2, 0x5,0x6,0xFF,  0, 0, 0, F|0xA,  0, 0, 0, F|0x8 };
-static const uint8_t anim_W[] = { 2, 0x6,0x7,0xFF,  0, 0, 0, F|0x8,  0, 0, 0, _|0x8 };
-static const uint8_t anim_X[] = { 2, 0x7,0x4,0xFF,  0, 0, 0, _|0x8,  0, 0, 0, _|0xA };
+static const uint8_t anim_crawlturn_tl[] = { 2, 0x4,0x5,0xFF,  0, 0, 0, _|0xA,  0, 0, 0, F|0xA };
+static const uint8_t anim_crawlturn_tr[] = { 2, 0x5,0x6,0xFF,  0, 0, 0, F|0xA,  0, 0, 0, F|0x8 };
+static const uint8_t anim_crawlturn_br[] = { 2, 0x6,0x7,0xFF,  0, 0, 0, F|0x8,  0, 0, 0, _|0x8 };
+static const uint8_t anim_crawlturn_bl[] = { 2, 0x7,0x4,0xFF,  0, 0, 0, _|0x8,  0, 0, 0, _|0xA };
 
 #undef _
 #undef F
@@ -10360,35 +10369,49 @@ static const uint8_t anim_X[] = { 2, 0x7,0x4,0xFF,  0, 0, 0, _|0x8,  0, 0, 0, _|
  */
 const uint8_t *animations[24] =
 {
-  anim_E, //  0 ['TL:up', 'TL:up+left']
-  anim_F, //  1 ['TR:right', 'TR:up+right']
-  anim_G, //  2 ['BR:down', 'BR:down+right']
-  anim_H, //  3 ['BL:left', 'BL:down+left']
+  // Comments here record which animation is selected by byte_CDAA.
+  // [facing direction:user input]
+  //
 
-  anim_M, //  4 ['TL:down', 'TL:right', 'TL:up+right', 'TL:down+right', 'TR:up', 'TR:up+left']
-  anim_N, //  5 ['TR:down', 'TR:left', 'TR:down+left', 'TR:down+right', 'BR:up', 'BR:up+left', 'BR:right', 'BR:up+right']
-  anim_O, //  6 ['BR:left', 'BR:down+left', 'BL:down', 'BL:down+right']
-  anim_P, //  7 ['TL:left', 'TL:down+left', 'BL:up', 'BL:up+left', 'BL:right', 'BL:up+right']
+  // Normal animations, move the map
+  anim_walk_tl, //  0 [TL:Up,    TL:Up+Left]
+  anim_walk_tr, //  1 [TR:Right, TR:Up+Right]
+  anim_walk_br, //  2 [BR:Down,  BR:Down+Right]
+  anim_walk_bl, //  3 [BL:Left,  BL:Down+Left]
 
-  anim_I, //  8 ['TL:none']
-  anim_J, //  9 ['TR:none']
-  anim_K, // 10 ['BR:none']
-  anim_L, // 11 ['BL:none']
+  // Normal + turning
+  anim_turn_tl, //  4 [TL:Down, TL:Right,     TL:Up+Right,  TL:Down+Right, TR:Up,    TR:Up+Left]
+  anim_turn_tr, //  5 [TR:Down, TR:Left,      TR:Down+Left, TR:Down+Right, BR:Up,    BR:Up+Left, BR:Right, BR:Up+Right]
+  anim_turn_br, //  6 [BR:Left, BR:Down+Left, BL:Down,      BL:Down+Right]
+  anim_turn_bl, //  7 [TL:Left, TL:Down+Left, BL:Up,        BL:Up+Left,    BL:Right, BL:Up+Right]
 
-  anim_Q, // 12 ['TL + crawl:up', 'TL + crawl:down', 'TL + crawl:up+left', 'TL + crawl:down+right']
-  anim_R, // 13 ['TR + crawl:left', 'TR + crawl:right', 'TR + crawl:up+right']
-  anim_S, // 14 ['BR + crawl:up', 'BR + crawl:down', 'BR + crawl:up+left', 'BR + crawl:down+left', 'BR + crawl:down+right']
-  anim_T, // 15 ['BL + crawl:left', 'BL + crawl:down+left', 'BL + crawl:right', 'BL + crawl:up+right']
+  // Standing still
+  anim_wait_tl, //  8 [TL:None]
+  anim_wait_tr, //  9 [TR:None]
+  anim_wait_br, // 10 [BR:None]
+  anim_wait_bl, // 11 [BL:None]
 
-  anim_U, // 16 ['TL + crawl:right', 'TL + crawl:up+right', 'TR + crawl:up', 'TR + crawl:up+left']
-  anim_V, // 17 ['TR + crawl:down', 'TR + crawl:down+right', 'BR + crawl:right', 'BR + crawl:up+right']
-  anim_W, // 18 ['BR + crawl:left', 'BL + crawl:down', 'BL + crawl:down+right']
-  anim_X, // 19 ['TL + crawl:left', 'TL + crawl:down+left', 'BL + crawl:up', 'BL + crawl:up+left']
+  // Note that when crawling the hero won't spin around in the tunnel. He'll
+  // retain his orientation until specficially spun around using the controls
+  // opposite to the direction of the tunnel.
 
-  anim_A, // 20 ['TL + crawl:none']
-  anim_B, // 21 ['TR + crawl:none', 'TR + crawl:down+left']
-  anim_C, // 22 ['BR + crawl:none']
-  anim_D, // 23 ['BL + crawl:none']
+  // Crawling (map movement is enabled which is odd... we never move the map when crawling)
+  anim_crawl_tl, // 12 [TL+crawl:Up,   TL+crawl:Down,      TL+crawl:Up+Left, TL+crawl:Down+Right]
+  anim_crawl_tr, // 13 [TR+crawl:Left, TR+crawl:Right,     TR+crawl:Up+Right]
+  anim_crawl_br, // 14 [BR+crawl:Up,   BR+crawl:Down,      BR+crawl:Up+Left, BR+crawl:Down+Left, BR+crawl:Down+Right]
+  anim_crawl_bl, // 15 [BL+crawl:Left, BL+crawl:Down+Left, BL+crawl:Right,   BL+crawl:Up+Right]
+
+  // Crawling + turning
+  anim_crawlturn_tl, // 16 [TL+crawl:Right, TL+crawl:Up+Right,   TR+crawl:Up,    TR+crawl:Up+Left]   // turn to face TR
+  anim_crawlturn_tr, // 17 [TR+crawl:Down,  TR+crawl:Down+Right, BR+crawl:Right, BR+crawl:Up+Right]  // turn to face BR
+  anim_crawlturn_br, // 18 [BR+crawl:Left,  BL+crawl:Down,       BL+crawl:Down+Right]                // turn to face BL
+  anim_crawlturn_bl, // 19 [TL+crawl:Left,  TL+crawl:Down+Left,  BL+crawl:Up,    BL+crawl:Up+Left]   // turn to face TL
+
+  // Crawling still
+  anim_crawlwait_tl, // 20 [TL+crawl:None]
+  anim_crawlwait_tr, // 21 [TR+crawl:None, TR+crawl:Down+Left] // looks like it ought to be 18, not 21
+  anim_crawlwait_br, // 22 [BR+crawl:None]
+  anim_crawlwait_bl, // 23 [BL+crawl:None]
 };
 
 /* ----------------------------------------------------------------------- */
