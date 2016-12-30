@@ -1068,10 +1068,10 @@ void use_item_common(tgestate_t *state, item_t item)
 
   memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(pos_t));
 
-  // TODO: Check, is a jump to NULL avoided by some mechanism?
-  assert(item_actions_jump_table[item] != NULL);
-
-  item_actions_jump_table[item](state);
+  /* Conv: In the original game the action jumps to a RET for action-less
+   * items. We use a NULL instead. */
+  if (item_actions_jump_table[item])
+    item_actions_jump_table[item](state);
 }
 
 /* ----------------------------------------------------------------------- */
