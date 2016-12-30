@@ -101,7 +101,7 @@ do {                                                          \
 #define ASSERT_MAP_POSITION_VALID(p)                          \
 do {                                                          \
   assert(p.x >= 0x00);                                        \
-  assert(p.x < 0xBC);                                         \
+  assert(p.x < 0xBE);                                         \
   assert(p.y >= 0x06);                                        \
   assert(p.y < 0x78);                                         \
 } while (0)
