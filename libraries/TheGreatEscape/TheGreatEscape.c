@@ -10486,7 +10486,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
  * \param[in] itemstr Pointer to itemstruct. (was IY)
  * \param[in] item    Item. (was A)
  *
- * \return Z
+ * \return 0 => vischar is invisible, 1 => vischar is visible (was Z?)
  */
 uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
@@ -10536,7 +10536,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
   if (item_visible(state, &clipped_width, &clipped_height) != 0)
-    return 1; /* invisible */ // NZ
+    return 0; /* invisible */
 
   // PUSH clipped_width
   // PUSH clipped_height
@@ -10622,7 +10622,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // POP BC
   // POP DE
 
-  return 0; // Z
+  return 1; /* visible */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -11502,7 +11502,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint8_t            E;              /* was E */
   uint8_t            instr;          /* was A */
   uint8_t            A;              /* was A */
-  uint16_t           x;              /* was HL */
+  int16_t            x;              /* was HL */
   uint8_t           *maskbuf;        /* was HL */
   uint16_t           y;              /* was DE */
   uint16_t           skip;           /* was DE */
