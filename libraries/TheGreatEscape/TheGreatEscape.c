@@ -1232,8 +1232,8 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos = &itemstr->pos;
     inpos  = &state->vischars[0].mi.pos;
 
-    outpos->x      = inpos->x;
-    outpos->y      = inpos->y;
+    outpos->x      = inpos->x; // note: narrowing
+    outpos->y      = inpos->y; // note: narrowing
     outpos->height = 5;
 
     calc_interior_item_screenpos(itemstr);
@@ -1505,7 +1505,7 @@ uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp)
   uint16_t       offset; /* was HL */
   uint16_t       delta;  /* was DE */
 
-  offset = slp - screen;
+  offset = slp - screen; // note: narrowing
 
   assert(offset < 0x8000);
 
@@ -1856,9 +1856,9 @@ void in_permitted_area(tgestate_t *state)
   {
     /* Indoors. */
 
-    pos->x      = vcpos->x;
-    pos->y      = vcpos->y;
-    pos->height = vcpos->height;
+    pos->x      = vcpos->x; // note: narrowing
+    pos->y      = vcpos->y; // note: narrowing
+    pos->height = vcpos->height; // note: narrowing
   }
 
   /* Red flag if picking a lock, or cutting wire. */
@@ -5522,7 +5522,7 @@ int collision(tgestate_t *state)
       }
       if (A == 0) // test direction
       {
-        A = *coord;
+        A = *coord; // note: narrowing
         if (A != C) // equivalent to the goto b0b8 it replaces
         {
           // Conv: Replaced[-2]+1 trick
@@ -5926,10 +5926,10 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     pos = &state->saved_pos;
 
     /* Conv: Two-iteration loop unrolled. */
-    x = pos->x; // narrowing // saved_pos must be 8-bit
+    x = pos->x;  // note: narrowing // saved_pos must be 8-bit
     if (x < object_bounds->x0 || x >= object_bounds->x1)
       goto next;
-    y = pos->y;
+    y = pos->y; // note: narrowing
     if (y < object_bounds->y0 || y >= object_bounds->y1)
       goto next;
 
@@ -8086,9 +8086,9 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     {
       /* Indoors. */
       /* Conv: Unrolled from original code. */
-      charpos_out->x      = vispos_in->x;
-      charpos_out->y      = vispos_in->y;
-      charpos_out->height = vispos_in->height;
+      charpos_out->x      = vispos_in->x; // note: narrowing
+      charpos_out->y      = vispos_in->y; // note: narrowing
+      charpos_out->height = vispos_in->height; // note: narrowing
     }
 
     // character = vischar->character; /* Done in original code, but we already have this from earlier. */
@@ -8961,8 +8961,8 @@ bribed_visible:
         else
         {
           /* Outdoors */
-          tinypos->x = pos->x;
-          tinypos->y = pos->y;
+          tinypos->x = pos->x; // note: narrowing
+          tinypos->y = pos->y; // note: narrowing
         }
         goto end_bit;
       }
@@ -11525,9 +11525,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   {
     /* Indoors. */
 
-    tinypos->x      = pos->x;
-    tinypos->y      = pos->y;
-    tinypos->height = pos->height;
+    tinypos->x      = pos->x; // note: narrowing
+    tinypos->y      = pos->y; // note: narrowing
+    tinypos->height = pos->height; // note: narrowing
   }
   else
   {
@@ -12042,7 +12042,7 @@ TGE_API void tge_setup(tgestate_t *state)
   do
   {
     /* This was 'A = L;' in original code as alignment was guaranteed. */
-    counter = reversed - &state->reversed[0]; /* Get a counter 0..255. */
+    counter = reversed - &state->reversed[0]; /* Get a counter 0..255. */ // note: narrowing
 
     /* Reverse the counter byte. */
     byte = 0;
