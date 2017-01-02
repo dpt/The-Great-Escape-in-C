@@ -16,44 +16,44 @@
 
 #define ASSERT_SCREEN_PTR_VALID(p)                    \
 do {                                                  \
-  assert(p >= &state->speccy->screen[0]);             \
-  assert(p < &state->speccy->screen[SCREEN_LENGTH]);  \
+  assert((p) >= &state->speccy->screen[0]);           \
+  assert((p) < &state->speccy->screen[SCREEN_LENGTH]); \
 } while (0)
 
 #define ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(p)         \
 do {                                                  \
-  assert(p >= &state->speccy->attributes[0]);         \
-  assert(p < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
+  assert((p) >= &state->speccy->attributes[0]);       \
+  assert((p) < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
 } while (0)
 
 #define ASSERT_MASK_BUF_PTR_VALID(p)                  \
 do {                                                  \
-  assert(p >= &state->mask_buffer[0]);                \
-  assert(p < &state->mask_buffer[MASK_BUFFER_LENGTH]); \
+  assert((p) >= &state->mask_buffer[0]);              \
+  assert((p) < &state->mask_buffer[MASK_BUFFER_LENGTH]); \
 } while (0)
 
 #define ASSERT_TILE_BUF_PTR_VALID(p)                  \
 do {                                                  \
-  assert(p >= state->tile_buf);                       \
-  assert(p < state->tile_buf + (state->columns * state->rows)); \
+  assert((p) >= state->tile_buf);                     \
+  assert((p) < state->tile_buf + (state->columns * state->rows)); \
 } while (0)
 
 #define ASSERT_WINDOW_BUF_PTR_VALID(p)                \
 do {                                                  \
-  assert(p >= state->window_buf);                     \
-  assert(p < state->window_buf + (state->columns * state->rows * 8)); \
+  assert((p) >= state->window_buf);                   \
+  assert((p) < state->window_buf + (state->columns * state->rows * 8)); \
 } while (0)
 
 #define ASSERT_MAP_BUF_PTR_VALID(p)                   \
 do {                                                  \
-  assert(p >= state->map_buf);                        \
-  assert(p < state->map_buf + (state->st_columns * state->st_rows)); \
+  assert((p) >= state->map_buf);                      \
+  assert((p) < state->map_buf + (state->st_columns * state->st_rows)); \
 } while (0)
 
 #define ASSERT_VISCHAR_VALID(p)                       \
 do {                                                  \
-  assert(p >= &state->vischars[0]);                   \
-  assert(p < &state->vischars[vischars_LENGTH]);      \
+  assert((p) >= &state->vischars[0]);                 \
+  assert((p) < &state->vischars[vischars_LENGTH]);    \
 } while (0)
 
 // non-state
