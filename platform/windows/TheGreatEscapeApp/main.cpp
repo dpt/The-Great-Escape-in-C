@@ -54,7 +54,7 @@ gamewin_t;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void draw_handler(unsigned int *pixels, void *opaque)
+static void draw_handler(unsigned int *pixels, zxbox_t *dirty, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
   RECT       rect;

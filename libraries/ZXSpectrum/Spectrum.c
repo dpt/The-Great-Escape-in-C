@@ -61,13 +61,13 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
   }
 }
 
-static void zx_kick(zxspectrum_t *state)
+static void zx_draw(zxspectrum_t *state, zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
   
   zxscreen_convert(prv->pub.screen, prv->screen);
 
-  prv->config.draw(prv->screen, prv->config.opaque);
+  prv->config.draw(prv->screen, dirty, prv->config.opaque);
 }
 
 static void zx_sleep(zxspectrum_t *state,
@@ -89,7 +89,7 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 
   prv->pub.in    = zx_in;
   prv->pub.out   = zx_out;
-  prv->pub.kick  = zx_kick;
+  prv->pub.draw  = zx_draw;
   prv->pub.sleep = zx_sleep;
 
   prv->config = *config;

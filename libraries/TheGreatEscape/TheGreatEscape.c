@@ -4719,7 +4719,7 @@ void zoombox(tgestate_t *state)
     zoombox_fill(state);
     zoombox_draw_border(state);
 
-    state->speccy->kick(state->speccy);
+    state->speccy->draw(state->speccy, NULL);
   }
   while (state->zoombox.height + state->zoombox.width < 35);
 }
@@ -5351,7 +5351,7 @@ next_row:
   while (--iters);
 
 exit:
-  state->speccy->kick(state->speccy);
+  state->speccy->draw(state->speccy, NULL);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -11952,7 +11952,7 @@ int user_confirm(tgestate_t *state)
 
   screenlocstring_plot(state, &screenlocstring_confirm_y_or_n);
 
-  state->speccy->kick(state->speccy);
+  state->speccy->draw(state->speccy, NULL);
 
   /* Keyscan. */
   for (;;)
@@ -12095,7 +12095,7 @@ TGE_API void tge_main(tgestate_t *state)
   {
     main_loop(state);
 
-    state->speccy->kick(state->speccy); // temporary
+    state->speccy->draw(state->speccy, NULL); // temporary
   }
 }
 

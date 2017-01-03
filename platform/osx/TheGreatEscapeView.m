@@ -57,9 +57,9 @@
 
 #pragma mark - Game thread callbacks
 
-static void draw_handler(unsigned int *pixels, void *opaque)
+static void draw_handler(unsigned int *pixels, zxbox_t *dirty, void *opaque)
 {
-  [(__bridge id) opaque setPixels:pixels];
+  [(__bridge id) opaque setPixels:pixels withDirtyRect:dirty];
 }
 
 static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
@@ -98,7 +98,7 @@ static void *tge_thread(void *arg)
 
 #pragma mark - blah
 
-- (void)setPixels:(unsigned int *)data
+- (void)setPixels:(unsigned int *)data withDirtyRect:(zxbox_t *)dirty
 {
   pixels = data;
 

@@ -91,6 +91,15 @@ typedef enum
 sleeptype_t;
 
 /**
+ * Bounding box.
+ */
+typedef struct zxbox
+{
+  int x0, y0, x1, y1;
+}
+zxbox_t;
+
+/**
  * The current state of the machine.
  */
 struct zxspectrum
@@ -108,7 +117,7 @@ struct zxspectrum
   /**
    * Call the implementer when screen or attributes have changed.
    */
-  void (*kick)(zxspectrum_t *state /*, changedbox */);
+  void (*draw)(zxspectrum_t *state, zxbox_t *dirty);
 
   /**
    * Call the implementer when we need to sleep.
@@ -130,7 +139,7 @@ typedef struct zxconfig
   void *opaque;
   
   /** Called when there's a new frame to draw. */
-  void (*draw)(unsigned int *pixels, void *opaque);
+  void (*draw)(unsigned int *pixels, zxbox_t *dirty, void *opaque);
 
   /** Called when there's nothing to do. */
   void (*sleep)(int duration, sleeptype_t sleeptype, void *opaque);

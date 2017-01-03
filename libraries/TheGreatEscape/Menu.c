@@ -212,7 +212,7 @@ static void choose_keys(tgestate_t *state)
     while (--prompt_iters);
 
 
-    state->speccy->kick(state->speccy);
+    state->speccy->draw(state->speccy, NULL);
 
 
     /* Wipe keydefs. */
@@ -346,7 +346,7 @@ assign_keydef:
           }
           while (--length);
 
-          state->speccy->kick(state->speccy);
+          state->speccy->draw(state->speccy, NULL);
         }
       }
       while (--prompt_iters);
@@ -540,7 +540,7 @@ void menu_screen(tgestate_t *state)
     }
     while (--overall_delay);
     
-    state->speccy->kick(state->speccy);
+    state->speccy->draw(state->speccy, NULL);
     state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
   }
 }
