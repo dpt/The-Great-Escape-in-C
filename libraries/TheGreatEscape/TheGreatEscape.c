@@ -312,9 +312,9 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->flags             = 0;
   vischar1->target.x          = 0;
   vischar1->target.y          = 0;
-  vischar1->p04.x             = 0;
-  vischar1->p04.y             = 0;
-  vischar1->p04.height        = 0;
+  vischar1->pos.x             = 0;
+  vischar1->pos.y             = 0;
+  vischar1->pos.height        = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
@@ -1699,8 +1699,8 @@ void process_player_input(tgestate_t *state)
         /* Hero was in bed. */
         state->vischars[0].target.x       = 0x2C;
         state->vischars[0].target.y       = 0x01;
-        state->vischars[0].p04.x          = 0x2E;
-        state->vischars[0].p04.y          = 0x2E;
+        state->vischars[0].pos.x          = 0x2E;
+        state->vischars[0].pos.y          = 0x2E;
         state->vischars[0].mi.pos.x       = 0x2E;
         state->vischars[0].mi.pos.y       = 0x2E;
         state->vischars[0].mi.pos.height  = 24;
@@ -3088,7 +3088,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
 
   A = get_next_target(state, &vischar->target, &target);
 
-  pos = &vischar->p04;
+  pos = &vischar->pos;
   pos->x = target->x;
   pos->y = target->y;
 
@@ -7987,7 +7987,7 @@ c592:
   else
   {
     state->entered_move_characters = 0;
-    // PUSH DE // -> vischar->p04
+    // PUSH DE // -> vischar->pos
     A = get_next_target(state, &charstr->target, &target);
     if (A == 255) // end of door list
     {
@@ -7996,16 +7996,16 @@ c592:
       // PUSH HL
       ran_out_of_list(state, vischar, &vischar->target);
       // POP HL
-      // DE = HL + 2; // -> vischar->p04
+      // DE = HL + 2; // -> vischar->pos
       goto c592;
     }
     else if (A == (1 << 7)) // did a door thing
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
-    // POP DE // -> vischar->p04
+    // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
-    memcpy(&vischar->p04, target, sizeof(tinypos_t)); // location is an xy not a tinypos so target must be wrong!
+    memcpy(&vischar->pos, target, sizeof(tinypos_t)); // location is an xy not a tinypos so target must be wrong!
     // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
@@ -8886,15 +8886,15 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   {
     if (flags == vischar_FLAGS_BRIBE_PENDING) // == 1
     {
-set_p04:
-      vischar2->p04.x = state->hero_map_position.x;
-      vischar2->p04.y = state->hero_map_position.y;
+set_pos:
+      vischar2->pos.x = state->hero_map_position.x;
+      vischar2->pos.y = state->hero_map_position.y;
       goto end_bit;
     }
     else if (flags == vischar_FLAGS_PERSUE) // == 2
     {
       if (state->automatic_player_counter > 0) // under player control, not automatic
-        goto set_p04;
+        goto set_pos;
 
       // hero is under automatic control
 
@@ -8907,8 +8907,8 @@ set_p04:
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
         // Moves dog toward poisoned food?
-        vischar2->p04.x = state->item_structs[item_FOOD].pos.x;
-        vischar2->p04.y = state->item_structs[item_FOOD].pos.y;
+        vischar2->pos.x = state->item_structs[item_FOOD].pos.x;
+        vischar2->pos.y = state->item_structs[item_FOOD].pos.y;
         goto end_bit;
       }
       else
@@ -8952,7 +8952,7 @@ bribed_visible:
         tinypos_t *tinypos; /* was DE */
 
         pos     = &found->mi.pos;
-        tinypos = &vischar2->p04;
+        tinypos = &vischar2->pos;
         if (state->room_index > room_0_OUTDOORS)
         {
           /* Indoors */
@@ -9080,7 +9080,7 @@ uint8_t move_character_x(tgestate_t *state,
    * vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = vischar->mi.pos.x - vischar->p04.x * scale;
+  delta = vischar->mi.pos.x - vischar->pos.x * scale;
   // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
   if (delta >= 3)
     return 8;
@@ -9120,7 +9120,7 @@ uint8_t move_character_y(tgestate_t *state,
    * vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = vischar->mi.pos.y - vischar->p04.y * scale;
+  delta = vischar->mi.pos.y - vischar->pos.y * scale;
   // Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3.
   if (delta >= 3)
     return 5;
@@ -11993,7 +11993,7 @@ TGE_API void tge_setup(tgestate_t *state)
     0x00,                 // character
     0x00,                 // flags
     { 0x2C, 0x01 },       // target
-    { 0x2E, 0x2E, 0x18 }, // p04
+    { 0x2E, 0x2E, 0x18 }, // pos
     0x00,                 // counter_and_flags
     &animations[0],       // animbase
     animations[8],        // anim

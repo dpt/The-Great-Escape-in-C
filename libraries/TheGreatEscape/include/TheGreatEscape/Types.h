@@ -424,7 +424,7 @@ typedef struct vischar
   xy_t            target;
 
   /** $8004 position */
-  tinypos_t       p04;
+  tinypos_t       pos;
 
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
