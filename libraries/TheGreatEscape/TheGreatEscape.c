@@ -3889,11 +3889,11 @@ void plot_topmost_tiles(tgestate_t *state)
  * \param[in] y        Map position y.                         (was A)
  * \param[in] window   Pointer to screen buffer start address. (was DE')
  */
-void plot_horizontal_tiles_common(tgestate_t       *state,
-                                  tileindex_t      *vistiles,
-                                  supertileindex_t *maptiles,
-                                  uint8_t           y,
-                                  uint8_t          *window)
+void plot_horizontal_tiles_common(tgestate_t             *state,
+                                  tileindex_t            *vistiles,
+                                  const supertileindex_t *maptiles,
+                                  uint8_t                 y,
+                                  uint8_t                *window)
 {
   // Conv: self_A86A removed. Can be replaced with pos_copy.
 
@@ -4092,11 +4092,11 @@ void plot_leftmost_tiles(tgestate_t *state)
  * \param[in] x        Map position x.                         (was A)
  * \param[in] window   Pointer to screen buffer start address. (was DE')
  */
-void plot_vertical_tiles_common(tgestate_t       *state,
-                                tileindex_t      *vistiles,
-                                supertileindex_t *maptiles,
-                                uint8_t           x,
-                                uint8_t          *window)
+void plot_vertical_tiles_common(tgestate_t             *state,
+                                tileindex_t            *vistiles,
+                                const supertileindex_t *maptiles,
+                                uint8_t                 x,
+                                uint8_t                *window)
 {
   /* Conv: self_A94D removed. */
 

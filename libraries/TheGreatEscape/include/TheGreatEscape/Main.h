@@ -315,21 +315,21 @@ void get_supertiles(tgestate_t *state);
 
 void plot_bottommost_tiles(tgestate_t *state);
 void plot_topmost_tiles(tgestate_t *state);
-void plot_horizontal_tiles_common(tgestate_t       *state,
-                                  tileindex_t      *vistiles,
-                                  supertileindex_t *maptiles,
-                                  uint8_t           pos,
-                                  uint8_t          *window);
+void plot_horizontal_tiles_common(tgestate_t             *state,
+                                  tileindex_t            *vistiles,
+                                  const supertileindex_t *maptiles,
+                                  uint8_t                 y,
+                                  uint8_t                *window);
 
 void plot_all_tiles(tgestate_t *state);
 
 void plot_rightmost_tiles(tgestate_t *state);
 void plot_leftmost_tiles(tgestate_t *state);
-void plot_vertical_tiles_common(tgestate_t       *state,
-                                tileindex_t      *vistiles,
-                                supertileindex_t *maptiles,
-                                uint8_t           x,
-                                uint8_t          *window);
+void plot_vertical_tiles_common(tgestate_t             *state,
+                                tileindex_t            *vistiles,
+                                const supertileindex_t *maptiles,
+                                uint8_t                 x,
+                                uint8_t                *window);
 
 INLINE uint8_t *plot_tile_then_advance(tgestate_t             *state,
                                        tileindex_t             tile_index,
