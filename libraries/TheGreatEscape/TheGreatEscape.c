@@ -4206,12 +4206,12 @@ void plot_vertical_tiles_common(tgestate_t             *state,
  */
 uint8_t *plot_tile_then_advance(tgestate_t             *state,
                                 tileindex_t             tile_index,
-                                const supertileindex_t *psupertileindex,
+                                const supertileindex_t *maptiles,
                                 uint8_t                *scr)
 {
   assert(state != NULL);
 
-  return plot_tile(state, tile_index, psupertileindex, scr) + (state->columns + 1) * 8 - 1; // -1 compensates the +1 in plot_tile
+  return plot_tile(state, tile_index, maptiles, scr) + state->columns * 8 - 1; // -1 compensates the +1 in plot_tile // was 191
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4223,7 +4223,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
  *
  * \param[in] state      Pointer to game state.
  * \param[in] tile_index Tile index. (was A)
- * \param[in] psupertileindex Pointer to supertile index (used to select the
+ * \param[in] maptiles   Pointer to supertile index (used to select the
                          correct exterior tile set). (was HL')
  * \param[in] scr        Output buffer start address. (was DE')
  *
@@ -4231,7 +4231,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
  */
 uint8_t *plot_tile(tgestate_t             *state,
                    tileindex_t             tile_index,
-                   const supertileindex_t *psupertileindex,
+                   const supertileindex_t *maptiles,
                    uint8_t                *scr)
 {
   supertileindex_t  supertileindex; /* was A' */
@@ -4240,26 +4240,39 @@ uint8_t *plot_tile(tgestate_t             *state,
   uint8_t          *dst;            /* was HL' */
   uint8_t           iters;          /* was A */
 
-  assert(state           != NULL);
-  assert(tile_index < 220); // ideally the constant should be elsewhere
-  ASSERT_SUPERTILE_PTR_VALID(psupertileindex);
-  assert(scr             != NULL);
+  assert(state != NULL);
+  ASSERT_MAP_BUF_PTR_VALID(maptiles);
+  ASSERT_WINDOW_BUF_PTR_VALID(scr);
 
-  supertileindex = *psupertileindex; /* get supertile index */
+  supertileindex = *maptiles; /* get supertile index */
   assert(supertileindex < supertileindex__LIMIT);
 
-  if (supertileindex < 45)
+  // Supertiles 44 and lower         use tiles   0..249 (249 tile span)
+  // Supertiles 45..138 and 204..218 use tiles 145..400 (255 tile span)
+  // Supertiles 139..203             use tiles 365..570 (205 tile span)
+
+  if (supertileindex <= 44)
+  {
+    assert(tile_index <= 249);
     tileset = &exterior_tiles[0];
-  else if (supertileindex < 139 || supertileindex >= 204)
-    tileset = &exterior_tiles[145]; // set 2
+  }
+  else if (supertileindex <= 138 || supertileindex >= 204)
+  {
+    assert(tile_index <= 255);
+    tileset = &exterior_tiles[145];
+  }
   else
-    tileset = &exterior_tiles[145 + 220]; // set 3
+  {
+    assert(tile_index <= 205);
+    tileset = &exterior_tiles[365];
+  }
 
   src = &tileset[tile_index].row[0];
   dst = scr;
   iters = 8;
   do
   {
+    ASSERT_WINDOW_BUF_PTR_VALID(dst);
     *dst = *src++;
     dst += state->columns; /* stride */ // FUTURE: Hoist.
   }
