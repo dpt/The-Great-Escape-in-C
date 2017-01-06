@@ -364,7 +364,7 @@ struct tgestate
   // $FE90 - 200 bytes unaccounted for
 
   /* replacing direct access to $FF58 .. $FF7A. 7 x 5. */
-  supertileindex_t      *map_buf;
+  supertileindex_t *map_buf;
 };
 
 #endif /* STATE_H */

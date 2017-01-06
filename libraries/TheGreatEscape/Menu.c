@@ -96,7 +96,7 @@ static void wipe_game_window(tgestate_t *state)
     uint8_t *const p = screen + *poffsets++;
 
     ASSERT_SCREEN_PTR_VALID(p);
-    memset(p, 0, state->columns - 1); /* 23 columns (not 24 like the back buffer) */
+    memset(p, 0, state->columns - 1); /* 23 columns (not 24 like the window buffer) */
   }
   while (--iters);
 }

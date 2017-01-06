@@ -3895,7 +3895,7 @@ void plot_horizontal_tiles_common(tgestate_t             *state,
                                   uint8_t                 y,
                                   uint8_t                *window)
 {
-  // Conv: self_A86A removed. Can be replaced with pos_copy.
+  /* Conv: self_A86A removed. Can be replaced with pos_copy. */
 
   uint8_t            y_offset; /* was Cdash */
   const tileindex_t *tiles;  /* was HL */
