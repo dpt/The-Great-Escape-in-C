@@ -11744,15 +11744,14 @@ void plot_game_window(tgestate_t *state)
   uint8_t *const  screen = &state->speccy->screen[0];
 
   uint8_t         y;         /* was A */
-  uint8_t        *src;       /* was HL */
+  const uint8_t  *src;       /* was HL */
   const uint16_t *offsets;   /* was SP */
   uint8_t         y_iters_A; /* was A */
   uint8_t        *dst;       /* was DE */
-  uint8_t         data;      /* was A */
+  uint8_t         prev;      /* was A */
   uint8_t         y_iters_B; /* was B' */
   uint8_t         iters;     /* was B */
-  uint8_t         copy;      /* was C */
-  uint8_t         tmp;       /* added for RRD macro */
+  uint8_t         tmp;       /* Conv: added for RRD macro */
 
   y = state->game_window_offset.y;
   if (y == 0)
@@ -11797,7 +11796,7 @@ void plot_game_window(tgestate_t *state)
   {
     src = &state->window_buf[0] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src);
-    data = *src++;
+    prev = *src++;
     offsets = &state->game_window_start_offsets[0];
     y_iters_B = 128; /* iterations */
     do
@@ -11805,30 +11804,19 @@ void plot_game_window(tgestate_t *state)
       dst = screen + *offsets++;
       ASSERT_SCREEN_PTR_VALID(dst);
 
-/* RRD is equivalent to: */
-#define RRD(A, HL, tmp)          \
-  tmp = A & 0x0F;                \
-  A = (*HL & 0x0F) | (A & 0xF0); \
-  *HL = (*HL >> 4) | (tmp << 4);
-
       /* Conv: Unrolling removed compared to original code which did 4 groups of 5 ops, then a final 3. */
-      iters = 4 * 5 + 3; /* iterations */
+      iters = 4 * 5 + 3; /* 23 iterations */
       do
       {
-        copy = *src; // safe copy of source data
-        RRD(data, src, tmp);
-        data = *src; // rotated result
-        *dst++ = data;
-        *src++ = copy; // restore safe copy
+        /* Conv: Original code banks and shuffles registers to preserve stuff. This is simplified. */
 
-        // A simplified form would be:
-        // next_A = *HL;
-        // *HL++ = (*HL >> 4) | (Adash << 4);
-        // Adash = next_A;
+        tmp = prev & 0x0F;
+        prev = *src; // save pixel so we can use the bottom nibble next time around
+        *dst++ = (*src++ >> 4) | (tmp << 4);
       }
       while (--iters);
 
-      data = *src++;
+      prev = *src++;
     }
     while (--y_iters_B);
   }
