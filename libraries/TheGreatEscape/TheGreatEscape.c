@@ -4307,7 +4307,7 @@ void shunt_map_right(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[1], &state->tile_buf[0], tile_buf_length - 1);
-  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length);
+  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length - 1);
 
   plot_leftmost_tiles(state);
 }
