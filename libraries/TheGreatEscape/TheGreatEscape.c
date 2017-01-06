@@ -3897,26 +3897,29 @@ void plot_horizontal_tiles_common(tgestate_t             *state,
 {
   /* Conv: self_A86A removed. Can be replaced with pos_copy. */
 
-  uint8_t            y_offset; /* was Cdash */
-  const tileindex_t *tiles;  /* was HL */
-  uint8_t            A;      /* was A */
-  uint8_t            iters;  /* was B */
-  uint8_t            iters2; /* was B' */
-  uint8_t            offset;  // new
+  uint8_t            y_offset;  /* was Cdash */
+  const tileindex_t *tiles;     /* was HL */
+  uint8_t            A;         /* was A */
+  uint8_t            iters;     /* was B */
+  uint8_t            iters2;    /* was B' */
+  uint8_t            offset;    // new
 
-  assert(state    != NULL);
+  assert(state != NULL);
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
-  // assert(pos);
+  // assert(y);
   ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   y_offset = (y & 3) * 4;
+  ASSERT_MAP_POSITION_VALID(state->map_position);
   offset = (state->map_position.x & 3) + y_offset;
 
   /* Initial edge. */
 
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[offset];
+  ASSERT_SUPERTILE_PTR_VALID(tiles);
+
   A = tiles - &supertiles[0].tiles[0]; // Conv: Original code could simply use L.
 
   // 0,1,2,3 => 4,3,2,1
@@ -4020,15 +4023,11 @@ void plot_all_tiles(tgestate_t *state)
   iters = state->columns; /* Conv: was 24 */
   do
   {
-    uint8_t newpos; /* was C' */
-
     plot_vertical_tiles_common(state, vistiles, maptiles, x, window);
     vistiles++;
-
-    newpos = ++x;
+    x++;
     if ((x & 3) == 0)
       maptiles++;
-    x = newpos;
     window++;
   }
   while (--iters);
@@ -4101,25 +4100,27 @@ void plot_vertical_tiles_common(tgestate_t             *state,
   /* Conv: self_A94D removed. */
 
   uint8_t            x_offset;  /* was $A94D */
-  const tileindex_t *tiles;     /* was HL */
+  const tileindex_t *tiles;     /* was HL */  // pointer into supertile
   uint8_t            offset;    /* was A */
   uint8_t            iters;     /* was A */
-  uint8_t            iters2;    /* was B' */
+  uint8_t            iters2;    /* was B' */ // FUTURE: merge with 'iters'
 
-  assert(state    != NULL);
+  assert(state != NULL);
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
   // assert(x);
   ASSERT_WINDOW_BUF_PTR_VALID(window);
 
   x_offset = x & 3; // self modify (local)
-  ASSERT_MAP_POSITION_VALID(state->map_position);
-  offset = (state->map_position.y & 3) * 4 + x_offset;
 
   /* Initial edge. */
 
+  ASSERT_MAP_POSITION_VALID(state->map_position);
+  offset = (state->map_position.y & 3) * 4 + x_offset;
+
   assert(*maptiles < supertileindex__LIMIT);
   tiles = &supertiles[*maptiles].tiles[offset];
+  ASSERT_SUPERTILE_PTR_VALID(tiles);
 
   // 0,1,2,3 => 4,3,2,1
   iters = -((offset >> 2) & 3) & 3;
@@ -4132,11 +4133,13 @@ void plot_vertical_tiles_common(tgestate_t             *state,
 
     ASSERT_TILE_BUF_PTR_VALID(vistiles);
     ASSERT_SUPERTILE_PTR_VALID(tiles);
+    ASSERT_MAP_BUF_PTR_VALID(maptiles);
+    ASSERT_WINDOW_BUF_PTR_VALID(window);
 
     t = *vistiles = *tiles; // A = tile index
-    plot_tile_then_advance(state, t, tiles, window);
-    vistiles += 4; // stride
-    tiles += state->columns - 1;
+    window = plot_tile_then_advance(state, t, maptiles, window);
+    tiles += 4; // supertile stride
+    vistiles += state->columns;
   }
   while (--iters);
 
@@ -4158,11 +4161,13 @@ void plot_vertical_tiles_common(tgestate_t             *state,
 
       ASSERT_TILE_BUF_PTR_VALID(vistiles);
       ASSERT_SUPERTILE_PTR_VALID(tiles);
+      ASSERT_MAP_BUF_PTR_VALID(maptiles);
+      ASSERT_WINDOW_BUF_PTR_VALID(window);
 
       t = *vistiles = *tiles; // A = tile index
-      plot_tile_then_advance(state, t, tiles, window);
-      tiles += state->columns - 1;
-      vistiles += 4; // stride
+      window = plot_tile_then_advance(state, t, maptiles, window);
+      vistiles += state->columns;
+      tiles += 4; // supertile stride
     }
     while (--iters);
 
@@ -4182,11 +4187,13 @@ void plot_vertical_tiles_common(tgestate_t             *state,
 
     ASSERT_TILE_BUF_PTR_VALID(vistiles);
     ASSERT_SUPERTILE_PTR_VALID(tiles);
+    ASSERT_MAP_BUF_PTR_VALID(maptiles);
+    ASSERT_WINDOW_BUF_PTR_VALID(window);
 
     t = *vistiles = *tiles; // A = tile index
-    plot_tile_then_advance(state, t, tiles, window);
-    vistiles += 4; // stride
-    tiles += state->columns - 1;
+    window = plot_tile_then_advance(state, t, maptiles, window);
+    tiles += 4; // supertile stride
+    vistiles += state->columns;
   }
   while (--iters);
 }
@@ -4198,7 +4205,7 @@ void plot_vertical_tiles_common(tgestate_t             *state,
  *
  * \param[in] state      Pointer to game state.
  * \param[in] tile_index Tile index. (was A)
- * \param[in] psupertileindex Pointer to supertile index (used to select the
+ * \param[in] maptiles   Pointer to supertile index (used to select the
  *                       correct exterior tile set). (was HL')
  * \param[in] scr        Address of output buffer start address. (was DE')
  *
