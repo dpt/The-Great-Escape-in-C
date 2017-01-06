@@ -7666,9 +7666,11 @@ clamp_height: // was $BBF8
         /* Move to next column. */
         x++;
         tilebuf++;
-        ASSERT_TILE_BUF_PTR_VALID(tilebuf);
+        if (width_counter > 1)
+          ASSERT_TILE_BUF_PTR_VALID(tilebuf);
         windowbuf++;
-        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
+        if (width_counter > 1)
+          ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
       }
       while (--width_counter);
 
@@ -10930,7 +10932,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       if (state->enable_E1BF)
         *screenptr = x;
 
-      screenptr += state->columns - 3;
+      screenptr += state->columns - 3; // was 21
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
@@ -11074,7 +11076,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       if (state->enable_E290)
         *screenptr = x;
 
-      screenptr += state->columns - 3;
+      screenptr += state->columns - 3; // was 21
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
@@ -11240,8 +11242,9 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     if (state->enable_E340)
       *screenptr = x;
 
-    screenptr += state->columns - 2;
-    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+    screenptr += state->columns - 2; // was 22
+    if (iters > 1)
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);
@@ -11385,8 +11388,9 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     if (state->enable_E3EC)
       *screenptr = x;
 
-    screenptr += state->columns - 2;
-    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+    screenptr += state->columns - 2; // was 22
+    if (iters > 1)
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);
