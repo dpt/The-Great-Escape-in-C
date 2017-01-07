@@ -7388,6 +7388,19 @@ pop_next:
   // This scales A by B then returns nothing: is it really doing this for no good reason?
   // It was a falthrough in the original code so assuming it was a missing RET.
   // count_of_something = multiply(A, 8);
+  /* Dump the mask buffer to the top-left of the screen. */
+  if (1)
+  {
+    uint8_t *slp;
+    int      yy;
+
+    slp = &state->speccy->screen[0];
+    for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
+    {
+      memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
+      slp = get_next_scanline(state, slp);
+    }
+  }
 }
 
 #if 0 // replaced the only call to this with an actual multiply
