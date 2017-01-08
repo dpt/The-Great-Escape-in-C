@@ -4058,6 +4058,9 @@ void plot_rightmost_tiles(tgestate_t *state)
 
   assert(state != NULL);
 
+  // 23 -> state->columns - 1
+  //  6 -> state->st_columns - 1
+
   vistiles = &state->tile_buf[23];   /* visible tiles array */
   maptiles = &state->map_buf[6];     /* 7x5 supertile refs */
   window   = &state->window_buf[23]; /* screen buffer start address */

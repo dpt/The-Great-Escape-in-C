@@ -18,8 +18,8 @@ struct tgestate
   int             width;      /* real screen width in UDGs e.g. 32 */
   int             height;     /* real screen height in UDGs e.g. 24 */
 
-  int             columns;    /* game window width in UDGs e.g. 23 */
-  int             rows;       /* game window height in UDGs e.g. 16 */
+  int             columns;    /* game buffer width in UDGs e.g. 24 */
+  int             rows;       /* game buffer height in UDGs e.g. 17 */
 
   int             st_columns; /* supertiles columns (normally 7) */
   int             st_rows;    /* supertiles rows (normally 5) */
