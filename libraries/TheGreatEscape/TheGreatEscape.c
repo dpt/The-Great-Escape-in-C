@@ -1841,9 +1841,9 @@ void in_permitted_area(tgestate_t *state)
   pos_t       *vcpos;     /* was HL */
   tinypos_t   *pos;       /* was DE */
   attribute_t  attr;      /* was A */
-  xy_t        *locptr;    /* was HL */
+  xy_t        *targetptr; /* was HL */
   uint8_t      A;
-  xy_t         loc;       /* was CA */
+  xy_t         target;    /* was CA */
   uint16_t     BC;
   uint8_t      red_flag;  /* was A */
 
@@ -1894,16 +1894,16 @@ void in_permitted_area(tgestate_t *state)
   if (state->in_solitary)
     goto set_flag_green;
 
-  locptr = &state->vischars[0].target;
-  loc = *locptr;
-  if (loc.x & vischar_BYTE2_BIT7)
-    loc.y++;
+  targetptr = &state->vischars[0].target;
+  target = *targetptr;
+  if (target.x & vischar_BYTE2_BIT7)
+    target.y++;
 
-  if (loc.x == 0xFF)
+  if (target.x == 0xFF)
   {
     //uint8_t A;
 
-    A = ((locptr->x & 0xF8) == 8) ? 1 : 2;
+    A = ((targetptr->x & 0xF8) == 8) ? 1 : 2;
     if (in_permitted_area_end_bit(state, A) == 0)
       goto set_flag_green;
     else
@@ -1915,8 +1915,7 @@ void in_permitted_area(tgestate_t *state)
     uint8_t                  iters; /* was B */
     const uint8_t           *HL;
 
-    A = loc.x; // added to coax A back from loc
-
+    A = target.x; // added to coax A back from target
     A &= ~vischar_BYTE2_BIT7;
     tab = &byte_to_pointer[0]; // table mapping bytes to offsets
     iters = NELEMS(byte_to_pointer);
@@ -1932,7 +1931,7 @@ void in_permitted_area(tgestate_t *state)
 found:
     HL = tab->pointer;
     // loc.y = 0; // not needed
-    HL += loc.y; // original code used B=0
+    HL += target.y; // original code used B=0
     if (in_permitted_area_end_bit(state, *HL) == 0)
       goto set_flag_green;
 
@@ -3088,9 +3087,9 @@ store_to_vischar:
  */
 void set_target(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t    A;      /* was A */
-  tinypos_t *pos;    /* was DE */
-  xy_t      *target; /* was HL */
+  uint8_t    ok;  /* was A */
+  tinypos_t *pos; /* was DE */
+  xy_t      *xy;  /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3099,18 +3098,18 @@ void set_target(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  A = get_next_target(state, &vischar->target, &target);
+  ok = get_next_target(state, &vischar->target, &xy);
 
   pos = &vischar->pos;
-  pos->x = target->x;
-  pos->y = target->y;
+  pos->x = xy->x;
+  pos->y = xy->y;
 
-  if (A == 255) /* End of door list. */
+  if (ok == 255) /* End of door list. */
   {
     state->IY = vischar;
     get_next_target_and_handle_it(state, vischar, &vischar->target);
   }
-  else if (A == 128) /* Did a door thing. */
+  else if (ok == (1 << 7)) /* Did a door thing. */
   {
     vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
