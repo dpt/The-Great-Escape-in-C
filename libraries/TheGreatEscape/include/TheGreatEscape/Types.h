@@ -424,6 +424,9 @@ typedef struct vischar
   xy_t            target;
 
   /** $8004 position */
+  // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
+  // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
+  // used in vischar_at_pos_x/y
   tinypos_t       pos;
 
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
@@ -670,7 +673,7 @@ searchlight_movement_t;
 typedef struct anim
 {
   int8_t  dx, dy, dh;  /**< signed deltas */
-  uint8_t spriteindex; /**< top bit is probably a flip flag */
+  uint8_t spriteindex; /**< top bit is a flip flag */
 }
 anim_t;
 

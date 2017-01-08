@@ -218,8 +218,9 @@ void set_hero_sprite_for_room(tgestate_t *state)
   hero = &state->vischars[0];
   hero->input = input_KICK;
 
-  // vischar_DIRECTION_CRAWL is set, or cleared, here but not checked directly anywhere else so it must be an offset
-  // e.g byte_CDAA[]
+  /* vischar_DIRECTION_CRAWL is set, or cleared, here but not tested
+   * directly anywhere else so it must be an offset into byte_CDAA[].
+   */
 
   /* When in tunnel rooms force the hero sprite to 'prisoner' and set the
    * crawl flag appropriately. */
@@ -875,6 +876,7 @@ uint8_t *const beds[beds_LENGTH] =
   { ROOMDIR(room_23_BREAKFAST,            TR), { 0x28, 0x42, 24 } },
   { ROOMDIR(room_25_BREAKFAST,            BL), { 0x26, 0x18, 24 } },
 
+  // 20 -
   { ROOMDIR(room_23_BREAKFAST,            TL), { 0x3E, 0x24, 24 } }, // 40
   { ROOMDIR(room_21_CORRIDOR,             BR), { 0x20, 0x2E, 24 } },
 
@@ -3304,7 +3306,7 @@ void character_sleeps(tgestate_t *state,
  *
  * \param[in] state  Pointer to game state.
  * \param[in] room   Room index.            (was C)
- * \param[in] target Likely a target.       (was DE/HL)
+ * \param[in] target Target - used to determine either a vischar or a characterstruct depending on if the room specified is the current room. (was DE/HL)
  */
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
@@ -3913,7 +3915,7 @@ void plot_horizontal_tiles_common(tgestate_t             *state,
   uint8_t            A;         /* was A */
   uint8_t            iters;     /* was B */
   uint8_t            iters2;    /* was B' */
-  uint8_t            offset;    // new
+  uint8_t            offset;    // new or A' ?
 
   assert(state != NULL);
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
@@ -4341,7 +4343,7 @@ void shunt_map_right(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[1], &state->tile_buf[0], tile_buf_length - 1);
-  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length - 1);
+  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length - 1); // orig uses window_buf_length which can't be right
 
   plot_leftmost_tiles(state);
 }
@@ -7034,7 +7036,9 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   x             = 0; // prev-x
   y             = 0; // prev-y
   item_and_flag = item_NONE; // 'nothing found' marker 0xFF
-  DEdash        = 0;
+  DEdash        = 0; // is this even used?
+
+  // Iterate over vischars for ?
 
   iters   = vischars_LENGTH; /* iterations */
   vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
@@ -7050,7 +7054,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
     item_and_flag = vischars_LENGTH - iters; /* Item index. */ // BC' is temp.
     DEdash = vischar->mi.pos.height;
 
-    y = vischar->mi.pos.y; /* Note: The y,x order here is correct. */
+    y = vischar->mi.pos.y; /* Note: The y,x order here matches the original code. */
     x = vischar->mi.pos.x;
     state->IY = found_vischar = vischar;
 
@@ -7635,7 +7639,7 @@ clamp_height: // was $BBF8
 
     width            = clipped_width & 0xFF; // was self modify // inner loop counter // width
     tilebuf_stride   = state->columns - width; // was self modify
-    windowbuf_stride = tilebuf_stride + 7 * state->columns; // was self modify // == (8 * state->tb_columns - C)
+    windowbuf_stride = tilebuf_stride + 7 * state->columns; // was self modify // == (8 * state->columns - C)
 
     map_position = &state->map_position;
 
@@ -7798,7 +7802,7 @@ void spawn_characters(tgestate_t *state)
           /* Outdoors. */
 
           /* Screen Y calculation. */
-          y = 0x200 - charstr->pos.x - charstr->pos.y - charstr->pos.height; // 0x200 represented as zero in original code.
+          y = 0x200 - charstr->pos.x - charstr->pos.y - charstr->pos.height; // 0x200 is represented as zero in original code.
           if (y <= map_y_clamped || y > MIN(map_y_clamped + 32, 0xFF))
             goto skip; // check
 
@@ -7813,7 +7817,7 @@ void spawn_characters(tgestate_t *state)
             goto skip; // check
         }
 
-        spawn_character(state, charstr);
+        spawn_character(state, charstr); // return code ignored
       }
     }
 
@@ -7888,7 +7892,7 @@ next:
  * \param[in] state   Pointer to game state.
  * \param[in] charstr Pointer to character to spawn. (was HL)
  *
- * \return NZ if not? spawned.
+ * \return 1 if spawned, 0 if no empty slots
  */
 int spawn_character(tgestate_t *state, characterstruct_t *charstr)
 {
@@ -7908,7 +7912,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   characterstruct_t           *charstr2;  /* was DE */
   pos_t                       *saved_pos; /* was HL */
   character_t                  character; /* was A */
-  const character_class_data_t *metadata;  /* was DE */
+  const character_class_data_t *metadata; /* was DE */
   int                          Z;
   room_t                       room;      /* was A */
   uint8_t                      A;         /* was A */
@@ -8047,7 +8051,8 @@ c592:
     }
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
-    memcpy(&vischar->pos, target, sizeof(tinypos_t)); // location is an xy not a tinypos so target must be wrong!
+    // it seems that get_next_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
+    memcpy(&vischar->pos, target, sizeof(tinypos_t));
     // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
@@ -8221,9 +8226,10 @@ uint8_t get_next_target(tgestate_t *state,
       *target_out = target;
       return 255; /* Conv: Was a goto to a return. */
     }
+    // is this door_LOCKED or door_REVERSE? (same below)
     else if ((doorindex & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
     {
-      // door = *pdoor; // removed redundant reload
+      // doorindex = *pdoor; // removed redundant reload
       if (target->x & vischar_BYTE2_BIT7) // sure this is location-x? because it looks like it might be retesting 'door' so it get wiped. yeah, sure it is. could just be 'x' i think.
         doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
@@ -8992,7 +8998,7 @@ set_pos:
 bribed_visible:
       /* Found bribed character in vischars. */
       {
-        pos_t     *pos;     /* was HL */
+        pos_t     *pos; /* was HL */
         tinypos_t *tinypos; /* was DE */
 
         pos     = &found->mi.pos;
@@ -9043,11 +9049,13 @@ end_bit:
   else
     scale = 8; /* Outdoors. */
 
-  if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc.
+  // Still trying to figure ot this IMPEDED flag. If it's clear and the vischar matches its stored 'pos' then we enter bribes_solitary_food(), else we character_behaviour_set_input(). However, if IMPEDED is set then that is reversed.
+
+  if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc?
     character_behaviour_impeded(state, vischar, A, scale);
   else if (vischar_at_pos_x(state, vischar, scale) == 0 &&
            vischar_at_pos_y(state, vischar, scale) == 0)
-    /* Character couldn't move. */
+    /* Character is at stored pos. */
     bribes_solitary_food(state, vischar);
   else
     character_behaviour_set_input(state, vischar, A /* new_input */); /* was fallthrough */
@@ -9073,7 +9081,10 @@ void character_behaviour_set_input(tgestate_t *state,
 }
 
 /**
- * $C9FF: Called when a character is impeded.
+ * $C9FF: Called when a character is (was) impeded.
+
+ similar to end of $C918 but the sense is reversed...
+
  *
  * \param[in] state     Pointer to game state.
  * \param[in] vischar   Pointer to visible character.   (was IY)
@@ -9093,7 +9104,7 @@ void character_behaviour_impeded(tgestate_t *state,
   /* Note: The y,x order here looks unusual but it matches the original code. */
   if (vischar_at_pos_y(state, vischar, scale) == 0 &&
       vischar_at_pos_x(state, vischar, scale) == 0)
-    /* Character couldn't move. */
+    /* Character is at stored pos. */
     character_behaviour_set_input(state, vischar, new_input);
   else
     bribes_solitary_food(state, vischar);
@@ -9136,7 +9147,7 @@ uint8_t vischar_at_pos_x(tgestate_t *state,
     return 4;
   else
   {
-    vischar->counter_and_flags |= vischar_BYTE7_IMPEDED;
+    vischar->counter_and_flags |= vischar_BYTE7_IMPEDED; // doubting that this is an impeded flag
     return 0;
   }
 }
@@ -9985,9 +9996,8 @@ next:
   /* Move the hero to solitary. */
   state->vischars[0].room = room_24_SOLITARY;
 
-  /* From reading the doors[] table this is the door inbetween
-   * room_21_CORRIDOR and room_0_OUTDOORS. I'd have expected this to be 49
-   * which is the door between room_22_REDKEY and room_24_SOLITARY. */
+  /* I reckon this should be 24 which is the door between room_22_REDKEY and
+   * room_24_SOLITARY. */
   state->current_door = 20;
 
   decrease_morale(state, 35);
@@ -10645,8 +10655,12 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (state->screenpos.y - state->map_position.y) * 192; // temp: HL
+    y = (state->screenpos.y - state->map_position.y) * 24 * 8; // temp: HL
 
+  // state->screenpos.y - state->map_position.y never seems to exceed $10 in the original game, but does for me
+  // state->screenpos.y seems to match, but state->map_position.y is 2 bigger
+
+  // Conv: Assigns to signed var.
   x = state->screenpos.x - state->map_position.x; // X axis
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
@@ -11615,7 +11629,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // HL now points after sprite_index
   // DE now points to state->map_position_related.x
 
-  // unrolled over original
+  // unrolled versus original
   state->screenpos.x = vischar->screenpos.x >> 3;
   state->screenpos.y = vischar->screenpos.y >> 3;
 
@@ -12094,7 +12108,7 @@ TGE_API void tge_setup(tgestate_t *state)
   menu_screen(state);
 
 
-  /* Construct a table of 256 bit-reversed bytes at 0x7F00. */
+  /* Construct a table of 256 bit-reversed bytes in state->reversed[]. */
   reversed = &state->reversed[0];
   do
   {

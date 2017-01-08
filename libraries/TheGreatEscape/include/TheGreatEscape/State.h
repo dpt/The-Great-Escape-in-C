@@ -161,6 +161,8 @@ struct tgestate
    * Used when drawing tiles. */
   // assigned in reset_outdoors
   // suspect that this is a centering value
+  // positive x - map shown further right
+  // positive y - map shown further up
   xy_t            map_position;
 
   /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
@@ -310,11 +312,11 @@ struct tgestate
   /** $DD69: Item attributes. */
   attribute_t     item_attributes[item__LIMIT];
 
-  /** $E121 .. $E363: (Formerly) Self-modified locations. */
-  uint8_t         self_E121; // masked_sprite_plotter_24_wide_vischar: height loop in right shift case = clipped_height & 0xFF
-  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide_vischar: height loop in left shift case = clipped_height & 0xFF
-  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left: height loop = clipped height & 0xFF
-  uint8_t         self_E363; // masked_sprite_plotter_16_wide_right: height loop = clipped height & 0xFF
+  /** $E121..$E363: Self-modified locations in masked sprite plotters. */
+  uint8_t         self_E121; // masked_sprite_plotter_24_wide_vischar: height loop (in right shift case) = clipped_height & 0xFF
+  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide_vischar: height loop (in left shift case)  = clipped_height & 0xFF
+  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left:    height loop                       = clipped_height & 0xFF
+  uint8_t         self_E363; // masked_sprite_plotter_16_wide_right:   height loop                       = clipped_height & 0xFF
 
   /* Note that these adjacent chunks actually overlap in the original game 
    * but I've divided them here for clarity. */
