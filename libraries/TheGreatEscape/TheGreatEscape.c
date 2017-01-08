@@ -7385,9 +7385,6 @@ pop_next:
   }
   while (--iters);
 
-  // This scales A by B then returns nothing: is it really doing this for no good reason?
-  // It was a falthrough in the original code so assuming it was a missing RET.
-  // count_of_something = multiply(A, 8);
   /* Dump the mask buffer to the top-left of the screen. */
   if (1)
   {
@@ -7402,52 +7399,6 @@ pop_next:
     }
   }
 }
-
-#if 0 // replaced the only call to this with an actual multiply
-/**
- * $BACD: Multiply the two input values returning a widened result.
- *
- * Leaf.
- *
- * If value is 00000001 and shift is 8 => 00000000 00001000
- * If value is 10000000 and shift is 8 => 00000100 00000000
- * If value is 00001111 and shift is 8 => 00000000 01111000
- * If value is 01010101 and shift is 8 => 00000010 10101000
- *
- * \param[in] left  Left hand value. (was A)
- * \param[in] right Right hand value. (was E)
- *
- * \return Widened value. (was HL)
- */
-uint16_t multiply(uint8_t left, uint8_t right)
-{
-  uint16_t expected_result; /* Conv: added */
-  uint8_t  iters;  /* was B */
-  uint16_t result; /* was HL */
-
-  expected_result = left * right; /* Conv: added */
-
-  /* sampled val,shift = $1A,$4 / $42,$8 / $1A,$2A */
-
-  iters  = 8;
-  result = 0;
-  do
-  {
-    int carry = 0;
-
-    result <<= 1;
-    carry = left >> 7; /* shift out of high end */
-    left <<= 1; /* was RRA */
-    if (carry)
-      result += right; /* shift into low end */
-  }
-  while (--iters);
-
-  assert(result == expected_result);
-
-  return result;
-}
-#endif
 
 /* ----------------------------------------------------------------------- */
 
