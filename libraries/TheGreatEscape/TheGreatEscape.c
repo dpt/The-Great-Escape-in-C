@@ -8204,14 +8204,16 @@ uint8_t get_next_target(tgestate_t *state,
     // PUSH HL
     y = target->y;
     pdoors = element_A_of_table_7738(x); // perhaps these are character routes, door-to-door
+    assert(pdoors);
 
-    index = 0x00; // was H = 0;
-    if (y == 0xFF) // flip direction?
-      index = 0xFF; // was H--; // H = 0 - 1 => 0xFF // making HL -ve?
-    index = (index << 8) | y; // was L = A;
+    if (y == 0xFF)
+      index = -1;
+    else
+      index = y;
+
     pdoor = pdoors + index;
     // EX DE,HL
-    doorindex = *pdoor; // was A = *DE
+    doorindex = *pdoor;
     // POP HL // was interleaved
     if (doorindex == door_NONE) /* end of list? */
     {
