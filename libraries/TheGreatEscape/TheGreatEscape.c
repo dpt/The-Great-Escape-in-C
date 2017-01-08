@@ -8270,7 +8270,7 @@ void move_characters(tgestate_t *state)
   uint8_t            B;           /* was B */
   uint8_t            max;         /* was A' */
   pos_t             *HLpos;       /* was HL */
-  tinypos_t         *DEtinypos;   /* was DE */
+  tinypos_t         *DEcharstr_tinypos;   /* was DE */
   door_t            *HLdoorpos;   /* was HL */
   tinypos_t         *HLtinypos;   /* was HL */
   characterstruct_t *DEcharstr;   /* was DE */
@@ -8381,14 +8381,14 @@ character_12_or_higher:
       else
         max = 6;
 
-      DEtinypos = &DEcharstr->pos;
+      DEcharstr_tinypos = &DEcharstr->pos;
 
       // here HLpos is pointing to 16-bit coords but change_by_delta needs/wants 8-bit...
       B = 0;
-      B = change_by_delta(max, B, (const uint8_t *) &HLpos->x, &DEtinypos->x); // max, rc, second, first
+      B = change_by_delta(max, B, (const uint8_t *) &HLpos->x, &DEcharstr_tinypos->x); // max, rc, second, first
       // DE++;
       // HL++;
-      B = change_by_delta(max, B, (const uint8_t *) &HLpos->y, &DEtinypos->y);
+      B = change_by_delta(max, B, (const uint8_t *) &HLpos->y, &DEcharstr_tinypos->y);
 
       // POP HL_target
 
@@ -8415,12 +8415,12 @@ character_12_or_higher:
         HLtinypos = &HLdoorpos[-1].pos;
 
       room = DEcharstr->room; // *DE++;
-      DEtinypos = &DEcharstr->pos;
+      DEcharstr_tinypos = &DEcharstr->pos;
       if (room != room_0_OUTDOORS)
       {
-        DEtinypos->x      = HLtinypos->x;
-        DEtinypos->y      = HLtinypos->y;
-        DEtinypos->height = HLtinypos->height;
+        DEcharstr_tinypos->x      = HLtinypos->x;
+        DEcharstr_tinypos->y      = HLtinypos->y;
+        DEcharstr_tinypos->height = HLtinypos->height;
 //        DE += 3;
 //        DE--; // DE points to DEtinypos->height
         // HL += 3 // HL points to next door_t?
@@ -8428,9 +8428,9 @@ character_12_or_higher:
       else
       {
         /* Conv: Unrolled. */
-        DEtinypos->x      = HLtinypos->x      >> 1;
-        DEtinypos->y      = HLtinypos->y      >> 1;
-        DEtinypos->height = HLtinypos->height >> 1;
+        DEcharstr_tinypos->x      = HLtinypos->x      >> 1;
+        DEcharstr_tinypos->y      = HLtinypos->y      >> 1;
+        DEcharstr_tinypos->height = HLtinypos->height >> 1;
 //        DE += 3;
 //        DE--;
       }
