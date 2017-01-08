@@ -10665,6 +10665,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
 
   maskbuf = &state->mask_buffer[0];
 
@@ -10887,6 +10888,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
     assert(bitmapptr != NULL);
 
     iters = state->self_E121; // clipped_height & 0xFF
+    assert(iters <= MASK_BUFFER_HEIGHT * 8);
     do
     {
       uint8_t bm0, bm1, bm2, bm3;         // was B, C, E, D
@@ -10987,6 +10989,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       x = MASK(bm3, mask3);
       foremaskptr++;
+      ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E1BF)
         *screenptr = x;
@@ -11016,6 +11019,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
     assert(bitmapptr != NULL);
 
     iters = state->self_E1E2; // clipped_height & 0xFF
+    assert(iters <= MASK_BUFFER_HEIGHT * 8);
     do
     {
       /* Note the different variable order to the case above. */
@@ -11205,6 +11209,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(bitmapptr != NULL);
 
   iters = state->self_E2C2; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
+  assert(iters <= MASK_BUFFER_HEIGHT * 8);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + iters * state->columns - 1);
   do
   {
     uint8_t bm0, bm1, bm2;       // was D, E, C
@@ -11282,6 +11288,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     screenptr = state->window_buf_pointer; // moved relative to the 24 version
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+    ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
     x = MASK(bm0, mask0);
     foremaskptr++;
@@ -11344,6 +11351,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   assert(bitmapptr != NULL);
 
   iters = state->self_E363; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
+  assert(iters <= MASK_BUFFER_HEIGHT * 8);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + iters * state->columns - 1);
   do
   {
     /* Note the different variable order to the 'left' case above. */
@@ -11706,6 +11715,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   state->window_buf_pointer = &state->window_buf[x + y]; // screen buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
 
   maskbuf = &state->mask_buffer[0];
 
