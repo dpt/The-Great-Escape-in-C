@@ -11836,7 +11836,14 @@ void plot_game_window(tgestate_t *state)
   uint8_t         iters;     /* was B */
   uint8_t         tmp;       /* Conv: added for RRD macro */
 
-  y = state->game_window_offset.y;
+  // these are 0/2/4/6 multiples of 24
+  assert(state->game_window_offset.x == 0x00 ||
+         state->game_window_offset.x == 0x30 ||
+         state->game_window_offset.x == 0x60 ||
+         state->game_window_offset.x == 0x90);
+
+  y = state->game_window_offset.y; // might not be a Y value. seems to only ever be 0 or 255.
+  assert(y == 0 || y == 255);
   if (y == 0)
   {
     src = &state->window_buf[1] + state->game_window_offset.x;
