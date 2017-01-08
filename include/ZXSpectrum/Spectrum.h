@@ -83,10 +83,11 @@ typedef struct zxspectrum zxspectrum_t;
  */
 typedef enum
 {
-  sleeptype_MENU,
-  sleeptype_SOUND,
-  sleeptype_KEYSCAN,
-  sleeptype_DELAY
+  sleeptype_MENU,     // main menu loop
+  sleeptype_SOUND,    // inbetween sound pulses
+  sleeptype_KEYSCAN,  // waiting for a keypress
+  sleeptype_DELAY,    // too vague
+  sleeptype_LOOP      // main game loop
 }
 sleeptype_t;
 
@@ -122,7 +123,7 @@ struct zxspectrum
   /**
    * Call the implementer when we need to sleep.
    */
-  void (*sleep)(zxspectrum_t *state, sleeptype_t type, int duration);
+  void (*sleep)(zxspectrum_t *state, sleeptype_t type, int duration); // duration units are what?
 
 
   uint8_t     screen[SCREEN_LENGTH];

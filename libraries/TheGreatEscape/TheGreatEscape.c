@@ -1558,6 +1558,17 @@ void main_loop(tgestate_t *state)
   wave_morale_flag(state);
   if ((state->game_counter & 63) == 0)
     dispatch_timed_event(state);
+
+  // This is temporary: each part of the code which updates the display
+  // should call the draw entry point with a correct dirty rectangle.
+  //
+  // Might be a better idea to save up all dirty rects then dispatch them in
+  // one go each time around this loop.
+  state->speccy->draw(state->speccy, NULL);
+
+  // Conv: Added this overall slowdown factor.
+  // Perhaps I should run main_loop on a timer instead of pratting around with sleep calls.
+  state->speccy->sleep(state->speccy, sleeptype_DELAY, 40000);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4739,6 +4750,7 @@ void zoombox(tgestate_t *state)
     zoombox_fill(state);
     zoombox_draw_border(state);
 
+    state->speccy->sleep(state->speccy, sleeptype_DELAY, 10000 /* 1/10th sec */);
     state->speccy->draw(state->speccy, NULL);
   }
   while (state->zoombox.height + state->zoombox.width < 35);
@@ -12142,8 +12154,6 @@ TGE_API void tge_main(tgestate_t *state)
   if (setjmp(state->jmpbuf_main) == 0)
   {
     main_loop(state);
-
-    state->speccy->draw(state->speccy, NULL); // temporary
   }
 }
 
