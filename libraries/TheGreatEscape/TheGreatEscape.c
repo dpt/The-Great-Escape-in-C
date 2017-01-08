@@ -4452,9 +4452,9 @@ void move_map(tgestate_t *state)
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_TOUCHING)
     return; /* Can't move the map when touch() saw contact. */
 
-  anim = state->vischars[0].anim;
+  anim      = state->vischars[0].anim;
   animindex = state->vischars[0].animindex;
-  direction = anim[3]; // 0xFF, 0, 1, 2, or 3 // input data here seems to be in groups of four
+  direction = anim[3]; // third byte of anim_[A-X] - 0xFF, 0, 1, 2, or 3
   if (direction == 0xFF)
     return; /* Don't move. */
 
@@ -6509,7 +6509,7 @@ const wall_t walls[24] =
 /**
  * $B5CE: called_from_main_loop_9
  *
- * work out screen positions
+ * work out screen positions and animations
  *
  * - movement
  * - crash if disabled, crash if iters reduced from 8
@@ -6519,23 +6519,23 @@ const wall_t walls[24] =
 void called_from_main_loop_9(tgestate_t *state)
 {
 #define O (0<<7)
-#define I (1<<7)
+#define I (1<<7) // could be: play anim backwards
 
   /**
-   * $CDAA: Indices into animations.
-   * indices: direction, input
+   * $CDAA: Maps (facing direction, user input) to animation + flag.
    */
-  static const uint8_t byte_CDAA[8][9] =
+  static const uint8_t byte_CDAA[8 /*direction*/][9 /*input*/] =
   {
-    // none, up, down, left, up+left, down+left, right, up+right, down+right, fire
+    // (U/D/L/R = Up/Down/Left/Right)
+    // None,  U,      D,      L,      U+L,    D+L,    R,      U+R,    D+R
     { O|0x08, O|0x00, O|0x04, I|0x07, O|0x00, I|0x07, O|0x04, O|0x04, O|0x04 }, // TL
     { O|0x09, I|0x04, O|0x05, O|0x05, I|0x04, O|0x05, O|0x01, O|0x01, O|0x05 }, // TR
     { O|0x0A, I|0x05, O|0x02, O|0x06, I|0x05, O|0x06, I|0x05, I|0x05, O|0x02 }, // BR
     { O|0x0B, O|0x07, I|0x06, O|0x03, O|0x07, O|0x03, O|0x07, O|0x07, I|0x06 }, // BL
-    { O|0x14, O|0x0C, I|0x0C, I|0x13, O|0x0C, I|0x13, O|0x10, O|0x10, I|0x0C }, // TL + crawl
-    { O|0x15, I|0x10, O|0x11, I|0x0D, I|0x10, I|0x15, O|0x0D, O|0x0D, O|0x11 }, // TR + crawl
-    { O|0x16, I|0x0E, O|0x0E, O|0x12, I|0x0E, O|0x0E, I|0x11, I|0x11, O|0x0E }, // BR + crawl
-    { O|0x17, O|0x13, I|0x12, O|0x0F, O|0x13, O|0x0F, I|0x0F, I|0x0F, I|0x12 }, // BL + crawl
+    { O|0x14, O|0x0C, I|0x0C, I|0x13, O|0x0C, I|0x13, O|0x10, O|0x10, I|0x0C }, // TL + Crawl
+    { O|0x15, I|0x10, O|0x11, I|0x0D, I|0x10, I|0x15, O|0x0D, O|0x0D, O|0x11 }, // TR + Crawl
+    { O|0x16, I|0x0E, O|0x0E, O|0x12, I|0x0E, O|0x0E, I|0x11, I|0x11, O|0x0E }, // BR + Crawl
+    { O|0x17, O|0x13, I|0x12, O|0x0F, O|0x13, O|0x0F, I|0x0F, I|0x0F, I|0x12 }, // BL + Crawl
   };
   // highest index = 0x17 (23 == max index in animations)
 
@@ -6550,6 +6550,9 @@ void called_from_main_loop_9(tgestate_t *state)
 
   assert(state != NULL);
 
+  anim = DE = NULL; // Conv: init
+  Adash = 0; // Conv: initialise
+
   iters     = vischars_LENGTH;
   state->IY = &state->vischars[0];
   do
@@ -6562,7 +6565,7 @@ void called_from_main_loop_9(tgestate_t *state)
     vischar->flags |= vischar_FLAGS_NO_COLLIDE;
 
     if (vischar->input & input_KICK)
-      goto kicked;
+      goto kicked; /* force an update */
 
     anim = vischar->anim;
     animindex = vischar->animindex;
@@ -6642,8 +6645,8 @@ kicked:
 
 end_bit:
   C = byte_CDAA[vischar->direction][vischar->input];
-  // original game uses ADD A,A to double A and in doing so discards top bit
-  DE = vischar->animbase[C & 0x7F]; // sampled animbase = $CDF2 (always) == &animations[0]
+  // Conv: Original game uses ADD A,A to double A and in doing so discards top flag bit. We mask it off instead.
+  DE = vischar->animbase[C & ~I]; // sampled animbase always $CDF2 == &animations[0]
   vischar->anim = DE;
   if ((C & I) == 0)
   {
