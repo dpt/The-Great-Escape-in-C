@@ -159,7 +159,7 @@ struct tgestate
 
   /** $81BB: Map position (on screen).
    * Used when drawing tiles. */
-  // assigned in reset_outdoors
+  // assigned in reset_outdoors from hero's vischar (scaled down)
   // suspect that this is a centering value
   // positive x - map shown further right
   // positive y - map shown further up

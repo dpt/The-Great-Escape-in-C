@@ -220,9 +220,9 @@ enum vischar_flags
 enum itemstruct_flags
 {
   itemstruct_ITEM_MASK                 = 0x0F,
-  itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4,
-  itemstruct_ITEM_FLAG_POISONED        = 1 << 5,
-  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /**< Set when the item is picked up for the first time. */
+  itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4, // only used (in a mask) by pick_up_item, but never set AFAICT
+  itemstruct_ITEM_FLAG_POISONED        = 1 << 5, // used with item_FOOD only
+  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /**< Set when the item is picked up for the first time (for scoring). */
 
   itemstruct_ROOM_NONE                 = 0x3F,
   itemstruct_ROOM_MASK                 = 0x3F,

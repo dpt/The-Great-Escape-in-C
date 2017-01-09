@@ -45,6 +45,8 @@
 #include <setjmp.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ZXSpectrum/Spectrum.h"
@@ -5431,6 +5433,8 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
     door_handling(state, vischar);
 
   /* If non-player character or hero is not cutting the fence. */
+  // NPCs are not bounds checked
+  // player is not bounds checked when cutting the fence
   if (vischar > &state->vischars[0] || ((state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE)) != vischar_FLAGS_CUTTING_WIRE))
   {
     if (bounds_check(state, vischar))
@@ -5457,6 +5461,8 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
  * $AFDF: (unknown) Definitely something to do with moving objects around. Collisions?
  *
  * \param[in] state         Pointer to game state.
+ *
+ * \return 0/1 => ?
  */
 int collision(tgestate_t *state)
 {
@@ -5608,6 +5614,7 @@ int collision(tgestate_t *state)
         state->IY->input = input_KICK;
 
 b0d0:
+        // is the 5 a character_behaviour delay field?
         state->IY->counter_and_flags = (state->IY->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
         // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
         //if (!Z)
@@ -6007,7 +6014,7 @@ void reset_outdoors(tgestate_t *state)
   /* Reset hero. */
   calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
 
-  /* Centre the screen on the hero. */
+  /* Centre the map position on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
   state->map_position.x = (state->vischars[0].floogle.x >> 3) - 11; // 11 would be screen width minus half of character width?
   state->map_position.y = (state->vischars[0].floogle.y >> 3) - 6;  // 6 would be screen height minus half of character height?
@@ -6743,10 +6750,10 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
-  assert((int16_t) vischar->screenpos.x >= -3000);
-  assert((int16_t) vischar->screenpos.x <   7000);
-  assert((int16_t) vischar->screenpos.y >= -3000);
-  assert((int16_t) vischar->screenpos.y <   4000);
+  assert((int16_t) vischar->floogle.x >= -3000);
+  assert((int16_t) vischar->floogle.x <   7000);
+  assert((int16_t) vischar->floogle.y >= -3000);
+  assert((int16_t) vischar->floogle.y <   4000);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6802,6 +6809,12 @@ void reset_game(tgestate_t *state)
 
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
+
+  // Bug: item_structs ought to have each element's flags restored so that
+  // itemstruct_ITEM_FLAG_HELD is reset.
+
+  // Bug: fails to reset position of stoves and crate. (IIRC DOS version
+  // resets them whenever they're spawned).
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7144,49 +7157,41 @@ void render_mask_buffer(tgestate_t *state)
     pmask = &exterior_mask_data[0]; // offset by +2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
 
-  uint8_t            A;                   /* was A */
-  const uint8_t     *mask_pointer;        /* was DE */
-//  uint16_t           HL;                  /* was HL */
-  uint16_t           mask_skip;           /* was HL */
-  uint8_t           *mask_buffer_pointer; /* was $81A0 */
+  uint8_t         A;                   /* was A */
+  const uint8_t  *mask_pointer;        /* was DE */
+  uint16_t        mask_skip;           /* was HL */
+  uint8_t        *mask_buffer_pointer; /* was $81A0 */
 
   /* Mask against all. */
   do
   {
     uint8_t scrx, scry, height; /* was A/C, A, A */
-
-    // moved from state
-
-    uint8_t clip_x;      /* was $B837 */ // x0 offset
-    uint8_t clip_y;      /* was $B838 */ // y0 offset
+    uint8_t clip_x;       /* was $B837 */ // x0 offset
+    uint8_t clip_y;       /* was $B838 */ // y0 offset
     uint8_t clip_height;  /* was $B839 */ // y0 offset 2
     uint8_t clip_width;   /* was $B83A */ // x0 offset 2
-
-//  uint8_t byte_B839;    /* was $BA70 - self modified */
-//  uint8_t byte_B83A;    /* was $BA72 - self modified */
     uint8_t self_BA90;    /* was $BA90 - self modified */
     uint8_t skip;         /* was $BABA - self modified */
 
-    // PUSH BC
-    // PUSH HL
+    /* Skip any masks which aren't on-screen. */
 
-    // pmask->bounds is a visual position on the map image
-    // pmask->pos is a map position
-    // so we can cull masks if not on-screen
-    // and we can cull masks if behind player
+    // PUSH BC, PUSH HL
+
+    // pmask->bounds is a visual position on the map image (isometric map space)
+    // pmask->pos is a map position (map space)
+    // so we can cull masks if not on-screen and we can cull masks if behind player
 
     scrx = state->screenpos.x;
-    if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0) // $EC03, $EC02
+    scry = state->screenpos.y; // reordered
+    if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0 ||
+        scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0)  // $EC03,$EC02 $EC05,$EC04
       goto pop_next;
 
-    scry = state->screenpos.y;
-    if (scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0) // $EC05, $EC04
-      goto pop_next;
+    // what's in state->tinypos_stash at this point?
+    // it's set by setup_vischar_plotting, setup_item_plotting
 
-    if (state->tinypos_stash.x <= pmask->pos.x) // $EC06
-      goto pop_next;
-
-    if (state->tinypos_stash.y < pmask->pos.y) // $EC07
+    if (state->tinypos_stash.x <= pmask->pos.x ||
+        state->tinypos_stash.y <  pmask->pos.y) // $EC06, $EC07
       goto pop_next;
 
     height = state->tinypos_stash.height;
@@ -7197,47 +7202,44 @@ void render_mask_buffer(tgestate_t *state)
 
     /* Work out clipping offsets, widths and heights. */
 
-    scrx = state->screenpos.x; // dupe of earlier load
+    // Conv: removed dupe of earlier load of scrx
     if (scrx >= pmask->bounds.x0) // must be $EC02
     {
-      clip_x = scrx - pmask->bounds.x0;
-      clip_width = MIN(pmask->bounds.x1 - scrx, 3) + 1;
+      clip_x      = scrx - pmask->bounds.x0;
+      clip_width  = MIN(pmask->bounds.x1 - scrx, 3) + 1;
     }
-    else // shape would start off the left hand side of the display ?
+    else
     {
-      uint8_t x0; /* was B */
-
-      x0 = pmask->bounds.x0; // must be $EC02
-      clip_x = 0;
-      clip_width = MIN((pmask->bounds.x1 - x0) + 1, 4 - (x0 - scrx));
+      // Conv: removed pmask->bounds.x0 cached in x0 (was B)
+      clip_x      = 0;
+      clip_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - scrx));
     }
 
-    scry = state->screenpos.y; // dupe of earlier load
+    // Conv: removed dupe of earlier load of scry
     if (scry >= pmask->bounds.y0)
     {
-      clip_y = scry - pmask->bounds.y0;
+      clip_y      = scry - pmask->bounds.y0;
       clip_height = MIN(pmask->bounds.y1 - scry, 4) + 1;
     }
     else
     {
-      uint8_t y0; /* was B */
-
-      y0 = pmask->bounds.y0;
-      clip_y = 0;
-      clip_height = MIN((pmask->bounds.y1 - y0) + 1, 5 - (y0 - scry));
+      // Conv: removed pmask->bounds.y0 cached in x0 (was B)
+      clip_y      = 0;
+      clip_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - scry));
     }
 
     // In the original code, HL is here decremented to point at member y0.
 
     {
-      uint8_t x, y;   /* was B, C */ // x,y are the correct way around here i think!
-      uint8_t index;  /* was A */
+      uint8_t x, y;  /* was B, C */ // x,y are the correct way around here i think!
+      uint8_t index; /* was A */
 
       x = y = 0;
-      if (clip_y == 0)
-        y = -state->screenpos.y + pmask->bounds.y0;
+      // Conv: flipped order of these
       if (clip_x == 0)
-        x = -state->screenpos.x + pmask->bounds.x0;
+        x = pmask->bounds.x0 - state->screenpos.x;
+      if (clip_y == 0)
+        y = pmask->bounds.y0 - state->screenpos.y;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
@@ -7246,24 +7248,18 @@ void render_mask_buffer(tgestate_t *state)
 
       mask_pointer = mask_pointers[index];
 
-//      L = clip_height; H = clip_width; // fused then split apart again immediately below
-//      self_BA70 = L; // self modify
-//      self_BA72 = H; // self modify
       self_BA90 = mask_pointer[0] - clip_width; // self modify // *mask_pointer is the mask's width
       skip = MASK_BUFFER_ROWBYTES - clip_width; // self modify
     }
 
-    // mask skip count == mask_width * clip_y + clip_x + 1
-    // *mask_pointer is the same mask width as fetched above
-    // note: multiply zeroes D
-    // Conv: Replaced call to multiply() with straight multiply.
+    /* Calculate count of mask tiles to skip. */
     mask_skip = clip_y * mask_pointer[0] + clip_x + 1;
 
-    // skip the initial clipped edge
+    /* Skip the initial clipped mask bytes. */
     do
     {
 more_to_skip:
-      A = *mask_pointer; // read count byte OR tile index
+      A = *mask_pointer; /* read count byte OR tile index */
       if (A & MASK_RUN_FLAG)
       {
         A &= ~MASK_RUN_FLAG;
@@ -7293,12 +7289,9 @@ skip_went_negative:
 
 skip_went_zero:
     {
-      uint8_t     *maskbufptr;     /* was HL */
-      uint8_t     iters2;          /* was C */
-      uint8_t     iters3;          /* was B */
-      uint8_t     counter_or_tile; /* was A */
-      uint8_t     counter;         /* was A' */
-      tileindex_t tile_index;      /* was A */
+      uint8_t *maskbufptr;  /* was HL */
+      uint8_t  iters2;      /* was C */
+      uint8_t  iters3;      /* was B */
 
       maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
@@ -7311,7 +7304,7 @@ skip_went_zero:
           // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
           // AFAICT it's ensuring that A is always the tile and that A' is the counter
 
-          uint8_t Adash = 0xCC;
+          uint8_t Adash = 0xCC; // safety value
 
           SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
 
@@ -7438,8 +7431,8 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
  *
  * \param[in]  state          Pointer to game state.
  * \param[in]  vischar        Pointer to visible character.       (was IY)
- * \param[out] clipped_width  Pointer to returned clipped width.  (was BC)
- * \param[out] clipped_height Pointer to returned ciipped height. (was DE)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (width, lefthand skip)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (height, top skip)
  *
  * \return 0 => visible, 0xFF => invisible. (was A)
  */
@@ -7448,16 +7441,11 @@ int vischar_visible(tgestate_t      *state,
                     uint16_t         *clipped_width,
                     uint16_t         *clipped_height)
 {
-  int8_t   A1;                  /* was A */
-  int8_t   A2;                  /* was A */
-  uint16_t new_width;           /* was BC */
-  uint16_t scaled_height_thing; /* was HL */
-  uint16_t DE;                  /* was DE */
-  uint16_t new_height;          /* was DE */
-  uint16_t scry;                /* was ? */
-  uint8_t  clamped_height;      /* was A */
-  uint8_t  Ay;                  /* was A */
-  uint16_t maxy;                /* was HL */
+  int8_t   amount_visible_right;  /* was A */
+  uint16_t new_width; /* was BC */
+  uint16_t Y1;  /* was HL */
+  uint16_t new_height;  /* was DE */
+  uint16_t Y2;  /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -7469,60 +7457,60 @@ int vischar_visible(tgestate_t      *state,
   /* Width part. */
 
   /* Conv: Re-read of map_position_related removed. */
-  A1 = state->map_position.x + state->columns - state->screenpos.x; // columns was 24
-  if (A1 <= 0)
-    return 0xFF; /* Not visible. */
+  /* Bail out if the vischar is off the right hand side of the screen. */
+  // like: if (state->screenpos.x > state->map_position.x + state->columns) ...
+  amount_visible_right = state->map_position.x + state->columns - state->screenpos.x; // columns was 24
+  if (amount_visible_right <= 0)
+    goto invisible;
 
-  // => if (state->map_position_related.x <= state->map_position.x + state->tb_columns)
-  if (A1 < vischar->width_bytes)
+  // Check for vischars partly on-screen.
+  if (amount_visible_right < vischar->width_bytes)
   {
-    // A1 must be the clipped width at this point
-    new_width = A1;
+    /* Lefthand ok, but righthand clipped. */
+    /* A1 must be the clipped width at this point. */
+    new_width = amount_visible_right;
   }
   else
   {
-    // A2 is signed for this part.
-    A2 = state->screenpos.x + vischar->width_bytes - state->map_position.x;
-    if (A2 <= 0) // off the left hand side?
-      return 0xFF; /* Not visible. */
+    int8_t amount_visible_left; /* was A */
 
-    if (A2 < vischar->width_bytes)
-      new_width = ((vischar->width_bytes - A2) << 8) | A2; // to grok // packed offset + width?
+    /* Bail out if the vischar is off the left hand side of the screen. */
+    // A2 is signed for this part.
+    amount_visible_left = state->screenpos.x + vischar->width_bytes - state->map_position.x;
+    if (amount_visible_left <= 0)
+      goto invisible;
+
+    /* Check for vischars partly on-screen. */
+    if (amount_visible_left < vischar->width_bytes)
+      /* Lefthand clipped, righthand ok. */
+      new_width = ((vischar->width_bytes - amount_visible_left) << 8) | amount_visible_left; // pack left clip offset + width
     else
+      /* No clipping. */
       new_width = vischar->width_bytes;
   }
 
   /* Height part. */
 
-  scaled_height_thing = (state->map_position.y + state->rows) * 8;
-  scry = vischar->floogle.y; // fused
-  scaled_height_thing -= scry;
-  if ((int16_t) scaled_height_thing <= 0) // signedness
-    return 0xFF; /* Not visible. */
+  // top?
+  Y1 = (state->map_position.y + state->rows) * 8 - vischar->floogle.y;
+  if (Y1 <= 0 || Y1 >= 256)
+    goto invisible;
 
-  if ((scaled_height_thing >> 8) != 0)
-    return 0xFF; /* Not visible. */
-
-  clamped_height = scaled_height_thing & 0xFF;
-  if (clamped_height < vischar->height)
+  if (Y1 < vischar->height)
   {
-    new_height = clamped_height;
+    new_height = Y1;
   }
   else
   {
-    maxy = vischar->height + scry; // height == height in rows
-    DE = state->map_position.y * 8;
-    maxy -= DE; // signedness
-    if ((int16_t) maxy <= 0)
-      return 0xFF; /* Not visible. */
+    // bottom?
+    Y2 = vischar->floogle.y + vischar->height - state->map_position.y * 8; // height == height in rows // signedness
+    if (Y2 <= 0 || Y2 >= 256)
+      goto invisible;
 
-    if ((maxy >> 8) != 0) // ie. (maxy >= 256)
-      return 0xFF; /* Not visible. */
-
-    Ay = maxy & 0xFF;
-    if (Ay < vischar->height)
-      new_height = ((vischar->height - Ay) << 8) | Ay;
+    if (Y2 < vischar->height)
+      new_height = ((vischar->height - Y2) << 8) | Y2; // pack offset + height
     else
+      /* No clipping. */
       new_height = vischar->height;
   }
 
@@ -7530,6 +7518,10 @@ int vischar_visible(tgestate_t      *state,
   *clipped_height = new_height;
 
   return 0; /* Visible */
+
+
+invisible:
+  return 0xFF;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9375,14 +9367,14 @@ void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
     {
       x = target->x & ~vischar_BYTE2_BIT7;
       if (x == 36)
-        goto cb46; // character index
+        goto do_character_event; // character index
       character = 0; // force the next 'if' statement
     }
     if (character <= character_11_GUARD_11)
-      goto cb50;
+      goto frob_target;
   }
 
-cb46:
+do_character_event:
   /* We arrive here if:
    * - vischar is the hero, or
    * - character is character_0_COMMANDANT and (target low byte & 0x7F) == 36, or
@@ -9394,7 +9386,7 @@ cb46:
     get_next_target_and_handle_it(state, vischar, target); // re-enter
   return; // exit via
 
-cb50:
+frob_target:
   /* We arrive here if:
    * - vischar is not the hero, and
    *   - character is character_0_COMMANDANT and (target low byte & 0x7F) != 36, or
@@ -10186,6 +10178,7 @@ next:
     return;
 
 nearby:
+    // FUTURE: merge into loop
     item = itemstruct->item_and_flags & itemstruct_ITEM_MASK;
 
     /* The green key and food items are ignored. */
@@ -10234,7 +10227,7 @@ int is_item_discoverable_interior(tgestate_t *state,
     if ((itemstr->room_and_flags & itemstruct_ROOM_MASK) == room &&
         /* Has the item been moved to a different room? */
         /* Bug? Note that room_and_flags doesn't get its flags masked off.
-         * Does it need & 0x3F ? */
+         * Does it need & 0x3F ? */ // FUTURE: add an assert to check this
         default_item_locations[itemstr->item_and_flags & itemstruct_ITEM_MASK].room_and_flags != room)
     {
       item = itemstr->item_and_flags & itemstruct_ITEM_MASK;
@@ -10285,7 +10278,7 @@ void item_discovered(tgestate_t *state, item_t item)
   default_item_location = &default_item_locations[item];
   room = default_item_location->room_and_flags;
 
-  /* Bug: 'item' is not masked, so goes out of range. */
+  /* Bug: 'item' is not masked, so goes out of range. */ // wut? the masking is up there ^
   itemstruct = item_to_itemstruct(state, item);
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
 
@@ -10739,8 +10732,8 @@ uint8_t item_visible(tgestate_t *state,
 {
   const uint8_t *px;            /* was HL */
   xy_t           map_position;  /* was DE */
-  uint8_t        xoff;          /* was A */
-  uint8_t        yoff;          /* was A */
+  int8_t         amount_visible_right; /* was A */
+  int8_t        Y1;          /* was A */
   uint16_t       width;         /* was BC */
   uint16_t       height;        /* was DE */
 
@@ -10750,58 +10743,61 @@ uint8_t item_visible(tgestate_t *state,
 
   /* Width part */
 
-  // Seems to be doing (map_position_x + state->tb_columns <= px[0])
+  // Seems to be doing (map_position_x + state->columns <= px[0])
   px = &state->screenpos.x;
   map_position = state->map_position;
 
-  xoff = map_position.x + state->columns - px[0]; // columns was 24
-  if (xoff > 0)
-  {
+  amount_visible_right = map_position.x + state->columns - px[0]; // columns was 24
+  if (amount_visible_right <= 0)
+    goto invisible;
+
 #define WIDTH_BYTES 3
-    if (xoff < WIDTH_BYTES)
-    {
-      width = xoff;
-    }
-    else
-    {
-      xoff = px[0] + WIDTH_BYTES - map_position.x;
-      if (xoff <= 0)
-        goto invisible; // off the left hand side?
-
-      if (xoff < WIDTH_BYTES)
-        width = ((WIDTH_BYTES - xoff) << 8) | xoff;
-      else
-        width = WIDTH_BYTES;
-    }
-
-    /* Height part */
-
-    yoff = map_position.y + state->rows - px[1]; // px[1] == map_position_related.y
-    if (yoff > 0)
-    {
-#define HEIGHT 2
-      if (yoff < HEIGHT)
-      {
-        height = 8;
-      }
-      else
-      {
-        yoff = px[1] + HEIGHT - map_position.y;
-        if (yoff <= 0)
-          goto invisible;
-
-        if (yoff < HEIGHT)
-          height = (8 << 8) | (state->item_height - 8);
-        else
-          height = state->item_height;
-      }
-
-      *clipped_width  = width;
-      *clipped_height = height;
-
-      return 0; /* item is visible */
-    }
+  if (amount_visible_right < WIDTH_BYTES)
+  {
+    width = amount_visible_right;
   }
+  else
+  {
+    int8_t amount_visible_left; /* was A */
+
+    amount_visible_left = px[0] + WIDTH_BYTES - map_position.x;
+    if (amount_visible_left <= 0)
+      goto invisible; // off the left hand side?
+
+    if (amount_visible_left < WIDTH_BYTES)
+      width = ((WIDTH_BYTES - amount_visible_left) << 8) | amount_visible_left;
+    else
+      width = WIDTH_BYTES;
+  }
+
+  /* Height part */
+
+  Y1 = map_position.y + state->rows - px[1]; // px[1] == map_position_related.y
+  if (Y1 <= 0 || Y1 >= 256)
+    goto invisible;
+
+#define HEIGHT 2 // in UDGs
+  if (Y1 < HEIGHT)
+  {
+    height = 8;
+  }
+  else
+  {
+    Y1 = px[1] + HEIGHT - map_position.y;
+    if (Y1 <= 0)
+      goto invisible;
+
+    if (Y1 < HEIGHT)
+      height = (8 << 8) | (state->item_height - 8); // looks odd
+    else
+      height = state->item_height;
+  }
+
+  *clipped_width  = width;
+  *clipped_height = height;
+
+  return 0; /* item is visible */
+
 
 invisible:
   return 1; /* item is not visible */
@@ -11602,7 +11598,6 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   const size_t      *enables;        /* was HL */
   uint8_t            self_E4C0;      /* was $E4C0 */
   uint8_t            offset;         /* was A' */
-  uint8_t            Cdash;          /* was C' */
   uint8_t            iters;          /* was B' */
   uint8_t            E;              /* was E */
   uint8_t            instr;          /* was A */
@@ -11652,8 +11647,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
   sprite2 = &sprite[sprite_index & ~sprite_FLAG_FLIP]; // sprite pointer
 
-  vischar->width_bytes = sprite2->width;  // width in bytes
-  vischar->height      = sprite2->height; // height in rows
+  vischar->width_bytes = sprite2->width;  /* width in bytes + 1 */
+  vischar->height      = sprite2->height; /* height in rows */
 
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
@@ -11686,23 +11681,21 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // PUSH HL
 
   self_E4C0 = A; // self-modify
-  E = A;
-  A = (clipped_width & 0xFF00) >> 8;
-  if (A == 0)
+  if ((clipped_width & 0xFF00) == 0) // no lefthand skip: start with 'on'
   {
     instr = 0x77; /* opcode of 'LD (HL),A' */
-    offset = clipped_width & 0xFF;
+    offset = clipped_width & 0xFF; // process this many bytes before clipping
   }
-  else
+  else // lefthand skip present: start with 'off'
   {
-    instr = 0x00; /* opcode of 'LD (HL),A' */
-    offset = E - (clipped_width & 0xFF);
+    instr = 0x00; /* opcode of 'NOP' */
+    offset = A - (clipped_width & 0xFF); // clip until this many bytes have been processed
   }
 
   // POP HLdash // entry point
 
   /* Set the addresses in the jump table to NOP or LD (HL),A. */
-  Cdash = offset; // must be no of columns?
+  //unused? Cdash = offset; // must be no of columns?
   iters = self_E4C0; /* 3 or 4 iterations */
   do
   {
@@ -11714,7 +11707,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   while (--iters);
 
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0)
+  if ((clipped_height >> 8) == 0) // top skippage
     y = (vischar->floogle.y - (state->map_position.y * 8)) * 24;
 
   x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
