@@ -36,3 +36,7 @@ Release/
 
 # Visual Studio profiler
 *.psess
+
+
+# Others
+scitools_understand
