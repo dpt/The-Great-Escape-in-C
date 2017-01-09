@@ -9077,7 +9077,7 @@ void character_behaviour_impeded(tgestate_t *state,
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   // assert(new_input);
-  // assert(scale);
+  assert(scale == 1 || scale == 4 || scale == 8);
 
   /* Note: The y,x order here looks unusual but it matches the original code. */
   if (vischar_at_pos_y(state, vischar, scale) == 0 &&
@@ -9111,7 +9111,7 @@ uint8_t vischar_at_pos_x(tgestate_t *state,
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  assert(scale >= 1 && scale <= 8);
+  assert(scale == 1 || scale == 4 || scale == 8);
 
   /* I'm assuming here (until proven otherwise) that HL and IY point to the
    * same vischar on entry. */
@@ -9155,7 +9155,7 @@ uint8_t vischar_at_pos_y(tgestate_t *state,
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  assert(scale >= 1 && scale <= 8);
+  assert(scale == 1 || scale == 4 || scale == 8);
 
   /* I'm assuming here (until proven otherwise) that HL and IY point to the
    * same vischar on entry. */
