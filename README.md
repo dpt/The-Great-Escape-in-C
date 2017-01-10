@@ -62,13 +62,13 @@ Non-core:
 - Windows build - works - needs Visual Studio 2015.
 - Makefile build - builds but doesn't run the game in any useful way.
 
-#### Xcode Build
+### Xcode Build
 Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
 
 ### Windows Build
 Open up the Visual Studio solution `platform/windows/TheGreatEscape/TheGreatEscape.sln` and build that using F7. Run using F5.
 
-#### Makefile Build
+### Makefile Build
 The Makefile build compiles the code using clang, and offers some other handy options, like running an [analysis](http://clang-analyzer.llvm.org/) pass, generating [ctags](http://ctags.sourceforge.net/), running the source through [splint](http://www.splint.org/) and reformatting the source code through [astyle](http://astyle.sourceforge.net/).
 
 ```
