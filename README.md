@@ -1,65 +1,74 @@
 # “The Great Escape” Reimplemented
 
-© David Thomas, 2013-2015.
+© David Thomas, 2013-2017.
 
-30th January 2015
+9th January 2017
 
 ## Overview
-This is a _work in progress_ reimplementation of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”, the classic isometric 3D game for the Sinclair ZX Spectrum 48K in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
+This is a _work in progress_ reimplementation of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”, the classic isometric 3D game for the 48K Sinclair ZX Spectrum in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
 
-The game’s graphics were extracted and logic was reverse engineered from a binary snapshot of the original Spectrum game. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I am now translating it into portable C with the goal of eventually making it run without an [emulator](http://fuse-emulator.sourceforge.net/) across a range of modern computers, including in-browser via [Emscripten](https://emscripten.org/).
+The graphics were extracted and game logic was [reverse engineered](https://github.com/dpt/The-Great-Escape/) from a binary snapshot of the original Spectrum game. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I am now translating it into portable C with the goal of eventually making it run without an [emulator](http://fuse-emulator.sourceforge.net/) across a range of modern computers, including in-browser via [Emscripten](https://emscripten.org/).
 
 This document describes the process by which the disassembly is being converted from [SkoolKit](http://skoolkit.ca/) format into, hopefully, functioning and portable C code.
 
 ## Goals of the Project
 * Accurately reimplement The Great Escape in portable C code.
 * Fully disassemble and document the original game.
-	* The existing disassembly is incomplete. Attempting to reimplement the game logic forces through issues which enable a complete reimplementation to be made, and the original code fully understood.
-* Fix any bugs in the original game.
+	* The existing disassembly is incomplete. Attempting to reimplement the game logic forces through issues and flushes out bugs which enable a complete reimplementation to be made, and the original code fully understood.
+* Fix some bugs in the original game.
 * Analyse the before-and-after code metrics.
 	* How much bigger is the compiled C reimplementation compared to the original game?
 	* What can we learn from the original’s tight coding techniques?
 * Provide a basis for porting the game to contemporary systems of the ZX Spectrum.
 	* Although old ports of the game exist for the [PC](http://www.abandonia.com/en/games/534/Great+Escape,+The.html), [C64](http://www.lemon64.com/?game_id=1090) and [CPC](http://www.amstradabandonware.com/en/gameitems/the-great-escape/1179), retro fans would like to see the game on other contemporary systems too.
 
-## Components
-### `TheGreatEscape`
-This is the main game reimplemented in a single (static) library.
-
-### `ZXSpectrum`
-Defines an interface to a virtual ZX Spectrum to which the game talks, replacing the bare-metal `IN` and `OUT` instructions and providing a screen to draw to.
-
-## Source Layout
-```
-./
-    include/            - public headers
-        TheGreatEscape/
-        ZXSpectrum/
-    libraries/          - sources
-        TheGreatEscape/
-            include/    - private headers
-        ZXSpectrum/
-    platform/           - platform-specific source
-        generic/        - generic Makefile build environment
-        osx/            - Xcode build environment for OS X
-```
-
 ## Current State of the Code
-### Does it build?
-Yes. The build will complete but with numerous warnings. Many of the currently implemented routines have chunks of code absent, as-yet unused variables, or do not correctly ‘join up’ with others.
+### Does it build and run?
+Yes!
 
-Code which does not build is disabled using `#if 0`. This keeps as much of the working code visible to the compiler as possible, allowing mistakes to be caught early.
+### What works?
 
-### Does it run?
-Sort of! The Xcode build will run to the main menu, animate the flag waving and allow selections to be made. You can define keys, but when you start the game for real it will crash.
+- Main menu
+- Keyboard input (+ Sinclair joystick)
+- Bell ringer
+- Score keeping
+- Character moves and animates correctly
+- Doors
+- Boundaries
+- Transitions
+- Room drawing
+- Exterior drawing, scrolling, masking (90%)
+- Items can be picked up, used and dropped
+
+Non-core:
+
+- UI front-ends preserve their aspect ratio
+- Keys for window scaling
+
+### What doesn't?
+
+- There's no sound at all
+- AI isn't functioning at all
+- Characters (including stoves and crates) vanish
+- Characters stand still when on-screen
+- Masking is somewhat broken
+- Timing needs fixing (e.g. exterior runs too fast)
+- Item rendering when outside triggers an assert
+- Items sometimes draw in the wrong place (e.g. the red cross parcel)
+- If left running the game will assert in get_next_target
 
 ## Current Builds
-Only the OS X-hosted builds are currently being worked on.
+- Xcode build - works.
+- Windows build - works - needs Visual Studio 2015.
+- Makefile build - builds but doesn't run the game in any useful way.
 
-### OS X
-There are two ways to build the code on OS X: Makefile-based or Xcode-based:
+#### Xcode Build
+Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
 
-#### Makefile
+### Windows Build
+Open up the Visual Studio solution `platform/windows/TheGreatEscape/TheGreatEscape.sln` and build that using F7. Run using F5.
+
+#### Makefile Build
 The Makefile build compiles the code using clang, and offers some other handy options, like running an [analysis](http://clang-analyzer.llvm.org/) pass, generating [ctags](http://ctags.sourceforge.net/), running the source through [splint](http://www.splint.org/) and reformatting the source code through [astyle](http://astyle.sourceforge.net/).
 
 ```
@@ -88,8 +97,28 @@ Or `MODE=release make build` to make the release version of the code.
 
 The Makefile-based build presently links against a stub `main()` which does nothing, so does not provide useful runnable code yet.
 
-#### Xcode
-Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
+## Components
+### `TheGreatEscape`
+This is the main game reimplemented in a single (static) library.
+
+### `ZXSpectrum`
+Defines an interface to a virtual ZX Spectrum to which the game talks, replacing the bare-metal `IN` and `OUT` instructions and providing a screen to draw to.
+
+## Source Layout
+```
+./
+    include/            - public headers
+        TheGreatEscape/
+        ZXSpectrum/
+    libraries/          - sources
+        TheGreatEscape/
+            include/    - private headers
+        ZXSpectrum/
+    platform/           - platform-specific source
+        generic/        - generic Makefile build environment
+        osx/            - Xcode build environment
+        windows/        - Windows build environment
+```
 
 ## The Conversion Process
 My previous work building the SkoolKit control file, [TheGreatEscape.ctl](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.ctl), is used as the source for the conversion. It contains my interpretation of the game logic in C-style pseudocode with occasional Z80 instructions embedded. The pseudocode is copied out to `TheGreatEscape.c` where it can be marshalled into syntactically correct C (or as close as is practically possible prior to rewriting).
@@ -134,12 +163,14 @@ In addition to being neater than having variables scattered everywhere, this all
 
 **Strings** are stored in ASCII rather than the custom font encoding the original game used (the game font uses the same glyph for ‘0’ and ‘O’). The font bitmap data remains encoded as per the game but an `ascii_to_font[]` table is introduced to convert from ASCII to the font encoding.
 
-### Feeding changes back into .ctl form
+### Feeding changes back into SkoolKit form
 At this point the .ctl disassembly is unavoidably incomplete. It’s still full of mysteries and, no doubt, mistakes. Having to reimplement the game in concrete C forces many questions which invalidate the existing interpretation of the original code.
 
 New discoveries ought to be fed back into the SkoolKit-format [TheGreatEscape.ctl](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.ctl) file. At the very least function names must kept in sync.
 
-At some point a whole other pass will need to be made over the .ctl file to bring across **all** changes.
+(In the meanwhile the .ctl file has been turned into a .skool file.)
+
+At some point a whole other pass will need to be made over the .skool file to bring across **all** changes.
 
 ### Obstacles
 When a high-level language is compiled into assembly language a series of passes are made over the code to reduce it down. Names are lost, variables are assigned to registers, optimisations are carried out, etc. In converting The Great Escape to C we’re performing a manual decompilation of the game’s assembly language and so reconstructing a form of source code which may not have existed to begin with.
