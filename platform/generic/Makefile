@@ -43,7 +43,7 @@ EXE=$(PROJECT)
 #
 ifeq ($(TARGET),ios-arm-clang)
 	DEVROOT=/Applications/Xcode.app/Contents/Developer
-	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk
+	SDK=$(DEVROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
 	SDKBIN=$(DEVROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin
 	CLANG=$(SDKBIN)/clang
 	CROSSFLAGS=-isysroot $(SDK) -Os -arch armv7 -mthumb
