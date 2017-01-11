@@ -451,7 +451,7 @@ const tile_t *select_tile_set(tgestate_t *state,
 
 void spawn_characters(tgestate_t *state);
 
-void purge_visible_characters(tgestate_t *state);
+void purge_invisible_characters(tgestate_t *state);
 
 int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 

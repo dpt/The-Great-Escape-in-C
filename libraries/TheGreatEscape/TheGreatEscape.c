@@ -1551,7 +1551,7 @@ void main_loop(tgestate_t *state)
   restore_tiles(state);
   move_characters(state);
   follow_suspicious_character(state);
-  purge_visible_characters(state);
+  purge_invisible_characters(state);
   spawn_characters(state);
   mark_nearby_items(state);
   ring_bell(state);
@@ -7808,47 +7808,66 @@ skip:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C47E: Run through all visible characters, resetting them if they're
- * off-screen.
+ * $C47E: Remove any off-screen non-player characters.
  *
  * Called from main loop.
  *
  * \param[in] state Pointer to game state.
  */
-void purge_visible_characters(tgestate_t *state)
+void purge_invisible_characters(tgestate_t *state)
 {
-  enum { EDGE = 9 };
+  /* Size, in UDGs, of a buffer zone around the visible screen in which
+   * visible characters will persist. */
+  enum { GRACE = 9 };
 
-  uint8_t    y, x;    /* was D, E */
-  uint8_t    iters;   /* was B */
-  vischar_t *vischar; /* was HL */
-  uint8_t    lo, hi;  /* was C, A */
+  uint8_t    miny, minx;  /* was D, E */
+  uint8_t    iters;       /* was B */
+  vischar_t *vischar;     /* was HL */
+  uint8_t    lo, hi;      /* was C, A */
 
   assert(state != NULL);
 
-  x = MAX(state->map_position.x - EDGE, 0);
-  y = MAX(state->map_position.y - EDGE, 0);
+  /* Calculate clamped lower bound. */
+  minx = MAX(state->map_position.x - GRACE, 0);
+  miny = MAX(state->map_position.y - GRACE, 0);
 
   iters   = vischars_LENGTH - 1;
   vischar = &state->vischars[1]; /* iterate over non-player characters */
   do
   {
+    /* Ignore inactive characters. */
     if (vischar->character == character_NONE)
       goto next;
 
+    /* Reset characters not in the current room. */
     if (state->room_index != vischar->room)
-      goto reset; /* this character is not in the current room */
-
-    lo = vischar->screenpos.y >> 8;
-    hi = vischar->screenpos.y & 0xFF;
-    divide_by_8_with_rounding(&lo, &hi);
-    if (hi <= y || hi > MIN(y + EDGE + 25, 255)) // Conv: C -> A
       goto reset;
 
-    lo = vischar->screenpos.x >> 8;
-    hi = vischar->screenpos.x & 0xFF;
+    // FUTURE
+    //
+    // /* Calculate clamped upper bound. */
+    // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
+    // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
+    //
+    // t = (vischar->screenpos + 4) / 8 / 256;
+    // if (t <= miny || t > maxy)
+    //   goto reset;
+    // t = (vischar->screenpos) / 8 / 256;
+    // if (t <= minx || t > maxx)
+    //   goto reset;
+
+    // Conv: Replaced constants with state->columns/rows.
+
+    hi = vischar->screenpos.y >> 8;
+    lo = vischar->screenpos.y & 0xFF;
+    divide_by_8_with_rounding(&lo, &hi);
+    if (lo <= miny || lo > MIN(miny + GRACE + (state->rows + 1) + GRACE, 255)) // Conv: C -> A
+      goto reset;
+
+    hi = vischar->screenpos.x >> 8;
+    lo = vischar->screenpos.x & 0xFF;
     divide_by_8(&lo, &hi);
-    if (hi <= x || hi > MIN(x + EDGE + 33, 255)) // Conv: C -> A
+    if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255)) // Conv: C -> A
       goto reset;
 
     goto next;
