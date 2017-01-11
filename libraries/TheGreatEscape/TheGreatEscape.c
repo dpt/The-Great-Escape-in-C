@@ -1860,8 +1860,8 @@ void in_permitted_area(tgestate_t *state)
     pos_to_tinypos(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].screenpos.x >= 0x06C8 ||
-        state->vischars[0].screenpos.y >= 0x0448)
+    if (state->vischars[0].floogle.x >= 0x06C8 ||
+        state->vischars[0].floogle.y >= 0x0448)
     {
       escaped(state);
       return;
@@ -6009,9 +6009,8 @@ void reset_outdoors(tgestate_t *state)
 
   /* Centre the screen on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position.x = (state->vischars[0].screenpos.x >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[0].screenpos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
-
+  state->map_position.x = (state->vischars[0].floogle.x >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[0].floogle.y >> 3) - 6;  // 6 would be screen height minus half of character height?
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
   state->room_index = room_0_OUTDOORS;
@@ -6739,8 +6738,8 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->screenpos.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
-  vischar->screenpos.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
+  vischar->floogle.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
+  vischar->floogle.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
@@ -7496,7 +7495,7 @@ int vischar_visible(tgestate_t      *state,
   /* Height part. */
 
   scaled_height_thing = (state->map_position.y + state->rows) * 8;
-  scry = vischar->screenpos.y; // fused
+  scry = vischar->floogle.y; // fused
   scaled_height_thing -= scry;
   if ((int16_t) scaled_height_thing <= 0) // signedness
     return 0xFF; /* Not visible. */
@@ -7574,8 +7573,8 @@ void restore_tiles(tgestate_t *state)
       goto next;
 
     /* Get the visible character's position in screen space. */
-    state->screenpos.y = vischar->screenpos.y >> 3; // divide by 8 (16-to-8)
-    state->screenpos.x = vischar->screenpos.x >> 3; // divide by 8 (16-to-8)
+    state->screenpos.y = vischar->floogle.y >> 3; // divide by 8 (16-to-8)
+    state->screenpos.x = vischar->floogle.x >> 3; // divide by 8 (16-to-8)
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
       goto next; /* invisible */
@@ -7848,23 +7847,23 @@ void purge_invisible_characters(tgestate_t *state)
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
     // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
     //
-    // t = (vischar->screenpos + 4) / 8 / 256;
+    // t = (vischar->floogle.y + 4) / 8 / 256;
     // if (t <= miny || t > maxy)
     //   goto reset;
-    // t = (vischar->screenpos) / 8 / 256;
+    // t = (vischar->floogle.x) / 8 / 256;
     // if (t <= minx || t > maxx)
     //   goto reset;
 
     // Conv: Replaced constants with state->columns/rows.
 
-    hi = vischar->screenpos.y >> 8;
-    lo = vischar->screenpos.y & 0xFF;
+    hi = vischar->floogle.y >> 8;
+    lo = vischar->floogle.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
     if (lo <= miny || lo > MIN(miny + GRACE + (state->rows + 1) + GRACE, 255)) // Conv: C -> A
       goto reset;
 
-    hi = vischar->screenpos.x >> 8;
-    lo = vischar->screenpos.x & 0xFF;
+    hi = vischar->floogle.x >> 8;
+    lo = vischar->floogle.x & 0xFF;
     divide_by_8(&lo, &hi);
     if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255)) // Conv: C -> A
       goto reset;
@@ -10876,7 +10875,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->screenpos.x & 7)) < 4)
+  if ((x = (vischar->floogle.x & 7)) < 4)
   {
     uint8_t self_E161, self_E143;
 
@@ -11175,7 +11174,7 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state, vischar_t *vischar
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  x = vischar->screenpos.x & 7;
+  x = vischar->floogle.x & 7;
   if (x < 4)
     masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
   else
@@ -11645,8 +11644,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // DE now points to state->map_position_related.x
 
   // unrolled versus original
-  state->screenpos.x = vischar->screenpos.x >> 3;
-  state->screenpos.y = vischar->screenpos.y >> 3;
+  state->screenpos.x = vischar->floogle.x >> 3;
+  state->screenpos.y = vischar->floogle.y >> 3;
+  // 'screenpos' here is now a scaled-down projected map coordinate
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
@@ -11715,7 +11715,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (vischar->screenpos.y - (state->map_position.y * 8)) * 24;
+    y = (vischar->floogle.y - (state->map_position.y * 8)) * 24;
 
   x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
@@ -11728,7 +11728,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE  // get clipped_height
   // PUSH DE
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->screenpos.y & 7) * 4; // i *think* its clipped_height -- check
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4; // i *think* its clipped_height -- check
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 

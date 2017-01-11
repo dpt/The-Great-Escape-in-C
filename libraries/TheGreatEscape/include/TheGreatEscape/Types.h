@@ -456,7 +456,9 @@ typedef struct vischar
   movableitem_t   mi;
 
   /** $8018,$801A 16-bit screen x,y coord */
-  bigxy_t         screenpos;
+  // in_permitted_area testing this against absolute values to determine the position tells me
+  // that this is a isometric projected map coord, not a screen coord as previously suspected
+  bigxy_t         floogle; // scaled 13.3 format
 
   /** $801C current room index */
   room_t          room;
