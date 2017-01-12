@@ -7288,6 +7288,7 @@ more_to_skip:
       mask_pointer++;
     }
     while (--mask_skip);
+    A = mask_skip; // ie. A = 0
     goto skip_went_zero;
 
 skip_went_negative:
