@@ -5813,8 +5813,6 @@ int is_door_locked(tgestate_t *state)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  *
- * \return Nothing. // suspect A is returned
- *
  * \remarks Exits using longjmp.
  */
 void door_handling(tgestate_t *state, vischar_t *vischar)
