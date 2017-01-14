@@ -7014,8 +7014,6 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
 /**
  * $B89C: Locates a vischar or item to plot.
  *
- * Only called from searchlight().
- *
  * \param[in]  state       Pointer to game state.
  * \param[out] pindex      If vischar, returns vischars_LENGTH - iters; if itemstruct, returns ((item__LIMIT - iters) | (1 << 6)). (was A)
  * \param[out] pvischar    Pointer to receive vischar pointer. (was IY)
