@@ -290,7 +290,7 @@ void setup_movable_items(tgestate_t *state)
   mark_nearby_items(state);
   called_from_main_loop_9(state);
   move_map(state);
-  locate_vischar_or_itemstruct_then_plot(state);
+  plot_sprites(state);
 }
 
 /**
@@ -1559,7 +1559,7 @@ void main_loop(tgestate_t *state)
   move_map(state);
   message_display(state); /* second */
   ring_bell(state); /* second */
-  locate_vischar_or_itemstruct_then_plot(state);
+  plot_sprites(state);
   plot_game_window(state);
   ring_bell(state); /* third */
   if (state->day_or_night != 0)
@@ -6955,12 +6955,11 @@ still_in_spotlight:
 #define item_FOUND (1 << 6) // set by get_greatest_itemstruct
 
 /**
- * $B866: Seems to locate things to plot, then invoke masked sprite plotter
- * on those things.
+ * $B866: Plot vischars and items in order.
  *
  * \param[in] state Pointer to game state.
  */
-void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
+void plot_sprites(tgestate_t *state)
 {
   uint8_t       index;      /* was A */
   vischar_t    *vischar;    /* was IY */
@@ -7012,7 +7011,7 @@ void locate_vischar_or_itemstruct_then_plot(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B89C: Locates a vischar or item to plot.
+ * $B89C: Returns the next vischar or item to draw.
  *
  * \param[in]  state       Pointer to game state.
  * \param[out] pindex      If vischar, returns vischars_LENGTH - iters; if itemstruct, returns ((item__LIMIT - iters) | (1 << 6)). (was A)
@@ -10499,7 +10498,7 @@ void mark_nearby_items(tgestate_t *state)
 /**
  * $DBEB: Iterates over all item_structs looking for nearby items.
  *
- * Returns the furthest/highest/nearest item?
+ * Returns the furthest/highest/nearest/ item? Next frontmost?
  *
  * Leaf.
  *

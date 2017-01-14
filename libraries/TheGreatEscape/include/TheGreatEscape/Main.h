@@ -423,7 +423,7 @@ void reset_map_and_characters(tgestate_t *state);
 
 void searchlight_mask_test(tgestate_t *state, vischar_t *vischar);
 
-void locate_vischar_or_itemstruct_then_plot(tgestate_t *state);
+void plot_sprites(tgestate_t *state);
 
 int locate_vischar_or_itemstruct(tgestate_t    *state,
                                  uint8_t       *pindex,
