@@ -77,7 +77,7 @@
 #include "TheGreatEscape/Main.h"
 
 // debug
-void check_map_buf(tgestate_t *state)
+static void check_map_buf(tgestate_t *state)
 {
   for (int i = 0; i < state->st_columns * state->st_rows; i++)
   {
