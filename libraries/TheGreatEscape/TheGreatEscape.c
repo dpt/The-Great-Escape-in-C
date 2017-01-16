@@ -8096,6 +8096,14 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
       pos = &state->movable_items[movable_item_STOVE2].pos;
     else
       pos = &state->movable_items[movable_item_CRATE].pos;
+
+    /* The DOS version of the game has a difference here. Instead of
+     * memcpy'ing the current vischar's position into the movable_items's
+     * position, it only copies the first two bytes. The code is setup for a
+     * copy of six bytes (cx is set to 3) but the 'movsw' ought to be a 'rep
+     * movsw' for it to work. It fixes the bug where stoves get left in place
+     * after a restarted game, but almost looks like an accident.
+     */
     memcpy(pos, &vischar->mi.pos, sizeof(*pos));
   }
   else
