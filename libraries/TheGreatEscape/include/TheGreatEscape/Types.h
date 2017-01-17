@@ -463,11 +463,8 @@ typedef struct vischar
   /** $801D unused */
   uint8_t         unused; // FUTURE: Remove
 
-  /** $801E copy of sprite width in bytes + 1 */
-  uint8_t         width_bytes;
-
-  /** $801F copy of sprite height in rows */
-  uint8_t         height;
+  /** $801E, $801F copy of sprite width, height from spritedef_t */
+  uint8_t         width_bytes, height;
 }
 vischar_t;
 

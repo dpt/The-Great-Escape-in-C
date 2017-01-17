@@ -61,8 +61,8 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct spritedef
 {
-  uint8_t        width; /* in bytes + 1 */
-  uint8_t        height;
+  uint8_t        width;  /**< in bytes + 1 */
+  uint8_t        height; /**< in rows */
   const uint8_t *bitmap;
   const uint8_t *mask;
 }
