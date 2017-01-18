@@ -7174,11 +7174,11 @@ void render_mask_buffer(tgestate_t *state)
     // and we can cull masks if behind player
 
     scrx = state->screenpos.x;
-    if (scrx - 1 >= pmask->bounds.x1 || scrx + 2 <= pmask->bounds.x0) // $EC03, $EC02
+    if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0) // $EC03, $EC02
       goto pop_next;
 
     scry = state->screenpos.y;
-    if (scry - 1 >= pmask->bounds.y1 || scry + 3 <= pmask->bounds.y0) // $EC05, $EC04
+    if (scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0) // $EC05, $EC04
       goto pop_next;
 
     if (state->tinypos_stash.x <= pmask->pos.x) // $EC06
