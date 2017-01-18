@@ -7387,7 +7387,7 @@ pop_next:
     uint8_t *slp;
     int      yy;
 
-    slp = &state->speccy->screen[0];
+    slp = &state->speccy->screen[(128+1) * state->width];
     for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
     {
       memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
