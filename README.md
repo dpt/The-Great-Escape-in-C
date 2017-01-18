@@ -39,6 +39,7 @@ Yes!
 - Room drawing
 - Exterior drawing, scrolling, masking (90%)
 - Items can be picked up, used and dropped
+- Masking
 
 Non-core:
 
@@ -51,11 +52,11 @@ Non-core:
 - AI isn't functioning at all
 - Characters (including stoves and crates) vanish
 - Characters stand still when on-screen
-- Masking is somewhat broken
 - Timing needs fixing (e.g. exterior runs too fast)
 - Item rendering when outside triggers an assert
 - Items sometimes draw in the wrong place (e.g. the red cross parcel)
 - If left running the game will assert in get_next_target
+- Collision stuff allows stove to be pushed out of bounds
 
 ## Current Builds
 - Xcode build - works.
