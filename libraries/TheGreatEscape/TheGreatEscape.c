@@ -6743,8 +6743,12 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   vischar->screenpos.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
   vischar->screenpos.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
 
-  assert(vischar->screenpos.x <= 0x500); // guess
-  assert(vischar->screenpos.y <= 0x800); // guess
+  // Measured: (-1664..3696, -1648..2024)
+  // Rounding up:
+  assert((int16_t) vischar->screenpos.x >= -3000);
+  assert((int16_t) vischar->screenpos.x <   7000);
+  assert((int16_t) vischar->screenpos.y >= -3000);
+  assert((int16_t) vischar->screenpos.y <   4000);
 }
 
 /* ----------------------------------------------------------------------- */
