@@ -294,8 +294,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       LONG width, height;
       LONG newwidth, newheight;
 
-      width  = rect->right - rect->left;
-      height = rect->bottom - rect->top;
+      width  = rect->right - rect->left - g_window_adjust_x;
+      height = rect->bottom - rect->top - g_window_adjust_y;
 
       switch (edge)
       {
