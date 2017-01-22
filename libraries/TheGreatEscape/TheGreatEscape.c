@@ -7259,26 +7259,24 @@ void render_mask_buffer(tgestate_t *state)
     do
     {
 more_to_skip:
-      A = *mask_pointer; /* read count byte OR tile index */
+      A = *mask_pointer++; /* read count byte OR tile index */
       if (A & MASK_RUN_FLAG)
       {
         A &= ~MASK_RUN_FLAG;
-        mask_pointer++;
         mask_skip -= A;
-        if ((int16_t) mask_skip < 0) // need a signed type?
+        if ((int16_t) mask_skip < 0) /* went too far? */
           goto skip_went_negative;
-        mask_pointer++;
+        mask_pointer++; /* skip mask index */
         if (mask_skip > 0) // still more to skip?
         {
           goto more_to_skip;
         }
-        else
+        else // mask_skip must be zero
         {
           A = 0; // counter
           goto skip_went_zero;
         }
       }
-      mask_pointer++;
     }
     while (--mask_skip);
     A = mask_skip; // ie. A = 0
@@ -7331,7 +7329,7 @@ skip_went_zero:
 
         // trailing
 
-        iters3 = self_BA90; // self modified
+        iters3 = self_BA90; // self modified // == mask width - clipped width
         if (iters3)
         {
           if (A)
@@ -7339,11 +7337,10 @@ skip_went_zero:
           do
           {
 ba9b:
-            A = *mask_pointer; // read count byte OR tile index
+            A = *mask_pointer++; // read count byte OR tile index
             if (A & MASK_RUN_FLAG)
             {
               A &= ~MASK_RUN_FLAG;
-              mask_pointer++;
 baa3:
               iters3 = A = iters3 - A;
               if ((int8_t) iters3 < 0)
@@ -7351,10 +7348,9 @@ baa3:
               mask_pointer++;
               if (iters3 > 0)
                 goto ba9b;
-              goto bab9;
+              else // iters3 must be zero
+                goto bab9;
             }
-
-            mask_pointer++;
           }
           while (--iters3);
 
