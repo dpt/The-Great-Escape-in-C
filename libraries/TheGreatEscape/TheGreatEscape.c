@@ -377,7 +377,7 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->doors[] with 0xFF. */
+  /* Wipe state->interior_doors[] with 0xFF. */
   // Alternative: memset(&state->interior_doors[0], door_NONE, 4);
   pdoorindex = &state->interior_doors[3];
   iters = 4;
@@ -794,11 +794,11 @@ uint8_t *const beds[beds_LENGTH] =
 /* ----------------------------------------------------------------------- */
 
 /**
- * $7A26: Door positions.
+ * $78D6: Door positions.
  *
  * Used by setup_doors, get_door, door_handling and bribes_solitary_food.
  */
-/*const*/ door_t doors[door_MAX * 2] =
+const door_t doors[door_MAX * 2] =
 {
   /* Shorthands for directions. */
 #define TL direction_TOP_LEFT
@@ -3172,7 +3172,7 @@ void byte_A13E_is_zero(tgestate_t *state,
   character_t character;
   vischar_t  *vischar;
 
-  assert(state    != NULL);
+  assert(state  != NULL);
   assert(target != NULL);
 
   vischar = state->IY;
@@ -5873,7 +5873,7 @@ found:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B252: Door in range.
+ * $B252: Door in range. Called for exterior doors only.
  *
  * (saved_X,saved_Y) within (-2,+2) of HL[1..] scaled << 2
  *
@@ -8446,6 +8446,7 @@ character_12_or_higher:
     else
     {
       // POP DE
+      DEcharstr = charstr; // points at characterstruct.pos
 
       /* Conv: Reordered. */
       if (charstr->room == room_0_OUTDOORS) // was DE[-1]
@@ -8469,14 +8470,14 @@ character_12_or_higher:
 //    DE++;
     // EX DE, HL
     // HL -> DEcharstr->target
-    A = HLtarget->x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
+    A = DEcharstr->target.x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
     if (A == 0xFF)
       return;
     //printf("%p\n", &HLtarget->y);
     if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      HLtarget->y++; // writes into doors
+      DEcharstr->target.y++;
     else
-      HLtarget->y--;
+      DEcharstr->target.y--;
   }
 }
 

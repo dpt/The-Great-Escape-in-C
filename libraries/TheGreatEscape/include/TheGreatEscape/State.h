@@ -343,6 +343,8 @@ struct tgestate
 
   /** $F05D: Locked gates and doors.
    * This uses door_LOCKED to signify locked gates and doors. */
+  // The first five locked doors are exterior doors.
+  // The doors 2..8 include interior doors.
   doorindex_t     locked_doors[11];
 
   /** $F06B: Key definitions. */
