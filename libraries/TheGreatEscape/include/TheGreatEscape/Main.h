@@ -407,7 +407,7 @@ INLINE void action_yellow_key(tgestate_t *state);
 INLINE void action_green_key(tgestate_t *state);
 void action_key(tgestate_t *state, room_t room_of_key);
 
-doorindex_t *open_door(tgestate_t *state);
+doorindex_t *get_nearest_door(tgestate_t *state);
 
 void action_wiresnips(tgestate_t *state);
 

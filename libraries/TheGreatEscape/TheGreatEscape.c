@@ -6330,9 +6330,9 @@ void action_lockpick(tgestate_t *state)
 
   assert(state != NULL);
 
-  pdoor = open_door(state);
+  pdoor = get_nearest_door(state);
   if (pdoor == NULL)
-    return; /* Wrong door? */
+    return; /* No door nearby. */
 
   state->ptr_to_door_being_lockpicked = pdoor;
   state->player_locked_out_until = state->game_counter + 255;
@@ -6392,9 +6392,9 @@ void action_key(tgestate_t *state, room_t room_of_key)
   assert(state != NULL);
   ASSERT_ROOM_VALID(room_of_key);
 
-  pdoor = open_door(state);
+  pdoor = get_nearest_door(state);
   if (pdoor == NULL)
-    return; /* Wrong door? */
+    return; /* No door nearby. */
 
   if ((*pdoor & ~door_LOCKED) != room_of_key)
   {
@@ -6414,21 +6414,23 @@ void action_key(tgestate_t *state, room_t room_of_key)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B4D0: Open door.
+ * $B4D0: Return the door in range of the hero.
+ *
+ * The hero's position is expected in state->saved_pos.
  *
  * \param[in] state Pointer to game state.
  *
  * \return Pointer to door in state->locked_doors[], or NULL. (was HL)
  */
-doorindex_t *open_door(tgestate_t *state)
+doorindex_t *get_nearest_door(tgestate_t *state)
 {
-  doorindex_t  *gate;       /* was HL */
-  uint8_t       iters;      /* was B */
-  const door_t *door;       /* was HL' */
-  doorindex_t   door_index; /* was C */
-  doorindex_t  *door_ptr;   /* was DE */
-  pos_t        *pos;        /* was DE' */
-  doorindex_t   door2;      /* was A */
+  doorindex_t  *locked_doors;         /* was HL */
+  uint8_t       iters;                /* was B */
+  const door_t *door;                 /* was HL' */
+  doorindex_t   locked_door_index;    /* was C */
+  doorindex_t  *interior_doors;       /* was DE */
+  pos_t        *pos;                  /* was DE' */
+  doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
 
@@ -6436,16 +6438,17 @@ doorindex_t *open_door(tgestate_t *state)
   {
     /* Outdoors. */
 
-    gate = &state->locked_doors[0];
-    iters = 5; // first five locked_doors include outdoor doors
+    /* Locked doors 0..4 include exterior doors. */
+    locked_doors = &state->locked_doors[0];
+    iters = 5;
     do
     {
-      door = get_door(*gate & ~door_LOCKED); // Conv: A used as temporary.
+      door = get_door(*locked_doors & ~door_LOCKED); // Conv: A used as temporary.
       if (door_in_range(state, door + 0) == 0 ||
           door_in_range(state, door + 1) == 0)
-        return gate; /* Conv: goto removed. */
+        return locked_doors; /* Conv: goto removed. */
 
-      gate++;
+      locked_doors++;
     }
     while (--iters);
 
@@ -6455,29 +6458,30 @@ doorindex_t *open_door(tgestate_t *state)
   {
     /* Indoors. */
 
-    gate = &state->locked_doors[2];
-    iters = 8; // locked_doors 2..8 include indoor doors // bug: iters should be 7
+    /* Locked doors 2..8 include interior doors. */
+    locked_doors = &state->locked_doors[2];
+    iters = 8; // Bug: iters should be 7
     do
     {
-      door_index = *gate & ~door_LOCKED;
+      locked_door_index = *locked_doors & ~door_LOCKED;
 
       /* Search interior_doors[] for door_index. */
-      door_ptr = &state->interior_doors[0];
+      interior_doors = &state->interior_doors[0];
+each_interior_door:
+      interior_door_index = *interior_doors;
+      if (interior_door_index != door_NONE)
+      {
+        if ((interior_door_index & ~door_REVERSE) == locked_door_index) // this must be door_REVERSE as it came from interior_doors[]
+          goto found;
 
-loop:
-      door2 = *door_ptr;
-      if (door2 == door_NONE)
-        goto next;
+        interior_doors++;
+        /* There's no termination condition here where you might expect one,
+         * but since every room has at least one door it *must* find one. */
+        goto each_interior_door;
+      }
 
-      if ((door2 & ~door_REVERSE) == door_index) // door_LOCKED or door_REVERSE? think _FLAG as it came from interior_doors[]
-        goto found;
-
-      door_ptr++;
-      // worrying lack of termination condition here - but i suppose every room has a door so it *must* find one
-      goto loop;
-
-next:
-      gate++;
+next_locked_door:
+      locked_doors++;
     }
     while (--iters);
 
@@ -6486,15 +6490,15 @@ next:
 
     // FUTURE: Move this into the body of the loop.
 found:
-    door = get_door(*door_ptr);
-    /* Range check pattern (-2..+3). */
+    door = get_door(*interior_doors);
+    /* Range check pattern (-2..+2). */
     pos = &state->saved_pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
     if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
         pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
-      goto next;
+      goto next_locked_door;
 
-    return gate;
+    return locked_doors;
   }
 }
 
