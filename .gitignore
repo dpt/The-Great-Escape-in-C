@@ -27,6 +27,7 @@ xcuserdata/
 *.pdb
 *.suo
 *.user
+*.VC.opendb
 Debug/
 Release/
 

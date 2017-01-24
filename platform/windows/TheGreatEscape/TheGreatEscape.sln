@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheGreatEscape", "TheGreatEscape.vcxproj", "{7697BCDA-F858-4D03-B8FB-F23FFA7B6D93}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheGreatEscapeApp", "..\TheGreatEscapeApp\TheGreatEscapeApp.vcxproj", "{F9F3396A-2D28-4B50-9DC7-5D4DA273AFA0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheGreatEscape", "TheGreatEscape.vcxproj", "{7697BCDA-F858-4D03-B8FB-F23FFA7B6D93}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZXSpectrum", "..\ZXSpectrum\ZXSpectrum.vcxproj", "{F9B26C4C-7DAD-4E1A-B141-6B511CF879A5}"
 EndProject
