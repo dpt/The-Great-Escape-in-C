@@ -6408,7 +6408,6 @@ void action_key(tgestate_t *state, room_t room_of_key)
   }
 
   queue_message_for_display(state, message);
-  (void) open_door(state); // unsure why this is done here
 }
 
 /* ----------------------------------------------------------------------- */
