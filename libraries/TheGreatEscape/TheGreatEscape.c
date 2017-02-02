@@ -10314,7 +10314,7 @@ void item_discovered(tgestate_t *state, item_t item)
  * $CD6A: Default item locations.
  */
 
-#define ITEM_ROOM(item_no, flags) ((item_no & 0x3F) | (flags << 6))
+#define ITEM_ROOM(room_no, flags) ((room_no & 0x3F) | (flags << 6))
 
 const default_item_location_t default_item_locations[item__LIMIT] =
 {
