@@ -2032,8 +2032,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   if (*proom != room_0_OUTDOORS)
     return 0; /* Indoors. */
 
-  return within_camp_bounds(0 /* area: corridor to yard */,
-                            &state->hero_map_position);
+  return within_camp_bounds(room_and_flags, &state->hero_map_position);
 }
 
 /**
