@@ -3078,7 +3078,7 @@ void set_character_target(tgestate_t *state,
   return;
 
   // FUTURE: Move this chunk into the body of the loop above.
-store_to_vischar:
+found_on_screen:
   vischar->flags &= ~vischar_FLAGS_DOOR_THING;
   store_target(target, &vischar->target);
 
