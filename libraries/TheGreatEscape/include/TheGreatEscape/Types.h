@@ -247,7 +247,7 @@ enum characterstruct_flags
 {
   /* Byte 0 */
   characterstruct_CHARACTER_MASK       = 0x1F,   /**< Character index mask. */
-  characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */
+  characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */ // set when on-screen (in vischar)?
 
   /* Byte 5 */
   characterstruct_BYTE5_MASK           = 0x7F,   // target low byte

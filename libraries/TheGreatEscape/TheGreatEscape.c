@@ -1247,9 +1247,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
 }
 
 /**
- * $7BD0: Assign target member for dropped exterior objects.
- *
- * Moved out to provide entry point.
+ * $7BD0: Calculate screen position for exterior item.
  *
  * Called by drop_item_tail and item_discovered.
  *
@@ -1268,9 +1266,7 @@ void calc_exterior_item_screenpos(itemstruct_t *itemstr)
 }
 
 /**
- * $7BF2: Calculate screen position for dropped items.
- *
- * Moved out to provide entry point.
+ * $7BF2: Calculate screen position for interior item.
  *
  * Called by drop_item_tail and item_discovered.
  *
@@ -1817,16 +1813,20 @@ void cutting_wire(tgestate_t *state)
  */
 void in_permitted_area(tgestate_t *state)
 {
+#define R (1<<7) // specifies a room index
+
   /**
    * $9EF9: Variable-length arrays, 0xFF terminated.
    */
-  static const uint8_t byte_9EF9[] = { 0x82, 0x82, 0xFF                         };
-  static const uint8_t byte_9EFC[] = { 0x83, 0x01, 0x01, 0x01, 0xFF             };
-  static const uint8_t byte_9F01[] = { 0x01, 0x01, 0x01, 0x00, 0x02, 0x02, 0xFF };
-  static const uint8_t byte_9F08[] = { 0x01, 0x01, 0x95, 0x97, 0x99, 0xFF       };
-  static const uint8_t byte_9F0E[] = { 0x83, 0x82, 0xFF                         };
-  static const uint8_t byte_9F11[] = { 0x99, 0xFF                               };
-  static const uint8_t byte_9F13[] = { 0x01, 0xFF                               };
+  static const uint8_t byte_9EF9[] = { R|0x02, R|0x02,   0xFF                             };
+  static const uint8_t byte_9EFC[] = { R|0x03,   0x01,   0x01,   0x01,   0xFF             };
+  static const uint8_t byte_9F01[] = {   0x01,   0x01,   0x01,   0x00,   0x02, 0x02, 0xFF };
+  static const uint8_t byte_9F08[] = {   0x01,   0x01, R|0x15, R|0x17, R|0x19, 0xFF       }; // breakfasty?
+  static const uint8_t byte_9F0E[] = { R|0x03, R|0x02,   0xFF                             };
+  static const uint8_t byte_9F11[] = { R|0x19,   0xFF                                     };
+  static const uint8_t byte_9F13[] = {   0x01,   0xFF                                     };
+
+#undef T
 
   /**
    * $9EE4: Maps bytes to pointers to the above arrays.
@@ -1907,7 +1907,9 @@ void in_permitted_area(tgestate_t *state)
   {
     //uint8_t A;
 
-    A = ((targetptr->y & 0xF8) == 8) ? 1 : 2;
+    // 1 => Hut area
+    // 2 => Yard area
+    A = ((targetptr->y & ~7) == 8) ? 1 : 2;
     if (in_permitted_area_end_bit(state, A) == 0)
       goto set_flag_green;
     else
@@ -1919,8 +1921,7 @@ void in_permitted_area(tgestate_t *state)
     uint8_t                  iters; /* was B */
     const uint8_t           *HL;
 
-    A = target.x; // added to coax A back from target
-    A &= ~vischar_BYTE2_BIT7;
+    A = target.x & ~vischar_BYTE2_BIT7; // added to coax A back from target
     tab = &byte_to_pointer[0]; // table mapping bytes to offsets
     iters = NELEMS(byte_to_pointer);
     do
@@ -1930,12 +1931,17 @@ void in_permitted_area(tgestate_t *state)
       tab++;
     }
     while (--iters);
+
+    // anything not found in byte_to_pointer => green flag
     goto set_flag_green;
 
 found:
+    // target.x was found in byte_to_pointer
+
     HL = tab->pointer;
     // loc.y = 0; // not needed
     HL += target.y; // original code used B=0
+    // *HL must be a room_and_flags... unsure
     if (in_permitted_area_end_bit(state, *HL) == 0)
       goto set_flag_green;
 
@@ -1945,11 +1951,7 @@ found:
     BC = 0;
     for (;;)
     {
-      const uint8_t *HL2;
-
-      HL2 = HL; // was PUSH HL
-      HL2 += BC;
-      A = *HL2;
+      A = HL[BC]; // likely; A is room_and_flags
       if (A == 0xFF) /* hit end of list */
         goto pop_and_set_flag_red;
       if (in_permitted_area_end_bit(state, A) == 0)
@@ -1971,6 +1973,7 @@ set_target_then_set_flag_green:
     }
     goto set_flag_green;
 
+    // FUTURE remove this needless jump
 pop_and_set_flag_red:
     goto set_flag_red;
   }
@@ -2006,7 +2009,7 @@ set_flag_red:
  * $A007: In permitted area (end bit).
  *
  * \param[in] state          Pointer to game state.
- * \param[in] room_and_flags Room index + flag in bit 7 (was A)
+ * \param[in] room_and_flags If bit 7 is set then bits 0..6 contain a room index. Otherwise it's an area index as passed into within_camp_bounds. (was A)
  *
  * \return 0 if the position is within the area bounds, 1 otherwise.
  */
@@ -2015,7 +2018,6 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   room_t *proom; /* was HL */
 
   assert(state != NULL);
-  // assert(room_and_flags); // FIXME devise a precondition
 
   // FUTURE: Just dereference proom once.
 
@@ -2024,7 +2026,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   if (room_and_flags & (1 << 7)) // flag means a room is specified
   {
     assert((room_and_flags & ~(1 << 7)) < room__LIMIT);
-    return *proom == (room_and_flags & 0x7F); /* Return room only. */
+    return *proom == (room_and_flags & ~(1 << 7)); /* Return room only. */
   }
 
   if (*proom != room_0_OUTDOORS)
@@ -3054,7 +3056,10 @@ void set_character_target(tgestate_t *state,
   charstr = get_character_struct(state, character);
   if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) != 0)
   {
+    assert(character == (charstr->character_and_flags & characterstruct_CHARACTER_MASK));
+
     // Why fetch this copy of character index, is it not the same as the passed-in character?
+    // might just be a re-fetch when the original code clobbers register A.
     character = charstr->character_and_flags & characterstruct_CHARACTER_MASK;
 
     /* Search non-player characters to see if this character is already on-screen. */
@@ -8223,7 +8228,9 @@ uint8_t get_next_target(tgestate_t *state,
     else if ((doorindex & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
     {
       // doorindex = *pdoor; // removed redundant reload
-      if (target->x & vischar_BYTE2_BIT7) // sure this is location-x? because it looks like it might be retesting 'door' so it get wiped. yeah, sure it is. could just be 'x' i think.
+      // Am I sure this is target.x because it looks like it might be retesting 'door' so it get wiped.
+      // yeah, sure it is. could just be 'x' i think.
+      if (target->x & vischar_BYTE2_BIT7)
         doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
       door = get_door(doorindex);
@@ -10222,8 +10229,10 @@ int is_item_discoverable_interior(tgestate_t *state,
     /* Is the item in the specified room? */
     if ((itemstr->room_and_flags & itemstruct_ROOM_MASK) == room &&
         /* Has the item been moved to a different room? */
-        /* Bug? Note that room_and_flags doesn't get its flags masked off.
+        /* Bug? Note that room_and_flags doesn't get its flag bits masked off.
          * Does it need & 0x3F ? */ // FUTURE: add an assert to check this
+        // wiresnips' room_and_flags is 255 so will never match 'room' (0..room_limit)
+        // so the effect is ... wiresnips are always discoverable?
         default_item_locations[itemstr->item_and_flags & itemstruct_ITEM_MASK].room_and_flags != room)
     {
       item = itemstr->item_and_flags & itemstruct_ITEM_MASK;
@@ -10248,7 +10257,7 @@ int is_item_discoverable_interior(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CD31: Item discovered.
+ * $CD31: Item discovered. / reset item
  *
  * \param[in] state Pointer to game state.
  * \param[in] item  Item. (was C)
@@ -10274,10 +10283,9 @@ void item_discovered(tgestate_t *state, item_t item)
   default_item_location = &default_item_locations[item];
   room = default_item_location->room_and_flags;
 
-  /* Bug: 'item' is not masked, so goes out of range. */ // wut? the masking is up there ^
+  /* Conv: 'item' was not masked in the original code (bug fix). */
   itemstruct = item_to_itemstruct(state, item);
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
-
   itemstruct->room_and_flags = default_item_location->room_and_flags;
   itemstruct->pos.x = default_item_location->pos.x;
   itemstruct->pos.y = default_item_location->pos.y;
