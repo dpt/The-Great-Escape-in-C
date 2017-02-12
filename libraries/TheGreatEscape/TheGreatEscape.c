@@ -3064,8 +3064,8 @@ void set_character_target(tgestate_t *state,
     vischar = &state->vischars[1];
     do
     {
-      if (character == charstr->character_and_flags) // No masking of character_and_flags?
-        goto store_to_vischar; /* Character is on-screen: store to vischar. */
+      if (character == vischar->character)
+        goto found_on_screen; /* Character is on-screen: store to vischar. */
       vischar++;
     }
     while (--iters);
