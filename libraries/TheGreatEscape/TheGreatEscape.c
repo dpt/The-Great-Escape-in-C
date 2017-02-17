@@ -8031,7 +8031,7 @@ c592:
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
     A = get_next_target(state, &charstr->target, &target);
-    if (A == 255) // end of door list
+    if (A == 255) /* End of door list. */
     {
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->target
@@ -8041,7 +8041,7 @@ c592:
       // DE = HL + 2; // -> vischar->pos
       goto c592;
     }
-    else if (A == (1 << 7)) // did a door thing
+    else if (A == (1 << 7)) /* Did a door thing. */
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
@@ -8176,6 +8176,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * \param[in] target     Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
  * \param[in] target_out Pointer to recieve new target. (was HL)
  *
+ * In the result == 128 case target_out points at a door_t.pos (door_t + 1 byte).
+ *
  * \return 0/128/255 = (ok/through a door/hit end of list)
  */
 uint8_t get_next_target(tgestate_t *state,
@@ -8276,7 +8278,7 @@ void move_characters(tgestate_t *state)
   uint8_t            max;         /* was A' */
   pos_t             *HLpos;       /* was HL */
   tinypos_t         *DEcharstr_tinypos;   /* was DE */
-  door_t            *HLdoorpos;   /* was HL */
+  door_t            *HLdoor;      /* was HL */
   tinypos_t         *HLtinypos;   /* was HL */
   characterstruct_t *DEcharstr;   /* was DE */
 
@@ -8316,7 +8318,7 @@ void move_characters(tgestate_t *state)
     return;
 
   A = get_next_target(state, &charstr->target, &HLtarget);
-  if (A == 0xFF) /* Hit end of list case. */
+  if (A == 0xFF) /* End of door list. */
   {
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8357,7 +8359,7 @@ character_12_or_higher:
   }
   else
   {
-    if (A == (1 << 7))
+    if (A == (1 << 7)) /* Did a door thing. */
     {
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
@@ -8404,21 +8406,21 @@ character_12_or_higher:
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      HLdoorpos = (door_t *) ((char *) HLtarget - 1); // ugly cast
-      assert(HLdoorpos >= &doors[0]);
-      assert(HLdoorpos < &doors[door_MAX * 2]);
+      HLdoor = (door_t *) ((char *) HLtarget - 1); // ugly cast to undo +1
+      assert(HLdoor >= &doors[0]);
+      assert(HLdoor < &doors[door_MAX * 2]);
 
       // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
       // => doors.room_and_flags
 
-      DEcharstr->room = (HLdoorpos->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2;
+      DEcharstr->room = (HLdoor->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
       // Stuff reading from doors.
-      if ((HLdoorpos->room_and_flags & door_FLAGS_MASK_DIRECTION) < 2)
+      if ((HLdoor->room_and_flags & door_FLAGS_MASK_DIRECTION) < 2)
         // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
-        HLtinypos = &HLdoorpos[1].pos;
+        HLtinypos = &HLdoor[1].pos;
       else
-        HLtinypos = &HLdoorpos[-1].pos;
+        HLtinypos = &HLdoor[-1].pos;
 
       room = DEcharstr->room; // *DE++;
       DEcharstr_tinypos = &DEcharstr->pos;
@@ -9389,10 +9391,8 @@ cb46:
    */
 
   character_event(state, target);
-  if (target->x == 0)
-    return;
-
-  get_next_target_and_handle_it(state, vischar, target); // re-enter
+  if (target->x != 0)
+    get_next_target_and_handle_it(state, vischar, target); // re-enter
   return; // exit via
 
 cb50:
