@@ -231,9 +231,9 @@ enum itemstruct_flags
 };
 
 /**
- * Identifiers of doors (and gates) flags and masks.
+ * Identifiers of door index flags and masks.
  */
-enum door_flags
+enum doorindex_flags
 {
   door_REVERSE                         = 1 << 7, /* Used to reverse door transitions. */
   door_LOCKED                          = 1 << 7, /* Used to lock doors. Seems to be only relevant for locked_doors[]. */
@@ -254,11 +254,11 @@ enum characterstruct_flags
 };
 
 /**
- * Identifiers of door position masks.
+ * Identifiers of door flags and masks.
  */
-enum doorpos_flags
+enum door_flags
 {
-  doorpos_FLAGS_MASK_DIRECTION         = 0x03, // up/down or direction field?
+  door_FLAGS_MASK_DIRECTION           = 0x03, // up/down or direction field?
 };
 
 /**
