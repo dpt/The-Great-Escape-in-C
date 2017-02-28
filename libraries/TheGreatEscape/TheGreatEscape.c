@@ -1912,7 +1912,7 @@ void in_permitted_area(tgestate_t *state)
   {
     //uint8_t A;
 
-    A = ((targetptr->x & 0xF8) == 8) ? 1 : 2;
+    A = ((targetptr->y & 0xF8) == 8) ? 1 : 2;
     if (in_permitted_area_end_bit(state, A) == 0)
       goto set_flag_green;
     else
