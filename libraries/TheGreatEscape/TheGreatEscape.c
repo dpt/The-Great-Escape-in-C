@@ -15,7 +15,6 @@
  *
  * - Some enums might be wider than expected (int vs uint8_t).
  * - Target member -- this could be a screen location, or an index.
- * - Decode table_7738.
  * - Decode foreground masks.
  * - Naming: "breakfast" room ought to be "mess hall".
  */
@@ -324,8 +323,8 @@ void setup_movable_item(tgestate_t          *state,
   /* Conv: Reset data inlined. */
 
   vischar1->flags             = 0;
-  vischar1->target.x          = 0;
-  vischar1->target.y          = 0;
+  vischar1->target.route      = 0;
+  vischar1->target.step       = 0;
   vischar1->pos.x             = 0;
   vischar1->pos.y             = 0;
   vischar1->pos.height        = 0;
@@ -1700,8 +1699,8 @@ void process_player_input(tgestate_t *state)
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
-        state->vischars[0].target.x       = 0x2B;
-        state->vischars[0].target.y       = 0x00;
+        state->vischars[0].target.route   = 43;
+        state->vischars[0].target.step    = 0;
         state->vischars[0].mi.pos.x       = 0x34;
         state->vischars[0].mi.pos.y       = 0x3E;
         roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
@@ -1710,8 +1709,8 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].target.x       = 0x2C;
-        state->vischars[0].target.y       = 0x01;
+        state->vischars[0].target.route   = 44;
+        state->vischars[0].target.step    = 1;
         state->vischars[0].pos.x          = 0x2E;
         state->vischars[0].pos.y          = 0x2E;
         state->vischars[0].mi.pos.x       = 0x2E;
@@ -1829,7 +1828,9 @@ void in_permitted_area(tgestate_t *state)
 #undef T
 
   /**
-   * $9EE4: Maps bytes to pointers to the above arrays.
+   * $9EE4: Maps route indicies to pointers to the above arrays.
+   *
+   * Suspect that this means "if you're in <this> route you can be in <these> places."
    */
   static const byte_to_pointer_t byte_to_pointer[7] =
   {
@@ -1845,10 +1846,9 @@ void in_permitted_area(tgestate_t *state)
   pos_t       *vcpos;     /* was HL */
   tinypos_t   *pos;       /* was DE */
   attribute_t  attr;      /* was A */
-  xy_t        *targetptr; /* was HL */
-  uint8_t      A;
-  xy_t         target;    /* was CA */
-  uint16_t     BC;
+  uint8_t      route;     /* was A */
+  target_t     target;    /* was CA */
+  uint16_t     BC;        /* was BC */
   uint8_t      red_flag;  /* was A */
 
   assert(state != NULL);
@@ -1898,35 +1898,35 @@ void in_permitted_area(tgestate_t *state)
   if (state->in_solitary)
     goto set_flag_green;
 
-  targetptr = &state->vischars[0].target;
-  target = *targetptr;
-  if (target.x & vischar_BYTE2_BIT7)
-    target.y++;
+  target = state->vischars[0].target;
+  if (target.route & target_ROUTE_REVERSED)
+    target.step++;
 
-  if (target.x == 0xFF)
+  if (target.route == target_ROUTE_WANDER)
   {
-    //uint8_t A;
+    uint8_t area; /* was A */
 
     // 1 => Hut area
     // 2 => Yard area
-    A = ((targetptr->y & ~7) == 8) ? 1 : 2;
-    if (in_permitted_area_end_bit(state, A) == 0)
+    area = ((target.step & ~7) == 8) ? 1 : 2;
+    if (in_permitted_area_end_bit(state, area) == 0) /* within bounds */
       goto set_flag_green;
     else
       goto set_flag_red;
   }
-  else
+  else // en route
   {
     const byte_to_pointer_t *tab;   /* was HL */
     uint8_t                  iters; /* was B */
     const uint8_t           *HL;
 
-    A = target.x & ~vischar_BYTE2_BIT7; // added to coax A back from target
+    // A is a route index
+    route = target.route & ~target_ROUTE_REVERSED; // added to coax A back from target
     tab = &byte_to_pointer[0]; // table mapping bytes to offsets
     iters = NELEMS(byte_to_pointer);
     do
     {
-      if (A == tab->byte)
+      if (route == tab->byte)
         goto found;
       tab++;
     }
@@ -1936,39 +1936,39 @@ void in_permitted_area(tgestate_t *state)
     goto set_flag_green;
 
 found:
-    // target.x was found in byte_to_pointer
+    // target.x (route index) was found in byte_to_pointer
 
     HL = tab->pointer;
     // loc.y = 0; // not needed
-    HL += target.y; // original code used B=0
+    HL += target.step; // original code used B=0
     // *HL must be a room_and_flags... unsure
-    if (in_permitted_area_end_bit(state, *HL) == 0)
+    if (in_permitted_area_end_bit(state, *HL) == 0) /* within bounds */
       goto set_flag_green;
 
-    if (state->vischars[0].target.x & vischar_BYTE2_BIT7)
+    if (state->vischars[0].target.route & target_ROUTE_REVERSED) // FUTURE: route is already in target
       HL++;
 
     BC = 0;
     for (;;)
     {
-      A = HL[BC]; // likely; A is room_and_flags
-      if (A == 0xFF) /* hit end of list */
+      uint8_t foo; /* was A */
+
+      foo = HL[BC]; // likely; A is room_and_flags
+      if (foo == 0xFF) /* hit end of list */
         goto pop_and_set_flag_red;
-      if (in_permitted_area_end_bit(state, A) == 0)
+      if (in_permitted_area_end_bit(state, foo) == 0)
         goto set_target_then_set_flag_green;
       BC++;
     }
 
 set_target_then_set_flag_green:
-    // oddness here needs checking out. only 'B' is loaded from the target, but
-    // set_hero_target needs BC
-    // BC is reset to zero above, so C must be the loop counter
-    // but why load .x into high byte?
     {
-      xy_t target2; /* was BC */
+      target_t target2; /* was BC */
 
-      target2.x = BC & 0xFF;
-      target2.y = state->vischars[0].target.x;
+      assert(BC < 256);
+
+      target2.route = state->vischars[0].target.route;
+      target2.step  = BC; /* loop counter */
       set_hero_target(state, target2);
     }
     goto set_flag_green;
@@ -2558,7 +2558,7 @@ void event_night_time(tgestate_t *state)
 
   if (state->hero_in_bed == 0)
   {
-    const xy_t target_2C01 = { 0x2C, 0x01 }; /* was BC */
+    const target_t target_2C01 = { 44, 1 }; /* was BC */
     set_hero_target(state, target_2C01);
   }
   set_day_or_night(state, 0xFF);
@@ -2720,7 +2720,9 @@ void event_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target_A603 = { 0xA6, 0x03 }; /* was C,A */
+  // Reverse route of below.
+
+  const target_t target_A603 = { 38 | target_ROUTE_REVERSED, 3 }; /* was C,A */
   set_guards_target(state, target_A603);
 }
 
@@ -2728,7 +2730,7 @@ void event_search_light(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target_2600 = { 0x26, 0x00 }; /* was A',C */
+  const target_t target_2600 = { 38, 0 }; /* was C,A */
   set_guards_target(state, target_2600);
 }
 
@@ -2739,7 +2741,7 @@ void event_search_light(tgestate_t *state)
  * \param[in] state  Pointer to game state.
  * \param[in] target Target.                (was C,A (hi,lo))
  */
-void set_guards_target(tgestate_t *state, xy_t target)
+void set_guards_target(tgestate_t *state, target_t target)
 {
   character_t index; /* was A' */
   uint8_t     iters; /* was B */
@@ -2753,7 +2755,7 @@ void set_guards_target(tgestate_t *state, xy_t target)
   {
     set_character_target(state, index, target);
     index++;
-    target.x++;
+    target.route++;
   }
   while (--iters);
 }
@@ -2804,7 +2806,7 @@ void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
-  const xy_t target_2A00 = { 0x2A, 0x00 }; /* was BC */
+  const target_t target_2A00 = { 42 | target_ROUTE_REVERSED, 0 }; /* was BC */
   set_hero_target(state, target_2A00);
 
   /* Position all six prisoners. */
@@ -2824,8 +2826,7 @@ void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t target_0500 = { 0x05, 0x00 }; /* was A',C */
-  // .x is incremented by set_prisoners_and_guards_target_B (but it's unclear why)
+  target_t target_0500 = { 5, 0 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_0500);
 
   /* Update all the bed objects to be empty. */
@@ -2866,7 +2867,7 @@ void end_of_breakfast(tgestate_t *state)
   }
 
   state->hero_in_breakfast = 0;
-  const xy_t target_9003 = { 0x90, 0x03 }; /* was BC */
+  const target_t target_9003 = { 16 | target_ROUTE_REVERSED, 3 }; /* was BC */
   set_hero_target(state, target_9003);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -2885,7 +2886,7 @@ void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  xy_t target_9003_also = { 0x90, 0x03 }; /* was A',C */
+  target_t target_9003_also = { 16 | target_ROUTE_REVERSED, 3 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_9003_also);
 
   /* Update all the benches to be empty. */
@@ -2914,12 +2915,12 @@ void end_of_breakfast(tgestate_t *state)
  * \param[in] state  Pointer to game state.
  * \param[in] target Target.                (was BC)
  */
-void set_hero_target(tgestate_t *state, xy_t target)
+void set_hero_target(tgestate_t *state, target_t target)
 {
   vischar_t *vischar; /* was HL */
 
   assert(state != NULL);
-  // assert(target);
+  assert((target.route & ~target_ROUTE_REVERSED) < routes__LIMIT);
 
   if (state->in_solitary)
     return; /* Ignore. */
@@ -2942,10 +2943,10 @@ void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target_8502 = { 0x85, 0x02 }; /* was BC */
+  const target_t target_8502 = { 5 | target_ROUTE_REVERSED, 2 }; /* was BC */
   set_hero_target(state, target_8502);
 
-  xy_t target_8502_also = { 0x85, 0x02 }; /* was A',C */
+  target_t target_8502_also = { 5 | target_ROUTE_REVERSED, 2 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_8502_also);
 }
 
@@ -2958,15 +2959,12 @@ void go_to_time_for_bed(tgestate_t *state)
  *
  * Called by go_to_roll_call.
  *
- * This increments .x and returns it, but it's unclear why it does that.
- * None of the calls seem to make use of it.
- *
  * \param[in]     state   Pointer to game state.
  * \param[in,out] ptarget Pointer to target. (was C,A')
  */
-void set_prisoners_and_guards_target(tgestate_t *state, xy_t *ptarget)
+void set_prisoners_and_guards_target(tgestate_t *state, target_t *ptarget)
 {
-  xy_t               target; /* new var */
+  target_t           target; /* new var */
   const character_t *pchars; /* was HL */
   uint8_t            iters;  /* was B */
 
@@ -2980,7 +2978,7 @@ void set_prisoners_and_guards_target(tgestate_t *state, xy_t *ptarget)
   do
   {
     set_character_target(state, *pchars, target);
-    target.x++;
+    target.route++;
     pchars++;
   }
   while (--iters);
@@ -3000,9 +2998,9 @@ void set_prisoners_and_guards_target(tgestate_t *state, xy_t *ptarget)
  * \param[in]     state   Pointer to game state.
  * \param[in,out] ptarget Pointer to target. (was C,A')
  */
-void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *ptarget)
+void set_prisoners_and_guards_target_B(tgestate_t *state, target_t *ptarget)
 {
-  xy_t               target;  /* new var */
+  target_t           target; /* new var */
   const character_t *pchars; /* was HL */
   uint8_t            iters;  /* was B */
 
@@ -3021,7 +3019,7 @@ void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *ptarget)
      * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
      * start of the second half of the list. */
     if (iters == 6)
-      target.x++;
+      target.route++;
 
     pchars++;
   }
@@ -3043,7 +3041,7 @@ void set_prisoners_and_guards_target_B(tgestate_t *state, xy_t *ptarget)
  */
 void set_character_target(tgestate_t *state,
                           character_t character,
-                          xy_t        target)
+                          target_t    target)
 {
   characterstruct_t *charstr; /* was HL */
   vischar_t         *vischar; /* was HL */
@@ -3098,9 +3096,9 @@ found_on_screen:
  */
 void set_target(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t    ok;  /* was A */
-  tinypos_t *pos; /* was DE */
-  xy_t      *xy;  /* was HL */
+  uint8_t    ok;      /* was A */
+  tinypos_t *pos;     /* was DE */
+  target_t  *target;  /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3109,11 +3107,12 @@ void set_target(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  ok = get_next_target(state, &vischar->target, &xy);
+  ok = get_next_target(state, &vischar->target, &target);
 
+  // stashing the target in 'pos'?
   pos = &vischar->pos;
-  pos->x = xy->x;
-  pos->y = xy->y;
+  pos->x = target->route;
+  pos->y = target->step;
 
   if (ok == 255) /* End of door list. */
   {
@@ -3136,7 +3135,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
  * \param[in]  target  Target. (was A' lo + C hi)
  * \param[out] ptarget Pointer to vischar->target, or characterstruct->target. (was HL)
  */
-void store_target(xy_t target, xy_t *ptarget)
+void store_target(target_t target, target_t *ptarget)
 {
   // assert(target);
   assert(ptarget != NULL);
@@ -3153,7 +3152,7 @@ void store_target(xy_t target, xy_t *ptarget)
  * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_nonzero(tgestate_t *state,
-                          xy_t       *target)
+                          target_t   *target)
 {
   assert(state  != NULL);
   assert(target != NULL);
@@ -3170,7 +3169,7 @@ void byte_A13E_is_nonzero(tgestate_t *state,
  * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_zero(tgestate_t *state,
-                       xy_t       *target)
+                       target_t   *target)
 {
   character_t character;
   vischar_t  *vischar;
@@ -3184,7 +3183,9 @@ void byte_A13E_is_zero(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    xy_t target_2C00 = { 0x2C, 0x00 }; /* was BC */
+    // hero moving in reaction to the commandant... exiting solitary?
+
+    target_t target_2C00 = { 44, 0 }; /* was BC */
     set_hero_target(state, target_2C00);
   }
   else
@@ -3196,41 +3197,45 @@ void byte_A13E_is_zero(tgestate_t *state,
 /**
  * $A404: Common end of above two routines.
  *
+ * Assigns target.x from character number.
+ *
  * \param[in] state     Pointer to game state.
  * \param[in] character Character index.       (was A)
  * \param[in] target    Pointer to target.     (was HL)
  */
 void byte_A13E_common(tgestate_t *state,
                       character_t character,
-                      xy_t       *target)
+                      target_t   *target)
 {
-  uint8_t A; /* was A */
+  uint8_t route; /* was A */
 
   assert(state    != NULL);
   ASSERT_CHARACTER_VALID(character);
   assert(target   != NULL);
 
-  target->y = 0x00;
+  target->step = 0;
 
   if (character >= character_20_PRISONER_1)
   {
     /* All prisoners */
 
-    A = character - 13;
+    // target.x = 7..12 (route to bed) for prisoner 1..6
+    route = character - 13;
   }
   else
   {
     /* All hostiles */
 
-    A = 13;
-    if (character & (1 << 0)) /* Odd numbered characters? */
+    route = 13;
+    if (character & 1) /* Odd numbered characters? */
     {
-      target->y = 0x01;
-      A |= (1 << 7);
+      /* reverse route */
+      target->step = 1;
+      route |= target_ROUTE_REVERSED;
     }
   }
 
-  target->x = A;
+  target->route = route;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3248,7 +3253,7 @@ void byte_A13E_common(tgestate_t *state,
  */
 void character_sits(tgestate_t *state,
                     uint8_t     x,
-                    xy_t       *target)
+                    target_t   *target)
 {
   uint8_t  index; /* was A */
   uint8_t *bench; /* was HL */
@@ -3292,7 +3297,7 @@ void character_sits(tgestate_t *state,
  */
 void character_sleeps(tgestate_t *state,
                       uint8_t     x,
-                      xy_t       *target)
+                      target_t   *target)
 {
   room_t room; /* was C */
 
@@ -3320,7 +3325,7 @@ void character_sleeps(tgestate_t *state,
  */
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                xy_t       *target)
+                                target_t   *target)
 {
   /* This receives a pointer to a target structure which is within either a
    * characterstruct or a vischar. */
@@ -3337,7 +3342,7 @@ void character_sit_sleep_common(tgestate_t *state,
   // $8022 -> vischar[1]->target
   // others -> character_structs->target
 
-  target->x = 0xFF;
+  target->route = target_ROUTE_WANDER; /* Choose random locations[]. */
 
   if (state->room_index != room)
   {
@@ -3421,7 +3426,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   *pflag = 0xFF;
 
   /* Reset only the bottom byte of target. */
-  state->vischars[0].target.x = 0x00;
+  state->vischars[0].target.route = 0; /* Stand still. */
 
   /* Set hero position (x,y) to zero. */
   state->vischars[0].mi.pos.x = 0;
@@ -3435,7 +3440,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4A9: Set target to (0x0E, 0x00).
+ * $A4A9: Set target to route 14.
  *
  * \param[in] state Pointer to game state.
  */
@@ -3443,15 +3448,17 @@ void set_target_0x0E00(tgestate_t *state)
 {
   assert(state != NULL);
 
-  const xy_t target_0E00 = { 0x0E, 0x00 };
+  const target_t target_0E00 = { 14, 0 };
   set_hero_target(state, target_0E00);
 
-  xy_t target_0E00_also = { 0x0E, 0x00 }; /* was A',C */
+  target_t target_0E00_also = { 14, 0 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_0E00_also);
 }
 
 /**
- * $A4B7: Set target to (0x8E, 0x04).
+ * $A4B7: Set target to route 14 reversed.
+ *
+ * Reverse of the route selected above?
  *
  * \param[in] state Pointer to game state.
  */
@@ -3459,15 +3466,17 @@ void set_target_0x8E04(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t target_8E04 = { 0x8E, 0x04 };
+  // route $E is 5 long, so offset 4 could be the final byte and the '128' flag is a reverse
+
+  target_t target_8E04 = { 14 | target_ROUTE_REVERSED, 4 };
   set_hero_target(state, target_8E04);
 
-  xy_t target_8E04_also = { 0x8E, 0x04 }; /* was A',C */
+  target_t target_8E04_also = { 14 | target_ROUTE_REVERSED, 4 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_8E04_also);
 }
 
 /**
- * $A4C5: Set target to (0x10, 0x00).
+ * $A4C5: Set target to route 16.
  *
  * \param[in] state Pointer to game state.
  */
@@ -3475,10 +3484,10 @@ void set_target_0x1000(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t target_1000 = { 0x10, 0x00 };
+  target_t target_1000 = { 16, 0 };
   set_hero_target(state, target_1000);
 
-  xy_t target_1000_also = { 0x10, 0x00 }; /* was A',C */
+  target_t target_1000_also = { 16, 0 }; /* was A',C */
   set_prisoners_and_guards_target_B(state, &target_1000_also);
 }
 
@@ -3493,7 +3502,7 @@ void set_target_0x1000(tgestate_t *state)
  * \param[in] target Pointer to character struct. (was HL)
  */
 void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     xy_t       *target)
+                                     target_t   *target)
 {
   assert(state  != NULL);
   assert(target != NULL);
@@ -3508,7 +3517,7 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
  * \param[in] target Pointer to target. (was HL)
  */
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  xy_t       *target)
+                                  target_t   *target)
 {
   character_t character;
   vischar_t  *vischar;
@@ -3522,7 +3531,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    const xy_t target_2B00 = { 0x2B, 0x00 }; /* was BC */
+    const target_t target_2B00 = { 43, 0 }; /* was BC */
     set_hero_target(state, target_2B00);
   }
   else
@@ -3534,34 +3543,39 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
 /**
  * $A4E4: Common end of above two routines.
  *
+ * Start of breakfast: sets routes for prisoners and guards.
+ *
  * \param[in] state     Pointer to game state.
  * \param[in] character Character index.       (was A)
  * \param[in] target    Pointer to target.     (was HL)
  */
 void byte_A13E_anotherone_common(tgestate_t *state,
                                  character_t character,
-                                 xy_t       *target)
+                                 target_t   *target)
 {
-  uint8_t A; /* was A */
+  uint8_t route; /* was A */
 
   assert(state    != NULL);
   ASSERT_CHARACTER_VALID(character);
   assert(target != NULL);
 
-  target->y = 0x00;
+  target->step = 0;
 
   if (character >= character_20_PRISONER_1)
   {
-    A = character - 2;
+    // target.x = 18..23 (route to sit) for prisoner 1..6
+    route = character - 2;
   }
   else
   {
-    A = 24;
+    // guards
+
+    route = 24;
     if (character & (1 << 0)) /* Odd numbered characters? */
-      A++; // gets hit during breakfast // would result in 25 which is the room number for breakfast ... which could be a clue
+      route++; // gets hit during breakfast // would result in 25 which is the room number for breakfast ... which could be a clue
   }
 
-  target->x = A;
+  target->route = route;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3575,10 +3589,10 @@ void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
-  xy_t target_1A00 = { 0x1A, 0x00 }; /* was A',C */
+  target_t target_1A00 = { 26, 0 }; /* was C,A' */
   set_prisoners_and_guards_target(state, &target_1A00);
 
-  const xy_t target_2D00 = { 0x2D, 0x00 };
+  const target_t target_2D00 = { 45, 0 };
   set_hero_target(state, target_2D00);
 }
 
@@ -6908,11 +6922,11 @@ void reset_map_and_characters(tgestate_t *state)
   reset = &character_reset_data[0];
   do
   {
-    charstr->room       = reset->room;
-    charstr->pos.x      = reset->x;
-    charstr->pos.y      = reset->y;
-    charstr->pos.height = 18; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
-    charstr->target.x   = 0;
+    charstr->room         = reset->room;
+    charstr->pos.x        = reset->x;
+    charstr->pos.y        = reset->y;
+    charstr->pos.height   = 18; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
+    charstr->target.route = 0; /* Stand still */
     charstr++;
     reset++;
 
@@ -8014,7 +8028,7 @@ found_empty_slot:
   //HL -= 2; // -> charstr->target
 
 c592:
-  if (charstr->target.x == 0)
+  if (charstr->target.route == 0) /* Stand still */
   {
     // DE += 3; // -> vischar->counter_and_flags
   }
@@ -8142,12 +8156,12 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     if (character >= character_16_GUARD_DOG_1 &&
         character <= character_19_GUARD_DOG_4)
     {
-      vischar->target.x = 0xFF;
-      vischar->target.y = 0x00;
+      vischar->target.route = target_ROUTE_WANDER; /* Choose random locations[]. */
+      vischar->target.step  = 0; /* 0..7 */
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
       {
-        vischar->target.x = 0xFF;
-        vischar->target.y = 0x18;
+        vischar->target.route = target_ROUTE_WANDER; /* Choose random locations[]. */
+        vischar->target.step  = 24; /* 24..31 */
       }
     }
 
@@ -8159,10 +8173,6 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 
 /**
  * $C651: Gets a new target.
-
- if location->x is 0xff then it picks a location from state->locations[] indexed by location->y but with the bottom three bits randomised
- else ...
-
  *
  * \param[in] state      Pointer to game state.
  * \param[in] target     Pointer to characterstruct + 5 [or others]. (target field(s)) (was HL)
@@ -8173,14 +8183,14 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * \return 0/128/255 = (ok/through a door/hit end of list)
  */
 uint8_t get_next_target(tgestate_t *state,
-                        xy_t       *target,
-                        xy_t      **target_out)
+                        target_t   *target,
+                        target_t  **target_out)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
-  uint8_t        x;         /* was A */
+  uint8_t        route;     /* was A */
   doorindex_t    doorindex; /* was A */
-  uint8_t        y;         /* was A or C */
+  uint8_t        step;         /* was A or C */
   const uint8_t *pdoors;    /* was DE */
   int16_t        index;     // signed /* was H */
   const uint8_t *pdoor;     /* was HL */
@@ -8192,27 +8202,27 @@ uint8_t get_next_target(tgestate_t *state,
 
   *target_out = NULL; // Conv: Added.
 
-  x = target->x; // read low byte only
-  if (x == 0xFF) // Perhaps this means that there's no specific route? Just wander around?
+  route = target->route;
+  if (route == target_ROUTE_WANDER) /* Random wandering (using .y + 0..7 to index locations[]). */
   {
     // Conv: In the original code *HL is used as a temporary.
 
     /* Randomise the bottom 3 bits of location's high byte. */
     // Q. Significance of these three bottommost bits?
-    y = (target->y & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
-    target->y = y;
+    step = (target->step & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
+    target->step = step;
   }
   else
   {
     // PUSH HL
-    y = target->y;
-    pdoors = element_A_of_table_7738(x); // perhaps these are character routes, door-to-door
+    step = target->step;
+    pdoors = get_route(route); // perhaps these are character routes, door-to-door
     assert(pdoors);
 
-    if (y == 0xFF)
+    if (step == 0xFF)
       index = -1;
     else
-      index = y;
+      index = step;
 
     pdoor = pdoors + index;
     // EX DE,HL
@@ -8230,7 +8240,7 @@ uint8_t get_next_target(tgestate_t *state,
       // doorindex = *pdoor; // removed redundant reload
       // Am I sure this is target.x because it looks like it might be retesting 'door' so it get wiped.
       // yeah, sure it is. could just be 'x' i think.
-      if (target->x & vischar_BYTE2_BIT7)
+      if (target->route & target_ROUTE_REVERSED)
         doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
       // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
       door = get_door(doorindex);
@@ -8240,14 +8250,14 @@ uint8_t get_next_target(tgestate_t *state,
     }
     else
     {
-      y = doorindex - 40; // removed redundant reload
+      step = doorindex - 40; // removed redundant reload
     }
   }
 
-  assert(y < NELEMS(state->locations));
+  assert(step < NELEMS(state->locations));
 
   // sampled A = $38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
-  *target_out = &state->locations[y];
+  *target_out = &state->locations[step];
 
   return 0;
 }
@@ -8266,7 +8276,7 @@ void move_characters(tgestate_t *state)
   room_t             room;        /* was A */
   item_t             item;        /* was C */
   uint8_t            A;           /* was A */
-  xy_t              *HLtarget;    /* was HL */
+  target_t          *HLtarget;    /* was HL */
 
   uint8_t            B;           /* was B */
   uint8_t            max;         /* was A' */
@@ -8275,6 +8285,7 @@ void move_characters(tgestate_t *state)
   door_t            *HLdoor;      /* was HL */
   tinypos_t         *HLtinypos;   /* was HL */
   characterstruct_t *DEcharstr;   /* was DE */
+  uint8_t            route;       /* was A */
 
   assert(state != NULL);
 
@@ -8306,8 +8317,8 @@ void move_characters(tgestate_t *state)
   // PUSH HL_pos
   // HL += 3; // point at charstr->target
 
-  /* Not yet understood. No target? */
-  if (charstr->target.x == 0) /* temp was A */
+  /* If standing still, return. */
+  if (charstr->target.route == 0) /* temp was A */
     // POP HL_pos
     return;
 
@@ -8322,16 +8333,18 @@ void move_characters(tgestate_t *state)
       if (character >= character_12_GUARD_12)
         goto character_12_or_higher;
 
+      // TODO: A -> route
+
       /* Characters 1..11. */
 back:
-      /* These ops modify the locations[] table. */
-      HLtarget->x = A = HLtarget->x ^ (1 << 7);
+      /* These ops modify the locations[] table. */ // which looks odd...
+      HLtarget->route = A = HLtarget->route ^ target_ROUTE_REVERSED;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
-      if (A & (1 << 7))
-        HLtarget->y--;
+      if (A & target_ROUTE_REVERSED)
+        HLtarget->step--;
       else
-        HLtarget->y++;
+        HLtarget->step++;
 
       // POP HL_pos
       return;
@@ -8341,7 +8354,7 @@ back:
       /* Commandant only. */
 
       // sampled HL = $7617 (characterstruct + 5)
-      A = HLtarget->x & characterstruct_BYTE5_MASK; // location
+      A = HLtarget->route & ~target_ROUTE_REVERSED;
       if (A != 36)
         goto back;
 
@@ -8367,8 +8380,9 @@ character_12_or_higher:
 
         DEpos = &state->saved_pos;
         /* Conv: Unrolled. */
-        DEpos->x = HLtarget->x >> 1;
-        DEpos->y = HLtarget->y >> 1;
+        // THIS USES ROUTE/STEP FROM TARGET BUT get_next_target OUGHT TO RETURN DIFFERENT TYPES
+        DEpos->x = HLtarget->route >> 1;
+        DEpos->y = HLtarget->step >> 1;
         HLpos    = &state->saved_pos;
 
         // POP DE_charstr
@@ -8464,14 +8478,14 @@ character_12_or_higher:
 //    DE++;
     // EX DE, HL
     // HL -> DEcharstr->target
-    A = DEcharstr->target.x; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
-    if (A == 0xFF)
+    route = DEcharstr->target.route; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // target field
+    if (route == target_ROUTE_WANDER)
       return;
     //printf("%p\n", &HLtarget->y);
-    if ((A & (1 << 7)) == 0)  // similar to pattern above (with the -1/+1)
-      DEcharstr->target.y++;
+    if ((route & target_ROUTE_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
+      DEcharstr->target.step++;
     else
-      DEcharstr->target.y--;
+      DEcharstr->target.step--;
   }
 }
 
@@ -8549,40 +8563,44 @@ characterstruct_t *get_character_struct(tgestate_t *state,
 /**
  * $C7C6: Character event.
  *
+ * Sampling shows this can be a charstruct.target or a vischar.target.
+ *
  * \param[in] state  Pointer to game state.
- * \param[in] target Pointer to a target.   (was HL). // sampling shows this can be a charstruct.target or a vischar.target.
+ * \param[in] target Pointer to a target.   (was HL).
  */
-void character_event(tgestate_t *state, xy_t *target)
+void character_event(tgestate_t *state, target_t *target)
 {
   /* $C7F9 */
-  static const charactereventmap_t eventmap[24] =
+  static const route2event_t eventmap[24] =
   {
-    // I suspect that the high values here have their top bit set for something.
-    // I'm writing them with it split out to see if it elucidates.
-    { 38 + 128,  0 },
-    { 39 + 128,  0 },
-    { 40 + 128,  1 },
-    { 41 + 128,  1 },
-    {  5,        0 },
-    {  6,        1 },
-    {  5 + 128,  3 },
-    {  6 + 128,  3 },
-    { 14,        2 },
-    { 15,        2 },
-    { 14 + 128,  0 },
-    { 15 + 128,  1 },
-    { 16,        5 },
-    { 17,        5 },
-    { 16 + 128,  0 },
-    { 17 + 128,  1 },
-    { 32 + 128,  0 },
-    { 33 + 128,  1 },
-    { 42,        7 },
-    { 44,        8 }, /* sleeps */
-    { 43,        9 }, /* sits */
-    { 36 + 128,  6 },
-    { 36,       10 }, /* released from solitary .. walking out? */
-    { 37,        4 }  /* morale related .. re-enables player control after solitary released? */
+    { 38 | target_ROUTE_REVERSED,  0 },
+    { 39 | target_ROUTE_REVERSED,  0 },
+    { 40 | target_ROUTE_REVERSED,  1 },
+    { 41 | target_ROUTE_REVERSED,  1 },
+
+    {  5,                          0 },
+    {  6,                          1 },
+    {  5 | target_ROUTE_REVERSED,  3 },
+    {  6 | target_ROUTE_REVERSED,  3 },
+
+    { 14,                          2 },
+    { 15,                          2 },
+    { 14 | target_ROUTE_REVERSED,  0 },
+    { 15 | target_ROUTE_REVERSED,  1 },
+
+    { 16,                          5 },
+    { 17,                          5 },
+    { 16 | target_ROUTE_REVERSED,  0 },
+    { 17 | target_ROUTE_REVERSED,  1 },
+
+    { 32 | target_ROUTE_REVERSED,  0 },
+    { 33 | target_ROUTE_REVERSED,  1 },
+    { 42,                          7 },
+    { 44,                          8 }, /* sleeps */
+    { 43,                          9 }, /* sits */
+    { 36 | target_ROUTE_REVERSED,  6 },
+    { 36,                         10 }, /* released from solitary .. walking out? */
+    { 37,                          4 }  /* morale related .. re-enables player control after solitary released? */
   };
 
   /* $C829 */
@@ -8601,22 +8619,26 @@ void character_event(tgestate_t *state, xy_t *target)
     &charevnt_handler_10_hero_released_from_solitary
   };
 
-  uint8_t                    x;         /* was A */
-  const charactereventmap_t *peventmap; /* was HL */
-  uint8_t                    iters;     /* was B */
+  uint8_t              route;     /* was A */
+  const route2event_t *peventmap; /* was HL */
+  uint8_t              iters;     /* was B */
 
   assert(state  != NULL);
   assert(target != NULL);
 
-  x = target->x; // ### these identify prisoner characters but they don't match character_t ###
-  if (x >= 7 && x <= 12)
+  // When I first started pulling the game apart I thought that these values
+  // identified characters but then got confused when I found another set of
+  // character constants (now called character_t's).
+
+  route = target->route;
+  if (route >= 7 && route <= 12) // 6 indices
   {
-    character_sleeps(state, x, target);
+    character_sleeps(state, route, target);
     return;
   }
-  if (x >= 18 && x <= 22)
+  if (route >= 18 && route <= 22) // only 5 indices - is this why one character doesn't sit for breakfast? there's an entry in routes[] which looks like it ought to match
   {
-    character_sits(state, x, target);
+    character_sits(state, route, target);
     return;
   }
 
@@ -8626,7 +8648,7 @@ void character_event(tgestate_t *state, xy_t *target)
   iters = NELEMS(eventmap);
   do
   {
-    if (x == peventmap->x)
+    if (route == peventmap->route)
     {
       /* Conv: call_action moved here. */
       handlers[peventmap->handler](state, target);
@@ -8638,129 +8660,93 @@ void character_event(tgestate_t *state, xy_t *target)
 
   // POP target (HL)
 
-  target->x = 0;
+  target->route = 0; /* Stand still. */
 }
 
 /**
- * $C83F:
+ * $C83F: Ends solitary.
  */
 void charevnt_handler_4_solitary_ends(tgestate_t *state,
-                                      xy_t       *target)
+                                      target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
   state->in_solitary = 0; /* Enable player control */
-  charevnt_handler_0(state, target);
+  charevnt_handler_0(state, target); // ($FF,$08)
 }
 
 /**
- * $C845:
+ * $C845: Sets target to { 3, 21 }.
  */
 void charevnt_handler_6(tgestate_t *state,
-                        xy_t       *target)
+                        target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
+  // this is something like: commandant walks to yard
 
-  // POP target (HL)
-  // (popped) sampled target = $80C2 (x2), $8042
-  target->x = 0x03;
-  target->y = 0x15;
+  target->route = 3; // route_commandant
+  target->step  = 21; // offset $15
 }
 
 /**
- * $C84C:
+ * $C84C: Sets target to route 36 in reverse. Sets hero to route 37.
  */
 void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
-                                                     xy_t       *target)
+                                                     target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
+  // If I remove the 128 here then when the commandant arrives to pick up the
+  // hero he repeatedly re-enters the room instead of turning around and
+  // leaving.
 
-  // POP target (HL)
-  target->x = 0xA4;
-  target->y = 0x03;
+  target->route = 36 | target_ROUTE_REVERSED;
+  target->step  = 3;
 
-  state->automatic_player_counter = 0; // force automatic control
+  state->automatic_player_counter = 0; /* Force automatic control */
 
-  const xy_t target_2500 = { 0x25, 0x00 }; /* was BC */
+  const target_t target_2500 = { 37, 0 }; /* was BC */
   set_hero_target(state, target_2500); // original jump was $A344, but have moved it
 }
 
 /**
- * $C85C:
+ * $C85C: Sets target to wander around locations 16..23.
  */
 void charevnt_handler_1(tgestate_t *state,
-                        xy_t       *target)
+                        target_t   *target)
 {
-  uint8_t y; /* was C */
+  // When .x is set to $FF it says to pick a random location from the
+  // locations[] array from .y to .y+7.
 
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  y = 0x10; // 0xFF10
-  set_target_ffxx(state, target, y);
+  target->route = target_ROUTE_WANDER; /* Choose random locations[]. */
+  target->step  = 16; /* locations 16..23 */
 }
 
 /**
- * $C860:
+ * $C860: Sets target to wander around locations 56..63.
  */
 void charevnt_handler_2(tgestate_t *state,
-                        xy_t       *target)
+                        target_t   *target)
 {
-  uint8_t y; /* was C */
-
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  y = 0x38; // 0xFF38
-  set_target_ffxx(state, target, y);
+  target->route = target_ROUTE_WANDER; /* Choose random locations[]. */
+  target->step  = 56; /* locations 56..63 */
 }
 
 /**
- * $C864:
+ * $C864: Sets target to wander around locations 8..15.
  *
  * \param[in] target ? (was HL)
  */
 void charevnt_handler_0(tgestate_t *state,
-                        xy_t       *target)
+                        target_t   *target)
 {
-  uint8_t y; /* was C */
-
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  y = 0x08; // 0xFF08 // sampled HL=$8022,$8042,$8002,$8062
-  set_target_ffxx(state, target, y);
+  target->route = target_ROUTE_WANDER; /* Choose random locations[]. */
+  target->step  = 8; /* locations 8..15 */
 }
 
-/**
- * $C866:
- *
- * \param[in] y Y byte. (was C)
- */
-void set_target_ffxx(tgestate_t *state, xy_t *target, uint8_t y)
-{
-  assert(state  != NULL);
-  assert(target != NULL);
-  // assert(y);
-
-  // POP target (HL)
-  target->x = 0xFF;
-  target->y = y;
-}
+// Conv: Inlined set_target_ffxx() in the above functions.
 
 /**
  * $C86C:
  */
 void charevnt_handler_3_check_var_A13E(tgestate_t *state,
-                                       xy_t       *target)
+                                       target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  // POP target (HL)
   if (state->entered_move_characters == 0)
     byte_A13E_is_zero(state, target);
   else
@@ -8771,12 +8757,8 @@ void charevnt_handler_3_check_var_A13E(tgestate_t *state,
  * $C877:
  */
 void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
-                                                  xy_t       *target)
+                                                  target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  // POP target (HL)
   if (state->entered_move_characters == 0)
     byte_A13E_is_zero_anotherone(state, target);
   else
@@ -8784,42 +8766,30 @@ void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
 }
 
 /**
- * $C882:
+ * $C882: Sets target to ($05,$00).
  */
 void charevnt_handler_7(tgestate_t *state,
-                        xy_t       *target)
+                        target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  // POP target (HL)
-  target->x = 0x05;
-  target->y = 0x00;
+  target->route = 5; // route_exit_hut2
+  target->step  = 0;
 }
 
 /**
- * $C889:
+ * $C889: Hero sits.
  */
 void charevnt_handler_9_hero_sits(tgestate_t *state,
-                                  xy_t       *target)
+                                  target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  // POP target (HL)
   hero_sits(state);
 }
 
 /**
- * $C88D:
+ * $C88D: Hero sleeps.
  */
 void charevnt_handler_8_hero_sleeps(tgestate_t *state,
-                                    xy_t       *target)
+                                    target_t   *target)
 {
-  assert(state  != NULL);
-  assert(target != NULL);
-
-  // POP target (HL)
   hero_sleeps(state);
 }
 
@@ -8965,9 +8935,9 @@ set_pos:
       }
       else
       {
-        vischar2->flags  = 0;
-        vischar2->target.x = 0xFF;
-        vischar2->target.y = 0x00;
+        vischar2->flags        = 0;
+        vischar2->target.route = target_ROUTE_WANDER; /* Choose random locations[]. */
+        vischar2->target.step  = 0; /* 0..7 */
         get_next_target_and_handle_it(state, vischar2, &vischar2->target);
         return;
       }
@@ -9022,7 +8992,7 @@ bribed_visible:
     }
   }
 
-  A = vischar2->target.y = 0x00; // makes no sense - check again
+  A = vischar2->target.step = 0; // makes no sense - check again
   if (A == 0)
   {
     character_behaviour_set_input(state, vischar, A /* new_input */);
@@ -9211,12 +9181,14 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   uint8_t          flags_lower6;            /* was A */
   uint8_t          flags_all;               /* was C */
   uint8_t          food_discovered_counter; /* was A */
-  uint8_t          C;                       /* was C */
-  uint8_t          A;                       /* was A */
-  uint8_t          Astacked;                /* was A */
+  uint8_t          step;                    /* was C */
+  uint8_t          route;                   /* was A */
+  uint8_t          route2;                  /* was A */
   const door_t    *door;                    /* was HL */
   const tinypos_t *tinypos;                 /* was HL */
   vischar_t       *vischarHL;               /* was HL */
+
+  doorindex_t      doorindex;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9250,7 +9222,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       food_discovered_counter = 255; /* food is poisoned */
     state->food_discovered_counter = food_discovered_counter;
 
-    vischar->target.x = 0x00;
+    vischar->target.route = 0; /* Stand still. */
 
     character_behaviour_set_input(state, vischar, 0 /* new_input */); // character_behaviour:$C9F5;
     return;
@@ -9263,23 +9235,24 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely target
     //orig:A = *--HL; // 80a2 etc
 
-    C = vischar->target.y; // check order
-    A = vischar->target.x;
+    step  = vischar->target.step; // check order
+    route = vischar->target.route;
 
-    A = element_A_of_table_7738(A)[C];
-    if (vischar->target.x & vischar_BYTE2_BIT7) // orig:(*HL & vischar_BYTE2_BIT7)
-      A ^= door_REVERSE; // later given to get_door, so must be a doorindex_t, so the flag must be door_REVERSE
+    // A must be a door index
+    doorindex = get_route(route)[step]; // follow this through
+    if (vischar->target.route & target_ROUTE_REVERSED) // needless reload
+      doorindex ^= door_REVERSE; // later given to get_door, so must be a doorindex_t, so the flag must be door_REVERSE
 
     // PUSH AF
-    Astacked = vischar->target.x; // $8002, ...
+    route2 = vischar->target.route; // $8002, ... // needless reload
     // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (Astacked & vischar_BYTE2_BIT7)
-      vischar->target.y--;
+    if (route2 & target_ROUTE_REVERSED)
+      vischar->target.step--;
     else
-      vischar->target.y++;
+      vischar->target.step++;
     // POP AF
 
-    door = get_door(A); // door related
+    door = get_door(doorindex); // door related
     vischar->room = (door->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
     if ((door->room_and_flags & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
@@ -9307,13 +9280,14 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  A = vischar->target.x;
-  if (A != 0xFF)
+  /* When on a route (.x != 0xFF) advance the counter (.y) in the required direction. */
+  route = vischar->target.route;
+  if (route != target_ROUTE_WANDER)
   {
-    if (A & vischar_BYTE2_BIT7)
-      vischar->target.y--;
+    if (route & target_ROUTE_REVERSED)
+      vischar->target.step--;
     else
-      vischar->target.y++;
+      vischar->target.step++;
   }
 
   get_next_target_and_handle_it(state, vischar, &vischar->target); // was fallthrough
@@ -9328,10 +9302,10 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
  */
 void get_next_target_and_handle_it(tgestate_t *state,
                                    vischar_t  *vischar,
-                                   xy_t       *target)
+                                   target_t   *target)
 {
-  uint8_t get_next_target_flags; /* was A */
-  xy_t   *new_target;
+  uint8_t   get_next_target_flags; /* was A */
+  target_t *new_target;
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9353,10 +9327,10 @@ void get_next_target_and_handle_it(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
+void ran_out_of_list(tgestate_t *state, vischar_t *vischar, target_t *target)
 {
   character_t character; /* was A */
-  uint8_t     x;         /* was A */
+  uint8_t     route;     /* was A */
 
   assert(state    != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9368,13 +9342,13 @@ void ran_out_of_list(tgestate_t *state, vischar_t *vischar, xy_t *target)
     character = vischar->character & vischar_CHARACTER_MASK;
     if (character == character_0_COMMANDANT)
     {
-      x = target->x & ~vischar_BYTE2_BIT7;
-      if (x == 36)
+      route = target->route & ~target_ROUTE_REVERSED;
+      if (route == 36)
         goto do_character_event; // character index
       character = 0; // force the next 'if' statement
     }
     if (character <= character_11_GUARD_11)
-      goto frob_target;
+      goto reverse_route;
   }
 
 do_character_event:
@@ -9385,23 +9359,23 @@ do_character_event:
    */
 
   character_event(state, target);
-  if (target->x != 0)
+  if (target->route != 0)
     get_next_target_and_handle_it(state, vischar, target); // re-enter
   return; // exit via
 
-frob_target:
+reverse_route:
   /* We arrive here if:
    * - vischar is not the hero, and
    *   - character is character_0_COMMANDANT and (target low byte & 0x7F) != 36, or
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
-  target->x ^= (1 << 7);
+  target->route ^= target_ROUTE_REVERSED; /* toggle route direction */
   // Conv: Removed [-2]+1 pattern.
-  if (target->x & (1 << 7))
-    target->y--;
+  if (target->route & target_ROUTE_REVERSED)
+    target->step--;
   else
-    target->y++;
+    target->step++;
 
   // Conv: 'A = 0' removed as it has no effect. [Present in DOS version]
 }
@@ -9417,21 +9391,21 @@ frob_target:
  * \param[in] vischar    Pointer to visible character. (was IY)
  * \param[in] pushed_HL  Pointer to target.            (was stack)
  * \param[in] new_target Pointer to target.            (was HL)
- * \param[in] A          flags of some sort
+ * \param[in] A          0/128 - as passed by get_next_target
  */
-void handle_target(tgestate_t *state,
-                   vischar_t  *vischar,
-                   xy_t       *pushed_HL,
-                   const xy_t *new_target,
-                   uint8_t     A)
+void handle_target(tgestate_t     *state,
+                   vischar_t      *vischar,
+                   target_t       *pushed_HL,
+                   const target_t *new_target,
+                   uint8_t         A)
 {
   assert(state        != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(pushed_HL    != NULL);
-  assert(new_target != NULL);
+  assert(new_target   != NULL);
   // assert(A);
 
-  if (A == (1 << 7))
+  if (A == (1 << 7)) // door case
     vischar->flags |= vischar_FLAGS_DOOR_THING;
 
   pushed_HL[1] = *new_target;
@@ -9456,13 +9430,13 @@ void handle_target(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CB79: Return the A'th element of table_7738.
+ * $CB79: Return a pointer to route index 'A'.
  *
  * Used by the routines at get_next_target and bribes_solitary_food.
  *
- * \param[in] A Index.
+ * \param[in] index Route index.
  *
- * \return Pointer to whatever this table is. (was DE)
+ * \return Pointer to route data. (was DE)
  */
 
 // get_next_target tells me that if (val & ~door_LOCKED) < 40 then it's a
@@ -9473,352 +9447,375 @@ void handle_target(tgestate_t *state,
 // Highest door used here: 35, lowest: 0.
 // Highest not-door used here: 77, lowest: 9.
 
-const uint8_t *element_A_of_table_7738(uint8_t A)
+const uint8_t *get_route(uint8_t index)
 {
+  /** Specifies a door within a route. */
 #define DOOR(d) (d)
-#define NOTDOOR(d) (d + 40)
+  /** Specifies a location index (in locations[]) within a route. */
+#define LOCATION(d) (d + 40)
+
+  // "marked" => i've noted the use in locations[]
+
   static const uint8_t data_7795[] =
   {
-    NOTDOOR(32), // 0x48
-    NOTDOOR(33), // 0x49
-    NOTDOOR(34), // 0x4A
+    LOCATION(32), // 0x48             // marked
+    LOCATION(33), // 0x49             // marked
+    LOCATION(34), // 0x4A             // marked
     door_NONE
   };
   static const uint8_t data_7799[] =
   {
-    NOTDOOR(35), // 0x4B
-    NOTDOOR(36), // 0x4C
-    NOTDOOR(37), // 0x4D
-    NOTDOOR(38), // 0x4E
-    NOTDOOR(39), // 0x4F
-    NOTDOOR(40), // 0x50
+    LOCATION(35), // 0x4B             // marked
+    LOCATION(36), // 0x4C             // marked
+    LOCATION(37), // 0x4D             // marked
+    LOCATION(38), // 0x4E             // marked
+    LOCATION(39), // 0x4F             // marked
+    LOCATION(40), // 0x50             // marked
     door_NONE
   };
-  static const uint8_t data_77A0[] =
+  /* I believe this to be the commandant's route. It's the longest and most complex of the routes. */
+  static const uint8_t route_commandant[] =
   {
-    NOTDOOR(46), // 0x56
-    DOOR(31),
-    DOOR(29),
-    DOOR(32),
-    DOOR(26),
-    DOOR(35),
-    DOOR(25 | door_LOCKED),
-    DOOR(22 | door_LOCKED),
-    DOOR(21 | door_LOCKED),
-    DOOR(20 | door_LOCKED),
-    DOOR(23 | door_LOCKED),
-    NOTDOOR(42), // 0x52
-    DOOR(23),
-    DOOR(10 | door_LOCKED),
-    DOOR(11),
-    DOOR(11 | door_LOCKED),
-    DOOR(12),
-    DOOR(27 | door_LOCKED),
-    DOOR(28),
-    DOOR(29 | door_LOCKED),
-    DOOR(13 | door_LOCKED),
-    NOTDOOR(11), // 0x33
-    NOTDOOR(55), // 0x5F
-    DOOR(0 | door_LOCKED),
-    DOOR(1 | door_LOCKED),
-    NOTDOOR(60), // 0x64
-    DOOR(1),
-    DOOR(0),
-    DOOR(4),
-    DOOR(16),
-    DOOR(5 | door_LOCKED),
-    NOTDOOR(11), // 0x33
-    DOOR(7),
-    DOOR(17 | door_LOCKED),
-    DOOR(6 | door_LOCKED),
-    DOOR(8),
-    DOOR(18),
-    DOOR(9 | door_LOCKED),
-    NOTDOOR(45), // 0x55
-    DOOR(14),
-    DOOR(34),
-    DOOR(34 | door_LOCKED),
-    DOOR(33),
-    DOOR(33 | door_LOCKED),
+    LOCATION(46), // 0x56             // marked
+    DOOR(31),                 // room_11_PAPERS    -> room_13_CORRIDOR
+    DOOR(29),                 // room_13_CORRIDOR  -> room_16_CORRIDOR
+    DOOR(32),                 // room_16_CORRIDOR  -> room_7_CORRIDOR
+    DOOR(26),                 // room_7_CORRIDOR   -> room_17_CORRIDOR
+    DOOR(35),                 // room_17_CORRIDOR  -> room_12_CORRIDOR
+    DOOR(25 | door_REVERSE),  // room_12_CORRIDOR  -> room_18_RADIO
+    DOOR(22 | door_REVERSE),  // room_18_RADIO     -> room_19_FOOD
+    DOOR(21 | door_REVERSE),  // room_19_FOOD      -> room_23_BREAKFAST
+    DOOR(20 | door_REVERSE),  // room_23_BREAKFAST -> room_21_CORRIDOR
+    DOOR(23 | door_REVERSE),  // room_21_CORRIDOR  -> room_22_REDKEY
+    LOCATION(42), // 0x52             // marked
+    DOOR(23),                 // room_22_REDKEY    -> room_21_CORRIDOR
+    DOOR(10 | door_REVERSE),  // room_21_CORRIDOR  -> room_0_OUTDOORS
+    DOOR(11),                 // room_0_OUTDOORS   -> room_20_REDCROSS
+    DOOR(11 | door_REVERSE),  // room_20_REDCROSS  -> room_0_OUTDOORS
+    DOOR(12),                 // room_0_OUTDOORS   -> room_15_UNIFORM
+    DOOR(27 | door_REVERSE),  // room_15_UNIFORM   -> room_14_TORCH
+    DOOR(28),                 // room_14_TORCH     -> room_16_CORRIDOR
+    DOOR(29 | door_REVERSE),  // room_16_CORRIDOR  -> room_13_CORRIDOR
+    DOOR(13 | door_REVERSE),  // room_13_CORRIDOR  -> room_0_OUTDOORS
+    LOCATION(11), // 0x33             // marked   // charevnt_handler_6 jumps to this offset
+    LOCATION(55), // 0x5F             // marked
+    DOOR( 0 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 0 to yard)
+    DOOR( 1 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 1 to yard)
+    LOCATION(60), // 0x64             // marked
+    DOOR( 1),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 1)
+    DOOR( 0),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 0)
+    DOOR( 4),                 // room_0_OUTDOORS   -> room_28_HUT1LEFT
+    DOOR(16),                 // room_28_HUT1LEFT  -> room_1_HUT1RIGHT
+    DOOR( 5 | door_REVERSE),  // room_1_HUT1RIGHT  -> room_0_OUTDOORS
+    LOCATION(11), // 0x33             // marked
+    DOOR( 7),                 // room_0_OUTDOORS   -> room_3_HUT2RIGHT
+    DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT  -> room_2_HUT2LEFT
+    DOOR( 6 | door_REVERSE),  // room_2_HUT2LEFT   -> room_0_OUTDOORS
+    DOOR( 8),                 // room_0_OUTDOORS   -> room_4_HUT3LEFT
+    DOOR(18),                 // room_4_HUT3LEFT   -> room_5_HUT3RIGHT
+    DOOR( 9 | door_REVERSE),  // room_5_HUT3RIGHT  -> room_0_OUTDOORS
+    LOCATION(45), // 0x55             // marked
+    DOOR(14),                 // room_0_OUTDOORS   -> room_8_CORRIDOR
+    DOOR(34),                 // room_8_CORRIDOR   -> room_9_CRATE
+    DOOR(34 | door_REVERSE),  // room_9_CRATE      -> room_8_CORRIDOR
+    DOOR(33),                 // room_8_CORRIDOR   -> room_10_LOCKPICK
+    DOOR(33 | door_REVERSE),  // room_10_LOCKPICK  -> room_8_CORRIDOR
     door_NONE
   };
   static const uint8_t data_77CD[] =
   {
-    NOTDOOR(43), // 0x53
-    NOTDOOR(44), // 0x54
+    LOCATION(43), // 0x53
+    LOCATION(44), // 0x54
     door_NONE
   };
-  static const uint8_t data_77D0[] =
+  static const uint8_t route_exit_hut2[] =
   {
-    DOOR(7 | door_LOCKED),
-    NOTDOOR(11), // 0x33
-    NOTDOOR(12), // 0x34
+    DOOR(7 | door_REVERSE),   // room_3_HUT2RIGHT -> room_0_OUTDOORS
+    LOCATION(11), // 0x33
+    LOCATION(12), // 0x34
     door_NONE
   };
-  static const uint8_t data_77D4[] =
+  static const uint8_t route_exit_hut3[] =
   {
-    DOOR(9 | door_LOCKED),
-    NOTDOOR(45), // 0x55
-    NOTDOOR(14), // 0x36
+    DOOR(9 | door_REVERSE),   // room_5_HUT3RIGHT -> room_0_OUTDOORS
+    LOCATION(45), // 0x55
+    LOCATION(14), // 0x36
     door_NONE
   };
-  static const uint8_t data_77D8[] =
+  static const uint8_t route_prisoner_sleeps_1[] =
   {
-    NOTDOOR(46), // 0x56
+    LOCATION(46), // 0x56
     door_NONE
   };
-  static const uint8_t data_77DA[] =
+  static const uint8_t route_prisoner_sleeps_2[] =
   {
-    NOTDOOR(47), // 0x57
+    LOCATION(47), // 0x57
     door_NONE
   };
-  static const uint8_t data_77DC[] =
+  static const uint8_t route_prisoner_sleeps_3[] =
   {
-    NOTDOOR(48), // 0x58
+    LOCATION(48), // 0x58
     door_NONE
   };
   static const uint8_t data_77DE[] =
   {
-    NOTDOOR(52), // 0x5C
-    NOTDOOR(53), // 0x5D
+    LOCATION(52), // 0x5C
+    LOCATION(53), // 0x5D
     door_NONE
   };
   static const uint8_t data_77E1[] =
   {
-    NOTDOOR(11), // 0x33
-    NOTDOOR(55), // 0x5F
-    DOOR(0 | door_LOCKED),
-    DOOR(1 | door_LOCKED),
-    NOTDOOR(56), // 0x60
+    LOCATION(11), // 0x33
+    LOCATION(55), // 0x5F
+    DOOR(0 | door_REVERSE), // move through gates
+    DOOR(1 | door_REVERSE), // move through gates to yard
+    LOCATION(56), // 0x60
     door_NONE
   };
   static const uint8_t data_77E7[] =
   {
-    NOTDOOR(12), // 0x34
-    DOOR(10),
-    DOOR(20),
-    DOOR(19 | door_LOCKED),
+    LOCATION(12), // 0x34
+    DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
+    DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
+    DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
     door_NONE
   };
   static const uint8_t data_77EC[] =
   {
-    NOTDOOR(16), // 0x38
-    NOTDOOR(12), // 0x34
-    DOOR(10),
-    DOOR(20),
+    LOCATION(16), // 0x38
+    LOCATION(12), // 0x34
+    DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
+    DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     door_NONE
   };
-  static const uint8_t data_77F1[] =
+  static const uint8_t route_prisoner_sits_1[] =
   {
-    NOTDOOR(64), // 0x68
+    LOCATION(64), // 0x68
     door_NONE
   };
-  static const uint8_t data_77F3[] =
+  static const uint8_t route_prisoner_sits_2[] =
   {
-    NOTDOOR(65), // 0x69
+    LOCATION(65), // 0x69
     door_NONE
   };
-  static const uint8_t data_77F5[] =
+  static const uint8_t route_prisoner_sits_3[] =
   {
-    NOTDOOR(66), // 0x6A
+    LOCATION(66), // 0x6A
     door_NONE
   };
   static const uint8_t data_77F7[] =
   {
-    NOTDOOR(68), // 0x6C
+    LOCATION(68), // 0x6C
     door_NONE
   };
   static const uint8_t data_77F9[] =
   {
-    NOTDOOR(69), // 0x6D
+    LOCATION(69), // 0x6D
     door_NONE
   };
   static const uint8_t data_77FB[] =
   {
-    NOTDOOR(9), // 0x31
+    LOCATION(9), // 0x31
     door_NONE
   };
   static const uint8_t data_77FD[] =
   {
-    NOTDOOR(11), // 0x33
+    LOCATION(11), // 0x33
     door_NONE
   };
   static const uint8_t data_77FF[] =
   {
-    NOTDOOR(17), // 0x39
+    LOCATION(17), // 0x39
     door_NONE
   };
   static const uint8_t data_7801[] =
   {
-    NOTDOOR(49), // 0x59
+    LOCATION(49), // 0x59
     door_NONE
   };
   static const uint8_t data_7803[] =
   {
-    NOTDOOR(72), // 0x70
+    LOCATION(72), // 0x70
     door_NONE
   };
   static const uint8_t data_7805[] =
   {
-    NOTDOOR(73), // 0x71
+    LOCATION(73), // 0x71
     door_NONE
   };
   static const uint8_t data_7807[] =
   {
-    NOTDOOR(74), // 0x72
+    LOCATION(74), // 0x72
     door_NONE
   };
   static const uint8_t data_7809[] =
   {
-    NOTDOOR(75), // 0x73
+    LOCATION(75), // 0x73
     door_NONE
   };
   static const uint8_t data_780B[] =
   {
-    NOTDOOR(76), // 0x74
+    LOCATION(76), // 0x74
     door_NONE
   };
   static const uint8_t data_780D[] =
   {
-    NOTDOOR(77), // 0x75
+    LOCATION(77), // 0x75
     door_NONE
   };
-  static const uint8_t data_780F[] =
+  static const uint8_t route_go_to_solitary[] =
   {
-    NOTDOOR(14), // 0x36
-    DOOR(10),
-    DOOR(23 | door_LOCKED),
-    DOOR(24 | door_LOCKED),
-    NOTDOOR(42), // 0x52
+    LOCATION(14), // 0x36
+    DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
+    DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
+    DOOR(24 | door_REVERSE),  // room_22_REDKEY   -> room_24_SOLITARY
+    LOCATION(42),             // 0x52
     door_NONE
   };
-  static const uint8_t data_7815[] =
+  static const uint8_t route_hero_leave_solitary[] =
   {
-    DOOR(24),
-    DOOR(23),
-    DOOR(10 | door_LOCKED),
-    NOTDOOR(14), // 0x36
+    DOOR(24),                 // room_24_SOLITARY -> room_22_REDKEY
+    DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
+    DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
+    LOCATION(14),             // 0x36
     door_NONE
   };
-  static const uint8_t data_781A[] =
+  static const uint8_t route_guard_12_bed[] =
   {
-    NOTDOOR(12), // 0x34
-    NOTDOOR(11), // 0x33
-    DOOR(7),
-    NOTDOOR(52), // 0x5C
+    LOCATION(12), // 0x34
+    LOCATION(11), // 0x33
+    DOOR(7),                  // room_0_OUTDOORS -> room_3_HUT2RIGHT
+    LOCATION(52), // 0x5C
     door_NONE
   };
-  static const uint8_t data_781F[] =
+  static const uint8_t route_guard_13_bed[] =
   {
-    NOTDOOR(12), // 0x34
-    NOTDOOR(11), // 0x33
-    DOOR(7),
-    DOOR(17 | door_LOCKED),
-    NOTDOOR(53), // 0x5D
+    LOCATION(12), // 0x34
+    LOCATION(11), // 0x33
+    DOOR(7),                  // room_0_OUTDOORS  -> room_3_HUT2RIGHT
+    DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
+    LOCATION(53), // 0x5D
     door_NONE
   };
-  static const uint8_t data_7825[] =
+  static const uint8_t route_guard_14_bed[] =
   {
-    NOTDOOR(12), // 0x34
-    NOTDOOR(11), // 0x33
-    NOTDOOR(45), // 0x55
-    DOOR(9),
-    NOTDOOR(52), // 0x5C
+    LOCATION(12), // 0x34
+    LOCATION(11), // 0x33
+    LOCATION(45), // 0x55
+    DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
+    LOCATION(52), // 0x5C
     door_NONE
   };
-  static const uint8_t data_782B[] =
+  static const uint8_t route_guard_15_bed[] =
   {
-    NOTDOOR(12), // 0x34
-    NOTDOOR(11), // 0x33
-    NOTDOOR(45), // 0x55
-    DOOR(9),
-    NOTDOOR(53), // 0x5C
+    LOCATION(12), // 0x34
+    LOCATION(11), // 0x33
+    LOCATION(45), // 0x55
+    DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
+    LOCATION(53), // 0x5C
     door_NONE
   };
-  static const uint8_t data_7831[] =
+  static const uint8_t route_hut2_left_to_right[] =
   {
-    DOOR(17),
+    DOOR(17),                 // room_2_HUT2LEFT -> room_3_HUT2RIGHT
     door_NONE
   };
   static const uint8_t data_7833[] =
   {
-    NOTDOOR(67), // 0x6B
+    LOCATION(67), // 0x6B
     door_NONE
   };
-  static const uint8_t data_7835[] =
+  static const uint8_t route_hut2_right_to_left[] =
   {
-    DOOR(17 | door_LOCKED),
-    NOTDOOR(70), // 0x6E
+    DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
+    LOCATION(70), // 0x6E
     door_NONE
   };
   static const uint8_t data_7838[] =
   {
-    NOTDOOR(50), // 0x5A
+    LOCATION(50), // 0x5A
     door_NONE
   };
 #undef DOOR
-#undef NOT_DOOR
+#undef LOCATION
 
   /**
-   * $7738: (unknown)
+   * $7738: Table of pointers to routes.
    */
-  static const uint8_t *table_7738[46] =
+  static const uint8_t *routes[46] =
   {
-    NULL, /* was zero */
-    &data_7795[0],
-    &data_7799[0],
-    &data_77A0[0],
-    &data_77CD[0],
-    &data_77D0[0],
-    &data_77D4[0],
-    &data_77D8[0],
-    &data_77DA[0],
-    &data_77DC[0],
-    &data_77D8[0], /* dupes index 7 */
-    &data_77DA[0], /* dupes index 8 */
-    &data_77DC[0], /* dupes index 9 */
-    &data_77DE[0],
-    &data_77E1[0],
-    &data_77E1[0], /* dupes index 14 */
-    &data_77E7[0],
-    &data_77EC[0],
-    &data_77F1[0],
-    &data_77F3[0],
-    &data_77F5[0],
-    &data_77F1[0], /* dupes index 18 */
-    &data_77F3[0], /* dupes index 19 */
-    &data_77F5[0], /* dupes index 20 */
-    &data_77F7[0],
-    &data_77F9[0],
-    &data_77FB[0],
-    &data_77FD[0],
-    &data_7803[0],
-    &data_7805[0],
-    &data_7807[0],
-    &data_77FF[0],
-    &data_7801[0],
-    &data_7809[0],
-    &data_780B[0],
-    &data_780D[0],
-    &data_780F[0],
-    &data_7815[0],
-    &data_781A[0],
-    &data_781F[0],
-    &data_7825[0],
-    &data_782B[0],
-    &data_7831[0],
-    &data_7833[0],
-    &data_7835[0],
-    &data_7838[0],
+    NULL, /* was zero */ // 0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
+
+    &data_7795[0], //  1:
+    &data_7799[0], //  2:
+    &route_commandant[0], //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
+    &data_77CD[0], //  4:
+
+    &route_exit_hut2[0], //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
+    &route_exit_hut3[0], //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
+
+    // character_sleeps routes
+    &route_prisoner_sleeps_1[0], //  7: prisoner 1 by byte_A13E_common
+    &route_prisoner_sleeps_2[0], //  8: prisoner 2 by byte_A13E_common
+    &route_prisoner_sleeps_3[0], //  9: prisoner 3 by byte_A13E_common
+    &route_prisoner_sleeps_1[0], // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
+    &route_prisoner_sleeps_2[0], // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
+    &route_prisoner_sleeps_3[0], // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
+
+    &data_77DE[0], // 13: (all hostiles) by byte_A13E_common
+
+    &data_77E1[0], // 14: set by set_target_0x8E04 (for hero, prisoners_and_guards-1), set_target_0x0E00 (for hero, prisoners_and_guards-1)
+    &data_77E1[0], // 15: set by set_target_0x8E04 (for hero, prisoners_and_guards-2), set_target_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
+
+    &data_77E7[0], // 16: set by set_target_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
+    &data_77EC[0], // 17:                                                        prisoners_and_guards-2 by end_of_breakfast
+
+    // character_sits routes
+    &route_prisoner_sits_1[0], // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
+    &route_prisoner_sits_2[0], // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
+    &route_prisoner_sits_3[0], // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
+    &route_prisoner_sits_1[0], // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
+    &route_prisoner_sits_2[0], // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
+    &route_prisoner_sits_3[0], // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
+
+    &data_77F7[0], // 24: guard at breakfast 1
+    &data_77F9[0], // 25: guard at breakfast 2
+
+    &data_77FB[0], // 26: character_12_GUARD_12   by go_to_roll_call
+    &data_77FD[0], // 27: character_13_GUARD_13   by go_to_roll_call
+    &data_7803[0], // 28: character_20_PRISONER_1 by go_to_roll_call
+    &data_7805[0], // 29: character_21_PRISONER_2 by go_to_roll_call
+    &data_7807[0], // 30: character_22_PRISONER_3 by go_to_roll_call
+    &data_77FF[0], // 31: character_14_GUARD_14   by go_to_roll_call
+    &data_7801[0], // 32: character_15_GUARD_15   by go_to_roll_call
+    &data_7809[0], // 33: character_23_PRISONER_4 by go_to_roll_call
+    &data_780B[0], // 34: character_24_PRISONER_5 by go_to_roll_call
+    &data_780D[0], // 35: character_25_PRISONER_6 by go_to_roll_call
+
+    &route_go_to_solitary[0], // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by ran_out_of_list
+    &route_hero_leave_solitary[0], // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
+
+    &route_guard_12_bed[0], // 38: guard 12 at 'time for bed', 'search light'
+    &route_guard_13_bed[0], // 39: guard 13 at 'time for bed', 'search light'
+    &route_guard_14_bed[0], // 40: guard 14 at 'time for bed', 'search light'
+    &route_guard_15_bed[0], // 41: guard 15 at 'time for bed', 'search light'
+
+    &route_hut2_left_to_right[0], // 42:
+
+    &data_7833[0], // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
+    &route_hut2_right_to_left[0], // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
+
+    &data_7838[0], // 45: (hero) by go_to_roll_call
+
     // original game has an FF byte here
   };
 
-  /* Conv: A may have flags bit 7 set so mask it off. */
-  A &= ~(1 << 7);
+  /* Conv: index may have flag bit 7 set so mask it off. */
+  index &= ~target_ROUTE_REVERSED;
 
-  assert(A < NELEMS(table_7738));
+  assert(index < NELEMS(routes));
 
-  return table_7738[A];
+  return routes[index];
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10016,7 +10013,7 @@ next:
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
-  state->vischars[0].target.x = 0x00; // ($8002) = 0; // target - why is this storing a byte and not a word?
+  state->vischars[0].target.route = 0; /* Stand still. */ // stores a byte, not a word
   transition(state, &solitary_pos);
 
   NEVER_RETURNS;
@@ -10737,7 +10734,7 @@ uint8_t item_visible(tgestate_t *state,
   const uint8_t *px;            /* was HL */
   xy_t           map_position;  /* was DE */
   int8_t         amount_visible_right; /* was A */
-  int8_t        Y1;          /* was A */
+  int8_t         Y1;            /* was A */
   uint16_t       width;         /* was BC */
   uint16_t       height;        /* was DE */
 

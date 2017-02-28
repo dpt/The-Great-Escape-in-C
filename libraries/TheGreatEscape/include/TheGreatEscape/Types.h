@@ -199,8 +199,6 @@ enum vischar_flags
   // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
-  vischar_BYTE2_BIT7                   = 1 << 7, // not yet understood
-
   vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
   vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero is at stored pos x, cleared when hero is at stored pos y
@@ -248,9 +246,6 @@ enum characterstruct_flags
   /* Byte 0 */
   characterstruct_CHARACTER_MASK       = 0x1F,   /**< Character index mask. */
   characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */ // set when on-screen (in vischar)?
-
-  /* Byte 5 */
-  characterstruct_BYTE5_MASK           = 0x7F,   // target low byte
 };
 
 /**
@@ -363,6 +358,19 @@ typedef uint8_t gametime_t;
 typedef uint8_t eventtime_t;
 
 /**
+ * Holds a target value.
+ */
+typedef struct target
+{
+#define target_ROUTE_WANDER 0xFF
+#define target_ROUTE_REVERSED (1 << 7)
+  uint8_t route; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
+  uint8_t step;  /** Step within the route. */
+}
+target_t;
+
+
+/**
  * Holds an X,Y position (16-bit).
  */
 typedef struct bigxy
@@ -421,8 +429,8 @@ typedef struct vischar
   /** $8001 flags */
   uint8_t         flags;
 
-  /** $8002 target location */
-  xy_t            target;
+  /** $8002 target */
+  target_t        target;
 
   /** $8004 position */
   // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
@@ -529,7 +537,7 @@ typedef struct characterstruct
   character_t character_and_flags;
   room_t      room;
   tinypos_t   pos;
-  xy_t        target;
+  target_t    target;
 }
 characterstruct_t;
 
@@ -563,20 +571,20 @@ typedef struct itemstruct
 itemstruct_t;
 
 /**
- * Maps a character to an event.
+ * Maps a route to an event.
  */
-typedef struct charactereventmap
+typedef struct route2event
 {
-  uint8_t x;
+  uint8_t route; // same type as target.route
   uint8_t handler;
 }
-charactereventmap_t;
+route2event_t;
 
 /**
  * Defines a character event handler.
  */
 typedef void (charevnt_handler_t)(tgestate_t *state,
-                                  xy_t       *target);
+                                  target_t   *target);
 
 /**
  * Defines a door's room, direction and position.
