@@ -179,7 +179,7 @@ struct tgestate
   /** $81D6: Indices of interior doors. */
   doorindex_t     interior_doors[4];
 
-   // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
+  // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
 #define MAX_INTERIOR_MASK_REFS 7
   /** $81DA: Interior mask data count. */
   uint8_t         interior_mask_data_count;

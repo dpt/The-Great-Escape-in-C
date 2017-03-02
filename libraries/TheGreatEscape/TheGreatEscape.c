@@ -1,10 +1,11 @@
 /**
  * TheGreatEscape.c
  *
- * Reimplementation of the ZX Spectrum 48K game "The Great Escape" created by
- * Denton Designs and published in 1986 by Ocean Software.
+ * Reimplementation in C of the 1986 ZX Spectrum 48K game "The Great Escape".
  *
- * This reimplementation copyright (c) David Thomas, 2012-2016.
+ * "The Great Escape" created by Denton Designs, published by Ocean Software.
+ *
+ * This reimplementation copyright (c) David Thomas, 2012-2017.
  * <dave@davespace.co.uk>.
  */
 
@@ -27,6 +28,7 @@
  *   variably-sized screen).
  * - Replace uint8_t counters, and other types which are smaller than int,
  *   with int where possible.
+ * - Merge loop elements into the body of the code.
  */
 
 /* GLOSSARY
@@ -34,7 +36,7 @@
  * - "Conv:"
  *   -- Code which has required adjustment.
  * - A call marked "exit via"
- *   -- The original code branched directly to this routine.
+ *   -- The original code branched directly to its target and exited via it.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -1106,7 +1108,7 @@ void pick_up_item(tgestate_t *state)
   itemstruct_t *itemstr; /* was HL */
   item_t       *pitem;   /* was DE */
   item_t        item;    /* was A */
-  attribute_t   attrs; 	 /* was A */
+  attribute_t   attrs;   /* was A */
 
   assert(state != NULL);
 
@@ -2017,8 +2019,11 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 
   proom = &state->room_index;
 
-  if (room_and_flags & (1 << 7)) // flag is?
+  if (room_and_flags & (1 << 7)) // flag means a room is specified
+  {
+    assert((room_and_flags & ~(1 << 7)) < room__LIMIT);
     return *proom == (room_and_flags & 0x7F); /* Return room only. */
+  }
 
   if (*proom != room_0_OUTDOORS)
     return 0; /* Indoors. */
@@ -5156,7 +5161,7 @@ void nighttime(tgestate_t *state)
     if (map_y + 16 < slstate->xy.y || slstate->xy.y + 16 < map_y)
       goto next;
 
-  middle_bit:
+middle_bit:
     // if searchlight.use_full_window == 0:
     //   the light is clipped to the left side of the window
     use_full_window = 0; // flag
@@ -5196,7 +5201,7 @@ void nighttime(tgestate_t *state)
     state->searchlight.use_full_window = use_full_window;
     searchlight_plot(state, attrs); // DE turned into HL from EX above
 
-  next:
+next:
     // POP HL
     // POP BC
     slstate++;
@@ -5367,7 +5372,7 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
         if (x < 7) // Conv: Constant 7 was in D
         {
           // don't render left of the game window
-        dont_plot:
+dont_plot:
           RL(pixels); // no plot
         }
         else
@@ -7385,7 +7390,7 @@ pop_next:
     uint8_t *slp;
     int      yy;
 
-    slp = &state->speccy->screen[(128+1) * state->width];
+    slp = &state->speccy->screen[(128 + 1) * state->width];
     for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
     {
       memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
@@ -7960,7 +7965,7 @@ found_empty_slot:
   Z = collision(state);
   if (Z == 0)
     Z = bounds_check(state, vischar);
-    // if Z == 1 then within wall bounds
+  // if Z == 1 then within wall bounds
 
   // POP DE (charstr2)
   // POP HL (vischar)

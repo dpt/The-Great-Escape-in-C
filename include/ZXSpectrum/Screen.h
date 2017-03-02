@@ -13,7 +13,7 @@ extern "C"
 {
 #endif
 
-  /**
+/**
  * Build conversion tables.
  *
  * Can be called multiple times.

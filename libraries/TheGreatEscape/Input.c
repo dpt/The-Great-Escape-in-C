@@ -217,7 +217,7 @@ static input_t inputroutine_fuller(tgestate_t *state)
   if (carry)
     left_right = input_RIGHT;
 
-  if (keybits & (1<<3))
+  if (keybits & (1 << 3))
     fire = input_FIRE;
   else
     fire = 0;
