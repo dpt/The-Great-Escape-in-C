@@ -380,7 +380,7 @@ void accept_bribe(tgestate_t *state);
 
 int bounds_check(tgestate_t *state, vischar_t *vischar);
 
-INLINE uint16_t multiply_by_8(uint8_t A);
+//INLINE uint16_t multiply_by_8(uint8_t A);
 
 int is_door_locked(tgestate_t *state);
 
@@ -518,7 +518,7 @@ void handle_target(tgestate_t *state,
                    const xy_t *new_target,
                    uint8_t     A);
 
-INLINE uint16_t multiply_by_1(uint8_t A);
+//INLINE uint16_t multiply_by_1(uint8_t A);
 
 INLINE const uint8_t *element_A_of_table_7738(uint8_t A);
 

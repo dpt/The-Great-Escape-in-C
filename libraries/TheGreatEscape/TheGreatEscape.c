@@ -5753,19 +5753,19 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $B1C7: Multiplies A by 8, returning the result in BC.
- *
- * Leaf.
- *
- * \param[in] A to be multiplied and widened.
- *
- * \return 'A' * 8 widened to a uint16_t. (was BC)
- */
-uint16_t multiply_by_8(uint8_t A)
-{
-  return A * 8;
-}
+///**
+// * $B1C7: Multiplies A by 8, returning the result in BC.
+// *
+// * Leaf.
+// *
+// * \param[in] A to be multiplied and widened.
+// *
+// * \return 'A' * 8 widened to a uint16_t. (was BC)
+// */
+//uint16_t multiply_by_8(uint8_t A)
+//{
+//  return A * 8;
+//}
 
 /* ----------------------------------------------------------------------- */
 
@@ -9449,17 +9449,17 @@ void handle_target(tgestate_t *state,
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $CB75: Widen A to BC.
- *
- * \param[in] A 'A' to be widened.
- *
- * \return 'A' widened to a uint16_t.
- */
-uint16_t multiply_by_1(uint8_t A)
-{
-  return A;
-}
+///**
+// * $CB75: Widen A to BC.
+// *
+// * \param[in] A 'A' to be widened.
+// *
+// * \return 'A' widened to a uint16_t.
+// */
+//uint16_t multiply_by_1(uint8_t A)
+//{
+//  return A;
+//}
 
 /* ----------------------------------------------------------------------- */
 
