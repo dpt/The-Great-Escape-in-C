@@ -3223,7 +3223,7 @@ void byte_A13E_common(tgestate_t *state,
     if (character & (1 << 0)) /* Odd numbered characters? */
     {
       target->y = 0x01;
-      A = character | (1 << 7);
+      A |= (1 << 7);
     }
   }
 
