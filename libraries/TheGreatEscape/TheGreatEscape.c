@@ -9279,9 +9279,9 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     Astacked = vischar->target.x; // $8002, ...
     // Conv: This is the [-2]+1 pattern which works out -1/+1.
     if (Astacked & vischar_BYTE2_BIT7)
-      vischar->target.x--;
+      vischar->target.y--;
     else
-      vischar->target.x++;
+      vischar->target.y++;
     // POP AF
 
     door = get_door(A); // door related
