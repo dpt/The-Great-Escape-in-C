@@ -3117,7 +3117,7 @@ void set_target(tgestate_t *state, vischar_t *vischar)
   if (ok == 255) /* End of door list. */
   {
     state->IY = vischar;
-    get_next_target_and_handle_it(state, vischar, &vischar->target);
+    (void) get_next_target_and_handle_it(state, vischar, &vischar->target);
   }
   else if (ok == (1 << 7)) /* Did a door thing. */
   {
@@ -3555,7 +3555,7 @@ void byte_A13E_anotherone_common(tgestate_t *state,
 {
   uint8_t route; /* was A */
 
-  assert(state    != NULL);
+  assert(state  != NULL);
   ASSERT_CHARACTER_VALID(character);
   assert(target != NULL);
 
@@ -3563,16 +3563,15 @@ void byte_A13E_anotherone_common(tgestate_t *state,
 
   if (character >= character_20_PRISONER_1)
   {
-    // target.x = 18..23 (route to sit) for prisoner 1..6
+    /* Prisoners 1..6 take routes 18..23 (routes to sitting). */
     route = character - 2;
   }
   else
   {
-    // guards
-
+    /* Guards take route 24 if even, or 25 if odd. */
     route = 24;
-    if (character & (1 << 0)) /* Odd numbered characters? */
-      route++; // gets hit during breakfast // would result in 25 which is the room number for breakfast ... which could be a clue
+    if (character & 1)
+      route++;
   }
 
   target->route = route;
@@ -3863,7 +3862,10 @@ void get_supertiles(tgestate_t *state)
     if (tiles >= &map[0] && (tiles + state->st_columns) < &map[MAPX * MAPY]) // conv: debugging
       memcpy(buf, tiles, state->st_columns);
     else
+    {
+      assert(0);
       memset(buf, 0x2a, state->st_columns); // debug
+    }
 
     buf   += state->st_columns;
     tiles += MAPX;
@@ -5692,7 +5694,7 @@ void accept_bribe(tgestate_t *state)
 
   state->IY->flags = 0;
 
-  get_next_target_and_handle_it(state, state->IY, &state->IY->target); /* FIXME these IYs. target should be HL? */
+  (void) get_next_target_and_handle_it(state, state->IY, &state->IY->target); /* FIXME these IYs. target should be HL? */
 
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
@@ -8042,7 +8044,7 @@ c592:
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->target
       // PUSH HL
-      ran_out_of_list(state, vischar, &vischar->target);
+      (void) ran_out_of_list(state, vischar, &vischar->target);
       // POP HL
       // DE = HL + 2; // -> vischar->pos
       goto c592;
@@ -8190,7 +8192,7 @@ uint8_t get_next_target(tgestate_t *state,
 
   uint8_t        route;     /* was A */
   doorindex_t    doorindex; /* was A */
-  uint8_t        step;         /* was A or C */
+  uint8_t        step;      /* was A or C */
   const uint8_t *pdoors;    /* was DE */
   int16_t        index;     // signed /* was H */
   const uint8_t *pdoor;     /* was HL */
@@ -8203,7 +8205,7 @@ uint8_t get_next_target(tgestate_t *state,
   *target_out = NULL; // Conv: Added.
 
   route = target->route;
-  if (route == target_ROUTE_WANDER) /* Random wandering (using .y + 0..7 to index locations[]). */
+  if (route == target_ROUTE_WANDER) /* Random wandering (using .step + rand(0..7) to index locations[]). */
   {
     // Conv: In the original code *HL is used as a temporary.
 
@@ -8921,7 +8923,7 @@ set_pos:
       // hero is under automatic control
 
       vischar2->flags = 0;
-      get_next_target_and_handle_it(state, vischar2, &vischar2->target);
+      (void) get_next_target_and_handle_it(state, vischar2, &vischar2->target);
       return;
     }
     else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
@@ -8938,7 +8940,7 @@ set_pos:
         vischar2->flags        = 0;
         vischar2->target.route = target_ROUTE_WANDER; /* Choose random locations[]. */
         vischar2->target.step  = 0; /* 0..7 */
-        get_next_target_and_handle_it(state, vischar2, &vischar2->target);
+        (void) get_next_target_and_handle_it(state, vischar2, &vischar2->target);
         return;
       }
     }
@@ -8964,7 +8966,7 @@ set_pos:
 
       /* Bribed character was not visible. */
       vischar2->flags = 0;
-      get_next_target_and_handle_it(state, vischar2, &vischar2->target);
+      (void) get_next_target_and_handle_it(state, vischar2, &vischar2->target);
       return;
 
 bribed_visible:
@@ -9183,12 +9185,11 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
   uint8_t          food_discovered_counter; /* was A */
   uint8_t          step;                    /* was C */
   uint8_t          route;                   /* was A */
+  doorindex_t      doorindex;               /* was A */
   uint8_t          route2;                  /* was A */
   const door_t    *door;                    /* was HL */
   const tinypos_t *tinypos;                 /* was HL */
   vischar_t       *vischarHL;               /* was HL */
-
-  doorindex_t      doorindex;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9269,7 +9270,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     {
       /* Hero's vischar only. */
       vischarHL->flags &= ~vischar_FLAGS_DOOR_THING;
-      get_next_target_and_handle_it(state, vischarHL, &vischarHL->target);
+      (void) get_next_target_and_handle_it(state, vischarHL, &vischarHL->target);
     }
 
     // POP HL_tinypos
@@ -9290,19 +9291,19 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->target.step++;
   }
 
-  get_next_target_and_handle_it(state, vischar, &vischar->target); // was fallthrough
+  (void) get_next_target_and_handle_it(state, vischar, &vischar->target); // was fallthrough
 }
 
 /**
- * $CB23: (unknown) get_next_target_and_handle_it
+ * $CB23: Calls get_next_target
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void get_next_target_and_handle_it(tgestate_t *state,
-                                   vischar_t  *vischar,
-                                   target_t   *target)
+uint8_t get_next_target_and_handle_it(tgestate_t *state,
+                                      vischar_t  *vischar,
+                                      target_t   *target)
 {
   uint8_t   get_next_target_flags; /* was A */
   target_t *new_target;
@@ -9313,13 +9314,24 @@ void get_next_target_and_handle_it(tgestate_t *state,
 
   get_next_target_flags = get_next_target(state, target, &new_target);
   if (get_next_target_flags != 255) /* Didn't hit end of list case. */
-    handle_target(state, vischar, target, new_target, get_next_target_flags);
+  {
+    /* Chunk from $CB61 */
+
+    if (get_next_target_flags == (1 << 7)) // door case
+      vischar->flags |= vischar_FLAGS_DOOR_THING;
+
+    target[1] = *new_target; // this must set vischar->pos.x/y
+
+    return 1 << 7;
+  }
   else
-    ran_out_of_list(state, vischar, target); // was fallthrough
+  {
+    return ran_out_of_list(state, vischar, target); // was fallthrough
+  }
 }
 
 /**
- * $CB2D: (unknown) ran_out_of_list
+ * $CB2D: get_next_target has run out of route.
  *
  * Called by spawn_character, get_next_target_and_handle_it.
  *
@@ -9327,7 +9339,9 @@ void get_next_target_and_handle_it(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] target  Pointer to vischar->target.   (was HL)
  */
-void ran_out_of_list(tgestate_t *state, vischar_t *vischar, target_t *target)
+uint8_t ran_out_of_list(tgestate_t *state,
+                        vischar_t  *vischar,
+                        target_t   *target)
 {
   character_t character; /* was A */
   uint8_t     route;     /* was A */
@@ -9359,9 +9373,9 @@ do_character_event:
    */
 
   character_event(state, target);
-  if (target->route != 0)
-    get_next_target_and_handle_it(state, vischar, target); // re-enter
-  return; // exit via
+  if (target->route == 0) /* standing still */
+    return 0;
+  return get_next_target_and_handle_it(state, vischar, target); // re-enter
 
 reverse_route:
   /* We arrive here if:
@@ -9377,41 +9391,10 @@ reverse_route:
   else
     target->step++;
 
-  // Conv: 'A = 0' removed as it has no effect. [Present in DOS version]
+  return 0;
 }
 
 // $CB5F,2 Unreferenced bytes. [Absent in DOS version]
-
-/**
- * $CB61: (unknown) handle_target
- *
- * Only ever called by get_next_target_and_handle_it. Consider merging this into it.
- *
- * \param[in] state      Pointer to game state.
- * \param[in] vischar    Pointer to visible character. (was IY)
- * \param[in] pushed_HL  Pointer to target.            (was stack)
- * \param[in] new_target Pointer to target.            (was HL)
- * \param[in] A          0/128 - as passed by get_next_target
- */
-void handle_target(tgestate_t     *state,
-                   vischar_t      *vischar,
-                   target_t       *pushed_HL,
-                   const target_t *new_target,
-                   uint8_t         A)
-{
-  assert(state        != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
-  assert(pushed_HL    != NULL);
-  assert(new_target   != NULL);
-  // assert(A);
-
-  if (A == (1 << 7)) // door case
-    vischar->flags |= vischar_FLAGS_DOOR_THING;
-
-  pushed_HL[1] = *new_target;
-
-  A = (1 << 7); // returned?
-}
 
 /* ----------------------------------------------------------------------- */
 

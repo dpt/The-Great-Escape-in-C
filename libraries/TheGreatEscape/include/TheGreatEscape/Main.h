@@ -508,17 +508,12 @@ uint8_t vischar_at_pos_y(tgestate_t *state,
 
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
-void get_next_target_and_handle_it(tgestate_t *state,
-                                   vischar_t  *vischar,
-                                   target_t   *target);
-void ran_out_of_list(tgestate_t *state,
-                     vischar_t  *vischar,
-                     target_t   *target);
-void handle_target(tgestate_t     *state,
-                   vischar_t      *vischar,
-                   target_t       *pushed_HL,
-                   const target_t *new_target,
-                   uint8_t         A);
+uint8_t get_next_target_and_handle_it(tgestate_t *state,
+                                      vischar_t  *vischar,
+                                      target_t   *target);
+uint8_t ran_out_of_list(tgestate_t *state,
+                        vischar_t  *vischar,
+                        target_t   *target);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);
 

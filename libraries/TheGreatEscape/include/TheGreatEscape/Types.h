@@ -191,7 +191,7 @@ enum vischar_flags
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
-  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling. reset by set_hero_target. set by set_target. seems related to door entering.
+  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling. reset by set_hero_target. set by set_target. seems related to door entering. // this may be "target was a door"
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
   // vischar_FLAGS_DOOR_THING:
@@ -368,7 +368,6 @@ typedef struct target
   uint8_t step;  /** Step within the route. */
 }
 target_t;
-
 
 /**
  * Holds an X,Y position (16-bit).
