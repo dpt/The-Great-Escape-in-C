@@ -107,6 +107,14 @@ do {                                                          \
   assert(p.y < 0x78);                                         \
 } while (0)
 
+#define ASSERT_ROUTE_VALID(r)                                 \
+do                                                            \
+{                                                             \
+  assert((r).index == 0xFF ||                                 \
+        ((r).index & ~route_REVERSED) < routes__LIMIT);       \
+}                                                             \
+while (0)
+
 /* ----------------------------------------------------------------------- */
 
 // FORWARD REFERENCES
@@ -242,60 +250,60 @@ timedevent_handler_t event_go_to_time_for_bed;
 timedevent_handler_t event_new_red_cross_parcel;
 timedevent_handler_t event_time_for_bed;
 timedevent_handler_t event_search_light;
-void set_guards_target(tgestate_t *state, target_t target);
+void set_guards_route(tgestate_t *state, route_t route);
 
 extern const character_t prisoners_and_guards[10];
 
 void wake_up(tgestate_t *state);
 void end_of_breakfast(tgestate_t *state);
 
-void set_hero_target(tgestate_t *state, target_t target);
+void set_hero_route(tgestate_t *state, route_t route);
 
 void go_to_time_for_bed(tgestate_t *state);
 
-void set_prisoners_and_guards_target(tgestate_t *state, target_t *target);
-void set_prisoners_and_guards_target_B(tgestate_t *state, target_t *target);
-void set_character_target(tgestate_t *state,
+void set_prisoners_and_guards_route(tgestate_t *state, route_t *route);
+void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *route);
+void set_character_route(tgestate_t  *state,
                           character_t character,
-                          target_t    target);
-void set_target(tgestate_t *state, vischar_t *vischar);
+                          route_t     route);
+void set_route(tgestate_t *state, vischar_t *vischar);
 
-INLINE void store_target(target_t target, target_t *ptarget);
+INLINE void store_route(route_t route, route_t *proute);
 
 void byte_A13E_is_nonzero(tgestate_t *state,
-                          target_t   *target);
+                          route_t   *route);
 void byte_A13E_is_zero(tgestate_t *state,
-                       target_t   *target);
+                       route_t   *route);
 void byte_A13E_common(tgestate_t *state,
                       character_t character,
-                      target_t   *target);
+                      route_t    *route);
 
 void character_sits(tgestate_t *state,
                     uint8_t     A,
-                    target_t   *target);
+                    route_t    *route);
 void character_sleeps(tgestate_t *state,
                       uint8_t     A,
-                      target_t   *target);
+                      route_t   *route);
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
-                                target_t   *target);
+                                route_t    *route);
 void select_room_and_plot(tgestate_t *state);
 
 void hero_sits(tgestate_t *state);
 void hero_sleeps(tgestate_t *state);
 void hero_sit_sleep_common(tgestate_t *state, uint8_t *HL);
 
-void set_target_0x0E00(tgestate_t *state);
-void set_target_0x8E04(tgestate_t *state);
-void set_target_0x1000(tgestate_t *state);
+void set_route_0x0E00(tgestate_t *state);
+void set_route_0x8E04(tgestate_t *state);
+void set_route_0x1000(tgestate_t *state);
 
 void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     target_t   *target);
+                                     route_t    *route);
 void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  target_t   *target);
+                                  route_t    *route);
 void byte_A13E_anotherone_common(tgestate_t  *state,
                                  character_t  character,
-                                 target_t    *target);
+                                 route_t     *route);
 
 void go_to_roll_call(tgestate_t *state);
 
@@ -459,8 +467,8 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_next_target(tgestate_t *state,
-                        target_t   *target,
-                        target_t  **target_out);
+                        route_t    *route,
+                        route_t   **route_out);
 
 void move_characters(tgestate_t *state);
 
@@ -472,7 +480,7 @@ int change_by_delta(int8_t         max,
 characterstruct_t *get_character_struct(tgestate_t *state,
                                         character_t character);
 
-void character_event(tgestate_t *state, target_t *target);
+void character_event(tgestate_t *state, route_t *route);
 
 charevnt_handler_t charevnt_handler_4_solitary_ends;
 charevnt_handler_t charevnt_handler_6;
@@ -510,10 +518,10 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_next_target_and_handle_it(tgestate_t *state,
                                       vischar_t  *vischar,
-                                      target_t   *target);
-uint8_t ran_out_of_list(tgestate_t *state,
-                        vischar_t  *vischar,
-                        target_t   *target);
+                                      route_t   *route);
+uint8_t route_ended(tgestate_t *state,
+                    vischar_t  *vischar,
+                    route_t    *route);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);
 

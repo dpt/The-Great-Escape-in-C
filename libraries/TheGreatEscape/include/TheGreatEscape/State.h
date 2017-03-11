@@ -219,7 +219,7 @@ struct tgestate
   uint8_t         automatic_player_counter;
 
   /** $A13A: Set to 0xFF when sent to solitary, inhibiting player control. Zero otherwise.
-   If nonzero then player control is inhibited (process_player_input, set_hero_target). */
+   If nonzero then player control is inhibited (process_player_input, set_hero_route). */
   uint8_t         in_solitary;
 
   /** $A13B: Set to 0xFF when morale hits zero, inhibiting player control. Zero otherwise. */
@@ -234,7 +234,7 @@ struct tgestate
   /** $A13E: (unknown) (flag: 0 or 255).
    *
    * Set to 0xFF only when move_characters is entered.
-   * Set to 0x00 in set_target, follow_suspicious_character and spawn_character.
+   * Set to 0x00 in set_route, follow_suspicious_character and spawn_character.
    */
   uint8_t         entered_move_characters;
 

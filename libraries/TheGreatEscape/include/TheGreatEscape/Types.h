@@ -191,12 +191,12 @@ enum vischar_flags
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPC only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
-  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling. reset by set_hero_target. set by set_target. seems related to door entering. // this may be "target was a door"
+  vischar_FLAGS_DOOR_THING             = 1 << 6, // affects scaling. reset by set_hero_route. set by set_route. seems related to door entering. // this may be "target was a door"
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
 
   // vischar_FLAGS_DOOR_THING:
-  // set by set_target (get_next_target A == 128 case), spawn_character (get_next_target A == 128 case), handle_target (get_next_target A == 128 case)
-  // cleared by set_hero_target, set_character_target (store_to_vischar case), bribes_solitary_food (character entering door chunk)
+  // set by set_route (get_next_target A == 128 case), spawn_character (get_next_target A == 128 case), handle_route (get_next_target A == 128 case)
+  // cleared by set_hero_route, set_character_route (store_to_vischar case), bribes_solitary_food (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), bribes_solitary_food (character entering door chunk)
 
   vischar_BYTE7_MASK_LO                = 0x0F,
@@ -358,16 +358,16 @@ typedef uint8_t gametime_t;
 typedef uint8_t eventtime_t;
 
 /**
- * Holds a target value.
+ * Holds a route value.
  */
-typedef struct target
+typedef struct route
 {
-#define target_ROUTE_WANDER 0xFF
-#define target_ROUTE_REVERSED (1 << 7)
-  uint8_t route; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
+#define route_WANDER 0xFF
+#define route_REVERSED (1 << 7)
+  uint8_t index; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
   uint8_t step;  /** Step within the route. */
 }
-target_t;
+route_t;
 
 /**
  * Holds an X,Y position (16-bit).
@@ -428,8 +428,8 @@ typedef struct vischar
   /** $8001 flags */
   uint8_t         flags;
 
-  /** $8002 target */
-  target_t        target;
+  /** $8002 route */
+  route_t         route;
 
   /** $8004 position */
   // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
@@ -536,7 +536,7 @@ typedef struct characterstruct
   character_t character_and_flags;
   room_t      room;
   tinypos_t   pos;
-  target_t    target;
+  route_t     route;
 }
 characterstruct_t;
 
@@ -574,7 +574,7 @@ itemstruct_t;
  */
 typedef struct route2event
 {
-  uint8_t route; // same type as target.route
+  uint8_t route; // same type as route.index
   uint8_t handler;
 }
 route2event_t;
@@ -583,7 +583,7 @@ route2event_t;
  * Defines a character event handler.
  */
 typedef void (charevnt_handler_t)(tgestate_t *state,
-                                  target_t   *target);
+                                  route_t    *route);
 
 /**
  * Defines a door's room, direction and position.
