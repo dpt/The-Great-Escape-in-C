@@ -73,10 +73,10 @@ do {                                                          \
   assert(i >= 0 && i < item__LIMIT);                          \
 } while (0)
 
-#define ASSERT_INTERIOR_TILES_VALID(p)                                \
-do {                                                                  \
-  assert(p >= &interior_tiles[0].row[0]);                             \
-  assert(p <= &interior_tiles[interiorobjecttile__LIMIT - 1].row[0]); \
+#define ASSERT_INTERIOR_TILES_VALID(p)                          \
+do {                                                            \
+  assert(p >= &interior_tiles[0].row[0]);                       \
+  assert(p <= &interior_tiles[interiortile__LIMIT - 1].row[0]); \
 } while (0)
 
 #define ASSERT_DOORS_VALID(p)                                 \

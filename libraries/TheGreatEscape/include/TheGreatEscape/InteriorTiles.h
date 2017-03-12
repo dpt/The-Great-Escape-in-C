@@ -6,18 +6,18 @@
 /**
  * Identifiers of tiles used to draw interior objects.
  */
-enum interior_object_tile
+enum interiortileindex
 {
-  interiorobjecttile__LIMIT = 194,
-  interiorobjecttile_ESCAPE = 255
+  interiortile__LIMIT = 194,
+  interiortile_ESCAPE = 255
 };
 
 /**
  * A tile used to draw interior objects.
  */
-typedef enum interior_object_tile objecttile_t;
+typedef uint8_t interiortileindex_t;
 
-extern const tile_t interior_tiles[interiorobjecttile__LIMIT];
+extern const tile_t interior_tiles[interiortile__LIMIT];
 
 #endif /* INTERIOR_TILES_H */
 

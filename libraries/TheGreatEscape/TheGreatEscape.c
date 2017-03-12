@@ -633,10 +633,10 @@ expand:
       assert(height > 0);
 
       byte = *data;
-      if (byte == interiorobjecttile_ESCAPE)
+      if (byte == interiortile_ESCAPE)
       {
         byte = *++data;
-        if (byte != interiorobjecttile_ESCAPE)
+        if (byte != interiortile_ESCAPE)
         {
           byte &= 0xF0;
           if (byte >= 128)
@@ -721,14 +721,14 @@ range:
  */
 void plot_interior_tiles(tgestate_t *state)
 {
-  int                rows;          /* added */
-  int                columns;       /* added */
-  uint8_t           *window_buf;    /* was HL */
-  const tileindex_t *tiles_buf;     /* was DE */
-  int                rowcounter;    /* was C */
-  int                columncounter; /* was B */
-  int                iters;         /* was B */
-  int                stride;        /* was C */
+  int                        rows;          /* added */
+  int                        columns;       /* added */
+  uint8_t                   *window_buf;    /* was HL */
+  const interiortileindex_t *tiles_buf;     /* was DE */
+  int                        rowcounter;    /* was C */
+  int                        columncounter; /* was B */
+  int                        iters;         /* was B */
+  int                        stride;        /* was C */
 
   assert(state != NULL);
 
@@ -736,7 +736,7 @@ void plot_interior_tiles(tgestate_t *state)
   columns    = state->columns; // 24
 
   window_buf = state->window_buf;
-  tiles_buf  = state->tile_buf;
+  tiles_buf  = state->tile_buf; // note: type is coerced
 
   rowcounter = rows;
   do

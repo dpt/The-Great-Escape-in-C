@@ -76,7 +76,7 @@
 		556D1A1B1B135E3C0036AED0 /* Input.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Input.h; path = TheGreatEscape/Input.h; sourceTree = "<group>"; };
 		556D1A1C1B1361570036AED0 /* Menu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Menu.h; path = TheGreatEscape/Menu.h; sourceTree = "<group>"; };
 		556D1A1D1B13617B0036AED0 /* Menu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Menu.c; sourceTree = "<group>"; };
-		556D1A1F1B1363780036AED0 /* Main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Main.h; path = TheGreatEscape/Main.h; sourceTree = "<group>"; };
+		556D1A1F1B1363780036AED0 /* Main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Main.h; path = TheGreatEscape/Main.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		556D1A201B1379B50036AED0 /* Text.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Text.h; path = TheGreatEscape/Text.h; sourceTree = "<group>"; };
 		556D1A211B1379CF0036AED0 /* Text.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Text.c; sourceTree = "<group>"; };
 		556D1A231B137A300036AED0 /* Messages.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Messages.h; path = TheGreatEscape/Messages.h; sourceTree = "<group>"; };
@@ -89,7 +89,7 @@
 		558FC6891A0EE15B00A4F50F /* Font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Font.h; path = TheGreatEscape/Font.h; sourceTree = "<group>"; };
 		558FC68A1A0EE15B00A4F50F /* InteriorObjectDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorObjectDefs.h; path = TheGreatEscape/InteriorObjectDefs.h; sourceTree = "<group>"; };
 		558FC68B1A0EE15B00A4F50F /* InteriorObjects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorObjects.h; path = TheGreatEscape/InteriorObjects.h; sourceTree = "<group>"; };
-		558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InteriorTiles.h; path = TheGreatEscape/InteriorTiles.h; sourceTree = "<group>"; };
+		558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = InteriorTiles.h; path = TheGreatEscape/InteriorTiles.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		558FC68D1A0EE15B00A4F50F /* ItemBitmaps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ItemBitmaps.h; path = TheGreatEscape/ItemBitmaps.h; sourceTree = "<group>"; };
 		558FC68E1A0EE15B00A4F50F /* Items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Items.h; path = TheGreatEscape/Items.h; sourceTree = "<group>"; };
 		558FC68F1A0EE15B00A4F50F /* Map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Map.h; path = TheGreatEscape/Map.h; sourceTree = "<group>"; };
@@ -107,7 +107,7 @@
 		558FC69B1A0EE15B00A4F50F /* Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Types.h; path = TheGreatEscape/Types.h; sourceTree = "<group>"; };
 		558FC69C1A0EE15B00A4F50F /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = TheGreatEscape/Utils.h; sourceTree = "<group>"; };
 		558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InteriorObjectDefs.c; sourceTree = "<group>"; };
-		558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InteriorTiles.c; sourceTree = "<group>"; };
+		558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = InteriorTiles.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ItemBitmaps.c; sourceTree = "<group>"; };
 		558FC6A01A0EE15B00A4F50F /* Map.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Map.c; sourceTree = "<group>"; };
 		558FC6A11A0EE15B00A4F50F /* Music.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Music.c; sourceTree = "<group>"; };

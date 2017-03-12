@@ -22,6 +22,4 @@ typedef struct
 }
 tile_t;
 
-extern const tile_t interior_tiles[194];
-
 #endif /* TILES_H */
