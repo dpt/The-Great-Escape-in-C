@@ -39,7 +39,7 @@ enum
 /**
  * Identifiers of game characters.
  */
-typedef enum character
+enum character
 {
   character_0_COMMANDANT,
   character_1_GUARD_1,
@@ -72,8 +72,9 @@ typedef enum character
   character_28_CRATE,
   character__LIMIT,
   character_NONE = 255
-}
-character_t;
+};
+
+typedef uint8_t character_t;
 
 /**
  * Identifiers of character structs.

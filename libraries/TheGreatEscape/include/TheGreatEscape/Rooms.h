@@ -1,6 +1,8 @@
 #ifndef ROOMS_H
 #define ROOMS_H
 
+#include <stdint.h>
+
 /* Key
  *
  *   '' => door (up/down)
@@ -132,7 +134,7 @@ enum room
 /**
  * A game room.
  */
-typedef enum room room_t;
+typedef uint8_t room_t;
 
 #endif /* ROOMS_H */
 

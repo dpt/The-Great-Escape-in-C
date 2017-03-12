@@ -1,6 +1,8 @@
 #ifndef ITEMS_H
 #define ITEMS_H
 
+#include <stdint.h>
+
 /**
  * Identifiers of game items.
  */
@@ -29,7 +31,7 @@ enum item
 /**
  * A game item.
  */
-typedef enum item item_t;
+typedef uint8_t item_t;
 
 #endif /* ITEMS_H */
 
