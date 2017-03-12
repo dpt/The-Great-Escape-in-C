@@ -5860,6 +5860,7 @@ found:
     return;
 
   vischar->room = (door_pos->room_and_flags & ~doorpos_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in doors[])
+  ASSERT_ROOM_VALID(vischar->room);
   if ((door_pos->room_and_flags & doorpos_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
     /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
@@ -8302,6 +8303,7 @@ void move_characters(tgestate_t *state)
 
   /* Are any items to be found in the same room as the character? */
   room = charstr->room;
+  ASSERT_ROOM_VALID(room);
   if (room != room_0_OUTDOORS)
     /* This discovers one item at a time. */
     if (is_item_discoverable_interior(state, room, &item) == 0)

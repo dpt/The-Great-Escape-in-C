@@ -65,7 +65,8 @@ do {                                                          \
 
 #define ASSERT_ROOM_VALID(r)                                  \
 do {                                                          \
-  assert(r >= 0 && r < room__LIMIT);                          \
+  assert(r == room_NONE ||                                    \
+         (r >= 0 && r < room__LIMIT));                        \
 } while (0)
 
 #define ASSERT_ITEM_VALID(i)                                  \
