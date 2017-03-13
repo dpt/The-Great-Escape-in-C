@@ -231,10 +231,13 @@ struct tgestate
   /** $A13D: Clock. Incremented once every 64 ticks of game_counter. */
   eventtime_t     clock;
 
-  /** $A13E: (unknown) (flag: 0 or 255).
+  /** $A13E: Set to 0xFF when character_index is to be used for character events. Zero for vischar events.
    *
    * Set to 0xFF only when move_characters is entered.
    * Set to 0x00 in set_route, follow_suspicious_character and spawn_character.
+   *
+   * Causes character events to use character_index, not IY (vischar). This
+   * needs to get set ahead of anything which causes a character event.
    */
   uint8_t         entered_move_characters;
 

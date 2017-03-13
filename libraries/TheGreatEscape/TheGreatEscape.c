@@ -3317,7 +3317,7 @@ void character_sleeps(tgestate_t *state,
   else
     room = room_5_HUT3RIGHT;
 
-  character_sit_sleep_common(state, room, route);
+  character_sit_sleep_common(state, room, route); // was fallthrough
 }
 
 /**
@@ -7927,8 +7927,8 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   const character_class_data_t *metadata; /* was DE */
   int                          Z;
   room_t                       room;      /* was A */
-  uint8_t                      A;         /* was A */
-  xy_t                        *route;     /* was HL */  /// DAVE THIS ONE
+  uint8_t                      get_next_target_flags; /* was A */
+  route_t                     *route;     /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -8037,17 +8037,13 @@ found_empty_slot:
   vischar->route = charstr->route;
   //HL -= 2; // -> charstr->route
 
-c592:
-  if (charstr->route.index == 0) /* Stand still */
-  {
-    // DE += 3; // -> vischar->counter_and_flags
-  }
-  else
+again:
+  if (charstr->route.index != 0) /* if not stood still */
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
-    A = get_next_target(state, &charstr->route, &route);
-    if (A == 255) /* End of door list. */
+    get_next_target_flags = get_next_target(state, &charstr->route, &route);
+    if (get_next_target_flags == 255) /* End of door list. */
     {
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->route
@@ -8055,9 +8051,9 @@ c592:
       (void) route_ended(state, vischar, &vischar->route);
       // POP HL
       // DE = HL + 2; // -> vischar->pos
-      goto c592;
+      goto again;
     }
-    else if (A == (1 << 7)) /* Did a door thing. */
+    else if (get_next_target_flags == (1 << 7)) /* Did a door thing. */
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
@@ -8577,6 +8573,8 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  *
  * Sampling shows this can be a charstruct.route or a vischar.route.
  *
+ * Theory: That this is triggered at the end of a route.
+ *
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to a route.    (was HL).
  */
@@ -8585,34 +8583,34 @@ void character_event(tgestate_t *state, route_t *route)
   /* $C7F9 */
   static const route2event_t eventmap[24] =
   {
-    { 38 | route_REVERSED,  0 },
-    { 39 | route_REVERSED,  0 },
-    { 40 | route_REVERSED,  1 },
-    { 41 | route_REVERSED,  1 },
+    { 38 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
+    { 39 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
+    { 40 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
+    { 41 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
 
-    {  5,                   0 },
-    {  6,                   1 },
+    {  5,                   0 }, /* target wanders locations 8..15 */
+    {  6,                   1 }, /* target wanders locations 16..23 */
     {  5 | route_REVERSED,  3 },
     {  6 | route_REVERSED,  3 },
 
-    { 14,                   2 },
-    { 15,                   2 },
-    { 14 | route_REVERSED,  0 },
-    { 15 | route_REVERSED,  1 },
+    { 14,                   2 }, /* target wanders locations 56..63 */
+    { 15,                   2 }, /* target wanders locations 56..63 */
+    { 14 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
+    { 15 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
 
     { 16,                   5 },
     { 17,                   5 },
-    { 16 | route_REVERSED,  0 },
-    { 17 | route_REVERSED,  1 },
+    { 16 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
+    { 17 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
 
-    { 32 | route_REVERSED,  0 },
-    { 33 | route_REVERSED,  1 },
+    { 32 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
+    { 33 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
     { 42,                   7 },
-    { 44,                   8 }, /* sleeps */
-    { 43,                   9 }, /* sits */
+    { 44,                   8 }, /* hero sleeps */
+    { 43,                   9 }, /* hero sits */
     { 36 | route_REVERSED,  6 },
-    { 36,                  10 }, /* released from solitary .. walking out? */
-    { 37,                   4 }  /* morale related .. re-enables player control after solitary released? */
+    { 36,                  10 }, /* hero released from solitary */
+    { 37,                   4 }  /* solitary ends */
   };
 
   /* $C829 */
@@ -9316,7 +9314,7 @@ uint8_t get_next_target_and_handle_it(tgestate_t *state,
                                       vischar_t  *vischar,
                                       route_t    *route)
 {
-  uint8_t   get_next_target_flags; /* was A */
+  uint8_t  get_next_target_flags; /* was A */
   route_t *new_route;
 
   assert(state != NULL);
@@ -9356,24 +9354,22 @@ uint8_t route_ended(tgestate_t *state,
                     route_t    *route)
 {
   character_t character;  /* was A */
-  uint8_t     routeindex; /* was A */
 
-  assert(state    != NULL);
+  assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  assert(route   != NULL);
+  assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
   /* If not the hero's vischar ... */
   if (route != &state->vischars[0].route) /* Conv: was (L != 0x02) */
   {
     character = vischar->character & vischar_CHARACTER_MASK;
+
+    /* Call character event for every step of the commandant route 36. */
     if (character == character_0_COMMANDANT)
-    {
-      routeindex = route->index & ~route_REVERSED; // doesn't need temp var really
-      if (routeindex == 36)
-        goto do_character_event; // character index
-      character = 0; // force the next 'if' statement // probably not needed in this version
-    }
+      if ((route->index & ~route_REVERSED) == 36)
+        goto do_character_event;
+
     if (character <= character_11_GUARD_11)
       goto reverse_route;
   }
