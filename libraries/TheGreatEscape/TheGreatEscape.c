@@ -8195,77 +8195,71 @@ uint8_t get_next_target(tgestate_t *state,
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
   uint8_t        routeindex; /* was A */
-  doorindex_t    doorindex; /* was A */
-  uint8_t        step;      /* was A or C */
-  const uint8_t *pdoors;    /* was DE */
-  int16_t        index;     // signed /* was H */
-  const uint8_t *pdoor;     /* was HL */
-  const door_t  *door;      /* was HL */
+  uint8_t        index;      /* was ? */
+  uint8_t        step;       /* was A or C */
+  const uint8_t *routebytes; /* was DE */
+  uint8_t        routebyte;  /* was A */
+  const door_t  *door;       /* was HL */
 
   assert(state     != NULL);
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
   assert(route_out != NULL);
 
-  *route_out = NULL; // Conv: Added.
+  *route_out = NULL; /* Conv: Added. */
 
   routeindex = route->index;
-  if (routeindex == route_WANDER) /* Random wandering (using .step + rand(0..7) to index locations[]). */
+  if (routeindex == route_WANDER)
   {
+    /* Random wandering (using .step + rand(0..7) to index locations[]). */
+
     // Conv: In the original code *HL is used as a temporary.
 
     /* Randomise the bottom 3 bits of location's high byte. */
-    // Q. Significance of these three bottommost bits?
-    step = (route->step & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
-    route->step = step;
+    index = (route->step & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
+    route->step = index;
   }
   else
   {
-    // PUSH HL
     step = route->step;
-    // 'doors' is not ideal naming these things can be doors/locations/terminators
-    pdoors = get_route(routeindex); // perhaps these are character routes, door-to-door
-    assert(pdoors);
+
+    routebytes = get_route(routeindex);
+    assert(routebytes != NULL);
 
     if (step == 0xFF)
-      index = -1;
+      /* Conv: Previous code was relying on being able to fetch the preceding
+       * route's final byte (0xFF) in all cases. That's not going to work
+       * with the way routes are defined in the portable version of the game
+       * so instead just set routebyte to 0xFF. */
+      routebyte = 0xFF;
     else
-      index = step;
+      routebyte = routebytes[step]; // HL was temporary
 
-    pdoor = pdoors + index;
-    // EX DE,HL
-    doorindex = *pdoor;
-    // POP HL // was interleaved
-    if (doorindex == door_NONE) /* end of list? */
+    if (routebyte == 0xFF)
     {
-      //printf("get_next_target: end of list case\n");
+      /* 255: End of route */
       *route_out = route;
       return 255; /* Conv: Was a goto to a return. */
     }
-    // is this door_LOCKED or door_REVERSE? (same below)
-    else if ((doorindex & ~door_LOCKED) < 40) // a door in this case, but not a door otherwise?
+    else if ((routebyte & ~door_REVERSE) < 40)
     {
-      // doorindex = *pdoor; // removed redundant reload
-      // Am I sure this is route.index because it looks like it might be retesting 'door' so it get wiped.
-      // yeah, sure it is. could just be 'x' i think.
+      /* < 40: A door */
       if (route->index & route_REVERSED)
-        doorindex ^= door_LOCKED; // 762C, 8002, 7672, 7679, 7680, 76A3, 76AA, 76B1, 76B8, 76BF, ... looks quite general ... 8002 looks wrong
-      // sampled HL = 7617 (character_structs.location)  762c (charstructs again)
-      door = get_door(doorindex);
-      // sampled HL = 78F6 (doors.room_and_flags)  79ea (door_t again)
+        routebyte ^= door_REVERSE;
+      door = get_door(routebyte);
       *route_out = &door->pos; // so this IS returning a tinypos in doors
       return 1 << 7;
     }
     else
     {
-      step = doorindex - 40; // removed redundant reload
+      /* 40 .. 117: A location index */
+      index = routebyte - 40;
     }
   }
 
-  assert(step < NELEMS(state->locations));
+  assert(index < NELEMS(state->locations));
 
-  // sampled A = $38,2D,02,06,1E,20,21,3C,23,2B,3A,0B,2D,04,03,1C,1B,21,3C,...
-  *route_out = &state->locations[step];
+  *route_out = &state->locations[index];
 
   return 0;
 }
