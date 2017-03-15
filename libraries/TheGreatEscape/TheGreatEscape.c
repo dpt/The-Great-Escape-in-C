@@ -821,198 +821,189 @@ const door_t doors[door_MAX * 2] =
   // could these be deltas rather than absolute values?
 
   // 0 - gate - initially locked
-  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x8A,  6 } }, // 0 // gates
+  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x8A,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x8E,  6 } },
-
   // 1 - gate - initially locked
-  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x7A,  6 } }, // gates
+  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x7A,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x7E,  6 } },
-
+  // 2
   { ROOMDIR(room_34,                      TL), { 0x8A, 0xB3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x10, 0x34, 12 } },
-
+  // 3
   { ROOMDIR(room_48,                      TL), { 0xCC, 0x79,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x10, 0x34, 12 } },
-
+  // 4
   { ROOMDIR(room_28_HUT1LEFT,             TR), { 0xD9, 0xA3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
-
-  { ROOMDIR(room_1_HUT1RIGHT,             TL), { 0xD4, 0xBD,  6 } }, // 10
+  // 5
+  { ROOMDIR(room_1_HUT1RIGHT,             TL), { 0xD4, 0xBD,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1E, 0x2E, 24 } },
-
+  // 6
   { ROOMDIR(room_2_HUT2LEFT,              TR), { 0xC1, 0xA3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
-
+  // 7
   { ROOMDIR(room_3_HUT2RIGHT,             TL), { 0xBC, 0xBD,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x2E, 24 } },
-
+  // 8
   { ROOMDIR(room_4_HUT3LEFT,              TR), { 0xA9, 0xA3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
-
+  // 9
   { ROOMDIR(room_5_HUT3RIGHT,             TL), { 0xA4, 0xBD,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x2E, 24 } },
-
-  { ROOMDIR(room_21_CORRIDOR,             TL), { 0xFC, 0xCA,  6 } }, // 20 // current_door when in solitary
+  // 10 - current_door when in solitary
+  { ROOMDIR(room_21_CORRIDOR,             TL), { 0xFC, 0xCA,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1C, 0x24, 24 } },
-
+  // 11
   { ROOMDIR(room_20_REDCROSS,             TL), { 0xFC, 0xDA,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1A, 0x22, 24 } },
-
   // 12 - initially locked
   { ROOMDIR(room_15_UNIFORM,              TR), { 0xF7, 0xE3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x26, 0x19, 24 } },
-
   // 13 - initially locked
   { ROOMDIR(room_13_CORRIDOR,             TR), { 0xDF, 0xE3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
-
   // 14 - initially locked
   { ROOMDIR(room_8_CORRIDOR,              TR), { 0x97, 0xD3,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x15, 24 } },
-
-  { ROOMDIR(room_6,                       TR), { 0x00, 0x00,  0 } }, // 30 // unused room
+  // 15 - unused room
+  { ROOMDIR(room_6,                       TR), { 0x00, 0x00,  0 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 0x22, 0x22, 24 } },
-
+  // 16
   { ROOMDIR(room_1_HUT1RIGHT,             TR), { 0x2C, 0x34, 24 } },
   { ROOMDIR(room_28_HUT1LEFT,             BL), { 0x26, 0x1A, 24 } },
-
-  { ROOMDIR(room_3_HUT2RIGHT,             TR), { 0x24, 0x36, 24 } }, // 34 // top right door in HUT2LEFT
+  // 17 - top right door in HUT2LEFT
+  { ROOMDIR(room_3_HUT2RIGHT,             TR), { 0x24, 0x36, 24 } },
   { ROOMDIR(room_2_HUT2LEFT,              BL), { 0x26, 0x1A, 24 } },
-
+  // 18
   { ROOMDIR(room_5_HUT3RIGHT,             TR), { 0x24, 0x36, 24 } },
   { ROOMDIR(room_4_HUT3LEFT,              BL), { 0x26, 0x1A, 24 } },
-
+  // 19
   { ROOMDIR(room_23_BREAKFAST,            TR), { 0x28, 0x42, 24 } },
   { ROOMDIR(room_25_BREAKFAST,            BL), { 0x26, 0x18, 24 } },
-
   // 20 -
-  { ROOMDIR(room_23_BREAKFAST,            TL), { 0x3E, 0x24, 24 } }, // 40
+  { ROOMDIR(room_23_BREAKFAST,            TL), { 0x3E, 0x24, 24 } },
   { ROOMDIR(room_21_CORRIDOR,             BR), { 0x20, 0x2E, 24 } },
-
+  // 21
   { ROOMDIR(room_19_FOOD,                 TR), { 0x22, 0x42, 24 } },
   { ROOMDIR(room_23_BREAKFAST,            BL), { 0x22, 0x1C, 24 } },
-
   // 22 - initially locked
   { ROOMDIR(room_18_RADIO,                TR), { 0x24, 0x36, 24 } },
   { ROOMDIR(room_19_FOOD,                 BL), { 0x38, 0x22, 24 } },
-
+  // 23
   { ROOMDIR(room_21_CORRIDOR,             TR), { 0x2C, 0x36, 24 } },
   { ROOMDIR(room_22_REDKEY,               BL), { 0x22, 0x1C, 24 } },
-
   // 24 - initially locked
   { ROOMDIR(room_22_REDKEY,               TR), { 0x2C, 0x36, 24 } },
   { ROOMDIR(room_24_SOLITARY,             BL), { 0x2A, 0x26, 24 } },
-
-  { ROOMDIR(room_12_CORRIDOR,             TR), { 0x42, 0x3A, 24 } }, // 50
+  // 25
+  { ROOMDIR(room_12_CORRIDOR,             TR), { 0x42, 0x3A, 24 } },
   { ROOMDIR(room_18_RADIO,                BL), { 0x22, 0x1C, 24 } },
-
+  // 26
   { ROOMDIR(room_17_CORRIDOR,             TL), { 0x3C, 0x24, 24 } },
   { ROOMDIR(room_7_CORRIDOR,              BR), { 0x1C, 0x22, 24 } },
-
+  // 27
   { ROOMDIR(room_15_UNIFORM,              TL), { 0x40, 0x28, 24 } },
   { ROOMDIR(room_14_TORCH,                BR), { 0x1E, 0x28, 24 } },
-
+  // 28
   { ROOMDIR(room_16_CORRIDOR,             TR), { 0x22, 0x42, 24 } },
   { ROOMDIR(room_14_TORCH,                BL), { 0x22, 0x1C, 24 } },
-
+  // 29
   { ROOMDIR(room_16_CORRIDOR,             TL), { 0x3E, 0x2E, 24 } },
   { ROOMDIR(room_13_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
-
-  { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } }, // 60 // strange outdoor-to-outdoor door definition. unused?
+  // 30 - strange outdoor-to-outdoor door definition. unused?
+  { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x30, 24 } },
-
   // 31 - initially locked
   { ROOMDIR(room_13_CORRIDOR,             TL), { 0x4A, 0x28, 24 } },
   { ROOMDIR(room_11_PAPERS,               BR), { 0x1A, 0x22, 24 } },
-
+  // 32
   { ROOMDIR(room_7_CORRIDOR,              TL), { 0x40, 0x24, 24 } },
   { ROOMDIR(room_16_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
-
+  // 33
   { ROOMDIR(room_10_LOCKPICK,             TL), { 0x36, 0x35, 24 } },
   { ROOMDIR(room_8_CORRIDOR,              BR), { 0x17, 0x26, 24 } },
-
   // 34 - initially locked
   { ROOMDIR(room_9_CRATE,                 TL), { 0x36, 0x1C, 24 } },
   { ROOMDIR(room_8_CORRIDOR,              BR), { 0x1A, 0x22, 24 } },
-
-  { ROOMDIR(room_12_CORRIDOR,             TL), { 0x3E, 0x24, 24 } }, // 70
+  // 35
+  { ROOMDIR(room_12_CORRIDOR,             TL), { 0x3E, 0x24, 24 } },
   { ROOMDIR(room_17_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
-
+  // 36
   { ROOMDIR(room_29_SECOND_TUNNEL_START,  TR), { 0x36, 0x36, 24 } },
   { ROOMDIR(room_9_CRATE,                 BL), { 0x38, 0x0A, 12 } },
-
+  // 37
   { ROOMDIR(room_52,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_30,                      BL), { 0x38, 0x0A, 12 } },
-
+  // 38
   { ROOMDIR(room_30,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_31,                      BR), { 0x38, 0x26, 12 } },
-
+  // 39
   { ROOMDIR(room_30,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_36,                      BL), { 0x38, 0x0A, 12 } },
-
-  { ROOMDIR(room_31,                      TL), { 0x64, 0x34, 12 } }, // 80
+  // 40
+  { ROOMDIR(room_31,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_32,                      BR), { 0x0A, 0x34, 12 } },
-
+  // 41
   { ROOMDIR(room_32,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_33,                      BL), { 0x20, 0x34, 12 } },
-
+  // 42
   { ROOMDIR(room_33,                      TR), { 0x40, 0x34, 12 } },
   { ROOMDIR(room_35,                      BL), { 0x38, 0x0A, 12 } },
-
+  // 43
   { ROOMDIR(room_35,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_34,                      BR), { 0x0A, 0x34, 12 } },
-
+  // 44
   { ROOMDIR(room_36,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_35,                      BR), { 0x38, 0x1C, 12 } },
-
-  { ROOMDIR(room_37,                      TL), { 0x3E, 0x22, 24 } }, /* Tunnel entrance */ // 90
+  // 45 - tunnel entrance
+  { ROOMDIR(room_37,                      TL), { 0x3E, 0x22, 24 } },
   { ROOMDIR(room_2_HUT2LEFT,              BR), { 0x10, 0x34, 12 } },
-
+  // 46
   { ROOMDIR(room_38,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_37,                      BR), { 0x10, 0x34, 12 } },
-
+  // 47
   { ROOMDIR(room_39,                      TR), { 0x40, 0x34, 12 } },
   { ROOMDIR(room_38,                      BL), { 0x20, 0x34, 12 } },
-
+  // 48
   { ROOMDIR(room_40,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_38,                      BR), { 0x38, 0x54, 12 } },
-
+  // 49
   { ROOMDIR(room_40,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_41,                      BL), { 0x38, 0x0A, 12 } },
-
-  { ROOMDIR(room_41,                      TL), { 0x64, 0x34, 12 } }, // 100
+  // 50
+  { ROOMDIR(room_41,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_42,                      BR), { 0x38, 0x26, 12 } },
-
+  // 51
   { ROOMDIR(room_41,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_45,                      BL), { 0x38, 0x0A, 12 } },
-
+  // 52
   { ROOMDIR(room_45,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_44,                      BR), { 0x38, 0x1C, 12 } },
-
+  // 53
   { ROOMDIR(room_43,                      TR), { 0x20, 0x34, 12 } },
   { ROOMDIR(room_44,                      BL), { 0x38, 0x0A, 12 } },
-
+  // 54
   { ROOMDIR(room_42,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_43,                      BL), { 0x20, 0x34, 12 } },
-
-  { ROOMDIR(room_46,                      TL), { 0x64, 0x34, 12 } }, // 110
+  // 55
+  { ROOMDIR(room_46,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_39,                      BR), { 0x38, 0x1C, 12 } },
-
+  // 56
   { ROOMDIR(room_47,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_46,                      BL), { 0x20, 0x34, 12 } },
-
+  // 57
   { ROOMDIR(room_50_BLOCKED_TUNNEL,       TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_47,                      BR), { 0x38, 0x56, 12 } },
-
+  // 58
   { ROOMDIR(room_50_BLOCKED_TUNNEL,       TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_49,                      BL), { 0x38, 0x0A, 12 } },
-
+  // 59
   { ROOMDIR(room_49,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_48,                      BR), { 0x38, 0x1C, 12 } },
-
-  { ROOMDIR(room_51,                      TR), { 0x38, 0x62, 12 } }, // 120
+  // 60
+  { ROOMDIR(room_51,                      TR), { 0x38, 0x62, 12 } },
   { ROOMDIR(room_29_SECOND_TUNNEL_START,  BL), { 0x20, 0x34, 12 } },
-
+  // 61
   { ROOMDIR(room_52,                      TL), { 0x64, 0x34, 12 } },
   { ROOMDIR(room_51,                      BR), { 0x38, 0x54, 12 } },
 
