@@ -466,9 +466,11 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
-uint8_t get_next_target(tgestate_t *state,
-                        route_t    *route,
-                        route_t   **route_out);
+uint8_t get_next_target(tgestate_t       *state,
+                        route_t          *route,
+                        route_t         **route_out,
+                        const tinypos_t **doorpos,
+                        xy_t            **location);
 
 void move_characters(tgestate_t *state);
 

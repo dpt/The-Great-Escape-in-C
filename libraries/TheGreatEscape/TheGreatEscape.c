@@ -2829,7 +2829,7 @@ void wake_up(tgestate_t *state)
   set_prisoners_and_guards_route_B(state, &t5);
 
   /* Update all the bed objects to be empty. */
-  // FIXME: This writes to a possibly shared structure, so ought to be moved into the state somehow.
+  // FIXME: Writing to shared state.
   bedpp = &beds[0];
   iters = beds_LENGTH; /* Bug: Conv: Original code uses 7 which is wrong. */
   do
@@ -3095,9 +3095,11 @@ found_on_screen:
  */
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t    ok;      /* was A */
-  tinypos_t *pos;     /* was DE */
-  route_t   *route;  /* was HL */
+  uint8_t          ok;       /* was A */
+  tinypos_t       *pos;      /* was DE */
+  route_t         *route;    /* was HL */
+  const tinypos_t *doorpos;  /* was HL */
+  xy_t            *location; /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3106,12 +3108,20 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  ok = get_next_target(state, &vischar->route, &route);
+  ok = get_next_target(state, &vischar->route, &route, &doorpos, &location);
 
   // stashing the route in 'pos'?
   pos = &vischar->pos;
-  pos->x = route->index;
-  pos->y = route->step;
+  if (ok == 0)
+  {
+    pos->x = location->x;
+    pos->y = location->y;
+  }
+  else if (ok == 128)
+  {
+    pos->x = doorpos->x;
+    pos->y = doorpos->y;
+  }
 
   if (ok == 255) /* End of door list. */
   {
@@ -7463,8 +7473,8 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
  */
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
-                    uint16_t         *clipped_width,
-                    uint16_t         *clipped_height)
+                    uint16_t        *clipped_width,
+                    uint16_t        *clipped_height)
 {
   int8_t   amount_visible_right;  /* was A */
   uint16_t new_width; /* was BC */
@@ -7929,6 +7939,8 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   room_t                       room;      /* was A */
   uint8_t                      get_next_target_flags; /* was A */
   route_t                     *route;     /* was HL */
+  const tinypos_t             *doorpos;   /* was HL */
+  xy_t                        *location;  /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -8042,7 +8054,11 @@ again:
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
-    get_next_target_flags = get_next_target(state, &charstr->route, &route);
+    get_next_target_flags = get_next_target(state,
+                                            &charstr->route,
+                                            &route,
+                                            &doorpos,
+                                            &location);
     if (get_next_target_flags == 255) /* End of door list. */
     {
       // POP HL // HL = DE
@@ -8060,7 +8076,16 @@ again:
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
     // it seems that get_next_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
-    memcpy(&vischar->pos, route, sizeof(tinypos_t));
+    if (get_next_target_flags == 128)
+    {
+      vischar->pos = *doorpos;
+    }
+    else
+    {
+      vischar->pos.x = location->x;
+      vischar->pos.y = location->y;
+    }
+    //memcpy(&vischar->pos, route, sizeof(tinypos_t));
     // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
@@ -8188,9 +8213,11 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  *
  * \return 0/128/255 = (ok/through a door/hit end of list)
  */
-uint8_t get_next_target(tgestate_t *state,
-                        route_t    *route,
-                        route_t   **route_out)
+uint8_t get_next_target(tgestate_t       *state,
+                        route_t          *route,
+                        route_t         **route_out,
+                        const tinypos_t **doorpos,
+                        xy_t            **location)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
 
@@ -8204,9 +8231,9 @@ uint8_t get_next_target(tgestate_t *state,
   assert(state     != NULL);
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
-  assert(route_out != NULL);
+//  assert(route_out != NULL);
 
-  *route_out = NULL; /* Conv: Added. */
+  *doorpos = NULL; /* Conv: Added. */
 
   routeindex = route->index;
   if (routeindex == route_WANDER)
@@ -8247,7 +8274,7 @@ uint8_t get_next_target(tgestate_t *state,
       if (route->index & route_REVERSED)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
-      *route_out = &door->pos; // so this IS returning a tinypos in doors
+      *doorpos = &door->pos; // so this IS returning a tinypos in doors
       return 1 << 7;
     }
     else
@@ -8259,7 +8286,7 @@ uint8_t get_next_target(tgestate_t *state,
 
   assert(index < NELEMS(state->locations));
 
-  *route_out = &state->locations[index];
+  *location = &state->locations[index];
 
   return 0;
 }
@@ -8277,17 +8304,19 @@ void move_characters(tgestate_t *state)
   characterstruct_t *charstr;     /* was HL */
   room_t             room;        /* was A */
   item_t             item;        /* was C */
-  uint8_t            A;           /* was A */
+  uint8_t            get_next_target_result;           /* was A */
   route_t           *HLroute;     /* was HL */
 
   uint8_t            B;           /* was B */
   uint8_t            max;         /* was A' */
   pos_t             *HLpos;       /* was HL */
-  tinypos_t         *DEcharstr_tinypos;   /* was DE */
+  tinypos_t         *DEcharstr_tinypos; /* was DE */
   door_t            *HLdoor;      /* was HL */
-  tinypos_t         *HLtinypos;   /* was HL */
+  const tinypos_t   *HLtinypos;   /* was HL */
   characterstruct_t *DEcharstr;   /* was DE */
-  uint8_t            routeindex;       /* was A */
+  uint8_t            routeindex;  /* was A */
+
+  xy_t              *HLlocation;  /* was HL */
 
   assert(state != NULL);
 
@@ -8324,8 +8353,12 @@ void move_characters(tgestate_t *state)
     // POP HL_pos
     return;
 
-  A = get_next_target(state, &charstr->route, &HLroute);
-  if (A == 0xFF) /* End of route. */
+  get_next_target_result = get_next_target(state,
+                                           &charstr->route,
+                                           &HLroute,
+                                           &HLtinypos,
+                                           &HLlocation);
+  if (get_next_target_result == 0xFF) /* End of route. */
   {
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8368,7 +8401,7 @@ character_12_or_higher:
   }
   else
   {
-    if (A == (1 << 7)) /* Did a door thing. */
+    if (get_next_target_result == (1 << 7)) /* Did a door thing. */
     {
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
@@ -8382,16 +8415,11 @@ character_12_or_higher:
 
         DEpos = &state->saved_pos;
         /* Conv: Unrolled. */
-        // THIS USES ROUTE/STEP FROM ROUTE BUT get_next_target OUGHT TO RETURN DIFFERENT TYPES
-        DEpos->x = HLroute->index >> 1;
-        DEpos->y = HLroute->step  >> 1;
-        HLpos    = &state->saved_pos;
+        DEpos->x = HLtinypos->x >> 1;
+        DEpos->y = HLtinypos->y >> 1;
+        HLtinypos = &state->saved_pos; // CHECK
 
         // POP DE_charstr
-      }
-      else
-      {
-        HLpos = HLroute;
       }
 
       if (DEcharstr->room == room_0_OUTDOORS) // reloads 'room'
@@ -8403,10 +8431,10 @@ character_12_or_higher:
 
       // here HLpos is pointing to 16-bit coords but change_by_delta needs/wants 8-bit...
       B = 0;
-      B = change_by_delta(max, B, (const uint8_t *) &HLpos->x, &DEcharstr_tinypos->x); // max, rc, second, first
+      B = change_by_delta(max, B, &HLtinypos->x, &DEcharstr_tinypos->x); // max, rc, second, first
       // DE++;
       // HL++;
-      B = change_by_delta(max, B, (const uint8_t *) &HLpos->y, &DEcharstr_tinypos->y);
+      B = change_by_delta(max, B, &HLtinypos->y, &DEcharstr_tinypos->y);
 
       // POP HL_route
 
@@ -8416,7 +8444,7 @@ character_12_or_higher:
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      HLdoor = (door_t *) ((char *) HLroute - 1); // ugly cast to undo +1
+      HLdoor = (door_t *) ((char *) HLtinypos - 1); // ugly cast to undo +1
       assert(HLdoor >= &doors[0]);
       assert(HLdoor < &doors[door_MAX * 2]);
 
@@ -8466,13 +8494,13 @@ character_12_or_higher:
 
       // sampled HL at $C77A = 787a, 787e, 7888, 7890, 78aa, 783a, 786a, 7896, 787c,
       // => state->locations[]
-      // HL comes from HLroute
+      // HL comes from HLlocation
 
       B = 0;
-      B = change_by_delta(max, B, (const uint8_t *) HLroute + 0, &charstr->pos.x);
+      B = change_by_delta(max, B, &HLlocation->x, &charstr->pos.x);
 //      HL++;
 //      DE++;
-      B = change_by_delta(max, B, (const uint8_t *) HLroute + 1, &charstr->pos.y);
+      B = change_by_delta(max, B, &HLlocation->y, &charstr->pos.y);
 //      DE++;
       if (B != 2)
         return; // managed to move
@@ -9308,15 +9336,21 @@ uint8_t get_next_target_and_handle_it(tgestate_t *state,
                                       vischar_t  *vischar,
                                       route_t    *route)
 {
-  uint8_t  get_next_target_flags; /* was A */
-  route_t *new_route;
+  uint8_t          get_next_target_flags; /* was A */
+  route_t         *new_route;             /* was HL */
+  const tinypos_t *doorpos;               /* was HL */
+  xy_t            *location;              /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  get_next_target_flags = get_next_target(state, route, &new_route);
+  get_next_target_flags = get_next_target(state,
+                                          route,
+                                          &new_route,
+                                          &doorpos,
+                                          &location);
   if (get_next_target_flags != 255) /* Didn't hit end of list case. */
   {
     /* Chunk from $CB61 */
@@ -9324,13 +9358,24 @@ uint8_t get_next_target_and_handle_it(tgestate_t *state,
     if (get_next_target_flags == (1 << 7)) // door case
       vischar->flags |= vischar_FLAGS_DOOR_THING;
 
-    route[1] = *new_route; // this must set vischar->pos.x/y
+    // Conv: Cope with get_next_target returning results in different vars.
+    // Original game just transfers x,y across.
+    if (get_next_target_flags == (1 << 7))
+    {
+      vischar->pos.x = doorpos->x;
+      vischar->pos.y = doorpos->y;
+    }
+    else
+    {
+      vischar->pos.x = location->x;
+      vischar->pos.y = location->y;
+    }
 
     return 1 << 7;
   }
   else
   {
-    return route_ended(state, vischar, route); // was fallthrough
+    return route_ended(state, vischar, new_route); // was fallthrough
   }
 }
 
