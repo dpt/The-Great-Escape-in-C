@@ -9520,57 +9520,57 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_77CD[] =
   {
-    LOCATION(43), // 0x53
-    LOCATION(44), // 0x54
+    LOCATION(43), // 0x53             // marked
+    LOCATION(44), // 0x54             // marked
     door_NONE
   };
   static const uint8_t route_exit_hut2[] =
   {
     DOOR(7 | door_REVERSE),   // room_3_HUT2RIGHT -> room_0_OUTDOORS
-    LOCATION(11), // 0x33
-    LOCATION(12), // 0x34
+    LOCATION(11), // 0x33             // marked
+    LOCATION(12), // 0x34             // marked
     door_NONE
   };
   static const uint8_t route_exit_hut3[] =
   {
     DOOR(9 | door_REVERSE),   // room_5_HUT3RIGHT -> room_0_OUTDOORS
-    LOCATION(45), // 0x55
-    LOCATION(14), // 0x36
+    LOCATION(45), // 0x55             // marked
+    LOCATION(14), // 0x36             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_1[] =
   {
-    LOCATION(46), // 0x56
+    LOCATION(46), // 0x56             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_2[] =
   {
-    LOCATION(47), // 0x57
+    LOCATION(47), // 0x57             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_3[] =
   {
-    LOCATION(48), // 0x58
+    LOCATION(48), // 0x58             // marked
     door_NONE
   };
   static const uint8_t data_77DE[] =
   {
-    LOCATION(52), // 0x5C
-    LOCATION(53), // 0x5D
+    LOCATION(52), // 0x5C             // marked
+    LOCATION(53), // 0x5D             // marked
     door_NONE
   };
   static const uint8_t data_77E1[] =
   {
-    LOCATION(11), // 0x33
-    LOCATION(55), // 0x5F
+    LOCATION(11), // 0x33             // marked
+    LOCATION(55), // 0x5F             // marked
     DOOR(0 | door_REVERSE), // move through gates
     DOOR(1 | door_REVERSE), // move through gates to yard
-    LOCATION(56), // 0x60
+    LOCATION(56), // 0x60             // marked
     door_NONE
   };
   static const uint8_t data_77E7[] =
   {
-    LOCATION(12), // 0x34
+    LOCATION(12), // 0x34             // marked
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
@@ -9578,94 +9578,94 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_77EC[] =
   {
-    LOCATION(16), // 0x38
-    LOCATION(12), // 0x34
+    LOCATION(16), // 0x38             // marked
+    LOCATION(12), // 0x34             // marked
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     door_NONE
   };
   static const uint8_t route_prisoner_sits_1[] =
   {
-    LOCATION(64), // 0x68
+    LOCATION(64), // 0x68             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sits_2[] =
   {
-    LOCATION(65), // 0x69
+    LOCATION(65), // 0x69             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sits_3[] =
   {
-    LOCATION(66), // 0x6A
+    LOCATION(66), // 0x6A             // marked
     door_NONE
   };
-  static const uint8_t data_77F7[] =
+  static const uint8_t route_guardA_breakfast[] =
   {
-    LOCATION(68), // 0x6C
+    LOCATION(68), // 0x6C             // marked
     door_NONE
   };
-  static const uint8_t data_77F9[] =
+  static const uint8_t route_guardB_breakfast[] =
   {
-    LOCATION(69), // 0x6D
+    LOCATION(69), // 0x6D             // marked
     door_NONE
   };
-  static const uint8_t data_77FB[] =
+  static const uint8_t route_guard_12_roll_call[] =
   {
-    LOCATION(9), // 0x31
+    LOCATION(9), // 0x31             // marked
     door_NONE
   };
-  static const uint8_t data_77FD[] =
+  static const uint8_t route_guard_13_roll_call[] =
   {
-    LOCATION(11), // 0x33
+    LOCATION(11), // 0x33             // marked
     door_NONE
   };
-  static const uint8_t data_77FF[] =
+  static const uint8_t route_guard_14_roll_call[] =
   {
-    LOCATION(17), // 0x39
+    LOCATION(17), // 0x39             // marked
     door_NONE
   };
-  static const uint8_t data_7801[] =
+  static const uint8_t route_guard_15_roll_call[] =
   {
-    LOCATION(49), // 0x59
+    LOCATION(49), // 0x59             // marked
     door_NONE
   };
-  static const uint8_t data_7803[] =
+  static const uint8_t route_prisoner_1_roll_call[] =
   {
-    LOCATION(72), // 0x70
+    LOCATION(72), // 0x70             // marked
     door_NONE
   };
-  static const uint8_t data_7805[] =
+  static const uint8_t route_prisoner_2_roll_call[] =
   {
-    LOCATION(73), // 0x71
+    LOCATION(73), // 0x71             // marked
     door_NONE
   };
-  static const uint8_t data_7807[] =
+  static const uint8_t route_prisoner_3_roll_call[] =
   {
-    LOCATION(74), // 0x72
+    LOCATION(74), // 0x72             // marked
     door_NONE
   };
-  static const uint8_t data_7809[] =
+  static const uint8_t route_prisoner_4_roll_call[] =
   {
-    LOCATION(75), // 0x73
+    LOCATION(75), // 0x73             // marked
     door_NONE
   };
-  static const uint8_t data_780B[] =
+  static const uint8_t route_prisoner_5_roll_call[] =
   {
-    LOCATION(76), // 0x74
+    LOCATION(76), // 0x74             // marked
     door_NONE
   };
-  static const uint8_t data_780D[] =
+  static const uint8_t route_prisoner_6_roll_call[] =
   {
-    LOCATION(77), // 0x75
+    LOCATION(77), // 0x75             // marked
     door_NONE
   };
   static const uint8_t route_go_to_solitary[] =
   {
-    LOCATION(14), // 0x36
+    LOCATION(14), // 0x36             // marked
     DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     DOOR(24 | door_REVERSE),  // room_22_REDKEY   -> room_24_SOLITARY
-    LOCATION(42),             // 0x52
+    LOCATION(42),             // 0x52             // marked
     door_NONE
   };
   static const uint8_t route_hero_leave_solitary[] =
@@ -9673,7 +9673,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(24),                 // room_24_SOLITARY -> room_22_REDKEY
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
     DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
-    LOCATION(14),             // 0x36
+    LOCATION(14),             // 0x36             // marked
     door_NONE
   };
   static const uint8_t route_guard_12_bed[] =
@@ -9686,29 +9686,29 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t route_guard_13_bed[] =
   {
-    LOCATION(12), // 0x34
-    LOCATION(11), // 0x33
+    LOCATION(12), // 0x34             // marked
+    LOCATION(11), // 0x33             // marked
     DOOR(7),                  // room_0_OUTDOORS  -> room_3_HUT2RIGHT
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(53), // 0x5D
+    LOCATION(53), // 0x5D             // marked
     door_NONE
   };
   static const uint8_t route_guard_14_bed[] =
   {
-    LOCATION(12), // 0x34
-    LOCATION(11), // 0x33
-    LOCATION(45), // 0x55
+    LOCATION(12), // 0x34             // marked
+    LOCATION(11), // 0x33             // marked
+    LOCATION(45), // 0x55             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(52), // 0x5C
+    LOCATION(52), // 0x5C             // marked
     door_NONE
   };
   static const uint8_t route_guard_15_bed[] =
   {
-    LOCATION(12), // 0x34
-    LOCATION(11), // 0x33
-    LOCATION(45), // 0x55
+    LOCATION(12), // 0x34             // marked
+    LOCATION(11), // 0x33             // marked
+    LOCATION(45), // 0x55             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(53), // 0x5C
+    LOCATION(53), // 0x5C             // marked
     door_NONE
   };
   static const uint8_t route_hut2_left_to_right[] =
@@ -9718,18 +9718,18 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_7833[] =
   {
-    LOCATION(67), // 0x6B
+    LOCATION(67), // 0x6B             // marked
     door_NONE
   };
   static const uint8_t route_hut2_right_to_left[] =
   {
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(70), // 0x6E
+    LOCATION(70), // 0x6E             // marked
     door_NONE
   };
-  static const uint8_t data_7838[] =
+  static const uint8_t route_hero_roll_call[] =
   {
-    LOCATION(50), // 0x5A
+    LOCATION(50), // 0x5A             // marked
     door_NONE
   };
 #undef DOOR
@@ -9740,68 +9740,68 @@ const uint8_t *get_route(uint8_t index)
    */
   static const uint8_t *routes[46] =
   {
-    NULL, /* was zero */ // 0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
+    NULL, /* was zero */              //  0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
 
-    &data_7795[0], //  1:
-    &data_7799[0], //  2:
-    &route_commandant[0], //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
-    &data_77CD[0], //  4:
+    &data_7795[0],                    //  1:
+    &data_7799[0],                    //  2:
+    &route_commandant[0],             //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
+    &data_77CD[0],                    //  4:
 
-    &route_exit_hut2[0], //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
-    &route_exit_hut3[0], //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
+    &route_exit_hut2[0],              //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
+    &route_exit_hut3[0],              //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
 
     // character_sleeps routes
-    &route_prisoner_sleeps_1[0], //  7: prisoner 1 by byte_A13E_common
-    &route_prisoner_sleeps_2[0], //  8: prisoner 2 by byte_A13E_common
-    &route_prisoner_sleeps_3[0], //  9: prisoner 3 by byte_A13E_common
-    &route_prisoner_sleeps_1[0], // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
-    &route_prisoner_sleeps_2[0], // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
-    &route_prisoner_sleeps_3[0], // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
+    &route_prisoner_sleeps_1[0],      //  7: prisoner 1 by byte_A13E_common
+    &route_prisoner_sleeps_2[0],      //  8: prisoner 2 by byte_A13E_common
+    &route_prisoner_sleeps_3[0],      //  9: prisoner 3 by byte_A13E_common
+    &route_prisoner_sleeps_1[0],      // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
+    &route_prisoner_sleeps_2[0],      // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
+    &route_prisoner_sleeps_3[0],      // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
 
-    &data_77DE[0], // 13: (all hostiles) by byte_A13E_common
+    &data_77DE[0],                    // 13: (all hostiles) by byte_A13E_common
 
-    &data_77E1[0], // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
-    &data_77E1[0], // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
+    &data_77E1[0],                    // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
+    &data_77E1[0],                    // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
 
-    &data_77E7[0], // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
-    &data_77EC[0], // 17:                                                        prisoners_and_guards-2 by end_of_breakfast
+    &data_77E7[0],                    // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
+    &data_77EC[0],                    // 17:                                                       prisoners_and_guards-2 by end_of_breakfast
 
     // character_sits routes
-    &route_prisoner_sits_1[0], // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
-    &route_prisoner_sits_2[0], // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
-    &route_prisoner_sits_3[0], // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
-    &route_prisoner_sits_1[0], // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
-    &route_prisoner_sits_2[0], // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
-    &route_prisoner_sits_3[0], // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
+    &route_prisoner_sits_1[0],        // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
+    &route_prisoner_sits_2[0],        // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
+    &route_prisoner_sits_3[0],        // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
+    &route_prisoner_sits_1[0],        // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
+    &route_prisoner_sits_2[0],        // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
+    &route_prisoner_sits_3[0],        // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
 
-    &data_77F7[0], // 24: guard at breakfast 1
-    &data_77F9[0], // 25: guard at breakfast 2
+    &route_guardA_breakfast[0],       // 24: "even guard" by byte_A13E_anotherone_common
+    &route_guardB_breakfast[0],       // 25: "odd guard" by byte_A13E_anotherone_common
 
-    &data_77FB[0], // 26: character_12_GUARD_12   by go_to_roll_call
-    &data_77FD[0], // 27: character_13_GUARD_13   by go_to_roll_call
-    &data_7803[0], // 28: character_20_PRISONER_1 by go_to_roll_call
-    &data_7805[0], // 29: character_21_PRISONER_2 by go_to_roll_call
-    &data_7807[0], // 30: character_22_PRISONER_3 by go_to_roll_call
-    &data_77FF[0], // 31: character_14_GUARD_14   by go_to_roll_call
-    &data_7801[0], // 32: character_15_GUARD_15   by go_to_roll_call
-    &data_7809[0], // 33: character_23_PRISONER_4 by go_to_roll_call
-    &data_780B[0], // 34: character_24_PRISONER_5 by go_to_roll_call
-    &data_780D[0], // 35: character_25_PRISONER_6 by go_to_roll_call
+    &route_guard_12_roll_call[0],     // 26: character_12_GUARD_12   by go_to_roll_call
+    &route_guard_13_roll_call[0],     // 27: character_13_GUARD_13   by go_to_roll_call
+    &route_prisoner_1_roll_call[0],   // 28: character_20_PRISONER_1 by go_to_roll_call
+    &route_prisoner_2_roll_call[0],   // 29: character_21_PRISONER_2 by go_to_roll_call
+    &route_prisoner_3_roll_call[0],   // 30: character_22_PRISONER_3 by go_to_roll_call
+    &route_guard_14_roll_call[0],     // 31: character_14_GUARD_14   by go_to_roll_call
+    &route_guard_15_roll_call[0],     // 32: character_15_GUARD_15   by go_to_roll_call
+    &route_prisoner_4_roll_call[0],   // 33: character_23_PRISONER_4 by go_to_roll_call
+    &route_prisoner_5_roll_call[0],   // 34: character_24_PRISONER_5 by go_to_roll_call
+    &route_prisoner_6_roll_call[0],   // 35: character_25_PRISONER_6 by go_to_roll_call
 
-    &route_go_to_solitary[0], // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by route_ended
-    &route_hero_leave_solitary[0], // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
+    &route_go_to_solitary[0],         // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by route_ended
+    &route_hero_leave_solitary[0],    // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
 
-    &route_guard_12_bed[0], // 38: guard 12 at 'time for bed', 'search light'
-    &route_guard_13_bed[0], // 39: guard 13 at 'time for bed', 'search light'
-    &route_guard_14_bed[0], // 40: guard 14 at 'time for bed', 'search light'
-    &route_guard_15_bed[0], // 41: guard 15 at 'time for bed', 'search light'
+    &route_guard_12_bed[0],           // 38: guard 12 at 'time for bed', 'search light'
+    &route_guard_13_bed[0],           // 39: guard 13 at 'time for bed', 'search light'
+    &route_guard_14_bed[0],           // 40: guard 14 at 'time for bed', 'search light'
+    &route_guard_15_bed[0],           // 41: guard 15 at 'time for bed', 'search light'
 
-    &route_hut2_left_to_right[0], // 42:
+    &route_hut2_left_to_right[0],     // 42:
 
-    &data_7833[0], // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
-    &route_hut2_right_to_left[0], // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
+    &data_7833[0],                    // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
+    &route_hut2_right_to_left[0],     // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
 
-    &data_7838[0], // 45: (hero) by go_to_roll_call
+    &route_hero_roll_call[0],         // 45: (hero) by go_to_roll_call
 
     // original game has an FF byte here
   };

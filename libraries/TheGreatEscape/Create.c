@@ -99,17 +99,17 @@ static void tge_initialise(tgestate_t *state)
 
     // charevnt_handler_0 uses 8..15
     { 0x68, 0x70 }, // 8
-    { 0x60, 0x70 }, // 9
+    { 0x60, 0x70 }, // 9 used by route_guard_12_roll_call
     { 0x6A, 0x66 }, // 10
-    { 0x5D, 0x68 }, // 11 used by route_commandant
-    { 0x7C, 0x65 }, // 12
+    { 0x5D, 0x68 }, // 11 used by route_commandant, route_exit_hut2, data_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
+    { 0x7C, 0x65 }, // 12 used by route_exit_hut2, data_77E7, data_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
     { 0x7C, 0x70 }, // 13
-    { 0x74, 0x68 }, // 14
+    { 0x74, 0x68 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
     { 0x70, 0x64 }, // 15
 
     // charevnt_handler_1 uses 16..23
-    { 0x78, 0x60 }, // 16
-    { 0x80, 0x58 }, // 17
+    { 0x78, 0x60 }, // 16 used by data_77EC
+    { 0x80, 0x58 }, // 17 used by route_guard_14_roll_call
     { 0x70, 0x60 }, // 18
     { 0x74, 0x54 }, // 19
     { 0x7C, 0x64 }, // 20
@@ -139,24 +139,24 @@ static void tge_initialise(tgestate_t *state)
     { 0x3D, 0x67 }, // 40 used by data_7799
 
     { 0x74, 0x4C }, // 41
-    { 0x2C, 0x2A }, // 42 used by route_commandant
-    { 0x6A, 0x48 }, // 43
-    { 0x6E, 0x48 }, // 44
-    { 0x51, 0x68 }, // 45 used by route_commandant
+    { 0x2C, 0x2A }, // 42 used by route_commandant, route_go_to_solitary
+    { 0x6A, 0x48 }, // 43 used by data_77CD
+    { 0x6E, 0x48 }, // 44 used by data_77CD
+    { 0x51, 0x68 }, // 45 used by route_commandant, route_exit_hut3, route_guard_14_bed, route_guard_15_bed
 
-    { 0x34, 0x3C }, // 46 used by route_commandant
-    { 0x34, 0x2C }, // 47
-    { 0x34, 0x1C }, // 48
-    { 0x77, 0x6B }, // 49
-    { 0x7A, 0x6E }, // 50
-    { 0x34, 0x1C }, // 51 // outside main map?
-    { 0x28, 0x3C }, // 52 // outside main map?
-    { 0x24, 0x22 }, // 53 // outside main map?
+    { 0x34, 0x3C }, // 46 used by route_commandant, route_prisoner_sleeps_1
+    { 0x34, 0x2C }, // 47 used by route_prisoner_sleeps_2
+    { 0x34, 0x1C }, // 48 used by route_prisoner_sleeps_3
+    { 0x77, 0x6B }, // 49 used by route_guard_15_roll_call
+    { 0x7A, 0x6E }, // 50 used by route_hero_roll_call
+    { 0x34, 0x1C }, // 51 
+    { 0x28, 0x3C }, // 52 used by data_77DE, route_guard_14_bed
+    { 0x24, 0x22 }, // 53 used by data_77DE, route_guard_13_bed, route_guard_15_bed
     { 0x50, 0x4C }, // 54
-    { 0x59, 0x4C }, // 55 used by route_commandant
+    { 0x59, 0x4C }, // 55 used by route_commandant, data_77E1
 
     // charevnt_handler_2 uses 56..63
-    { 0x59, 0x3C }, // 56
+    { 0x59, 0x3C }, // 56 used by data_77E1
     { 0x64, 0x3D }, // 57
     { 0x5C, 0x36 }, // 58
     { 0x54, 0x32 }, // 59
@@ -165,20 +165,20 @@ static void tge_initialise(tgestate_t *state)
     { 0x4F, 0x3B }, // 62
     { 0x67, 0x2F }, // 63
 
-    { 0x34, 0x36 }, // 64 character walks into breakfast room
-    { 0x34, 0x2E }, // 65 outside main map?
-    { 0x34, 0x24 }, // 66 outside main map?
-    { 0x34, 0x3E }, // 67 outside main map?
-    { 0x20, 0x38 }, // 68 outside main map?
-    { 0x34, 0x18 }, // 69 outside main map?
-    { 0x2A, 0x2E }, // 70 outside main map? // 70
-    { 0x22, 0x22 }, // 71 outside main map?
-    { 0x78, 0x6E }, // 72 roll call
-    { 0x76, 0x6E }, // 73 roll call
-    { 0x74, 0x6E }, // 74 roll call
-    { 0x79, 0x6D }, // 75 roll call
-    { 0x77, 0x6D }, // 76 roll call
-    { 0x75, 0x6D }, // 77 roll call
+    { 0x34, 0x36 }, // 64 character walks into breakfast room, used by route_prisoner_sits_1
+    { 0x34, 0x2E }, // 65 used by route_prisoner_sits_2
+    { 0x34, 0x24 }, // 66 used by route_prisoner_sits_3
+    { 0x34, 0x3E }, // 67 used by data_7833
+    { 0x20, 0x38 }, // 68 used by route_guardA_breakfast
+    { 0x34, 0x18 }, // 69 used by route_guardB_breakfast
+    { 0x2A, 0x2E }, // 70 used by route_hut2_right_to_left
+    { 0x22, 0x22 }, // 71
+    { 0x78, 0x6E }, // 72 roll call used by route_prisoner_1_roll_call
+    { 0x76, 0x6E }, // 73 roll call used by route_prisoner_2_roll_call
+    { 0x74, 0x6E }, // 74 roll call used by route_prisoner_3_roll_call
+    { 0x79, 0x6D }, // 75 roll call used by route_prisoner_4_roll_call
+    { 0x77, 0x6D }, // 76 roll call used by route_prisoner_5_roll_call
+    { 0x75, 0x6D }, // 77 roll call used by route_prisoner_6_roll_call
   };
 
   /* $AD3E: Searchlight movement pattern for L-shaped gap? */
