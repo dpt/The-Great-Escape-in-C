@@ -3112,23 +3112,23 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // stashing the route in 'pos'?
   pos = &vischar->pos;
-  if (ok == 0)
+  if (ok == get_next_target_LOCATION)
   {
     pos->x = location->x;
     pos->y = location->y;
   }
-  else if (ok == 128)
+  else if (ok == get_next_target_DOOR)
   {
     pos->x = doorpos->x;
     pos->y = doorpos->y;
   }
 
-  if (ok == 255) /* End of door list. */
+  if (ok == get_next_target_ROUTE_ENDS)
   {
     state->IY = vischar;
     (void) get_next_target_and_handle_it(state, vischar, &vischar->route);
   }
-  else if (ok == (1 << 7)) /* Did a door thing. */
+  else if (ok == get_next_target_DOOR)
   {
     vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
@@ -8059,7 +8059,7 @@ again:
                                             &route,
                                             &doorpos,
                                             &location);
-    if (get_next_target_flags == 255) /* End of door list. */
+    if (get_next_target_flags == get_next_target_ROUTE_ENDS)
     {
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->route
@@ -8069,14 +8069,14 @@ again:
       // DE = HL + 2; // -> vischar->pos
       goto again;
     }
-    else if (get_next_target_flags == (1 << 7)) /* Did a door thing. */
+    else if (get_next_target_flags == get_next_target_DOOR)
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
     // it seems that get_next_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
-    if (get_next_target_flags == 128)
+    if (get_next_target_flags == get_next_target_DOOR)
     {
       vischar->pos = *doorpos;
     }
@@ -8266,7 +8266,7 @@ uint8_t get_next_target(tgestate_t       *state,
     {
       /* 255: End of route */
       *route_out = route;
-      return 255; /* Conv: Was a goto to a return. */
+      return get_next_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
     }
     else if ((routebyte & ~door_REVERSE) < 40)
     {
@@ -8275,7 +8275,7 @@ uint8_t get_next_target(tgestate_t       *state,
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
       *doorpos = &door->pos; // so this IS returning a tinypos in doors
-      return 1 << 7;
+      return get_next_target_DOOR;
     }
     else
     {
@@ -8288,7 +8288,7 @@ uint8_t get_next_target(tgestate_t       *state,
 
   *location = &state->locations[index];
 
-  return 0;
+  return get_next_target_LOCATION;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8358,7 +8358,7 @@ void move_characters(tgestate_t *state)
                                            &HLroute,
                                            &HLtinypos,
                                            &HLlocation);
-  if (get_next_target_result == 0xFF) /* End of route. */
+  if (get_next_target_result == get_next_target_ROUTE_ENDS)
   {
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8401,7 +8401,7 @@ character_12_or_higher:
   }
   else
   {
-    if (get_next_target_result == (1 << 7)) /* Did a door thing. */
+    if (get_next_target_result == get_next_target_DOOR)
     {
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
@@ -9351,16 +9351,17 @@ uint8_t get_next_target_and_handle_it(tgestate_t *state,
                                           &new_route,
                                           &doorpos,
                                           &location);
-  if (get_next_target_flags != 255) /* Didn't hit end of list case. */
+  if (get_next_target_flags != get_next_target_ROUTE_ENDS)
   {
+    /* Didn't hit end of list case. */
     /* Chunk from $CB61 */
 
-    if (get_next_target_flags == (1 << 7)) // door case
+    if (get_next_target_flags == get_next_target_DOOR)
       vischar->flags |= vischar_FLAGS_DOOR_THING;
 
     // Conv: Cope with get_next_target returning results in different vars.
     // Original game just transfers x,y across.
-    if (get_next_target_flags == (1 << 7))
+    if (get_next_target_flags == get_next_target_DOOR)
     {
       vischar->pos.x = doorpos->x;
       vischar->pos.y = doorpos->y;
