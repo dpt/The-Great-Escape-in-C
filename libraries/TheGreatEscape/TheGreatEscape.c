@@ -3095,7 +3095,7 @@ found_on_screen:
  */
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          ok;       /* was A */
+  uint8_t          get_next_target_flags; /* was A */
   tinypos_t       *pos;      /* was DE */
   route_t         *route;    /* was HL */
   const tinypos_t *doorpos;  /* was HL */
@@ -3108,27 +3108,31 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  ok = get_next_target(state, &vischar->route, &route, &doorpos, &location);
+  get_next_target_flags = get_next_target(state,
+                                          &vischar->route,
+                                          &route,
+                                          &doorpos,
+                                          &location);
 
-  // stashing the route in 'pos'?
+  /* Stash the target coordinates in 'pos'. */
   pos = &vischar->pos;
-  if (ok == get_next_target_LOCATION)
+  if (get_next_target_flags == get_next_target_LOCATION)
   {
     pos->x = location->x;
     pos->y = location->y;
   }
-  else if (ok == get_next_target_DOOR)
+  else if (get_next_target_flags == get_next_target_DOOR)
   {
     pos->x = doorpos->x;
     pos->y = doorpos->y;
   }
 
-  if (ok == get_next_target_ROUTE_ENDS)
+  if (get_next_target_flags == get_next_target_ROUTE_ENDS)
   {
     state->IY = vischar;
     (void) get_next_target_and_handle_it(state, vischar, &vischar->route);
   }
-  else if (ok == get_next_target_DOOR)
+  else if (get_next_target_flags == get_next_target_DOOR)
   {
     vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
