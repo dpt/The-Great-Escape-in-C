@@ -5491,7 +5491,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   /* At this point we handle non-colliding characters and items only. */
 
   vischar->counter_and_flags &= ~vischar_BYTE7_TOUCHING; // clear
-  vischar->mi.pos           = state->saved_pos;
+  vischar->mi.pos           = state->saved_pos.pos;
   vischar->mi.sprite_index  = stashed_sprite_index; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
@@ -5549,19 +5549,19 @@ int collision(tgestate_t *state)
 //          state->saved_pos.x < vischar->mi.pos.x - 4)
 //        goto pop_next;
     x = vischar->mi.pos.x + 4;
-    saved_x = state->saved_pos.x;
+    saved_x = state->saved_pos.pos.x;
     if (saved_x != x)
-      if (saved_x > x || state->saved_pos.x < x - 8) // redundant reload of var
+      if (saved_x > x || state->saved_pos.pos.x < x - 8) // redundant reload of var
         goto pop_next;
 
     y = vischar->mi.pos.y + 4;
-    saved_y = state->saved_pos.y;
+    saved_y = state->saved_pos.pos.y;
     if (saved_y != y)
-      if (saved_y > y || state->saved_pos.y < y - 8) // redundant reload of var
+      if (saved_y > y || state->saved_pos.pos.y < y - 8) // redundant reload of var
         goto pop_next;
 
     // Check the heights are within 24 of each other
-    delta = state->saved_pos.height - vischar->mi.pos.height; // Note: Signed result.
+    delta = state->saved_pos.pos.height - vischar->mi.pos.height; // Note: Signed result.
     if (delta < 0)
       delta = -delta; // absolute value
     if (delta >= 24)
@@ -5779,12 +5779,12 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
     minheight = wall->minheight * 8;
     maxheight = wall->maxheight * 8;
 
-    if (state->saved_pos.x      >= minx + 2   &&
-        state->saved_pos.x      <  maxx + 4   &&
-        state->saved_pos.y      >= miny       &&
-        state->saved_pos.y      <  maxy + 4   &&
-        state->saved_pos.height >= minheight  &&
-        state->saved_pos.height <  maxheight + 2)
+    if (state->saved_pos.pos.x      >= minx + 2   &&
+        state->saved_pos.pos.x      <  maxx + 4   &&
+        state->saved_pos.pos.y      >= miny       &&
+        state->saved_pos.pos.y      <  maxy + 4   &&
+        state->saved_pos.pos.height >= minheight  &&
+        state->saved_pos.pos.height <  maxheight + 2)
     {
       vischar->counter_and_flags ^= vischar_BYTE7_IMPEDED;
       return 1; // NZ
@@ -5939,11 +5939,11 @@ int door_in_range(tgestate_t *state, const door_t *door)
   assert(door  != NULL);
 
   x = multiply_by_4(door->pos.x);
-  if (state->saved_pos.x < x - halfdist || state->saved_pos.x >= x + halfdist)
+  if (state->saved_pos.pos.x < x - halfdist || state->saved_pos.pos.x >= x + halfdist)
     return 0;
 
   y = multiply_by_4(door->pos.y);
-  if (state->saved_pos.y < y - halfdist || state->saved_pos.y >= y + halfdist)
+  if (state->saved_pos.pos.y < y - halfdist || state->saved_pos.pos.y >= y + halfdist)
     return 0;
 
   return 1;
@@ -6005,7 +6005,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   room_bounds = &roomdef_bounds[state->roomdef_bounds_index];
-  saved_pos = &state->saved_pos;
+  saved_pos = &state->saved_pos.pos;
   /* Conv: Merged conditions. */
   if (room_bounds->x0     < saved_pos->x || room_bounds->x1 + 4 >= saved_pos->x ||
       room_bounds->y0 - 4 < saved_pos->y || room_bounds->y1     >= saved_pos->y)
@@ -6018,7 +6018,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     uint8_t x, y; /* was A, A */
 
     /* Conv: HL dropped. */
-    pos = &state->saved_pos;
+    pos = &state->saved_pos.pos;
 
     /* Conv: Two-iteration loop unrolled. */
     x = pos->x;  // note: narrowing // saved_pos must be 8-bit
@@ -6109,7 +6109,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     /* Skip any door which is more than three units away. */
     doorpos = &door->pos;
-    pos = &state->saved_pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
+    pos = &state->saved_pos.pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
     x = doorpos->x;
     if (x - 3 >= pos->x || x + 3 < pos->x) // -3 .. +2
       continue;
@@ -6536,7 +6536,7 @@ next_locked_door:
 found:
     door = get_door(*interior_doors);
     /* Range check pattern (-2..+2). */
-    pos = &state->saved_pos; // note: 16-bit values holding 8-bit values
+    pos = &state->saved_pos.pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
     if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
         pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
@@ -6665,11 +6665,11 @@ decrement:
 
       // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (animations)
 
-      state->saved_pos.x = vischar->mi.pos.x - SXT_8_16(DE);
+      state->saved_pos.pos.x = vischar->mi.pos.x - SXT_8_16(DE);
       DE++;
-      state->saved_pos.y = vischar->mi.pos.y - SXT_8_16(DE);
+      state->saved_pos.pos.y = vischar->mi.pos.y - SXT_8_16(DE);
       DE++;
-      state->saved_pos.height = vischar->mi.pos.height - SXT_8_16(DE);
+      state->saved_pos.pos.height = vischar->mi.pos.height - SXT_8_16(DE);
 
       if (touch(state, vischar, Adash /* sprite_index */))
         goto pop_next;
@@ -6686,11 +6686,11 @@ decrement:
 increment:
       SWAP(const uint8_t *, DE, anim);
 
-      state->saved_pos.x = vischar->mi.pos.x + SXT_8_16(DE);
+      state->saved_pos.pos.x = vischar->mi.pos.x + SXT_8_16(DE);
       DE++;
-      state->saved_pos.y = vischar->mi.pos.y + SXT_8_16(DE);
+      state->saved_pos.pos.y = vischar->mi.pos.y + SXT_8_16(DE);
       DE++;
-      state->saved_pos.height = vischar->mi.pos.height + SXT_8_16(DE);
+      state->saved_pos.pos.height = vischar->mi.pos.height + SXT_8_16(DE);
       DE++;
 
       A = *DE; // a spriteindex_t
@@ -6769,7 +6769,7 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Save a copy of the vischar's position + offset. */
-  state->saved_pos = vischar->mi.pos;
+  state->saved_pos.pos = vischar->mi.pos;
 
   calc_vischar_screenpos(state, vischar);
 }
@@ -6788,8 +6788,8 @@ void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->floogle.x = (0x200 - state->saved_pos.x + state->saved_pos.y) * 2;
-  vischar->floogle.y = 0x800 - state->saved_pos.x - state->saved_pos.y - state->saved_pos.height;
+  vischar->floogle.x = (0x200 - state->saved_pos.pos.x + state->saved_pos.pos.y) * 2;
+  vischar->floogle.y = 0x800 - state->saved_pos.pos.x - state->saved_pos.pos.y - state->saved_pos.pos.height;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
@@ -7978,7 +7978,7 @@ found_empty_slot:
   charstr2 = charstr;
 
   /* Scale coords dependent on which room the character is in. */
-  saved_pos = &state->saved_pos;
+  saved_pos = &state->saved_pos.pos;
   if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
@@ -8413,15 +8413,18 @@ character_12_or_higher:
       // PUSH HL_route
       if (room == room_0_OUTDOORS)
       {
-        pos_t *DEpos;
+        tinypos_t *DEpos; /* was DE */
 
         // PUSH DE_charstr
 
-        DEpos = &state->saved_pos;
+        // The original code stores to saved_pos as if it's a pair of bytes.
+        // I assume it's just scratch space.
+
+        DEpos = &state->saved_pos.tinypos;
         /* Conv: Unrolled. */
         DEpos->x = HLtinypos->x >> 1;
         DEpos->y = HLtinypos->y >> 1;
-        HLtinypos = &state->saved_pos; // CHECK
+        HLtinypos = &state->saved_pos.tinypos;
 
         // POP DE_charstr
       }

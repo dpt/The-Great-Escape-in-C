@@ -119,7 +119,12 @@ struct tgestate
 
   /** $81A4: Saved position (on map).
    * Used by various places in the code. */
-  pos_t           saved_pos;
+  union
+  {
+    pos_t         pos;
+    tinypos_t     tinypos;
+  }
+  saved_pos;
 
   /** $81AC: Input bitmap pointer. Used by masked sprite plotters. */
   const uint8_t  *bitmap_pointer;
