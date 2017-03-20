@@ -117,7 +117,7 @@ struct tgestate
   /** $81A2: Pointer into window_buf[]. Used by masked sprite plotters. */
   uint8_t        *window_buf_pointer;
 
-  /** $81A4: Saved position (on map).
+  /** $81A4: Scratch space for saving positions.
    * Used by various places in the code. */
   union
   {

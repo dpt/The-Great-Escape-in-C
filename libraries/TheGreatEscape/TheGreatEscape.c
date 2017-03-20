@@ -8414,45 +8414,47 @@ trigger_event:
   {
     if (get_next_target_result == get_next_target_DOOR)
     {
+      const tinypos_t *HLtinypos2; /* was HL */
+
       // POP DE_pos
       DEcharstr = charstr; // points at characterstruct.pos
       room = DEcharstr->room; // read one byte earlier
       // PUSH HL_route
       if (room == room_0_OUTDOORS)
       {
-        tinypos_t *DEpos; /* was DE */
-
-        // PUSH DE_charstr
-
         // The original code stores to saved_pos as if it's a pair of bytes.
-        // I assume it's just scratch space.
+        // This is different from most, if not all, of the other locations in
+        // the code which treat it as a pair of 16-bit words.
+        // Given that I assume it's just being used here as scratch space.
 
-        DEpos = &state->saved_pos.tinypos;
         /* Conv: Unrolled. */
-        DEpos->x = HLtinypos->x >> 1;
-        DEpos->y = HLtinypos->y >> 1;
-        HLtinypos = &state->saved_pos.tinypos;
-
-        // POP DE_charstr
+        state->saved_pos.tinypos.x = HLtinypos->x >> 1;
+        state->saved_pos.tinypos.y = HLtinypos->y >> 1;
+        HLtinypos2 = &state->saved_pos.tinypos;
+      }
+      else
+      {
+        /* Conv: Assignment made explicit. */
+        HLtinypos2 = HLtinypos;
       }
 
-      if (DEcharstr->room == room_0_OUTDOORS) // reloads 'room'
+      if (DEcharstr->room == room_0_OUTDOORS) // FUTURE: Remove reload of 'room'.
         max = 2;
       else
         max = 6;
 
       DEcharstr_tinypos = &DEcharstr->pos;
 
-      B = change_by_delta(max, 0, &HLtinypos->x, &DEcharstr_tinypos->x); // max, rc, second, first
-      B = change_by_delta(max, B, &HLtinypos->y, &DEcharstr_tinypos->y);
+      B = change_by_delta(max, 0, &HLtinypos2->x, &DEcharstr_tinypos->x); // max, rc, second, first
+      B = change_by_delta(max, B, &HLtinypos2->y, &DEcharstr_tinypos->y);
       if (B != 2)
         return; /* Managed to move. */
 
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      // Ugly cast to turn HLtinypos back into a door_t.
-      // I'm unsure how this can work in the OUTDOORS case when HLtinypos points at state->saved_pos.
+      /* This unpleasant cast turns HLtinypos (assigned in get_next_target)
+       * back into a door_t. */
       HLdoor = (door_t *) ((char *) HLtinypos - 1);
       assert(HLdoor >= &doors[0]);
       assert(HLdoor < &doors[door_MAX * 2]);
@@ -8464,18 +8466,18 @@ trigger_event:
 
       // Stuff reading from doors.
       if ((HLdoor->room_and_flags & door_FLAGS_MASK_DIRECTION) < 2)
+        // top left or top right
         // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
         HLtinypos = &HLdoor[1].pos;
       else
+        // bottom left or bottom right
         HLtinypos = &HLdoor[-1].pos;
 
       room = DEcharstr->room; // *DE++;
       DEcharstr_tinypos = &DEcharstr->pos;
       if (room != room_0_OUTDOORS)
       {
-        DEcharstr_tinypos->x      = HLtinypos->x;
-        DEcharstr_tinypos->y      = HLtinypos->y;
-        DEcharstr_tinypos->height = HLtinypos->height;
+        *DEcharstr_tinypos = *HLtinypos;
 //        DE += 3;
 //        DE--; // DE points to DEtinypos->height
         // HL += 3 // HL points to next door_t?
@@ -8505,12 +8507,8 @@ trigger_event:
       // => state->locations[]
       // HL comes from HLlocation
 
-      B = 0;
-      B = change_by_delta(max, B, &HLlocation->x, &charstr->pos.x);
-//      HL++;
-//      DE++;
+      B = change_by_delta(max, 0, &HLlocation->x, &charstr->pos.x);
       B = change_by_delta(max, B, &HLlocation->y, &charstr->pos.y);
-//      DE++;
       if (B != 2)
         return; // managed to move
     }
@@ -8520,7 +8518,6 @@ trigger_event:
     routeindex = DEcharstr->route.index; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // route field
     if (routeindex == route_WANDER)
       return;
-    //printf("%p\n", &HLroute->y);
     if ((routeindex & route_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
       DEcharstr->route.step++;
     else
