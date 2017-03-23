@@ -3095,11 +3095,11 @@ found_on_screen:
  */
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          get_next_target_flags; /* was A */
-  tinypos_t       *pos;      /* was DE */
-  route_t         *route;    /* was HL */
-  const tinypos_t *doorpos;  /* was HL */
-  xy_t            *location; /* was HL */
+  uint8_t          get_target_result; /* was A */
+  tinypos_t       *pos;               /* was DE */
+  route_t         *route;             /* was HL */
+  const tinypos_t *doorpos;           /* was HL */
+  xy_t            *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3108,31 +3108,31 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
-  get_next_target_flags = get_next_target(state,
-                                          &vischar->route,
-                                          &route,
-                                          &doorpos,
-                                          &location);
+  get_target_result = get_target(state,
+                                 &vischar->route,
+                                 &route,
+                                 &doorpos,
+                                 &location);
 
   /* Stash the target coordinates in 'pos'. */
   pos = &vischar->pos;
-  if (get_next_target_flags == get_next_target_LOCATION)
+  if (get_target_result == get_target_LOCATION)
   {
     pos->x = location->x;
     pos->y = location->y;
   }
-  else if (get_next_target_flags == get_next_target_DOOR)
+  else if (get_target_result == get_target_DOOR)
   {
     pos->x = doorpos->x;
     pos->y = doorpos->y;
   }
 
-  if (get_next_target_flags == get_next_target_ROUTE_ENDS)
+  if (get_target_result == get_target_ROUTE_ENDS)
   {
     state->IY = vischar;
-    (void) get_next_target_and_handle_it(state, vischar, &vischar->route);
+    (void) get_target_and_handle_it(state, vischar, &vischar->route);
   }
-  else if (get_next_target_flags == get_next_target_DOOR)
+  else if (get_target_result == get_target_DOOR)
   {
     vischar->flags |= vischar_FLAGS_DOOR_THING;
   }
@@ -5723,7 +5723,7 @@ void accept_bribe(tgestate_t *state)
 
   state->IY->flags = 0;
 
-  (void) get_next_target_and_handle_it(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
+  (void) get_target_and_handle_it(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
 
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
@@ -7940,18 +7940,18 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
     { &animations[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
   };
 
-  vischar_t                   *vischar;   /* was HL/IY */
-  uint8_t                      iters;     /* was B */
-  characterstruct_t           *charstr2;  /* was DE */
-  pos_t                       *saved_pos; /* was HL */
-  character_t                  character; /* was A */
-  const character_class_data_t *metadata; /* was DE */
+  vischar_t                   *vischar;           /* was HL/IY */
+  uint8_t                      iters;             /* was B */
+  characterstruct_t           *charstr2;          /* was DE */
+  pos_t                       *saved_pos;         /* was HL */
+  character_t                  character;         /* was A */
+  const character_class_data_t *metadata;         /* was DE */
   int                          Z;
-  room_t                       room;      /* was A */
-  uint8_t                      get_next_target_flags; /* was A */
-  route_t                     *route;     /* was HL */
-  const tinypos_t             *doorpos;   /* was HL */
-  xy_t                        *location;  /* was HL */
+  room_t                       room;              /* was A */
+  uint8_t                      get_target_result; /* was A */
+  route_t                     *route;             /* was HL */
+  const tinypos_t             *doorpos;           /* was HL */
+  xy_t                        *location;          /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -8065,12 +8065,12 @@ again:
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
-    get_next_target_flags = get_next_target(state,
-                                            &charstr->route,
-                                            &route,
-                                            &doorpos,
-                                            &location);
-    if (get_next_target_flags == get_next_target_ROUTE_ENDS)
+    get_target_result = get_target(state,
+                                   &charstr->route,
+                                   &route,
+                                   &doorpos,
+                                   &location);
+    if (get_target_result == get_target_ROUTE_ENDS)
     {
       // POP HL // HL = DE
       // HL -= 2; // -> vischar->route
@@ -8080,14 +8080,14 @@ again:
       // DE = HL + 2; // -> vischar->pos
       goto again;
     }
-    else if (get_next_target_flags == get_next_target_DOOR)
+    else if (get_target_result == get_target_DOOR)
     {
       vischar->flags |= vischar_FLAGS_DOOR_THING;
     }
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
-    // it seems that get_next_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
-    if (get_next_target_flags == get_next_target_DOOR)
+    // it seems that get_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
+    if (get_target_result == get_target_DOOR)
     {
       vischar->pos = *doorpos;
     }
@@ -8214,23 +8214,33 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C651: Gets a new route.
+ * $C651: Return the coordinates of the route's current target.
+ *
+ * Given a route_t return the coordinates to move to. Coordinates might be
+ * returned as a tinypos_t when moving to a door or an xy_t when moving to a
+ * numbered location. The original route_t is returned when the route ends.
+ *
+ * If the route specifies 'wander' then one of eight random locations is
+ * chosen starting from route.step.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] route     Pointer to characterstruct + 5 [or others]. (route field(s)) (was HL)
- * \param[in] route_out Pointer to recieve new route. (was HL)
+ * \param[in] route     Pointer to route.                            (was HL)
+ * \param[in] route_out Receives input route when route has ended.   (was HL)
+ * \param[in] doorpos   Receives doorpos when moving to a door.      (was HL)
+ * \param[in] location  Receives location when moving to a location. (was HL)
  *
- * In the result == 128 case route_out points at a door_t.pos (door_t + 1 byte).
- *
- * \return 0/128/255 = (ok/through a door/hit end of list)
+ * \retval get_target_ROUTE_ENDS The route has ended.
+ * \retval get_target_DOOR       The next target is a door.
+ * \retval get_target_LOCATION   The next target is a location.
  */
-uint8_t get_next_target(tgestate_t       *state,
-                        route_t          *route,
-                        route_t         **route_out,
-                        const tinypos_t **doorpos,
-                        xy_t            **location)
+uint8_t get_target(tgestate_t       *state,
+                   route_t          *route,
+                   route_t         **route_out,
+                   const tinypos_t **doorpos,
+                   xy_t            **location)
 {
   // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
+  // FIXME What was this ^ about?
 
   uint8_t        routeindex; /* was A */
   uint8_t        index;      /* was ? */
@@ -8242,7 +8252,7 @@ uint8_t get_next_target(tgestate_t       *state,
   assert(state     != NULL);
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
-//  assert(route_out != NULL);
+  assert(route_out != NULL);
 
   *doorpos = NULL; /* Conv: Added. */
 
@@ -8277,7 +8287,7 @@ uint8_t get_next_target(tgestate_t       *state,
     {
       /* 255: End of route */
       *route_out = route;
-      return get_next_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
+      return get_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
     }
     else if ((routebyte & ~door_REVERSE) < 40)
     {
@@ -8286,7 +8296,7 @@ uint8_t get_next_target(tgestate_t       *state,
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
       *doorpos = &door->pos; // so this IS returning a tinypos in doors
-      return get_next_target_DOOR;
+      return get_target_DOOR;
     }
     else
     {
@@ -8299,7 +8309,7 @@ uint8_t get_next_target(tgestate_t       *state,
 
   *location = &state->locations[index];
 
-  return get_next_target_LOCATION;
+  return get_target_LOCATION;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8315,7 +8325,7 @@ void move_characters(tgestate_t *state)
   characterstruct_t *charstr;                 /* was HL */
   room_t             room;                    /* was A */
   item_t             item;                    /* was C */
-  uint8_t            get_next_target_result;  /* was A */
+  uint8_t            get_target_result;       /* was A */
   route_t           *HLroute;                 /* was HL */
   const tinypos_t   *HLtinypos;               /* was HL */
   xy_t              *HLlocation;              /* was HL */
@@ -8362,12 +8372,12 @@ void move_characters(tgestate_t *state)
     // POP HL_pos
     return;
 
-  get_next_target_result = get_next_target(state,
-                                           &charstr->route,
-                                           &HLroute,
-                                           &HLtinypos,
-                                           &HLlocation);
-  if (get_next_target_result == get_next_target_ROUTE_ENDS)
+  get_target_result = get_target(state,
+                                 &charstr->route,
+                                 &HLroute,
+                                 &HLtinypos,
+                                 &HLlocation);
+  if (get_target_result == get_target_ROUTE_ENDS)
   {
     /* When the route ends reverse the route. */
 
@@ -8412,7 +8422,7 @@ trigger_event:
   }
   else
   {
-    if (get_next_target_result == get_next_target_DOOR)
+    if (get_target_result == get_target_DOOR)
     {
       const tinypos_t *HLtinypos2; /* was HL */
 
@@ -8453,7 +8463,7 @@ trigger_event:
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      /* This unpleasant cast turns HLtinypos (assigned in get_next_target)
+      /* This unpleasant cast turns HLtinypos (assigned in get_target)
        * back into a door_t. */
       HLdoor = (door_t *) ((char *) HLtinypos - 1);
       assert(HLdoor >= &doors[0]);
@@ -8960,7 +8970,7 @@ set_pos:
       // hero is under automatic control
 
       vischar2->flags = 0;
-      (void) get_next_target_and_handle_it(state, vischar2, &vischar2->route);
+      (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
       return;
     }
     else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
@@ -8977,7 +8987,7 @@ set_pos:
         vischar2->flags       = 0;
         vischar2->route.index = route_WANDER; /* Choose random locations[]. */
         vischar2->route.step  = 0; /* 0..7 */
-        (void) get_next_target_and_handle_it(state, vischar2, &vischar2->route);
+        (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9003,7 +9013,7 @@ set_pos:
 
       /* Bribed character was not visible. */
       vischar2->flags = 0;
-      (void) get_next_target_and_handle_it(state, vischar2, &vischar2->route);
+      (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
       return;
 
 bribed_visible:
@@ -9311,7 +9321,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     {
       /* Hero's vischar only. */
       vischarHL->flags &= ~vischar_FLAGS_DOOR_THING;
-      (void) get_next_target_and_handle_it(state, vischarHL, &vischarHL->route);
+      (void) get_target_and_handle_it(state, vischarHL, &vischarHL->route);
     }
 
     // POP HL_tinypos
@@ -9332,46 +9342,46 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->route.step++;
   }
 
-  (void) get_next_target_and_handle_it(state, vischar, &vischar->route); // was fallthrough
+  (void) get_target_and_handle_it(state, vischar, &vischar->route); // was fallthrough
 }
 
 /**
- * $CB23: Calls get_next_target
+ * $CB23: Calls get_target
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t get_next_target_and_handle_it(tgestate_t *state,
-                                      vischar_t  *vischar,
-                                      route_t    *route)
+uint8_t get_target_and_handle_it(tgestate_t *state,
+                                 vischar_t  *vischar,
+                                 route_t    *route)
 {
-  uint8_t          get_next_target_flags; /* was A */
-  route_t         *new_route;             /* was HL */
-  const tinypos_t *doorpos;               /* was HL */
-  xy_t            *location;              /* was HL */
+  uint8_t          get_target_result; /* was A */
+  route_t         *new_route;         /* was HL */
+  const tinypos_t *doorpos;           /* was HL */
+  xy_t            *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  get_next_target_flags = get_next_target(state,
-                                          route,
-                                          &new_route,
-                                          &doorpos,
-                                          &location);
-  if (get_next_target_flags != get_next_target_ROUTE_ENDS)
+  get_target_result = get_target(state,
+                                 route,
+                                 &new_route,
+                                 &doorpos,
+                                 &location);
+  if (get_target_result != get_target_ROUTE_ENDS)
   {
     /* Didn't hit end of list case. */
     /* Chunk from $CB61 */
 
-    if (get_next_target_flags == get_next_target_DOOR)
+    if (get_target_result == get_target_DOOR)
       vischar->flags |= vischar_FLAGS_DOOR_THING;
 
-    // Conv: Cope with get_next_target returning results in different vars.
+    // Conv: Cope with get_target returning results in different vars.
     // Original game just transfers x,y across.
-    if (get_next_target_flags == get_next_target_DOOR)
+    if (get_target_result == get_target_DOOR)
     {
       vischar->pos.x = doorpos->x;
       vischar->pos.y = doorpos->y;
@@ -9391,9 +9401,9 @@ uint8_t get_next_target_and_handle_it(tgestate_t *state,
 }
 
 /**
- * $CB2D: get_next_target has run out of route.
+ * $CB2D: get_target has run out of route.
  *
- * Called by spawn_character, get_next_target_and_handle_it.
+ * Called by spawn_character, get_target_and_handle_it.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9434,7 +9444,7 @@ do_character_event:
   character_event(state, route);
   if (route->index == 0) /* standing still */
     return 0;
-  return get_next_target_and_handle_it(state, vischar, route); // re-enter
+  return get_target_and_handle_it(state, vischar, route); // re-enter
 
 reverse_route:
   /* We arrive here if:
@@ -9474,14 +9484,14 @@ reverse_route:
 /**
  * $CB79: Return a pointer to route index 'A'.
  *
- * Used by the routines at get_next_target and bribes_solitary_food.
+ * Used by the routines at get_target and bribes_solitary_food.
  *
  * \param[in] index Route index.
  *
  * \return Pointer to route data. (was DE)
  */
 
-// get_next_target tells me that if (val & ~door_LOCKED) < 40 then it's a
+// get_target tells me that if (val & ~door_LOCKED) < 40 then it's a
 // door else other values are +40.
 //
 // How does 40 relate to door_MAX?
@@ -9865,7 +9875,7 @@ const uint8_t *get_route(uint8_t index)
 /**
  * $CB85: Pseudo-random number generator.
  *
- * Leaf. Only ever used by get_next_target.
+ * Leaf. Only ever used by get_target.
  *
  * \return Pseudo-random number from 0..15.
  */

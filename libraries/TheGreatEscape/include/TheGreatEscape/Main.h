@@ -466,15 +466,15 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr);
 
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
-#define get_next_target_LOCATION   0
-#define get_next_target_DOOR       128
-#define get_next_target_ROUTE_ENDS 255
+#define get_target_LOCATION   0
+#define get_target_DOOR       128
+#define get_target_ROUTE_ENDS 255
 
-uint8_t get_next_target(tgestate_t       *state,
-                        route_t          *route,
-                        route_t         **route_out,
-                        const tinypos_t **doorpos,
-                        xy_t            **location);
+uint8_t get_target(tgestate_t       *state,
+                   route_t          *route,
+                   route_t         **route_out,
+                   const tinypos_t **doorpos,
+                   xy_t            **location);
 
 void move_characters(tgestate_t *state);
 
@@ -522,9 +522,9 @@ uint8_t vischar_at_pos_y(tgestate_t *state,
 
 void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 
-uint8_t get_next_target_and_handle_it(tgestate_t *state,
-                                      vischar_t  *vischar,
-                                      route_t   *route);
+uint8_t get_target_and_handle_it(tgestate_t *state,
+                                 vischar_t  *vischar,
+                                 route_t   *route);
 uint8_t route_ended(tgestate_t *state,
                     vischar_t  *vischar,
                     route_t    *route);
