@@ -30,32 +30,32 @@ static void tge_initialise(tgestate_t *state)
    */
   static const characterstruct_t character_structs[character_structs__LIMIT] =
   {
-    { character_0_COMMANDANT,   room_11_PAPERS,   {  46,  46, 24 }, { 0x03, 0x00 } },
-    { character_1_GUARD_1,      room_0_OUTDOORS,  { 102,  68,  3 }, { 0x01, 0x00 } },
-    { character_2_GUARD_2,      room_0_OUTDOORS,  {  68, 104,  3 }, { 0x01, 0x02 } },
-    { character_3_GUARD_3,      room_16_CORRIDOR, {  46,  46, 24 }, { 0x03, 0x13 } },
-    { character_4_GUARD_4,      room_0_OUTDOORS,  {  61, 103,  3 }, { 0x02, 0x04 } },
-    { character_5_GUARD_5,      room_0_OUTDOORS,  { 106,  56, 13 }, { 0x00, 0x00 } },
-    { character_6_GUARD_6,      room_0_OUTDOORS,  {  72,  94, 13 }, { 0x00, 0x00 } },
-    { character_7_GUARD_7,      room_0_OUTDOORS,  {  72,  70, 13 }, { 0x00, 0x00 } },
-    { character_8_GUARD_8,      room_0_OUTDOORS,  {  80,  46, 13 }, { 0x00, 0x00 } },
-    { character_9_GUARD_9,      room_0_OUTDOORS,  { 108,  71, 21 }, { 0x04, 0x00 } },
-    { character_10_GUARD_10,    room_0_OUTDOORS,  {  92,  52,  3 }, { 0xFF, 0x38 } },
-    { character_11_GUARD_11,    room_0_OUTDOORS,  { 109,  69,  3 }, { 0x00, 0x00 } },
-    { character_12_GUARD_12,    room_3_HUT2RIGHT, {  40,  60, 24 }, { 0x00, 0x08 } },
-    { character_13_GUARD_13,    room_2_HUT2LEFT,  {  36,  48, 24 }, { 0x00, 0x08 } },
-    { character_14_GUARD_14,    room_5_HUT3RIGHT, {  40,  60, 24 }, { 0x00, 0x10 } },
-    { character_15_GUARD_15,    room_5_HUT3RIGHT, {  36,  34, 24 }, { 0x00, 0x10 } },
-    { character_16_GUARD_DOG_1, room_0_OUTDOORS,  {  68,  84,  1 }, { 0xFF, 0x00 } },
-    { character_17_GUARD_DOG_2, room_0_OUTDOORS,  {  68, 104,  1 }, { 0xFF, 0x00 } },
-    { character_18_GUARD_DOG_3, room_0_OUTDOORS,  { 102,  68,  1 }, { 0xFF, 0x18 } },
-    { character_19_GUARD_DOG_4, room_0_OUTDOORS,  {  88,  68,  1 }, { 0xFF, 0x18 } },
-    { character_20_PRISONER_1,  room_NONE,        {  52,  60, 24 }, { 0x00, 0x08 } }, // wake_up, breakfast_time
-    { character_21_PRISONER_2,  room_NONE,        {  52,  44, 24 }, { 0x00, 0x08 } }, // wake_up, breakfast_time
-    { character_22_PRISONER_3,  room_NONE,        {  52,  28, 24 }, { 0x00, 0x08 } }, // wake_up, breakfast_time
-    { character_23_PRISONER_4,  room_NONE,        {  52,  60, 24 }, { 0x00, 0x10 } }, // wake_up, breakfast_time
-    { character_24_PRISONER_5,  room_NONE,        {  52,  44, 24 }, { 0x00, 0x10 } }, // wake_up, breakfast_time
-    { character_25_PRISONER_6,  room_NONE,        {  52,  28, 24 }, { 0x00, 0x10 } }, // wake_up, breakfast_time
+    { character_0_COMMANDANT,   room_11_PAPERS,   {  46,  46, 24 }, {   3,  0 } },
+    { character_1_GUARD_1,      room_0_OUTDOORS,  { 102,  68,  3 }, {   1,  0 } },
+    { character_2_GUARD_2,      room_0_OUTDOORS,  {  68, 104,  3 }, {   1,  2 } },
+    { character_3_GUARD_3,      room_16_CORRIDOR, {  46,  46, 24 }, {   3, 19 } },
+    { character_4_GUARD_4,      room_0_OUTDOORS,  {  61, 103,  3 }, {   2,  4 } },
+    { character_5_GUARD_5,      room_0_OUTDOORS,  { 106,  56, 13 }, {   0,  0 } },
+    { character_6_GUARD_6,      room_0_OUTDOORS,  {  72,  94, 13 }, {   0,  0 } },
+    { character_7_GUARD_7,      room_0_OUTDOORS,  {  72,  70, 13 }, {   0,  0 } },
+    { character_8_GUARD_8,      room_0_OUTDOORS,  {  80,  46, 13 }, {   0,  0 } },
+    { character_9_GUARD_9,      room_0_OUTDOORS,  { 108,  71, 21 }, {   4,  0 } },
+    { character_10_GUARD_10,    room_0_OUTDOORS,  {  92,  52,  3 }, { 255, 56 } }, // route_WANDER
+    { character_11_GUARD_11,    room_0_OUTDOORS,  { 109,  69,  3 }, {   0,  0 } },
+    { character_12_GUARD_12,    room_3_HUT2RIGHT, {  40,  60, 24 }, {   0,  8 } },
+    { character_13_GUARD_13,    room_2_HUT2LEFT,  {  36,  48, 24 }, {   0,  8 } },
+    { character_14_GUARD_14,    room_5_HUT3RIGHT, {  40,  60, 24 }, {   0, 16 } },
+    { character_15_GUARD_15,    room_5_HUT3RIGHT, {  36,  34, 24 }, {   0, 16 } },
+    { character_16_GUARD_DOG_1, room_0_OUTDOORS,  {  68,  84,  1 }, { 255,  0 } }, // route_WANDER
+    { character_17_GUARD_DOG_2, room_0_OUTDOORS,  {  68, 104,  1 }, { 255,  0 } }, // route_WANDER
+    { character_18_GUARD_DOG_3, room_0_OUTDOORS,  { 102,  68,  1 }, { 255, 24 } }, // route_WANDER
+    { character_19_GUARD_DOG_4, room_0_OUTDOORS,  {  88,  68,  1 }, { 255, 24 } }, // route_WANDER
+    { character_20_PRISONER_1,  room_NONE,        {  52,  60, 24 }, {   0,  8 } }, // wake_up, breakfast_time
+    { character_21_PRISONER_2,  room_NONE,        {  52,  44, 24 }, {   0,  8 } }, // wake_up, breakfast_time
+    { character_22_PRISONER_3,  room_NONE,        {  52,  28, 24 }, {   0,  8 } }, // wake_up, breakfast_time
+    { character_23_PRISONER_4,  room_NONE,        {  52,  60, 24 }, {   0, 16 } }, // wake_up, breakfast_time
+    { character_24_PRISONER_5,  room_NONE,        {  52,  44, 24 }, {   0, 16 } }, // wake_up, breakfast_time
+    { character_25_PRISONER_6,  room_NONE,        {  52,  28, 24 }, {   0, 16 } }, // wake_up, breakfast_time
   };
 
   /**
@@ -63,22 +63,22 @@ static void tge_initialise(tgestate_t *state)
    */
   static const itemstruct_t item_structs[item__LIMIT] =
   {
-    { item_WIRESNIPS,        room_NONE,        { 64, 32,  2 }, { 0x78, 0xF4 } },
-    { item_SHOVEL,           room_9_CRATE,     { 62, 48,  0 }, { 0x7C, 0xF2 } },
-    { item_LOCKPICK,         room_10_LOCKPICK, { 73, 36, 16 }, { 0x77, 0xF0 } },
-    { item_PAPERS,           room_11_PAPERS,   { 42, 58,  4 }, { 0x84, 0xF3 } },
-    { item_TORCH,            room_14_TORCH,    { 34, 24,  2 }, { 0x7A, 0xF6 } },
-    { item_BRIBE,            room_NONE,        { 36, 44,  4 }, { 0x7E, 0xF4 } },
-    { item_UNIFORM,          room_15_UNIFORM,  { 44, 65, 16 }, { 0x87, 0xF1 } },
-    { item_FOOD,             room_19_FOOD,     { 64, 48, 16 }, { 0x7E, 0xF0 } },
-    { item_POISON,           room_1_HUT1RIGHT, { 66, 52,  4 }, { 0x7C, 0xF1 } },
-    { item_RED_KEY,          room_22_REDKEY,   { 60, 42,  0 }, { 0x7B, 0xF2 } },
-    { item_YELLOW_KEY,       room_11_PAPERS,   { 28, 34,  0 }, { 0x81, 0xF8 } },
-    { item_GREEN_KEY,        room_0_OUTDOORS,  { 74, 72,  0 }, { 0x7A, 0x6E } },
-    { item_RED_CROSS_PARCEL, room_NONE,        { 28, 50, 12 }, { 0x85, 0xF6 } },
-    { item_RADIO,            room_18_RADIO,    { 36, 58,  8 }, { 0x85, 0xF4 } },
-    { item_PURSE,            room_NONE,        { 36, 44,  4 }, { 0x7E, 0xF4 } },
-    { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 0x7E, 0xF4 } },
+    { item_WIRESNIPS,        room_NONE,        { 64, 32,  2 }, { 120, 244 } },
+    { item_SHOVEL,           room_9_CRATE,     { 62, 48,  0 }, { 124, 242 } },
+    { item_LOCKPICK,         room_10_LOCKPICK, { 73, 36, 16 }, { 119, 240 } },
+    { item_PAPERS,           room_11_PAPERS,   { 42, 58,  4 }, { 132, 243 } },
+    { item_TORCH,            room_14_TORCH,    { 34, 24,  2 }, { 122, 246 } },
+    { item_BRIBE,            room_NONE,        { 36, 44,  4 }, { 126, 244 } },
+    { item_UNIFORM,          room_15_UNIFORM,  { 44, 65, 16 }, { 135, 241 } },
+    { item_FOOD,             room_19_FOOD,     { 64, 48, 16 }, { 126, 240 } },
+    { item_POISON,           room_1_HUT1RIGHT, { 66, 52,  4 }, { 124, 241 } },
+    { item_RED_KEY,          room_22_REDKEY,   { 60, 42,  0 }, { 123, 242 } },
+    { item_YELLOW_KEY,       room_11_PAPERS,   { 28, 34,  0 }, { 129, 248 } },
+    { item_GREEN_KEY,        room_0_OUTDOORS,  { 74, 72,  0 }, { 122, 110 } },
+    { item_RED_CROSS_PARCEL, room_NONE,        { 28, 50, 12 }, { 133, 246 } },
+    { item_RADIO,            room_18_RADIO,    { 36, 58,  8 }, { 133, 244 } },
+    { item_PURSE,            room_NONE,        { 36, 44,  4 }, { 126, 244 } },
+    { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 126, 244 } },
   };
 
   /**
@@ -88,127 +88,127 @@ static void tge_initialise(tgestate_t *state)
   {
     // reset_visible_character guard dogs 1 & 2 use 0..7
     // character_behaviour uss this range also, for dog behaviour
-    { 0x44, 0x68 }, // 0
-    { 0x44, 0x54 }, // 1
-    { 0x44, 0x46 }, // 2
-    { 0x40, 0x66 }, // 3
-    { 0x40, 0x40 }, // 4
-    { 0x44, 0x44 }, // 5
-    { 0x40, 0x40 }, // 6
-    { 0x44, 0x40 }, // 7
+    {  68, 104 }, // 0
+    {  68,  84 }, // 1
+    {  68,  70 }, // 2
+    {  64, 102 }, // 3
+    {  64,  64 }, // 4
+    {  68,  68 }, // 5
+    {  64,  64 }, // 6
+    {  68,  64 }, // 7
 
     // charevnt_handler_0 uses 8..15
-    { 0x68, 0x70 }, // 8
-    { 0x60, 0x70 }, // 9 used by route_guard_12_roll_call
-    { 0x6A, 0x66 }, // 10
-    { 0x5D, 0x68 }, // 11 used by route_commandant, route_exit_hut2, data_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
-    { 0x7C, 0x65 }, // 12 used by route_exit_hut2, data_77E7, data_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
-    { 0x7C, 0x70 }, // 13
-    { 0x74, 0x68 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
-    { 0x70, 0x64 }, // 15
+    { 104, 112 }, // 8
+    {  96, 112 }, // 9 used by route_guard_12_roll_call
+    { 106, 102 }, // 10
+    {  93, 104 }, // 11 used by route_commandant, route_exit_hut2, data_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
+    { 124, 101 }, // 12 used by route_exit_hut2, data_77E7, data_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
+    { 124, 112 }, // 13
+    { 116, 104 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
+    { 112, 100 }, // 15
 
     // charevnt_handler_1 uses 16..23
-    { 0x78, 0x60 }, // 16 used by data_77EC
-    { 0x80, 0x58 }, // 17 used by route_guard_14_roll_call
-    { 0x70, 0x60 }, // 18
-    { 0x74, 0x54 }, // 19
-    { 0x7C, 0x64 }, // 20
-    { 0x7C, 0x70 }, // 21
-    { 0x74, 0x68 }, // 22
-    { 0x70, 0x64 }, // 23
+    { 120,  96 }, // 16 used by data_77EC
+    { 128,  88 }, // 17 used by route_guard_14_roll_call
+    { 112,  96 }, // 18
+    { 116,  84 }, // 19
+    { 124, 100 }, // 20
+    { 124, 112 }, // 21
+    { 116, 104 }, // 22
+    { 112, 100 }, // 23
 
     // reset_visible_character guard dogs 3 & 4 use 24..31
-    { 0x66, 0x44 }, // 24
-    { 0x66, 0x40 }, // 25
-    { 0x60, 0x40 }, // 26
-    { 0x5C, 0x44 }, // 27
-    { 0x56, 0x44 }, // 28
-    { 0x54, 0x40 }, // 29
-    { 0x4A, 0x44 }, // 30
-    { 0x4A, 0x40 }, // 31
+    { 102,  68 }, // 24
+    { 102,  64 }, // 25
+    {  96,  64 }, // 26
+    {  92,  68 }, // 27
+    {  86,  68 }, // 28
+    {  84,  64 }, // 29
+    {  74,  68 }, // 30
+    {  74,  64 }, // 31
 
-    { 0x66, 0x44 }, // 32 used by data_7795
-    { 0x44, 0x44 }, // 33 used by data_7795
-    { 0x44, 0x68 }, // 34 used by data_7795
+    { 102,  68 }, // 32 used by data_7795
+    {  68,  68 }, // 33 used by data_7795
+    {  68, 104 }, // 34 used by data_7795
 
-    { 0x6B, 0x45 }, // 35 used by data_7799
-    { 0x6B, 0x2D }, // 36 used by data_7799
-    { 0x4D, 0x2D }, // 37 used by data_7799
-    { 0x4D, 0x3D }, // 38 used by data_7799
-    { 0x3D, 0x3D }, // 39 used by data_7799
-    { 0x3D, 0x67 }, // 40 used by data_7799
+    { 107,  69 }, // 35 used by data_7799
+    { 107,  45 }, // 36 used by data_7799
+    {  77,  45 }, // 37 used by data_7799
+    {  77,  61 }, // 38 used by data_7799
+    {  61,  61 }, // 39 used by data_7799
+    {  61, 103 }, // 40 used by data_7799
 
-    { 0x74, 0x4C }, // 41
-    { 0x2C, 0x2A }, // 42 used by route_commandant, route_go_to_solitary
-    { 0x6A, 0x48 }, // 43 used by data_77CD
-    { 0x6E, 0x48 }, // 44 used by data_77CD
-    { 0x51, 0x68 }, // 45 used by route_commandant, route_exit_hut3, route_guard_14_bed, route_guard_15_bed
+    { 116,  76 }, // 41
+    {  44,  42 }, // 42 used by route_commandant, route_go_to_solitary
+    { 106,  72 }, // 43 used by data_77CD
+    { 110,  72 }, // 44 used by data_77CD
+    {  81, 104 }, // 45 used by route_commandant, route_exit_hut3, route_guard_14_bed, route_guard_15_bed
 
-    { 0x34, 0x3C }, // 46 used by route_commandant, route_prisoner_sleeps_1
-    { 0x34, 0x2C }, // 47 used by route_prisoner_sleeps_2
-    { 0x34, 0x1C }, // 48 used by route_prisoner_sleeps_3
-    { 0x77, 0x6B }, // 49 used by route_guard_15_roll_call
-    { 0x7A, 0x6E }, // 50 used by route_hero_roll_call
-    { 0x34, 0x1C }, // 51 
-    { 0x28, 0x3C }, // 52 used by data_77DE, route_guard_14_bed
-    { 0x24, 0x22 }, // 53 used by data_77DE, route_guard_13_bed, route_guard_15_bed
-    { 0x50, 0x4C }, // 54
-    { 0x59, 0x4C }, // 55 used by route_commandant, data_77E1
+    {  52,  60 }, // 46 used by route_commandant, route_prisoner_sleeps_1
+    {  52,  44 }, // 47 used by route_prisoner_sleeps_2
+    {  52,  28 }, // 48 used by route_prisoner_sleeps_3
+    { 119, 107 }, // 49 used by route_guard_15_roll_call
+    { 122, 110 }, // 50 used by route_hero_roll_call
+    {  52,  28 }, // 51 
+    {  40,  60 }, // 52 used by data_77DE, route_guard_14_bed
+    {  36,  34 }, // 53 used by data_77DE, route_guard_13_bed, route_guard_15_bed
+    {  80,  76 }, // 54
+    {  89,  76 }, // 55 used by route_commandant, data_77E1
 
     // charevnt_handler_2 uses 56..63
-    { 0x59, 0x3C }, // 56 used by data_77E1
-    { 0x64, 0x3D }, // 57
-    { 0x5C, 0x36 }, // 58
-    { 0x54, 0x32 }, // 59
-    { 0x66, 0x30 }, // 60 used by route_commandant
-    { 0x60, 0x38 }, // 61
-    { 0x4F, 0x3B }, // 62
-    { 0x67, 0x2F }, // 63
+    {  89,  60 }, // 56 used by data_77E1
+    { 100,  61 }, // 57
+    {  92,  54 }, // 58
+    {  84,  50 }, // 59
+    { 102,  48 }, // 60 used by route_commandant
+    {  96,  56 }, // 61
+    {  79,  59 }, // 62
+    { 103,  47 }, // 63
 
-    { 0x34, 0x36 }, // 64 character walks into breakfast room, used by route_prisoner_sits_1
-    { 0x34, 0x2E }, // 65 used by route_prisoner_sits_2
-    { 0x34, 0x24 }, // 66 used by route_prisoner_sits_3
-    { 0x34, 0x3E }, // 67 used by data_7833
-    { 0x20, 0x38 }, // 68 used by route_guardA_breakfast
-    { 0x34, 0x18 }, // 69 used by route_guardB_breakfast
-    { 0x2A, 0x2E }, // 70 used by route_hut2_right_to_left
-    { 0x22, 0x22 }, // 71
-    { 0x78, 0x6E }, // 72 roll call used by route_prisoner_1_roll_call
-    { 0x76, 0x6E }, // 73 roll call used by route_prisoner_2_roll_call
-    { 0x74, 0x6E }, // 74 roll call used by route_prisoner_3_roll_call
-    { 0x79, 0x6D }, // 75 roll call used by route_prisoner_4_roll_call
-    { 0x77, 0x6D }, // 76 roll call used by route_prisoner_5_roll_call
-    { 0x75, 0x6D }, // 77 roll call used by route_prisoner_6_roll_call
+    {  52,  54 }, // 64 character walks into breakfast room, used by route_prisoner_sits_1
+    {  52,  46 }, // 65 used by route_prisoner_sits_2
+    {  52,  36 }, // 66 used by route_prisoner_sits_3
+    {  52,  62 }, // 67 used by data_7833
+    {  32,  56 }, // 68 used by route_guardA_breakfast
+    {  52,  24 }, // 69 used by route_guardB_breakfast
+    {  42,  46 }, // 70 used by route_hut2_right_to_left
+    {  34,  34 }, // 71
+    { 120, 110 }, // 72 roll call used by route_prisoner_1_roll_call
+    { 118, 110 }, // 73 roll call used by route_prisoner_2_roll_call
+    { 116, 110 }, // 74 roll call used by route_prisoner_3_roll_call
+    { 121, 109 }, // 75 roll call used by route_prisoner_4_roll_call
+    { 119, 109 }, // 76 roll call used by route_prisoner_5_roll_call
+    { 117, 109 }, // 77 roll call used by route_prisoner_6_roll_call
   };
 
   /* $AD3E: Searchlight movement pattern for L-shaped gap? */
   static const uint8_t movement_0[] =
   {
-    0x20, direction_BOTTOM_RIGHT,
-    0x20, direction_TOP_RIGHT,
-    0xFF
+     32, direction_BOTTOM_RIGHT,
+     32, direction_TOP_RIGHT,
+    255
   };
 
   /* $AD43: Searchlight movement pattern for main compound. */
   static const uint8_t movement_1[] =
   {
-    0x18, direction_TOP_RIGHT,
-    0x0C, direction_TOP_LEFT,
-    0x18, direction_BOTTOM_LEFT,
-    0x0C, direction_TOP_LEFT,
-    0x20, direction_TOP_RIGHT,
-    0x14, direction_TOP_LEFT,
-    0x20, direction_BOTTOM_LEFT,
-    0x2C, direction_BOTTOM_RIGHT,
-    0xFF,
+     24, direction_TOP_RIGHT,
+     12, direction_TOP_LEFT,
+     24, direction_BOTTOM_LEFT,
+     12, direction_TOP_LEFT,
+     32, direction_TOP_RIGHT,
+     20, direction_TOP_LEFT,
+     32, direction_BOTTOM_LEFT,
+     44, direction_BOTTOM_RIGHT,
+    255,
   };
 
   /* $AD54: Searchlight movement pattern for ? */
   static const uint8_t movement_2[] =
   {
-    0x2C, direction_BOTTOM_RIGHT,
-    0x2A, direction_TOP_RIGHT,
-    0xFF,
+     44, direction_BOTTOM_RIGHT,
+     42, direction_TOP_RIGHT,
+    255,
   };
 
   /**
@@ -216,9 +216,9 @@ static void tge_initialise(tgestate_t *state)
    */
   static const searchlight_movement_t searchlight_states[3] =
   {
-    { { 0x24, 0x52 }, 0x2C, direction_BOTTOM_RIGHT, 0, &movement_2[0] },
-    { { 0x78, 0x52 }, 0x18, direction_TOP_RIGHT,    0, &movement_1[0] },
-    { { 0x3C, 0x4C }, 0x20, direction_BOTTOM_RIGHT, 0, &movement_0[0] },
+    { {  36, 82 }, 44, direction_BOTTOM_RIGHT, 0, &movement_2[0] },
+    { { 120, 82 }, 24, direction_TOP_RIGHT,    0, &movement_1[0] },
+    { {  60, 76 }, 32, direction_BOTTOM_RIGHT, 0, &movement_0[0] },
   };
 
   /**

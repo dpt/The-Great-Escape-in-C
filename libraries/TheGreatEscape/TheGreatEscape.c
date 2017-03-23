@@ -184,8 +184,8 @@ void enter_room(tgestate_t *state)
   state->game_window_offset.y = 0;
   setup_room(state);
   plot_interior_tiles(state);
-  state->map_position.x = 0x74;
-  state->map_position.y = 0xEA;
+  state->map_position.x = 116;
+  state->map_position.y = 234;
   set_hero_sprite_for_room(state);
   calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
   setup_movable_items(state);
@@ -472,53 +472,53 @@ void setup_room(tgestate_t *state)
    */
   static const mask_t interior_mask_data_source[47] =
   {
-    { 0x1B, { 0x7B, 0x7F, 0xF1, 0xF3 }, { 0x36, 0x28, 0x20 } },
-    { 0x1B, { 0x77, 0x7B, 0xF3, 0xF5 }, { 0x36, 0x18, 0x20 } },
-    { 0x1B, { 0x7C, 0x80, 0xF1, 0xF3 }, { 0x32, 0x2A, 0x20 } },
-    { 0x19, { 0x83, 0x86, 0xF2, 0xF7 }, { 0x18, 0x24, 0x20 } },
-    { 0x19, { 0x81, 0x84, 0xF4, 0xF9 }, { 0x18, 0x1A, 0x20 } },
-    { 0x19, { 0x81, 0x84, 0xF3, 0xF8 }, { 0x1C, 0x17, 0x20 } },
-    { 0x19, { 0x83, 0x86, 0xF4, 0xF8 }, { 0x16, 0x20, 0x20 } },
-    { 0x18, { 0x7D, 0x80, 0xF4, 0xF9 }, { 0x18, 0x1A, 0x20 } },
-    { 0x18, { 0x7B, 0x7E, 0xF3, 0xF8 }, { 0x22, 0x1A, 0x20 } },
-    { 0x18, { 0x79, 0x7C, 0xF4, 0xF9 }, { 0x22, 0x10, 0x20 } },
-    { 0x18, { 0x7B, 0x7E, 0xF4, 0xF9 }, { 0x1C, 0x17, 0x20 } },
-    { 0x18, { 0x79, 0x7C, 0xF1, 0xF6 }, { 0x2C, 0x1E, 0x20 } },
-    { 0x18, { 0x7D, 0x80, 0xF2, 0xF7 }, { 0x24, 0x22, 0x20 } },
-    { 0x1D, { 0x7F, 0x82, 0xF6, 0xF7 }, { 0x1C, 0x1E, 0x20 } },
-    { 0x1D, { 0x82, 0x85, 0xF2, 0xF3 }, { 0x23, 0x30, 0x20 } },
-    { 0x1D, { 0x86, 0x89, 0xF2, 0xF3 }, { 0x1C, 0x37, 0x20 } },
-    { 0x1D, { 0x86, 0x89, 0xF4, 0xF5 }, { 0x18, 0x30, 0x20 } },
-    { 0x1D, { 0x80, 0x83, 0xF1, 0xF2 }, { 0x28, 0x30, 0x20 } },
-    { 0x1C, { 0x81, 0x82, 0xF4, 0xF6 }, { 0x1C, 0x20, 0x20 } },
-    { 0x1C, { 0x83, 0x84, 0xF4, 0xF6 }, { 0x1C, 0x2E, 0x20 } },
-    { 0x1A, { 0x7E, 0x80, 0xF5, 0xF7 }, { 0x1C, 0x20, 0x20 } },
-    { 0x12, { 0x7A, 0x7B, 0xF2, 0xF3 }, { 0x3A, 0x28, 0x20 } },
-    { 0x12, { 0x7A, 0x7B, 0xEF, 0xF0 }, { 0x45, 0x35, 0x20 } },
-    { 0x17, { 0x80, 0x85, 0xF4, 0xF6 }, { 0x1C, 0x24, 0x20 } },
-    { 0x14, { 0x80, 0x84, 0xF3, 0xF5 }, { 0x26, 0x28, 0x20 } },
-    { 0x15, { 0x84, 0x85, 0xF6, 0xF7 }, { 0x1A, 0x1E, 0x20 } },
-    { 0x15, { 0x7E, 0x7F, 0xF3, 0xF4 }, { 0x2E, 0x26, 0x20 } },
-    { 0x16, { 0x7C, 0x85, 0xEF, 0xF3 }, { 0x32, 0x22, 0x20 } },
-    { 0x16, { 0x79, 0x82, 0xF0, 0xF4 }, { 0x34, 0x1A, 0x20 } },
-    { 0x16, { 0x7D, 0x86, 0xF2, 0xF6 }, { 0x24, 0x1A, 0x20 } },
-    { 0x10, { 0x76, 0x78, 0xF5, 0xF7 }, { 0x36, 0x0A, 0x20 } },
-    { 0x10, { 0x7A, 0x7C, 0xF3, 0xF5 }, { 0x36, 0x0A, 0x20 } },
-    { 0x10, { 0x7E, 0x80, 0xF1, 0xF3 }, { 0x36, 0x0A, 0x20 } },
-    { 0x10, { 0x82, 0x84, 0xEF, 0xF1 }, { 0x36, 0x0A, 0x20 } },
-    { 0x10, { 0x86, 0x88, 0xED, 0xEF }, { 0x36, 0x0A, 0x20 } },
-    { 0x10, { 0x8A, 0x8C, 0xEB, 0xED }, { 0x36, 0x0A, 0x20 } },
-    { 0x11, { 0x73, 0x75, 0xEB, 0xED }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x77, 0x79, 0xED, 0xEF }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x7B, 0x7D, 0xEF, 0xF1 }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x7F, 0x81, 0xF1, 0xF3 }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x83, 0x85, 0xF3, 0xF5 }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x87, 0x89, 0xF5, 0xF7 }, { 0x0A, 0x30, 0x20 } },
-    { 0x10, { 0x84, 0x86, 0xF4, 0xF7 }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x87, 0x89, 0xED, 0xEF }, { 0x0A, 0x30, 0x20 } },
-    { 0x11, { 0x7B, 0x7D, 0xF3, 0xF5 }, { 0x0A, 0x0A, 0x20 } },
-    { 0x11, { 0x79, 0x7B, 0xF4, 0xF6 }, { 0x0A, 0x0A, 0x20 } },
-    { 0x0F, { 0x88, 0x8C, 0xF5, 0xF8 }, { 0x0A, 0x0A, 0x20 } },
+    { 27, { 123, 127, 241, 243 }, { 54, 40, 32 } },
+    { 27, { 119, 123, 243, 245 }, { 54, 24, 32 } },
+    { 27, { 124, 128, 241, 243 }, { 50, 42, 32 } },
+    { 25, { 131, 134, 242, 247 }, { 24, 36, 32 } },
+    { 25, { 129, 132, 244, 249 }, { 24, 26, 32 } },
+    { 25, { 129, 132, 243, 248 }, { 28, 23, 32 } },
+    { 25, { 131, 134, 244, 248 }, { 22, 32, 32 } },
+    { 24, { 125, 128, 244, 249 }, { 24, 26, 32 } },
+    { 24, { 123, 126, 243, 248 }, { 34, 26, 32 } },
+    { 24, { 121, 124, 244, 249 }, { 34, 16, 32 } },
+    { 24, { 123, 126, 244, 249 }, { 28, 23, 32 } },
+    { 24, { 121, 124, 241, 246 }, { 44, 30, 32 } },
+    { 24, { 125, 128, 242, 247 }, { 36, 34, 32 } },
+    { 29, { 127, 130, 246, 247 }, { 28, 30, 32 } },
+    { 29, { 130, 133, 242, 243 }, { 35, 48, 32 } },
+    { 29, { 134, 137, 242, 243 }, { 28, 55, 32 } },
+    { 29, { 134, 137, 244, 245 }, { 24, 48, 32 } },
+    { 29, { 128, 131, 241, 242 }, { 40, 48, 32 } },
+    { 28, { 129, 130, 244, 246 }, { 28, 32, 32 } },
+    { 28, { 131, 132, 244, 246 }, { 28, 46, 32 } },
+    { 26, { 126, 128, 245, 247 }, { 28, 32, 32 } },
+    { 18, { 122, 123, 242, 243 }, { 58, 40, 32 } },
+    { 18, { 122, 123, 239, 240 }, { 69, 53, 32 } },
+    { 23, { 128, 133, 244, 246 }, { 28, 36, 32 } },
+    { 20, { 128, 132, 243, 245 }, { 38, 40, 32 } },
+    { 21, { 132, 133, 246, 247 }, { 26, 30, 32 } },
+    { 21, { 126, 127, 243, 244 }, { 46, 38, 32 } },
+    { 22, { 124, 133, 239, 243 }, { 50, 34, 32 } },
+    { 22, { 121, 130, 240, 244 }, { 52, 26, 32 } },
+    { 22, { 125, 134, 242, 246 }, { 36, 26, 32 } },
+    { 16, { 118, 120, 245, 247 }, { 54, 10, 32 } },
+    { 16, { 122, 124, 243, 245 }, { 54, 10, 32 } },
+    { 16, { 126, 128, 241, 243 }, { 54, 10, 32 } },
+    { 16, { 130, 132, 239, 241 }, { 54, 10, 32 } },
+    { 16, { 134, 136, 237, 239 }, { 54, 10, 32 } },
+    { 16, { 138, 140, 235, 237 }, { 54, 10, 32 } },
+    { 17, { 115, 117, 235, 237 }, { 10, 48, 32 } },
+    { 17, { 119, 121, 237, 239 }, { 10, 48, 32 } },
+    { 17, { 123, 125, 239, 241 }, { 10, 48, 32 } },
+    { 17, { 127, 129, 241, 243 }, { 10, 48, 32 } },
+    { 17, { 131, 133, 243, 245 }, { 10, 48, 32 } },
+    { 17, { 135, 137, 245, 247 }, { 10, 48, 32 } },
+    { 16, { 132, 134, 244, 247 }, { 10, 48, 32 } },
+    { 17, { 135, 137, 237, 239 }, { 10, 48, 32 } },
+    { 17, { 123, 125, 243, 245 }, { 10, 10, 32 } },
+    { 17, { 121, 123, 244, 246 }, { 10, 10, 32 } },
+    { 15, { 136, 140, 245, 248 }, { 10, 10, 32 } },
   };
 
   const roomdef_t *proomdef; /* was HL */
@@ -585,10 +585,10 @@ void setup_room(tgestate_t *state)
  * @code
  * <w> <h>: width, height
  * Repeat:
- *   <t>:                   emit tile <t>
- *   <0xFF> <64..127> <t>:  emit tiles <t> <t+1> <t+2> .. up to 63 times
- *   <0xFF> <128..254> <t>: emit tile <t> up to 126 times
- *   <0xFF> <0xFF>:         emit <0xFF>
+ *   <t>:                  emit tile <t>
+ *   <255> <64..127> <t>:  emit tiles <t> <t+1> <t+2> .. up to 63 times
+ *   <255> <128..254> <t>: emit tile <t> up to 126 times
+ *   <255> <255>:          emit <255>
  * @endcode
  *
  * \param[in]  state  Pointer to game state.
@@ -816,198 +816,198 @@ const door_t doors[door_MAX * 2] =
   // pos is the position of the door in the current room
 
   // odd stuff:
-  // rooms 28, 2, 4, 13 come out at the same place? 0x2A,0x1C -- maybe just doors in the same pos in different rooms
+  // rooms 28, 2, 4, 13 come out at the same place? 42, 28 -- maybe just doors in the same pos in different rooms
   // rooms 34 and 48 come out at the same place? -- ditto
-  // rooms 3, 5, 23 ... 0x20,0x2E
+  // rooms 3, 5, 23 ... 32,46
   //
   // could these be deltas rather than absolute values?
 
   // 0 - gate - initially locked
-  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x8A,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x8E,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 138,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), { 178, 142,  6 } },
   // 1 - gate - initially locked
-  { ROOMDIR(room_0_OUTDOORS,              TR), { 0xB2, 0x7A,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0xB2, 0x7E,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 122,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), { 178, 126,  6 } },
   // 2
-  { ROOMDIR(room_34,                      TL), { 0x8A, 0xB3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x10, 0x34, 12 } },
+  { ROOMDIR(room_34,                      TL), { 138, 179,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 3
-  { ROOMDIR(room_48,                      TL), { 0xCC, 0x79,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x10, 0x34, 12 } },
+  { ROOMDIR(room_48,                      TL), { 204, 121,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 4
-  { ROOMDIR(room_28_HUT1LEFT,             TR), { 0xD9, 0xA3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
+  { ROOMDIR(room_28_HUT1LEFT,             TR), { 217, 163,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 5
-  { ROOMDIR(room_1_HUT1RIGHT,             TL), { 0xD4, 0xBD,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1E, 0x2E, 24 } },
+  { ROOMDIR(room_1_HUT1RIGHT,             TL), { 212, 189,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  30,  46, 24 } },
   // 6
-  { ROOMDIR(room_2_HUT2LEFT,              TR), { 0xC1, 0xA3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
+  { ROOMDIR(room_2_HUT2LEFT,              TR), { 193, 163,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 7
-  { ROOMDIR(room_3_HUT2RIGHT,             TL), { 0xBC, 0xBD,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x2E, 24 } },
+  { ROOMDIR(room_3_HUT2RIGHT,             TL), { 188, 189,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  32,  46, 24 } },
   // 8
-  { ROOMDIR(room_4_HUT3LEFT,              TR), { 0xA9, 0xA3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
+  { ROOMDIR(room_4_HUT3LEFT,              TR), { 169, 163,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 9
-  { ROOMDIR(room_5_HUT3RIGHT,             TL), { 0xA4, 0xBD,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x2E, 24 } },
+  { ROOMDIR(room_5_HUT3RIGHT,             TL), { 164, 189,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  32,  46, 24 } },
   // 10 - current_door when in solitary
-  { ROOMDIR(room_21_CORRIDOR,             TL), { 0xFC, 0xCA,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1C, 0x24, 24 } },
+  { ROOMDIR(room_21_CORRIDOR,             TL), { 252, 202,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  28,  36, 24 } },
   // 11
-  { ROOMDIR(room_20_REDCROSS,             TL), { 0xFC, 0xDA,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_20_REDCROSS,             TL), { 252, 218,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  26,  34, 24 } },
   // 12 - initially locked
-  { ROOMDIR(room_15_UNIFORM,              TR), { 0xF7, 0xE3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x26, 0x19, 24 } },
+  { ROOMDIR(room_15_UNIFORM,              TR), { 247, 227,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  38,  25, 24 } },
   // 13 - initially locked
-  { ROOMDIR(room_13_CORRIDOR,             TR), { 0xDF, 0xE3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x1C, 24 } },
+  { ROOMDIR(room_13_CORRIDOR,             TR), { 223, 227,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 14 - initially locked
-  { ROOMDIR(room_8_CORRIDOR,              TR), { 0x97, 0xD3,  6 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x2A, 0x15, 24 } },
+  { ROOMDIR(room_8_CORRIDOR,              TR), { 151, 211,  6 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  21, 24 } },
   // 15 - unused room
-  { ROOMDIR(room_6,                       TR), { 0x00, 0x00,  0 } },
-  { ROOMDIR(room_0_OUTDOORS,              BL), { 0x22, 0x22, 24 } },
+  { ROOMDIR(room_6,                       TR), {   0,   0,  0 } },
+  { ROOMDIR(room_0_OUTDOORS,              BL), {  34,  34, 24 } },
   // 16
-  { ROOMDIR(room_1_HUT1RIGHT,             TR), { 0x2C, 0x34, 24 } },
-  { ROOMDIR(room_28_HUT1LEFT,             BL), { 0x26, 0x1A, 24 } },
+  { ROOMDIR(room_1_HUT1RIGHT,             TR), {  44,  52, 24 } },
+  { ROOMDIR(room_28_HUT1LEFT,             BL), {  38,  26, 24 } },
   // 17 - top right door in HUT2LEFT
-  { ROOMDIR(room_3_HUT2RIGHT,             TR), { 0x24, 0x36, 24 } },
-  { ROOMDIR(room_2_HUT2LEFT,              BL), { 0x26, 0x1A, 24 } },
+  { ROOMDIR(room_3_HUT2RIGHT,             TR), {  36,  54, 24 } },
+  { ROOMDIR(room_2_HUT2LEFT,              BL), {  38,  26, 24 } },
   // 18
-  { ROOMDIR(room_5_HUT3RIGHT,             TR), { 0x24, 0x36, 24 } },
-  { ROOMDIR(room_4_HUT3LEFT,              BL), { 0x26, 0x1A, 24 } },
+  { ROOMDIR(room_5_HUT3RIGHT,             TR), {  36,  54, 24 } },
+  { ROOMDIR(room_4_HUT3LEFT,              BL), {  38,  26, 24 } },
   // 19
-  { ROOMDIR(room_23_BREAKFAST,            TR), { 0x28, 0x42, 24 } },
-  { ROOMDIR(room_25_BREAKFAST,            BL), { 0x26, 0x18, 24 } },
+  { ROOMDIR(room_23_BREAKFAST,            TR), {  40,  66, 24 } },
+  { ROOMDIR(room_25_BREAKFAST,            BL), {  38,  24, 24 } },
   // 20 -
-  { ROOMDIR(room_23_BREAKFAST,            TL), { 0x3E, 0x24, 24 } },
-  { ROOMDIR(room_21_CORRIDOR,             BR), { 0x20, 0x2E, 24 } },
+  { ROOMDIR(room_23_BREAKFAST,            TL), {  62,  36, 24 } },
+  { ROOMDIR(room_21_CORRIDOR,             BR), {  32,  46, 24 } },
   // 21
-  { ROOMDIR(room_19_FOOD,                 TR), { 0x22, 0x42, 24 } },
-  { ROOMDIR(room_23_BREAKFAST,            BL), { 0x22, 0x1C, 24 } },
+  { ROOMDIR(room_19_FOOD,                 TR), {  34,  66, 24 } },
+  { ROOMDIR(room_23_BREAKFAST,            BL), {  34,  28, 24 } },
   // 22 - initially locked
-  { ROOMDIR(room_18_RADIO,                TR), { 0x24, 0x36, 24 } },
-  { ROOMDIR(room_19_FOOD,                 BL), { 0x38, 0x22, 24 } },
+  { ROOMDIR(room_18_RADIO,                TR), {  36,  54, 24 } },
+  { ROOMDIR(room_19_FOOD,                 BL), {  56,  34, 24 } },
   // 23
-  { ROOMDIR(room_21_CORRIDOR,             TR), { 0x2C, 0x36, 24 } },
-  { ROOMDIR(room_22_REDKEY,               BL), { 0x22, 0x1C, 24 } },
+  { ROOMDIR(room_21_CORRIDOR,             TR), {  44,  54, 24 } },
+  { ROOMDIR(room_22_REDKEY,               BL), {  34,  28, 24 } },
   // 24 - initially locked
-  { ROOMDIR(room_22_REDKEY,               TR), { 0x2C, 0x36, 24 } },
-  { ROOMDIR(room_24_SOLITARY,             BL), { 0x2A, 0x26, 24 } },
+  { ROOMDIR(room_22_REDKEY,               TR), {  44,  54, 24 } },
+  { ROOMDIR(room_24_SOLITARY,             BL), {  42,  38, 24 } },
   // 25
-  { ROOMDIR(room_12_CORRIDOR,             TR), { 0x42, 0x3A, 24 } },
-  { ROOMDIR(room_18_RADIO,                BL), { 0x22, 0x1C, 24 } },
+  { ROOMDIR(room_12_CORRIDOR,             TR), {  66,  58, 24 } },
+  { ROOMDIR(room_18_RADIO,                BL), {  34,  28, 24 } },
   // 26
-  { ROOMDIR(room_17_CORRIDOR,             TL), { 0x3C, 0x24, 24 } },
-  { ROOMDIR(room_7_CORRIDOR,              BR), { 0x1C, 0x22, 24 } },
+  { ROOMDIR(room_17_CORRIDOR,             TL), {  60,  36, 24 } },
+  { ROOMDIR(room_7_CORRIDOR,              BR), {  28,  34, 24 } },
   // 27
-  { ROOMDIR(room_15_UNIFORM,              TL), { 0x40, 0x28, 24 } },
-  { ROOMDIR(room_14_TORCH,                BR), { 0x1E, 0x28, 24 } },
+  { ROOMDIR(room_15_UNIFORM,              TL), {  64,  40, 24 } },
+  { ROOMDIR(room_14_TORCH,                BR), {  30,  40, 24 } },
   // 28
-  { ROOMDIR(room_16_CORRIDOR,             TR), { 0x22, 0x42, 24 } },
-  { ROOMDIR(room_14_TORCH,                BL), { 0x22, 0x1C, 24 } },
+  { ROOMDIR(room_16_CORRIDOR,             TR), {  34,  66, 24 } },
+  { ROOMDIR(room_14_TORCH,                BL), {  34,  28, 24 } },
   // 29
-  { ROOMDIR(room_16_CORRIDOR,             TL), { 0x3E, 0x2E, 24 } },
-  { ROOMDIR(room_13_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_16_CORRIDOR,             TL), {  62,  46, 24 } },
+  { ROOMDIR(room_13_CORRIDOR,             BR), {  26,  34, 24 } },
   // 30 - strange outdoor-to-outdoor door definition. unused?
-  { ROOMDIR(room_0_OUTDOORS,              TL), { 0x44, 0x30, 24 } },
-  { ROOMDIR(room_0_OUTDOORS,              BR), { 0x20, 0x30, 24 } },
+  { ROOMDIR(room_0_OUTDOORS,              TL), {  68,  48, 24 } },
+  { ROOMDIR(room_0_OUTDOORS,              BR), {  32,  48, 24 } },
   // 31 - initially locked
-  { ROOMDIR(room_13_CORRIDOR,             TL), { 0x4A, 0x28, 24 } },
-  { ROOMDIR(room_11_PAPERS,               BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_13_CORRIDOR,             TL), {  74,  40, 24 } },
+  { ROOMDIR(room_11_PAPERS,               BR), {  26,  34, 24 } },
   // 32
-  { ROOMDIR(room_7_CORRIDOR,              TL), { 0x40, 0x24, 24 } },
-  { ROOMDIR(room_16_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_7_CORRIDOR,              TL), {  64,  36, 24 } },
+  { ROOMDIR(room_16_CORRIDOR,             BR), {  26,  34, 24 } },
   // 33
-  { ROOMDIR(room_10_LOCKPICK,             TL), { 0x36, 0x35, 24 } },
-  { ROOMDIR(room_8_CORRIDOR,              BR), { 0x17, 0x26, 24 } },
+  { ROOMDIR(room_10_LOCKPICK,             TL), {  54,  53, 24 } },
+  { ROOMDIR(room_8_CORRIDOR,              BR), {  23,  38, 24 } },
   // 34 - initially locked
-  { ROOMDIR(room_9_CRATE,                 TL), { 0x36, 0x1C, 24 } },
-  { ROOMDIR(room_8_CORRIDOR,              BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_9_CRATE,                 TL), {  54,  28, 24 } },
+  { ROOMDIR(room_8_CORRIDOR,              BR), {  26,  34, 24 } },
   // 35
-  { ROOMDIR(room_12_CORRIDOR,             TL), { 0x3E, 0x24, 24 } },
-  { ROOMDIR(room_17_CORRIDOR,             BR), { 0x1A, 0x22, 24 } },
+  { ROOMDIR(room_12_CORRIDOR,             TL), {  62,  36, 24 } },
+  { ROOMDIR(room_17_CORRIDOR,             BR), {  26,  34, 24 } },
   // 36
-  { ROOMDIR(room_29_SECOND_TUNNEL_START,  TR), { 0x36, 0x36, 24 } },
-  { ROOMDIR(room_9_CRATE,                 BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_29_SECOND_TUNNEL_START,  TR), {  54,  54, 24 } },
+  { ROOMDIR(room_9_CRATE,                 BL), {  56,  10, 12 } },
   // 37
-  { ROOMDIR(room_52,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_30,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_52,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_30,                      BL), {  56,  10, 12 } },
   // 38
-  { ROOMDIR(room_30,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_31,                      BR), { 0x38, 0x26, 12 } },
+  { ROOMDIR(room_30,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_31,                      BR), {  56,  38, 12 } },
   // 39
-  { ROOMDIR(room_30,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_36,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_30,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_36,                      BL), {  56,  10, 12 } },
   // 40
-  { ROOMDIR(room_31,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_32,                      BR), { 0x0A, 0x34, 12 } },
+  { ROOMDIR(room_31,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_32,                      BR), {  10,  52, 12 } },
   // 41
-  { ROOMDIR(room_32,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_33,                      BL), { 0x20, 0x34, 12 } },
+  { ROOMDIR(room_32,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_33,                      BL), {  32,  52, 12 } },
   // 42
-  { ROOMDIR(room_33,                      TR), { 0x40, 0x34, 12 } },
-  { ROOMDIR(room_35,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_33,                      TR), {  64,  52, 12 } },
+  { ROOMDIR(room_35,                      BL), {  56,  10, 12 } },
   // 43
-  { ROOMDIR(room_35,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_34,                      BR), { 0x0A, 0x34, 12 } },
+  { ROOMDIR(room_35,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_34,                      BR), {  10,  52, 12 } },
   // 44
-  { ROOMDIR(room_36,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_35,                      BR), { 0x38, 0x1C, 12 } },
+  { ROOMDIR(room_36,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_35,                      BR), {  56,  28, 12 } },
   // 45 - tunnel entrance
-  { ROOMDIR(room_37,                      TL), { 0x3E, 0x22, 24 } },
-  { ROOMDIR(room_2_HUT2LEFT,              BR), { 0x10, 0x34, 12 } },
+  { ROOMDIR(room_37,                      TL), {  62,  34, 24 } },
+  { ROOMDIR(room_2_HUT2LEFT,              BR), {  16,  52, 12 } },
   // 46
-  { ROOMDIR(room_38,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_37,                      BR), { 0x10, 0x34, 12 } },
+  { ROOMDIR(room_38,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_37,                      BR), {  16,  52, 12 } },
   // 47
-  { ROOMDIR(room_39,                      TR), { 0x40, 0x34, 12 } },
-  { ROOMDIR(room_38,                      BL), { 0x20, 0x34, 12 } },
+  { ROOMDIR(room_39,                      TR), {  64,  52, 12 } },
+  { ROOMDIR(room_38,                      BL), {  32,  52, 12 } },
   // 48
-  { ROOMDIR(room_40,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_38,                      BR), { 0x38, 0x54, 12 } },
+  { ROOMDIR(room_40,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_38,                      BR), {  56,  84, 12 } },
   // 49
-  { ROOMDIR(room_40,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_41,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_40,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_41,                      BL), {  56,  10, 12 } },
   // 50
-  { ROOMDIR(room_41,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_42,                      BR), { 0x38, 0x26, 12 } },
+  { ROOMDIR(room_41,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_42,                      BR), {  56,  38, 12 } },
   // 51
-  { ROOMDIR(room_41,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_45,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_41,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_45,                      BL), {  56,  10, 12 } },
   // 52
-  { ROOMDIR(room_45,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_44,                      BR), { 0x38, 0x1C, 12 } },
+  { ROOMDIR(room_45,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_44,                      BR), {  56,  28, 12 } },
   // 53
-  { ROOMDIR(room_43,                      TR), { 0x20, 0x34, 12 } },
-  { ROOMDIR(room_44,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_43,                      TR), {  32,  52, 12 } },
+  { ROOMDIR(room_44,                      BL), {  56,  10, 12 } },
   // 54
-  { ROOMDIR(room_42,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_43,                      BL), { 0x20, 0x34, 12 } },
+  { ROOMDIR(room_42,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_43,                      BL), {  32,  52, 12 } },
   // 55
-  { ROOMDIR(room_46,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_39,                      BR), { 0x38, 0x1C, 12 } },
+  { ROOMDIR(room_46,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_39,                      BR), {  56,  28, 12 } },
   // 56
-  { ROOMDIR(room_47,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_46,                      BL), { 0x20, 0x34, 12 } },
+  { ROOMDIR(room_47,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_46,                      BL), {  32,  52, 12 } },
   // 57
-  { ROOMDIR(room_50_BLOCKED_TUNNEL,       TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_47,                      BR), { 0x38, 0x56, 12 } },
+  { ROOMDIR(room_50_BLOCKED_TUNNEL,       TL), { 100,  52, 12 } },
+  { ROOMDIR(room_47,                      BR), {  56,  86, 12 } },
   // 58
-  { ROOMDIR(room_50_BLOCKED_TUNNEL,       TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_49,                      BL), { 0x38, 0x0A, 12 } },
+  { ROOMDIR(room_50_BLOCKED_TUNNEL,       TR), {  56,  98, 12 } },
+  { ROOMDIR(room_49,                      BL), {  56,  10, 12 } },
   // 59
-  { ROOMDIR(room_49,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_48,                      BR), { 0x38, 0x1C, 12 } },
+  { ROOMDIR(room_49,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_48,                      BR), {  56,  28, 12 } },
   // 60
-  { ROOMDIR(room_51,                      TR), { 0x38, 0x62, 12 } },
-  { ROOMDIR(room_29_SECOND_TUNNEL_START,  BL), { 0x20, 0x34, 12 } },
+  { ROOMDIR(room_51,                      TR), {  56,  98, 12 } },
+  { ROOMDIR(room_29_SECOND_TUNNEL_START,  BL), {  32,  52, 12 } },
   // 61
-  { ROOMDIR(room_52,                      TL), { 0x64, 0x34, 12 } },
-  { ROOMDIR(room_51,                      BR), { 0x38, 0x54, 12 } },
+  { ROOMDIR(room_52,                      TL), { 100,  52, 12 } },
+  { ROOMDIR(room_51,                      BR), {  56,  84, 12 } },
 
 #undef ROOMDIR
 
@@ -1589,7 +1589,7 @@ void check_morale(tgestate_t *state)
   queue_message_for_display(state, message_MORALE_IS_ZERO);
 
   /* Inhibit user input. */
-  state->morale_exhausted = 0xFF;
+  state->morale_exhausted = 255;
 
   /* Immediately assume automatic control of hero. */
   state->automatic_player_counter = 0;
@@ -1615,8 +1615,8 @@ void keyscan_break(tgestate_t *state)
   assert(state != NULL);
 
   /* Is shift-space (break) pressed? */
-  space = (state->speccy->in(state->speccy, port_KEYBOARD_SPACESYMSHFTMNB) & 0x01) == 0;
-  shift = (state->speccy->in(state->speccy, port_KEYBOARD_SHIFTZXCV)       & 0x01) == 0;
+  space = (state->speccy->in(state->speccy, port_KEYBOARD_SPACESYMSHFTMNB) & 1) == 0;
+  shift = (state->speccy->in(state->speccy, port_KEYBOARD_SHIFTZXCV)       & 1) == 0;
   if (!space || !shift)
     return; /* not pressed */
 
@@ -1700,8 +1700,8 @@ void process_player_input(tgestate_t *state)
         /* Hero was at breakfast. */
         state->vischars[0].route.index    = 43;
         state->vischars[0].route.step     = 0;
-        state->vischars[0].mi.pos.x       = 0x34;
-        state->vischars[0].mi.pos.y       = 0x3E;
+        state->vischars[0].mi.pos.x       = 52;
+        state->vischars[0].mi.pos.y       = 62;
         roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
         state->hero_in_breakfast = 0;
       }
@@ -1710,10 +1710,10 @@ void process_player_input(tgestate_t *state)
         /* Hero was in bed. */
         state->vischars[0].route.index    = 44;
         state->vischars[0].route.step     = 1;
-        state->vischars[0].pos.x          = 0x2E;
-        state->vischars[0].pos.y          = 0x2E;
-        state->vischars[0].mi.pos.x       = 0x2E;
-        state->vischars[0].mi.pos.y       = 0x2E;
+        state->vischars[0].pos.x          = 46;
+        state->vischars[0].pos.y          = 46;
+        state->vischars[0].mi.pos.x       = 46;
+        state->vischars[0].mi.pos.y       = 46;
         state->vischars[0].mi.pos.height  = 24;
         roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
         state->hero_in_bed = 0;
@@ -1814,15 +1814,15 @@ void in_permitted_area(tgestate_t *state)
 #define R (1<<7) // specifies a room index
 
   /**
-   * $9EF9: Variable-length arrays, 0xFF terminated.
+   * $9EF9: Variable-length arrays, 255 terminated.
    */
-  static const uint8_t byte_9EF9[] = { R|0x02, R|0x02,   0xFF                             };
-  static const uint8_t byte_9EFC[] = { R|0x03,   0x01,   0x01,   0x01,   0xFF             };
-  static const uint8_t byte_9F01[] = {   0x01,   0x01,   0x01,   0x00,   0x02, 0x02, 0xFF };
-  static const uint8_t byte_9F08[] = {   0x01,   0x01, R|0x15, R|0x17, R|0x19, 0xFF       }; // breakfasty?
-  static const uint8_t byte_9F0E[] = { R|0x03, R|0x02,   0xFF                             };
-  static const uint8_t byte_9F11[] = { R|0x19,   0xFF                                     };
-  static const uint8_t byte_9F13[] = {   0x01,   0xFF                                     };
+  static const uint8_t byte_9EF9[] = { R| 2, R|  2,   255                         };
+  static const uint8_t byte_9EFC[] = { R| 3,     1,     1,     1,   255           };
+  static const uint8_t byte_9F01[] = {    1,     1,     1,     0,     2,   2, 255 };
+  static const uint8_t byte_9F08[] = {    1,     1, R| 21, R| 23, R| 25, 255      }; // breakfasty?
+  static const uint8_t byte_9F0E[] = { R| 3, R|  2,   255                         };
+  static const uint8_t byte_9F11[] = { R|25,   255                                };
+  static const uint8_t byte_9F13[] = {    1,   255                                };
 
 #undef T
 
@@ -1953,7 +1953,7 @@ found:
       uint8_t foo; /* was A */
 
       foo = HL[BC]; // likely; A is room_and_flags
-      if (foo == 0xFF) /* hit end of list */
+      if (foo == 255) /* hit end of list */
         goto pop_and_set_flag_red;
       if (in_permitted_area_end_bit(state, foo) == 0)
         goto set_route_then_set_flag_green;
@@ -2050,9 +2050,9 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
    */
   static const bounds_t permitted_bounds[3] =
   {
-    { 0x56,0x5E, 0x3D,0x48 }, /* Corridor to yard */
-    { 0x4E,0x84, 0x47,0x74 }, /* Hut area */
-    { 0x4F,0x69, 0x2F,0x3F }, /* Yard area */
+    { 86, 94, 61, 72 }, /* Corridor to yard */
+    { 78,132, 71,116 }, /* Hut area */
+    { 79,105, 47, 63 }, /* Yard area */
   };
 
   const bounds_t *bounds; /* was HL */
@@ -2560,7 +2560,7 @@ void event_night_time(tgestate_t *state)
     const route_t t = { 44, 1 }; /* was BC */
     set_hero_route(state, t);
   }
-  set_day_or_night(state, 0xFF);
+  set_day_or_night(state, 255);
 }
 
 void event_another_day_dawns(tgestate_t *state)
@@ -2583,9 +2583,9 @@ void set_day_or_night(tgestate_t *state, uint8_t day_night)
   attribute_t attrs;
 
   assert(state != NULL);
-  assert(day_night == 0x00 || day_night == 0xFF);
+  assert(day_night == 0 || day_night == 255);
 
-  state->day_or_night = day_night; // night=0xFF, day=0x00
+  state->day_or_night = day_night; // night=255, day=0
   attrs = choose_game_window_attributes(state);
   set_game_window_attributes(state, attrs);
 }
@@ -2665,10 +2665,10 @@ void event_new_red_cross_parcel(tgestate_t *state)
 {
   static const itemstruct_t red_cross_parcel_reset_data =
   {
-    0x00, /* never used */
+    0, /* never used */
     room_20_REDCROSS,
     { 44, 44, 12 },
-    { 0x80, 0xF4 }
+    { 128, 244 }
   };
 
   static const item_t red_cross_parcel_contents_list[4] =
@@ -3442,7 +3442,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   assert(pflag != NULL);
 
   /* Set hero_in_breakfast or hero_in_bed flag. */
-  *pflag = 0xFF;
+  *pflag = 255;
 
   /* Reset only the route index. */
   state->vischars[0].route.index = 0; /* Stand still. */
@@ -3886,7 +3886,7 @@ void get_supertiles(tgestate_t *state)
     else
     {
       assert(0);
-      memset(buf, 0x2a, state->st_columns); // debug
+      memset(buf, 42, state->st_columns); // debug
     }
 
     buf   += state->st_columns;
@@ -4524,8 +4524,8 @@ void move_map(tgestate_t *state)
 
   anim      = state->vischars[0].anim;
   animindex = state->vischars[0].animindex;
-  direction = anim[3]; // third byte of anim_[A-X] - 0xFF, 0, 1, 2, or 3
-  if (direction == 0xFF)
+  direction = anim[3]; // third byte of anim_[A-X] - 255, 0, 1, 2, or 3
+  if (direction == 255)
     return; /* Don't move. */
 
   if (animindex & vischar_ANIMINDEX_BIT7)
@@ -4539,22 +4539,22 @@ void move_map(tgestate_t *state)
   if (/* DISABLES CODE */ (0))
   {
     // Equivalent
-         if (direction == direction_TOP_LEFT)     { y = 0x7C; x = 0xC0; }
-    else if (direction == direction_TOP_RIGHT)    { y = 0x7C; x = 0x00; }
-    else if (direction == direction_BOTTOM_RIGHT) { y = 0x00; x = 0x00; }
-    else if (direction == direction_BOTTOM_LEFT)  { y = 0x00; x = 0xC0; }
+         if (direction == direction_TOP_LEFT)     { y = 124; x = 192; }
+    else if (direction == direction_TOP_RIGHT)    { y = 124; x =   0; }
+    else if (direction == direction_BOTTOM_RIGHT) { y =   0; x =   0; }
+    else if (direction == direction_BOTTOM_LEFT)  { y =   0; x = 192; }
   }
   else
   {
-    y = 0x7C;
-    x = 0x00;
+    y = 124;
+    x = 0;
     /* direction_BOTTOM_* - bottom of the map clamp */
     if (direction >= direction_BOTTOM_RIGHT)
-      y = 0x00;
+      y = 0;
     /* direction_*_LEFT - left of the map clamp */
     if (direction != direction_TOP_RIGHT &&
         direction != direction_BOTTOM_RIGHT)
-      x = 0xC0;
+      x = 192;
   }
 
   /* Note: This looks like it ought to be an AND but it's definitely an OR in
@@ -4593,18 +4593,18 @@ void move_map(tgestate_t *state)
   }
   else
   {
-    game_window_offset.x = 0x00;
-    game_window_offset.y = 0x00;
+    game_window_offset.x = 0;
+    game_window_offset.y = 0;
     if (move_map_y != 0)
     {
-      game_window_offset.x = 0x60;
+      game_window_offset.x = 96;
       if (move_map_y != 2)
       {
-        game_window_offset.x = 0x30;
-        game_window_offset.y = 0xFF;
+        game_window_offset.x = 48;
+        game_window_offset.y = 255;
         if (move_map_y != 1)
         {
-          game_window_offset.x = 0x90;
+          game_window_offset.x = 144;
         }
       }
     }
@@ -5062,7 +5062,7 @@ void searchlight_movement(searchlight_movement_t *slstate)
       slstate->counter = ++counter; /* count up */
     }
     ptr = slstate->ptr;
-    if (ptr[counter * 2] == 0xFF) /* end of list? */
+    if (ptr[counter * 2] == 255) /* end of list? */
     {
       slstate->counter--; /* overshot? count down counter byte */
       slstate->counter |= 1 << 7; /* go negative */
@@ -5984,16 +5984,16 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
    */
   static const bounds_t roomdef_bounds[10] =
   {
-    { 0x42,0x1A, 0x46,0x16 },
-    { 0x3E,0x16, 0x3A,0x1A },
-    { 0x36,0x1E, 0x42,0x12 },
-    { 0x3E,0x1E, 0x3A,0x22 },
-    { 0x4A,0x12, 0x3E,0x1E },
-    { 0x38,0x32, 0x64,0x0A },
-    { 0x68,0x06, 0x38,0x32 },
-    { 0x38,0x32, 0x64,0x1A },
-    { 0x68,0x1C, 0x38,0x32 },
-    { 0x38,0x32, 0x58,0x0A },
+    {  66, 26,  70, 22 },
+    {  62, 22,  58, 26 },
+    {  54, 30,  66, 18 },
+    {  62, 30,  58, 34 },
+    {  74, 18,  62, 30 },
+    {  56, 50, 100, 10 },
+    { 104,  6,  56, 50 },
+    {  56, 50, 100, 26 },
+    { 104, 28,  56, 50 },
+    {  56, 50,  88, 10 },
   };
 
   const bounds_t *room_bounds;   /* was BC */
@@ -6555,30 +6555,30 @@ found:
  */
 const wall_t walls[24] =
 {
-  { 0x6A, 0x6E, 0x52, 0x62, 0, 11 }, // hut 0 (leftmost)
-  { 0x5E, 0x62, 0x52, 0x62, 0, 11 }, // hut 1 (home hut)
-  { 0x52, 0x56, 0x52, 0x62, 0, 11 }, // hut 2 (rightmost)
-  { 0x3E, 0x5A, 0x6A, 0x80, 0, 48 }, // main building, top right
-  { 0x34, 0x80, 0x72, 0x80, 0, 48 }, // main building, topmost/right
-  { 0x7E, 0x98, 0x5E, 0x80, 0, 48 }, // main building, top left
-  { 0x82, 0x98, 0x5A, 0x80, 0, 48 }, // main building, top left
-  { 0x86, 0x8C, 0x46, 0x80, 0, 10 }, // main building, left wall
-  { 0x82, 0x86, 0x46, 0x4A, 0, 18 }, // corner, bottom left
-  { 0x6E, 0x82, 0x46, 0x47, 0, 10 }, // front wall
-  { 0x6D, 0x6F, 0x45, 0x49, 0, 18 }, // gate post (left)
-  { 0x67, 0x69, 0x45, 0x49, 0, 18 }, // gate post (right)
-  { 0x46, 0x46, 0x46, 0x6A, 0,  8 }, // fence - right of main camp
-  { 0x3E, 0x3E, 0x3E, 0x6A, 0,  8 }, // fence - rightmost fence
-  { 0x4E, 0x4E, 0x2E, 0x3E, 0,  8 }, // fence - rightmost of yard
-  { 0x68, 0x68, 0x2E, 0x45, 0,  8 }, // fence - leftmost of yard
-  { 0x3E, 0x68, 0x3E, 0x3E, 0,  8 }, // fence - top of yard
-  { 0x4E, 0x68, 0x2E, 0x2E, 0,  8 }, // fence - bottom of yard
-  { 0x46, 0x67, 0x46, 0x46, 0,  8 }, // fence - bottom of main camp
-  { 0x68, 0x6A, 0x38, 0x3A, 0,  8 }, // fence - watchtower (left of yard)
-  { 0x4E, 0x50, 0x2E, 0x30, 0,  8 }, // fence - watchtower (in yard)
-  { 0x46, 0x48, 0x46, 0x48, 0,  8 }, // fence - watchtower (bottom left of main camp)
-  { 0x46, 0x48, 0x5E, 0x60, 0,  8 }, // fence - watchtower (top right of main camp)
-  { 0x69, 0x6D, 0x46, 0x49, 0,  8 }, // fence - gate
+  { 106, 110,  82,  98, 0, 11 }, // hut 0 (leftmost)
+  {  94,  98,  82,  98, 0, 11 }, // hut 1 (home hut)
+  {  82,  86,  82,  98, 0, 11 }, // hut 2 (rightmost)
+  {  62,  90, 106, 128, 0, 48 }, // main building, top right
+  {  52, 128, 114, 128, 0, 48 }, // main building, topmost/right
+  { 126, 152,  94, 128, 0, 48 }, // main building, top left
+  { 130, 152,  90, 128, 0, 48 }, // main building, top left
+  { 134, 140,  70, 128, 0, 10 }, // main building, left wall
+  { 130, 134,  70,  74, 0, 18 }, // corner, bottom left
+  { 110, 130,  70,  71, 0, 10 }, // front wall
+  { 109, 111,  69,  73, 0, 18 }, // gate post (left)
+  { 103, 105,  69,  73, 0, 18 }, // gate post (right)
+  {  70,  70,  70, 106, 0,  8 }, // fence - right of main camp
+  {  62,  62,  62, 106, 0,  8 }, // fence - rightmost fence
+  {  78,  78,  46,  62, 0,  8 }, // fence - rightmost of yard
+  { 104, 104,  46,  69, 0,  8 }, // fence - leftmost of yard
+  {  62, 104,  62,  62, 0,  8 }, // fence - top of yard
+  {  78, 104,  46,  46, 0,  8 }, // fence - bottom of yard
+  {  70, 103,  70,  70, 0,  8 }, // fence - bottom of main camp
+  { 104, 106,  56,  58, 0,  8 }, // fence - watchtower (left of yard)
+  {  78,  80,  46,  48, 0,  8 }, // fence - watchtower (in yard)
+  {  70,  72,  70,  72, 0,  8 }, // fence - watchtower (bottom left of main camp)
+  {  70,  72,  94,  96, 0,  8 }, // fence - watchtower (top right of main camp)
+  { 105, 109,  70,  73, 0,  8 }, // fence - gate
 };
 
 /* ----------------------------------------------------------------------- */
@@ -6605,16 +6605,16 @@ void called_from_main_loop_9(tgestate_t *state)
   {
     // (U/D/L/R = Up/Down/Left/Right)
     // None,  U,      D,      L,      U+L,    D+L,    R,      U+R,    D+R
-    { O|0x08, O|0x00, O|0x04, I|0x07, O|0x00, I|0x07, O|0x04, O|0x04, O|0x04 }, // TL
-    { O|0x09, I|0x04, O|0x05, O|0x05, I|0x04, O|0x05, O|0x01, O|0x01, O|0x05 }, // TR
-    { O|0x0A, I|0x05, O|0x02, O|0x06, I|0x05, O|0x06, I|0x05, I|0x05, O|0x02 }, // BR
-    { O|0x0B, O|0x07, I|0x06, O|0x03, O|0x07, O|0x03, O|0x07, O|0x07, I|0x06 }, // BL
-    { O|0x14, O|0x0C, I|0x0C, I|0x13, O|0x0C, I|0x13, O|0x10, O|0x10, I|0x0C }, // TL + Crawl
-    { O|0x15, I|0x10, O|0x11, I|0x0D, I|0x10, I|0x15, O|0x0D, O|0x0D, O|0x11 }, // TR + Crawl
-    { O|0x16, I|0x0E, O|0x0E, O|0x12, I|0x0E, O|0x0E, I|0x11, I|0x11, O|0x0E }, // BR + Crawl
-    { O|0x17, O|0x13, I|0x12, O|0x0F, O|0x13, O|0x0F, I|0x0F, I|0x0F, I|0x12 }, // BL + Crawl
+    { O| 8, O| 0, O| 4, I| 7, O| 0, I| 7, O| 4, O| 4, O| 4 }, // TL
+    { O| 9, I| 4, O| 5, O| 5, I| 4, O| 5, O| 1, O| 1, O| 5 }, // TR
+    { O|10, I| 5, O| 2, O| 6, I| 5, O| 6, I| 5, I| 5, O| 2 }, // BR
+    { O|11, O| 7, I| 6, O| 3, O| 7, O| 3, O| 7, O| 7, I| 6 }, // BL
+    { O|20, O|12, I|12, I|19, O|12, I|19, O|16, O|16, I|12 }, // TL + Crawl
+    { O|21, I|16, O|17, I|13, I|16, I|21, O|13, O|13, O|17 }, // TR + Crawl
+    { O|22, I|14, O|14, O|18, I|14, O|14, I|17, I|17, O|14 }, // BR + Crawl
+    { O|23, O|19, I|18, O|15, O|19, O|15, I|15, I|15, I|18 }, // BL + Crawl
   };
-  // highest index = 0x17 (23 == max index in animations)
+  // highest index = 23 (== max index in animations)
 
   uint8_t        iters;     /* was B */
   const uint8_t *anim;      /* was HL */
@@ -6915,7 +6915,7 @@ void reset_map_and_characters(tgestate_t *state)
   state->day_or_night = 0;
   state->vischars[0].flags = 0;
   roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL_SW_NE;
-  roomdef_50_blocked_tunnel[2] = 0x34; /* Reset boundary. */
+  roomdef_50_blocked_tunnel[2] = 52; /* Reset boundary. */
 
   /* Lock the gates and doors. */
   gate = &state->locked_doors[0];
@@ -6996,7 +6996,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   while (--iters);
 
   /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
-  if (--state->searchlight_state == searchlight_STATE_SEARCHING) // state went 0xFF
+  if (--state->searchlight_state == searchlight_STATE_SEARCHING) // state went 255
   {
     attrs = choose_game_window_attributes(state);
     set_game_window_attributes(state, attrs);
@@ -7102,7 +7102,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
 
   x             = 0; // prev-x
   y             = 0; // prev-y
-  item_and_flag = item_NONE; // 'nothing found' marker 0xFF
+  item_and_flag = item_NONE; // 'nothing found' marker 255
   DEdash        = 0; // is this even used?
 
   // Iterate over vischars for ?
@@ -7179,7 +7179,7 @@ void render_mask_buffer(tgestate_t *state)
   assert(state != NULL);
 
   /* Clear the whole mask buffer. */
-  memset(&state->mask_buffer[0], 0xFF, sizeof(state->mask_buffer));
+  memset(&state->mask_buffer[0], 255, sizeof(state->mask_buffer));
 
   if (state->room_index > room_0_OUTDOORS)
   {
@@ -7473,7 +7473,7 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
  * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (width, lefthand skip)
  * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (height, top skip)
  *
- * \return 0 => visible, 0xFF => invisible. (was A)
+ * \return 0 => visible, 255 => invisible. (was A)
  */
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
@@ -7560,7 +7560,7 @@ int vischar_visible(tgestate_t      *state,
 
 
 invisible:
-  return 0xFF;
+  return 255;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7607,7 +7607,7 @@ void restore_tiles(tgestate_t *state)
     state->screenpos.y = vischar->floogle.y >> 3; // divide by 8 (16-to-8)
     state->screenpos.x = vischar->floogle.x >> 3; // divide by 8 (16-to-8)
 
-    if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 0xFF)
+    if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 255)
       goto next; /* invisible */
 
     // $BBD3
@@ -8257,16 +8257,16 @@ uint8_t get_next_target(tgestate_t       *state,
     routebytes = get_route(routeindex);
     assert(routebytes != NULL);
 
-    if (step == 0xFF)
+    if (step == 255)
       /* Conv: Previous code was relying on being able to fetch the preceding
-       * route's final byte (0xFF) in all cases. That's not going to work
+       * route's final byte (255) in all cases. That's not going to work
        * with the way routes are defined in the portable version of the game
-       * so instead just set routebyte to 0xFF. */
-      routebyte = 0xFF;
+       * so instead just set routebyte to 255. */
+      routebyte = 255;
     else
       routebyte = routebytes[step]; // HL was temporary
 
-    if (routebyte == 0xFF)
+    if (routebyte == 255)
     {
       /* 255: End of route */
       *route_out = route;
@@ -8324,7 +8324,7 @@ void move_characters(tgestate_t *state)
 
   assert(state != NULL);
 
-  state->entered_move_characters = 0xFF;
+  state->entered_move_characters = 255;
 
   /* Move to the next character, wrapping around after character 26. */
   character = state->character_index + 1;
@@ -9316,7 +9316,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* When on a route (.x != 0xFF) advance the counter (.y) in the required direction. */
+  /* When on a route (.x != 255) advance the counter (.y) in the required direction. */
   route = vischar->route.index;
   if (route != route_WANDER)
   {
@@ -9405,7 +9405,7 @@ uint8_t route_ended(tgestate_t *state,
   ASSERT_ROUTE_VALID(*route);
 
   /* If not the hero's vischar ... */
-  if (route != &state->vischars[0].route) /* Conv: was (L != 0x02) */
+  if (route != &state->vischars[0].route) /* Conv: was (L != 2) */
   {
     character = vischar->character & vischar_CHARACTER_MASK;
 
@@ -9494,25 +9494,25 @@ const uint8_t *get_route(uint8_t index)
 
   static const uint8_t data_7795[] =
   {
-    LOCATION(32), // 0x48             // marked
-    LOCATION(33), // 0x49             // marked
-    LOCATION(34), // 0x4A             // marked
+    LOCATION(32), // 72             // marked
+    LOCATION(33), // 73             // marked
+    LOCATION(34), // 74             // marked
     door_NONE
   };
   static const uint8_t data_7799[] =
   {
-    LOCATION(35), // 0x4B             // marked
-    LOCATION(36), // 0x4C             // marked
-    LOCATION(37), // 0x4D             // marked
-    LOCATION(38), // 0x4E             // marked
-    LOCATION(39), // 0x4F             // marked
-    LOCATION(40), // 0x50             // marked
+    LOCATION(35), // 75             // marked
+    LOCATION(36), // 76             // marked
+    LOCATION(37), // 77             // marked
+    LOCATION(38), // 78             // marked
+    LOCATION(39), // 79             // marked
+    LOCATION(40), // 80             // marked
     door_NONE
   };
   /* I believe this to be the commandant's route. It's the longest and most complex of the routes. */
   static const uint8_t route_commandant[] =
   {
-    LOCATION(46), // 0x56             // marked
+    LOCATION(46), // 86             // marked
     DOOR(31),                 // room_11_PAPERS    -> room_13_CORRIDOR
     DOOR(29),                 // room_13_CORRIDOR  -> room_16_CORRIDOR
     DOOR(32),                 // room_16_CORRIDOR  -> room_7_CORRIDOR
@@ -9523,7 +9523,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(21 | door_REVERSE),  // room_19_FOOD      -> room_23_BREAKFAST
     DOOR(20 | door_REVERSE),  // room_23_BREAKFAST -> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR  -> room_22_REDKEY
-    LOCATION(42), // 0x52             // marked
+    LOCATION(42), // 82             // marked
     DOOR(23),                 // room_22_REDKEY    -> room_21_CORRIDOR
     DOOR(10 | door_REVERSE),  // room_21_CORRIDOR  -> room_0_OUTDOORS
     DOOR(11),                 // room_0_OUTDOORS   -> room_20_REDCROSS
@@ -9533,24 +9533,24 @@ const uint8_t *get_route(uint8_t index)
     DOOR(28),                 // room_14_TORCH     -> room_16_CORRIDOR
     DOOR(29 | door_REVERSE),  // room_16_CORRIDOR  -> room_13_CORRIDOR
     DOOR(13 | door_REVERSE),  // room_13_CORRIDOR  -> room_0_OUTDOORS
-    LOCATION(11), // 0x33             // marked   // charevnt_handler_6 jumps to this offset
-    LOCATION(55), // 0x5F             // marked
+    LOCATION(11), // 51             // marked   // charevnt_handler_6 jumps to this offset
+    LOCATION(55), // 95             // marked
     DOOR( 0 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 0 to yard)
     DOOR( 1 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 1 to yard)
-    LOCATION(60), // 0x64             // marked
+    LOCATION(60), // 100             // marked
     DOOR( 1),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 1)
     DOOR( 0),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 0)
     DOOR( 4),                 // room_0_OUTDOORS   -> room_28_HUT1LEFT
     DOOR(16),                 // room_28_HUT1LEFT  -> room_1_HUT1RIGHT
     DOOR( 5 | door_REVERSE),  // room_1_HUT1RIGHT  -> room_0_OUTDOORS
-    LOCATION(11), // 0x33             // marked
+    LOCATION(11), // 51             // marked
     DOOR( 7),                 // room_0_OUTDOORS   -> room_3_HUT2RIGHT
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT  -> room_2_HUT2LEFT
     DOOR( 6 | door_REVERSE),  // room_2_HUT2LEFT   -> room_0_OUTDOORS
     DOOR( 8),                 // room_0_OUTDOORS   -> room_4_HUT3LEFT
     DOOR(18),                 // room_4_HUT3LEFT   -> room_5_HUT3RIGHT
     DOOR( 9 | door_REVERSE),  // room_5_HUT3RIGHT  -> room_0_OUTDOORS
-    LOCATION(45), // 0x55             // marked
+    LOCATION(45), // 85             // marked
     DOOR(14),                 // room_0_OUTDOORS   -> room_8_CORRIDOR
     DOOR(34),                 // room_8_CORRIDOR   -> room_9_CRATE
     DOOR(34 | door_REVERSE),  // room_9_CRATE      -> room_8_CORRIDOR
@@ -9560,57 +9560,57 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_77CD[] =
   {
-    LOCATION(43), // 0x53             // marked
-    LOCATION(44), // 0x54             // marked
+    LOCATION(43), // 83             // marked
+    LOCATION(44), // 84             // marked
     door_NONE
   };
   static const uint8_t route_exit_hut2[] =
   {
     DOOR(7 | door_REVERSE),   // room_3_HUT2RIGHT -> room_0_OUTDOORS
-    LOCATION(11), // 0x33             // marked
-    LOCATION(12), // 0x34             // marked
+    LOCATION(11), // 51             // marked
+    LOCATION(12), // 52             // marked
     door_NONE
   };
   static const uint8_t route_exit_hut3[] =
   {
     DOOR(9 | door_REVERSE),   // room_5_HUT3RIGHT -> room_0_OUTDOORS
-    LOCATION(45), // 0x55             // marked
-    LOCATION(14), // 0x36             // marked
+    LOCATION(45), // 85             // marked
+    LOCATION(14), // 54             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_1[] =
   {
-    LOCATION(46), // 0x56             // marked
+    LOCATION(46), // 86             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_2[] =
   {
-    LOCATION(47), // 0x57             // marked
+    LOCATION(47), // 87             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sleeps_3[] =
   {
-    LOCATION(48), // 0x58             // marked
+    LOCATION(48), // 88             // marked
     door_NONE
   };
   static const uint8_t data_77DE[] =
   {
-    LOCATION(52), // 0x5C             // marked
-    LOCATION(53), // 0x5D             // marked
+    LOCATION(52), // 92             // marked
+    LOCATION(53), // 93             // marked
     door_NONE
   };
   static const uint8_t data_77E1[] =
   {
-    LOCATION(11), // 0x33             // marked
-    LOCATION(55), // 0x5F             // marked
+    LOCATION(11), // 51             // marked
+    LOCATION(55), // 95             // marked
     DOOR(0 | door_REVERSE), // move through gates
     DOOR(1 | door_REVERSE), // move through gates to yard
-    LOCATION(56), // 0x60             // marked
+    LOCATION(56), // 96             // marked
     door_NONE
   };
   static const uint8_t data_77E7[] =
   {
-    LOCATION(12), // 0x34             // marked
+    LOCATION(12), // 52             // marked
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
@@ -9618,94 +9618,94 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_77EC[] =
   {
-    LOCATION(16), // 0x38             // marked
-    LOCATION(12), // 0x34             // marked
+    LOCATION(16), // 56             // marked
+    LOCATION(12), // 52             // marked
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     door_NONE
   };
   static const uint8_t route_prisoner_sits_1[] =
   {
-    LOCATION(64), // 0x68             // marked
+    LOCATION(64), // 104             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sits_2[] =
   {
-    LOCATION(65), // 0x69             // marked
+    LOCATION(65), // 105             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_sits_3[] =
   {
-    LOCATION(66), // 0x6A             // marked
+    LOCATION(66), // 106             // marked
     door_NONE
   };
   static const uint8_t route_guardA_breakfast[] =
   {
-    LOCATION(68), // 0x6C             // marked
+    LOCATION(68), // 108             // marked
     door_NONE
   };
   static const uint8_t route_guardB_breakfast[] =
   {
-    LOCATION(69), // 0x6D             // marked
+    LOCATION(69), // 109             // marked
     door_NONE
   };
   static const uint8_t route_guard_12_roll_call[] =
   {
-    LOCATION(9), // 0x31             // marked
+    LOCATION(9), // 49             // marked
     door_NONE
   };
   static const uint8_t route_guard_13_roll_call[] =
   {
-    LOCATION(11), // 0x33             // marked
+    LOCATION(11), // 51             // marked
     door_NONE
   };
   static const uint8_t route_guard_14_roll_call[] =
   {
-    LOCATION(17), // 0x39             // marked
+    LOCATION(17), // 57             // marked
     door_NONE
   };
   static const uint8_t route_guard_15_roll_call[] =
   {
-    LOCATION(49), // 0x59             // marked
+    LOCATION(49), // 89             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_1_roll_call[] =
   {
-    LOCATION(72), // 0x70             // marked
+    LOCATION(72), // 112             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_2_roll_call[] =
   {
-    LOCATION(73), // 0x71             // marked
+    LOCATION(73), // 113             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_3_roll_call[] =
   {
-    LOCATION(74), // 0x72             // marked
+    LOCATION(74), // 114             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_4_roll_call[] =
   {
-    LOCATION(75), // 0x73             // marked
+    LOCATION(75), // 115             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_5_roll_call[] =
   {
-    LOCATION(76), // 0x74             // marked
+    LOCATION(76), // 116             // marked
     door_NONE
   };
   static const uint8_t route_prisoner_6_roll_call[] =
   {
-    LOCATION(77), // 0x75             // marked
+    LOCATION(77), // 117             // marked
     door_NONE
   };
   static const uint8_t route_go_to_solitary[] =
   {
-    LOCATION(14), // 0x36             // marked
+    LOCATION(14), // 54             // marked
     DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     DOOR(24 | door_REVERSE),  // room_22_REDKEY   -> room_24_SOLITARY
-    LOCATION(42),             // 0x52             // marked
+    LOCATION(42),             // 82             // marked
     door_NONE
   };
   static const uint8_t route_hero_leave_solitary[] =
@@ -9713,42 +9713,42 @@ const uint8_t *get_route(uint8_t index)
     DOOR(24),                 // room_24_SOLITARY -> room_22_REDKEY
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
     DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
-    LOCATION(14),             // 0x36             // marked
+    LOCATION(14),             // 54             // marked
     door_NONE
   };
   static const uint8_t route_guard_12_bed[] =
   {
-    LOCATION(12), // 0x34
-    LOCATION(11), // 0x33
+    LOCATION(12), // 52
+    LOCATION(11), // 51
     DOOR(7),                  // room_0_OUTDOORS -> room_3_HUT2RIGHT
-    LOCATION(52), // 0x5C
+    LOCATION(52), // 92
     door_NONE
   };
   static const uint8_t route_guard_13_bed[] =
   {
-    LOCATION(12), // 0x34             // marked
-    LOCATION(11), // 0x33             // marked
+    LOCATION(12), // 52             // marked
+    LOCATION(11), // 51             // marked
     DOOR(7),                  // room_0_OUTDOORS  -> room_3_HUT2RIGHT
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(53), // 0x5D             // marked
+    LOCATION(53), // 93             // marked
     door_NONE
   };
   static const uint8_t route_guard_14_bed[] =
   {
-    LOCATION(12), // 0x34             // marked
-    LOCATION(11), // 0x33             // marked
-    LOCATION(45), // 0x55             // marked
+    LOCATION(12), // 52             // marked
+    LOCATION(11), // 51             // marked
+    LOCATION(45), // 85             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(52), // 0x5C             // marked
+    LOCATION(52), // 92             // marked
     door_NONE
   };
   static const uint8_t route_guard_15_bed[] =
   {
-    LOCATION(12), // 0x34             // marked
-    LOCATION(11), // 0x33             // marked
-    LOCATION(45), // 0x55             // marked
+    LOCATION(12), // 52             // marked
+    LOCATION(11), // 51             // marked
+    LOCATION(45), // 85             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(53), // 0x5C             // marked
+    LOCATION(53), // 92             // marked
     door_NONE
   };
   static const uint8_t route_hut2_left_to_right[] =
@@ -9758,18 +9758,18 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_7833[] =
   {
-    LOCATION(67), // 0x6B             // marked
+    LOCATION(67), // 107             // marked
     door_NONE
   };
   static const uint8_t route_hut2_right_to_left[] =
   {
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(70), // 0x6E             // marked
+    LOCATION(70), // 110             // marked
     door_NONE
   };
   static const uint8_t route_hero_roll_call[] =
   {
-    LOCATION(50), // 0x5A             // marked
+    LOCATION(50), // 90             // marked
     door_NONE
   };
 #undef DOOR
@@ -9956,7 +9956,7 @@ void solitary(tgestate_t *state)
    */
   static const tinypos_t solitary_pos =
   {
-    0x3A, 0x2A, 24
+    58, 42, 24
   };
 
   /**
@@ -9965,8 +9965,8 @@ void solitary(tgestate_t *state)
   static const uint8_t solitary_commandant_reset_data[6] =
   {
     room_0_OUTDOORS,  // room
-    0x74, 0x64, 0x03, // pos
-    0x24, 0x00        // route
+    116, 100, 3, // pos
+    36, 0        // route
   };
 
   item_t       *pitem;       /* was HL */
@@ -10044,7 +10044,7 @@ next:
   queue_message_for_display(state, message_WAIT_FOR_RELEASE);
   queue_message_for_display(state, message_ANOTHER_DAY_DAWNS);
 
-  state->in_solitary = 0xFF; /* inhibit user input */
+  state->in_solitary = 255; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
   state->vischars[0].mi.sprite = &sprites[sprite_PRISONER_FACING_AWAY_1];
   vischar = &state->vischars[0];
@@ -10347,22 +10347,22 @@ void item_discovered(tgestate_t *state, item_t item)
 
 const default_item_location_t default_item_locations[item__LIMIT] =
 {
-  { ITEM_ROOM(room_NONE,        3), { 0x40, 0x20 } }, /* item_WIRESNIPS        */
-  { ITEM_ROOM(room_9_CRATE,     0), { 0x3E, 0x30 } }, /* item_SHOVEL           */
-  { ITEM_ROOM(room_10_LOCKPICK, 0), { 0x49, 0x24 } }, /* item_LOCKPICK         */
-  { ITEM_ROOM(room_11_PAPERS,   0), { 0x2A, 0x3A } }, /* item_PAPERS           */
-  { ITEM_ROOM(room_14_TORCH,    0), { 0x32, 0x18 } }, /* item_TORCH            */
-  { ITEM_ROOM(room_NONE,        0), { 0x24, 0x2C } }, /* item_BRIBE            */
-  { ITEM_ROOM(room_15_UNIFORM,  0), { 0x2C, 0x41 } }, /* item_UNIFORM          */
-  { ITEM_ROOM(room_19_FOOD,     0), { 0x40, 0x30 } }, /* item_FOOD             */
-  { ITEM_ROOM(room_1_HUT1RIGHT, 0), { 0x42, 0x34 } }, /* item_POISON           */
-  { ITEM_ROOM(room_22_REDKEY,   0), { 0x3C, 0x2A } }, /* item_RED_KEY          */
-  { ITEM_ROOM(room_11_PAPERS,   0), { 0x1C, 0x22 } }, /* item_YELLOW_KEY       */
-  { ITEM_ROOM(room_0_OUTDOORS,  0), { 0x4A, 0x48 } }, /* item_GREEN_KEY        */
-  { ITEM_ROOM(room_NONE,        0), { 0x1C, 0x32 } }, /* item_RED_CROSS_PARCEL */
-  { ITEM_ROOM(room_18_RADIO,    0), { 0x24, 0x3A } }, /* item_RADIO            */
-  { ITEM_ROOM(room_NONE,        0), { 0x1E, 0x22 } }, /* item_PURSE            */
-  { ITEM_ROOM(room_NONE,        0), { 0x34, 0x1C } }, /* item_COMPASS          */
+  { ITEM_ROOM(room_NONE,        3), { 64, 32 } }, /* item_WIRESNIPS        */
+  { ITEM_ROOM(room_9_CRATE,     0), { 62, 48 } }, /* item_SHOVEL           */
+  { ITEM_ROOM(room_10_LOCKPICK, 0), { 73, 36 } }, /* item_LOCKPICK         */
+  { ITEM_ROOM(room_11_PAPERS,   0), { 42, 58 } }, /* item_PAPERS           */
+  { ITEM_ROOM(room_14_TORCH,    0), { 50, 24 } }, /* item_TORCH            */
+  { ITEM_ROOM(room_NONE,        0), { 36, 44 } }, /* item_BRIBE            */
+  { ITEM_ROOM(room_15_UNIFORM,  0), { 44, 65 } }, /* item_UNIFORM          */
+  { ITEM_ROOM(room_19_FOOD,     0), { 64, 48 } }, /* item_FOOD             */
+  { ITEM_ROOM(room_1_HUT1RIGHT, 0), { 66, 52 } }, /* item_POISON           */
+  { ITEM_ROOM(room_22_REDKEY,   0), { 60, 42 } }, /* item_RED_KEY          */
+  { ITEM_ROOM(room_11_PAPERS,   0), { 28, 34 } }, /* item_YELLOW_KEY       */
+  { ITEM_ROOM(room_0_OUTDOORS,  0), { 74, 72 } }, /* item_GREEN_KEY        */
+  { ITEM_ROOM(room_NONE,        0), { 28, 50 } }, /* item_RED_CROSS_PARCEL */
+  { ITEM_ROOM(room_18_RADIO,    0), { 36, 58 } }, /* item_RADIO            */
+  { ITEM_ROOM(room_NONE,        0), { 30, 34 } }, /* item_PURSE            */
+  { ITEM_ROOM(room_NONE,        0), { 52, 28 } }, /* item_COMPASS          */
 };
 
 #undef ITEM_ROOM
@@ -10386,46 +10386,46 @@ const default_item_location_t default_item_locations[item__LIMIT] =
 //   uint8_t B;         // unknown yet
 //                      // A+B differ when changing direction
 //   uint8_t direction; // selects map movement routine in move_map:
-//                      // 0x00 = player moves down-right (map is shifted up-left)
-//                      // 0x01 = player moves down-left  (map is shifted up-right)
-//                      // 0x02 = player moves up-left    (map is shifted down-right)
-//                      // 0x03 = player moves up-right   (map is shifted down-left)
-//                      // 0xFF = don't move the map
+//                      // 0 = player moves down-right (map is shifted up-left)
+//                      // 1 = player moves down-left  (map is shifted up-right)
+//                      // 2 = player moves up-left    (map is shifted down-right)
+//                      // 3 = player moves up-right   (map is shifted down-left)
+//                      // 255 = don't move the map
 //                      // perhaps a direction_t if interpretation of this field is "which direction to move the map"
 //   anim_t  anim[UNKNOWN];
 //                      // each anim has x/y/z - a triple of delta values used for movement
 //                      // z's are always zero as no movement changes height
 // };
 
-static const uint8_t anim_crawlwait_tl[] = { 1, 0x4,0x4,0xFF,  0, 0, 0, _|0xA };
-static const uint8_t anim_crawlwait_tr[] = { 1, 0x5,0x5,0xFF,  0, 0, 0, F|0xA };
-static const uint8_t anim_crawlwait_br[] = { 1, 0x6,0x6,0xFF,  0, 0, 0, F|0x8 };
-static const uint8_t anim_crawlwait_bl[] = { 1, 0x7,0x7,0xFF,  0, 0, 0, _|0x8 };
+static const uint8_t anim_crawlwait_tl[] = { 1, 4,4,255,  0, 0, 0, _|10 };
+static const uint8_t anim_crawlwait_tr[] = { 1, 5,5,255,  0, 0, 0, F|10 };
+static const uint8_t anim_crawlwait_br[] = { 1, 6,6,255,  0, 0, 0, F|8  };
+static const uint8_t anim_crawlwait_bl[] = { 1, 7,7,255,  0, 0, 0, _|8  };
 
-static const uint8_t anim_walk_tl[]      = { 4, 0x0,0x0,0x02,  2, 0, 0, _|0x0,  2, 0, 0, _|0x1,  2, 0, 0, _|0x2,  2, 0, 0, _|0x3 };
-static const uint8_t anim_walk_tr[]      = { 4, 0x1,0x1,0x03,  0, 2, 0, F|0x0,  0, 2, 0, F|0x1,  0, 2, 0, F|0x2,  0, 2, 0, F|0x3 };
-static const uint8_t anim_walk_br[]      = { 4, 0x2,0x2,0x00, -2, 0, 0, _|0x4, -2, 0, 0, _|0x5, -2, 0, 0, _|0x6, -2, 0, 0, _|0x7 };
-static const uint8_t anim_walk_bl[]      = { 4, 0x3,0x3,0x01,  0,-2, 0, F|0x4,  0,-2, 0, F|0x5,  0,-2, 0, F|0x6,  0,-2, 0, F|0x7 };
+static const uint8_t anim_walk_tl[]      = { 4, 0,0,2,    2, 0, 0, _|0,  2, 0, 0, _|1,  2, 0, 0, _|2,  2, 0, 0, _|3 };
+static const uint8_t anim_walk_tr[]      = { 4, 1,1,3,    0, 2, 0, F|0,  0, 2, 0, F|1,  0, 2, 0, F|2,  0, 2, 0, F|3 };
+static const uint8_t anim_walk_br[]      = { 4, 2,2,0,   -2, 0, 0, _|4, -2, 0, 0, _|5, -2, 0, 0, _|6, -2, 0, 0, _|7 };
+static const uint8_t anim_walk_bl[]      = { 4, 3,3,1,    0,-2, 0, F|4,  0,-2, 0, F|5,  0,-2, 0, F|6,  0,-2, 0, F|7 };
 
-static const uint8_t anim_wait_tl[]      = { 1, 0x0,0x0,0xFF,  0, 0, 0, _|0x0 };
-static const uint8_t anim_wait_tr[]      = { 1, 0x1,0x1,0xFF,  0, 0, 0, F|0x0 };
-static const uint8_t anim_wait_br[]      = { 1, 0x2,0x2,0xFF,  0, 0, 0, _|0x4 };
-static const uint8_t anim_wait_bl[]      = { 1, 0x3,0x3,0xFF,  0, 0, 0, F|0x4 };
+static const uint8_t anim_wait_tl[]      = { 1, 0,0,255,  0, 0, 0, _|0  };
+static const uint8_t anim_wait_tr[]      = { 1, 1,1,255,  0, 0, 0, F|0  };
+static const uint8_t anim_wait_br[]      = { 1, 2,2,255,  0, 0, 0, _|4  };
+static const uint8_t anim_wait_bl[]      = { 1, 3,3,255,  0, 0, 0, F|4  };
 
-static const uint8_t anim_turn_tl[]      = { 2, 0x0,0x1,0xFF,  0, 0, 0, _|0x0,  0, 0, 0, F|0x0 };
-static const uint8_t anim_turn_tr[]      = { 2, 0x1,0x2,0xFF,  0, 0, 0, F|0x0,  0, 0, 0, _|0x4 };
-static const uint8_t anim_turn_br[]      = { 2, 0x2,0x3,0xFF,  0, 0, 0, _|0x4,  0, 0, 0, F|0x4 };
-static const uint8_t anim_turn_bl[]      = { 2, 0x3,0x0,0xFF,  0, 0, 0, F|0x4,  0, 0, 0, _|0x0 };
+static const uint8_t anim_turn_tl[]      = { 2, 0,1,255,  0, 0, 0, _|0,  0, 0, 0, F|0  };
+static const uint8_t anim_turn_tr[]      = { 2, 1,2,255,  0, 0, 0, F|0,  0, 0, 0, _|4  };
+static const uint8_t anim_turn_br[]      = { 2, 2,3,255,  0, 0, 0, _|4,  0, 0, 0, F|4  };
+static const uint8_t anim_turn_bl[]      = { 2, 3,0,255,  0, 0, 0, F|4,  0, 0, 0, _|0  };
 
-static const uint8_t anim_crawl_tl[]     = { 2, 0x4,0x4,0x02,  2, 0, 0, _|0xA,  2, 0, 0, _|0xB };
-static const uint8_t anim_crawl_tr[]     = { 2, 0x5,0x5,0x03,  0, 2, 0, F|0xA,  0, 2, 0, F|0xB };
-static const uint8_t anim_crawl_br[]     = { 2, 0x6,0x6,0x00, -2, 0, 0, F|0x8, -2, 0, 0, F|0x9 };
-static const uint8_t anim_crawl_bl[]     = { 2, 0x7,0x7,0x01,  0,-2, 0, _|0x8,  0,-2, 0, _|0x9 };
+static const uint8_t anim_crawl_tl[]     = { 2, 4,4,2,    2, 0, 0, _|10, 2, 0, 0, _|11 };
+static const uint8_t anim_crawl_tr[]     = { 2, 5,5,3,    0, 2, 0, F|10, 0, 2, 0, F|11 };
+static const uint8_t anim_crawl_br[]     = { 2, 6,6,0,   -2, 0, 0, F|8, -2, 0, 0, F|9  };
+static const uint8_t anim_crawl_bl[]     = { 2, 7,7,1,    0,-2, 0, _|8,  0,-2, 0, _|9  };
 
-static const uint8_t anim_crawlturn_tl[] = { 2, 0x4,0x5,0xFF,  0, 0, 0, _|0xA,  0, 0, 0, F|0xA };
-static const uint8_t anim_crawlturn_tr[] = { 2, 0x5,0x6,0xFF,  0, 0, 0, F|0xA,  0, 0, 0, F|0x8 };
-static const uint8_t anim_crawlturn_br[] = { 2, 0x6,0x7,0xFF,  0, 0, 0, F|0x8,  0, 0, 0, _|0x8 };
-static const uint8_t anim_crawlturn_bl[] = { 2, 0x7,0x4,0xFF,  0, 0, 0, _|0x8,  0, 0, 0, _|0xA };
+static const uint8_t anim_crawlturn_tl[] = { 2, 4,5,255,  0, 0, 0, _|10, 0, 0, 0, F|10 };
+static const uint8_t anim_crawlturn_tr[] = { 2, 5,6,255,  0, 0, 0, F|10, 0, 0, 0, F|8  };
+static const uint8_t anim_crawlturn_br[] = { 2, 6,7,255,  0, 0, 0, F|8,  0, 0, 0, _|8  };
+static const uint8_t anim_crawlturn_bl[] = { 2, 7,4,255,  0, 0, 0, _|8,  0, 0, 0, _|10 };
 
 #undef _
 #undef F
@@ -10666,7 +10666,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   if ((clipped_width >> 8) == 0)
   {
-    instr = 0x77; /* opcode of 'LD (HL),A' */
+    instr = 119; /* opcode of 'LD (HL),A' */
     offset_tmp = clipped_width & 0xFF;
   }
   else
@@ -10685,7 +10685,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
     *(((uint8_t *) state) + *enables++) = instr;
     *(((uint8_t *) state) + *enables++) = instr;
     if (--offset == 0)
-      instr ^= 0x77; /* Toggle between LD (HL),A and NOP. */
+      instr ^= 119; /* Toggle between LD (HL),A and NOP. */
   }
   while (--iters);
 
@@ -11721,12 +11721,12 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   self_E4C0 = A; // self-modify
   if ((clipped_width & 0xFF00) == 0) // no lefthand skip: start with 'on'
   {
-    instr = 0x77; /* opcode of 'LD (HL),A' */
+    instr = 119; /* opcode of 'LD (HL),A' */
     offset = clipped_width & 0xFF; // process this many bytes before clipping
   }
   else // lefthand skip present: start with 'off'
   {
-    instr = 0x00; /* opcode of 'NOP' */
+    instr = 0; /* opcode of 'NOP' */
     offset = A - (clipped_width & 0xFF); // clip until this many bytes have been processed
   }
 
@@ -11740,7 +11740,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     *(((uint8_t *) state) + *enables++) = instr;
     *(((uint8_t *) state) + *enables++) = instr;
     if (--offset == 0)
-      instr ^= 0x77; /* Toggle between LD and NOP. */
+      instr ^= 119; /* Toggle between LD and NOP. */
   }
   while (--iters);
 
@@ -11839,7 +11839,7 @@ void divide_by_8_with_rounding(uint8_t *plow, uint8_t *phigh)
 
   t = *plow + 4; /* Like adding 0.5. */
   *plow = (uint8_t) t; /* Store modulo 256. */
-  if (t >= 0x100)
+  if (t >= 256)
     (*phigh)++; /* Carry. */
 
   divide_by_8(plow, phigh);
@@ -11883,11 +11883,10 @@ void plot_game_window(tgestate_t *state)
   uint8_t         iters;     /* was B */
   uint8_t         tmp;       /* Conv: added for RRD macro */
 
-  // these are 0/2/4/6 multiples of 24
-  assert(state->game_window_offset.x == 0x00 ||
-         state->game_window_offset.x == 0x30 ||
-         state->game_window_offset.x == 0x60 ||
-         state->game_window_offset.x == 0x90);
+  assert(state->game_window_offset.x == 0 * 24 ||
+         state->game_window_offset.x == 2 * 24 ||
+         state->game_window_offset.x == 4 * 24 ||
+         state->game_window_offset.x == 6 * 24);
 
   y = state->game_window_offset.y; // might not be a Y value. seems to only ever be 0 or 255.
   assert(y == 0 || y == 255);
@@ -11978,7 +11977,7 @@ void event_roll_call(tgestate_t *state)
 
   /* Is the hero within the roll call area bounds? */
   /* Conv: Unrolled. */
-  /* Range checking. X in (0x72..0x7C) and Y in (0x6A..0x72). */
+  /* Range checking. X in (114..124) and Y in (106..114). */
   range = map_ROLL_CALL_X;
   pcoord = &state->hero_map_position.x;
   coord = *pcoord++;
@@ -12023,7 +12022,7 @@ void action_papers(tgestate_t *state)
   /**
    * $EFF9: Position outside the main gate.
    */
-  static const tinypos_t outside_main_gate = { 0xD6, 0x8A, 0x06 };
+  static const tinypos_t outside_main_gate = { 214, 138, 6 };
 
   uint16_t  range;  /* was DE */
   uint8_t  *pcoord; /* was HL */
@@ -12033,7 +12032,7 @@ void action_papers(tgestate_t *state)
 
   /* Is the hero within the main gate bounds? */
   // UNROLLED
-  /* Range checking. X in (0x69..0x6D) and Y in (0x49..0x4B). */
+  /* Range checking. X in (105..109) and Y in (73..75). */
   range = map_MAIN_GATE_X; // note the confused coords business
   pcoord = &state->hero_map_position.x;
   coord = *pcoord++;
@@ -12123,22 +12122,22 @@ TGE_API void tge_setup(tgestate_t *state)
    */
   const vischar_t vischar_initial =
   {
-    0x00,                 // character
-    0x00,                 // flags
-    { 0x2C, 0x01 },       // route
-    { 0x2E, 0x2E, 0x18 }, // pos
-    0x00,                 // counter_and_flags
+    0,                    // character
+    0,                    // flags
+    { 44, 1 },            // route
+    { 46, 46, 24 },       // pos
+    0,                    // counter_and_flags
     &animations[0],       // animbase
     animations[8],        // anim
-    0x00,                 // animindex
-    0x00,                 // input
+    0,                    // animindex
+    0,                    // input
     direction_TOP_LEFT,   // direction
-    { { 0x0000, 0x0000, 0x0018 }, &sprites[sprite_PRISONER_FACING_AWAY_1], 0 }, // mi
-    { 0x0000, 0x0000 },   // scrx, scry
+    { { 0, 0, 24 }, &sprites[sprite_PRISONER_FACING_AWAY_1], 0 }, // mi
+    { 0, 0 },             // scrx, scry
     room_0_OUTDOORS,      // room
-    0x00,                 // unused
-    0x00,                 // width_bytes
-    0x00,                 // height
+    0,                    // unused
+    0,                    // width_bytes
+    0,                    // height
   };
 
   uint8_t   *reversed; /* was HL */
@@ -12152,7 +12151,7 @@ TGE_API void tge_setup(tgestate_t *state)
 
   wipe_full_screen_and_attributes(state);
   set_morale_flag_screen_attributes(state, attribute_BRIGHT_GREEN_OVER_BLACK);
-  /* The original code seems to pass in 0x44, not zero, as it uses a register
+  /* The original code seems to pass in 68, not zero, as it uses a register
    * left over from a previous call to set_morale_flag_screen_attributes(). */
   set_menu_item_attributes(state, 0, attribute_BRIGHT_YELLOW_OVER_BLACK);
   plot_statics_and_menu_text(state);
