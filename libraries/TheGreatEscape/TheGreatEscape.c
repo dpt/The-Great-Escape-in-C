@@ -8275,7 +8275,7 @@ uint8_t get_target(tgestate_t       *state,
     else
       routebyte = routebytes[step]; // HL was temporary
 
-    if (routebyte == 255)
+    if (routebyte == routebyte_END) // needs a better end byte
     {
       /* Route byte == 255: End of route */
       return get_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
@@ -9474,7 +9474,7 @@ reverse_route:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CB79: Return a pointer to route index 'A'.
+ * $CB79: Return a pointer to the route with the specified index.
  *
  * Used by the routines at get_target and bribes_solitary_food.
  *
@@ -9505,7 +9505,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(32), // 72             // marked
     LOCATION(33), // 73             // marked
     LOCATION(34), // 74             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_7799[] =
   {
@@ -9515,7 +9515,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(38), // 78             // marked
     LOCATION(39), // 79             // marked
     LOCATION(40), // 80             // marked
-    door_NONE
+    routebyte_END
   };
   /* I believe this to be the commandant's route. It's the longest and most complex of the routes. */
   static const uint8_t route_commandant[] =
@@ -9564,48 +9564,48 @@ const uint8_t *get_route(uint8_t index)
     DOOR(34 | door_REVERSE),  // room_9_CRATE      -> room_8_CORRIDOR
     DOOR(33),                 // room_8_CORRIDOR   -> room_10_LOCKPICK
     DOOR(33 | door_REVERSE),  // room_10_LOCKPICK  -> room_8_CORRIDOR
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_77CD[] =
   {
     LOCATION(43), // 83             // marked
     LOCATION(44), // 84             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_exit_hut2[] =
   {
     DOOR(7 | door_REVERSE),   // room_3_HUT2RIGHT -> room_0_OUTDOORS
     LOCATION(11), // 51             // marked
     LOCATION(12), // 52             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_exit_hut3[] =
   {
     DOOR(9 | door_REVERSE),   // room_5_HUT3RIGHT -> room_0_OUTDOORS
     LOCATION(45), // 85             // marked
     LOCATION(14), // 54             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_1[] =
   {
     LOCATION(46), // 86             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_2[] =
   {
     LOCATION(47), // 87             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_3[] =
   {
     LOCATION(48), // 88             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_77DE[] =
   {
     LOCATION(52), // 92             // marked
     LOCATION(53), // 93             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_77E1[] =
   {
@@ -9614,7 +9614,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(0 | door_REVERSE), // move through gates
     DOOR(1 | door_REVERSE), // move through gates to yard
     LOCATION(56), // 96             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_77E7[] =
   {
@@ -9622,7 +9622,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_77EC[] =
   {
@@ -9630,82 +9630,82 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(12), // 52             // marked
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sits_1[] =
   {
     LOCATION(64), // 104             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sits_2[] =
   {
     LOCATION(65), // 105             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_sits_3[] =
   {
     LOCATION(66), // 106             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guardA_breakfast[] =
   {
     LOCATION(68), // 108             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guardB_breakfast[] =
   {
     LOCATION(69), // 109             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_12_roll_call[] =
   {
     LOCATION(9), // 49             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_13_roll_call[] =
   {
     LOCATION(11), // 51             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_14_roll_call[] =
   {
     LOCATION(17), // 57             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_15_roll_call[] =
   {
     LOCATION(49), // 89             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_1_roll_call[] =
   {
     LOCATION(72), // 112             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_2_roll_call[] =
   {
     LOCATION(73), // 113             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_3_roll_call[] =
   {
     LOCATION(74), // 114             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_4_roll_call[] =
   {
     LOCATION(75), // 115             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_5_roll_call[] =
   {
     LOCATION(76), // 116             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_prisoner_6_roll_call[] =
   {
     LOCATION(77), // 117             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_go_to_solitary[] =
   {
@@ -9714,7 +9714,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     DOOR(24 | door_REVERSE),  // room_22_REDKEY   -> room_24_SOLITARY
     LOCATION(42),             // 82             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_hero_leave_solitary[] =
   {
@@ -9722,7 +9722,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
     DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
     LOCATION(14),             // 54             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_12_bed[] =
   {
@@ -9730,7 +9730,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(11), // 51
     DOOR(7),                  // room_0_OUTDOORS -> room_3_HUT2RIGHT
     LOCATION(52), // 92
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_13_bed[] =
   {
@@ -9739,7 +9739,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(7),                  // room_0_OUTDOORS  -> room_3_HUT2RIGHT
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
     LOCATION(53), // 93             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_14_bed[] =
   {
@@ -9748,7 +9748,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(45), // 85             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
     LOCATION(52), // 92             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_guard_15_bed[] =
   {
@@ -9757,28 +9757,28 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(45), // 85             // marked
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
     LOCATION(53), // 92             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_hut2_left_to_right[] =
   {
     DOOR(17),                 // room_2_HUT2LEFT -> room_3_HUT2RIGHT
-    door_NONE
+    routebyte_END
   };
   static const uint8_t data_7833[] =
   {
     LOCATION(67), // 107             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_hut2_right_to_left[] =
   {
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
     LOCATION(70), // 110             // marked
-    door_NONE
+    routebyte_END
   };
   static const uint8_t route_hero_roll_call[] =
   {
     LOCATION(50), // 90             // marked
-    door_NONE
+    routebyte_END
   };
 #undef DOOR
 #undef LOCATION

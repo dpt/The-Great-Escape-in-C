@@ -532,6 +532,8 @@ uint8_t route_ended(tgestate_t *state,
 
 /** Highest route number. */
 #define routes__LIMIT 46
+/** Byte which terminates a route. */
+#define routebyte_END 255
 INLINE const uint8_t *get_route(uint8_t A);
 
 uint8_t random_nibble(tgestate_t *state);
