@@ -379,7 +379,7 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->interior_doors[] with 0xFF. */
+  /* Wipe state->interior_doors[] with door_NONE. */
   // Alternative: memset(&state->interior_doors[0], door_NONE, 4);
   pdoorindex = &state->interior_doors[3];
   iters = 4;
@@ -8129,7 +8129,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     /* A stove or crate character. */
 
     vischar->character         = character_NONE;
-    vischar->flags             = 0xFF; /* flags */
+    vischar->flags             = vischar_FLAGS_EMPTY_SLOT; /* flags */
     vischar->counter_and_flags = 0;    /* more flags */
 
     /* Save the old position. */
@@ -12194,13 +12194,14 @@ TGE_API void tge_setup(tgestate_t *state)
   }
   while (--iters);
 
-  /* Write 0xFF 0xFF over all non-visible characters. */
+  /* Write (character_NONE, vischar_FLAGS_EMPTY_SLOT) over all non-visible
+   * characters. */
   iters = vischars_LENGTH - 1;
   vischar = &state->vischars[1];
   do
   {
     vischar->character = character_NONE;
-    vischar->flags     = 0xFF;
+    vischar->flags     = vischar_FLAGS_EMPTY_SLOT;
     vischar++;
   }
   while (--iters);
