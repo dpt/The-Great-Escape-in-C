@@ -3097,7 +3097,6 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          get_target_result; /* was A */
   tinypos_t       *pos;               /* was DE */
-  route_t         *route;             /* was HL */
   const tinypos_t *doorpos;           /* was HL */
   xy_t            *location;          /* was HL */
 
@@ -3110,7 +3109,6 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   get_target_result = get_target(state,
                                  &vischar->route,
-                                 &route,
                                  &doorpos,
                                  &location);
 
@@ -7949,7 +7947,6 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   int                          Z;
   room_t                       room;              /* was A */
   uint8_t                      get_target_result; /* was A */
-  route_t                     *route;             /* was HL */
   const tinypos_t             *doorpos;           /* was HL */
   xy_t                        *location;          /* was HL */
 
@@ -8067,7 +8064,6 @@ again:
     // PUSH DE // -> vischar->pos
     get_target_result = get_target(state,
                                    &charstr->route,
-                                   &route,
                                    &doorpos,
                                    &location);
     if (get_target_result == get_target_ROUTE_ENDS)
@@ -8218,14 +8214,13 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  *
  * Given a route_t return the coordinates to move to. Coordinates might be
  * returned as a tinypos_t when moving to a door or an xy_t when moving to a
- * numbered location. The original route_t is returned when the route ends.
+ * numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
  * chosen starting from route.step.
  *
  * \param[in] state     Pointer to game state.
  * \param[in] route     Pointer to route.                            (was HL)
- * \param[in] route_out Receives input route when route has ended.   (was HL)
  * \param[in] doorpos   Receives doorpos when moving to a door.      (was HL)
  * \param[in] location  Receives location when moving to a location. (was HL)
  *
@@ -8235,7 +8230,6 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  */
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   route_t         **route_out,
                    const tinypos_t **doorpos,
                    xy_t            **location)
 {
@@ -8252,7 +8246,6 @@ uint8_t get_target(tgestate_t       *state,
   assert(state     != NULL);
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
-  assert(route_out != NULL);
 
   *doorpos = NULL; /* Conv: Added. */
 
@@ -8286,7 +8279,6 @@ uint8_t get_target(tgestate_t       *state,
     if (routebyte == 255)
     {
       /* 255: End of route */
-      *route_out = route;
       return get_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
     }
     else if ((routebyte & ~door_REVERSE) < 40)
@@ -8374,12 +8366,13 @@ void move_characters(tgestate_t *state)
 
   get_target_result = get_target(state,
                                  &charstr->route,
-                                 &HLroute,
                                  &HLtinypos,
                                  &HLlocation);
   if (get_target_result == get_target_ROUTE_ENDS)
   {
     /* When the route ends reverse the route. */
+
+    HLroute = &charstr->route;
 
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -9357,7 +9350,6 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
                                  route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
-  route_t         *new_route;         /* was HL */
   const tinypos_t *doorpos;           /* was HL */
   xy_t            *location;          /* was HL */
 
@@ -9368,7 +9360,6 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
 
   get_target_result = get_target(state,
                                  route,
-                                 &new_route,
                                  &doorpos,
                                  &location);
   if (get_target_result != get_target_ROUTE_ENDS)
@@ -9396,7 +9387,7 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
   }
   else
   {
-    return route_ended(state, vischar, new_route); // was fallthrough
+    return route_ended(state, vischar, route); // was fallthrough
   }
 }
 

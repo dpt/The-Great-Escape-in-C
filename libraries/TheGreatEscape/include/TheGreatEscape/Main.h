@@ -472,7 +472,6 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   route_t         **route_out,
                    const tinypos_t **doorpos,
                    xy_t            **location);
 
