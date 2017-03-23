@@ -8212,9 +8212,9 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 /**
  * $C651: Return the coordinates of the route's current target.
  *
- * Given a route_t return the coordinates to move to. Coordinates might be
- * returned as a tinypos_t when moving to a door or an xy_t when moving to a
- * numbered location.
+ * Given a route_t return the coordinates the character should move to.
+ * Coordinates are returned as a tinypos_t when moving to a door or an xy_t
+ * when moving to a numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
  * chosen starting from route.step.
@@ -8233,11 +8233,8 @@ uint8_t get_target(tgestate_t       *state,
                    const tinypos_t **doorpos,
                    xy_t            **location)
 {
-  // Q. Are these locations overwritten? Seem to be. Need to be moved into state then.
-  // FIXME What was this ^ about?
-
   uint8_t        routeindex; /* was A */
-  uint8_t        index;      /* was ? */
+  uint8_t        index;      /* was A */
   uint8_t        step;       /* was A or C */
   const uint8_t *routebytes; /* was DE */
   uint8_t        routebyte;  /* was A */
@@ -8247,17 +8244,19 @@ uint8_t get_target(tgestate_t       *state,
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  *doorpos = NULL; /* Conv: Added. */
+  *doorpos  = NULL; /* Conv: Added. */
+  *location = NULL; /* Conv: Added. */
 
   routeindex = route->index;
   if (routeindex == route_WANDER)
   {
-    /* Random wandering (using .step + rand(0..7) to index locations[]). */
+    /* Wander around randomly. */
+    /* Uses .step + rand(0..7) to index locations[]. */
 
-    // Conv: In the original code *HL is used as a temporary.
-
-    /* Randomise the bottom 3 bits of location's high byte. */
-    index = (route->step & ~7) | (random_nibble(state) & 7); /* Conv: Original uses ADD not OR. */
+    /* Randomise the bottom 3 bits of route->step. */
+    /* Conv: In the original code *HL is used as a temporary. */
+    index = route->step & ~7;
+    index |= random_nibble(state) & 7; /* Conv: ADD became OR. */
     route->step = index;
   }
   else
@@ -8268,31 +8267,33 @@ uint8_t get_target(tgestate_t       *state,
     assert(routebytes != NULL);
 
     if (step == 255)
-      /* Conv: Previous code was relying on being able to fetch the preceding
-       * route's final byte (255) in all cases. That's not going to work
-       * with the way routes are defined in the portable version of the game
-       * so instead just set routebyte to 255. */
+      /* Conv: Original code was relying on being able to fetch the preceding
+       * route's final byte (255) in all cases. That's not going to work with
+       * the way routes are defined in the portable version of the game so
+       * instead just set routebyte to 255. */
       routebyte = 255;
     else
       routebyte = routebytes[step]; // HL was temporary
 
     if (routebyte == 255)
     {
-      /* 255: End of route */
+      /* Route byte == 255: End of route */
       return get_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
     }
-    else if ((routebyte & ~door_REVERSE) < 40)
+    else if ((routebyte & ~door_REVERSE) < 40) // (0..39 || 128..167)
     {
-      /* < 40: A door */
+      /* Route byte < 40: A door */
       if (route->index & route_REVERSED)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
-      *doorpos = &door->pos; // so this IS returning a tinypos in doors
+      *doorpos = &door->pos;
       return get_target_DOOR;
     }
     else
     {
-      /* 40 .. 117: A location index */
+      /* Route byte == 40..117: A location index */
+      assert(routebyte >= 40);
+      assert(routebyte <= 117);
       index = routebyte - 40;
     }
   }
