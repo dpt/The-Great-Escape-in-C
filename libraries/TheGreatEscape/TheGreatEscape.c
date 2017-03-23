@@ -9498,127 +9498,126 @@ const uint8_t *get_route(uint8_t index)
   /** Specifies a location index (in locations[]) within a route. */
 #define LOCATION(d) (d + 40)
 
-  // "marked" => i've noted the use in locations[]
-
   static const uint8_t data_7795[] =
   {
-    LOCATION(32), // 72             // marked
-    LOCATION(33), // 73             // marked
-    LOCATION(34), // 74             // marked
+    LOCATION(32),
+    LOCATION(33),
+    LOCATION(34),
     routebyte_END
   };
   static const uint8_t data_7799[] =
   {
-    LOCATION(35), // 75             // marked
-    LOCATION(36), // 76             // marked
-    LOCATION(37), // 77             // marked
-    LOCATION(38), // 78             // marked
-    LOCATION(39), // 79             // marked
-    LOCATION(40), // 80             // marked
+    LOCATION(35),
+    LOCATION(36),
+    LOCATION(37),
+    LOCATION(38),
+    LOCATION(39),
+    LOCATION(40),
     routebyte_END
   };
-  /* I believe this to be the commandant's route. It's the longest and most complex of the routes. */
+  /* I believe this to be the commandant's route. It's the longest and most
+   * complex of the routes. */
   static const uint8_t route_commandant[] =
   {
-    LOCATION(46), // 86             // marked
-    DOOR(31),                 // room_11_PAPERS    -> room_13_CORRIDOR
-    DOOR(29),                 // room_13_CORRIDOR  -> room_16_CORRIDOR
-    DOOR(32),                 // room_16_CORRIDOR  -> room_7_CORRIDOR
-    DOOR(26),                 // room_7_CORRIDOR   -> room_17_CORRIDOR
-    DOOR(35),                 // room_17_CORRIDOR  -> room_12_CORRIDOR
-    DOOR(25 | door_REVERSE),  // room_12_CORRIDOR  -> room_18_RADIO
-    DOOR(22 | door_REVERSE),  // room_18_RADIO     -> room_19_FOOD
-    DOOR(21 | door_REVERSE),  // room_19_FOOD      -> room_23_BREAKFAST
-    DOOR(20 | door_REVERSE),  // room_23_BREAKFAST -> room_21_CORRIDOR
-    DOOR(23 | door_REVERSE),  // room_21_CORRIDOR  -> room_22_REDKEY
-    LOCATION(42), // 82             // marked
-    DOOR(23),                 // room_22_REDKEY    -> room_21_CORRIDOR
-    DOOR(10 | door_REVERSE),  // room_21_CORRIDOR  -> room_0_OUTDOORS
-    DOOR(11),                 // room_0_OUTDOORS   -> room_20_REDCROSS
-    DOOR(11 | door_REVERSE),  // room_20_REDCROSS  -> room_0_OUTDOORS
-    DOOR(12),                 // room_0_OUTDOORS   -> room_15_UNIFORM
-    DOOR(27 | door_REVERSE),  // room_15_UNIFORM   -> room_14_TORCH
-    DOOR(28),                 // room_14_TORCH     -> room_16_CORRIDOR
-    DOOR(29 | door_REVERSE),  // room_16_CORRIDOR  -> room_13_CORRIDOR
-    DOOR(13 | door_REVERSE),  // room_13_CORRIDOR  -> room_0_OUTDOORS
-    LOCATION(11), // 51             // marked   // charevnt_handler_6 jumps to this offset
-    LOCATION(55), // 95             // marked
-    DOOR( 0 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 0 to yard)
-    DOOR( 1 | door_REVERSE),  // room_0_OUTDOORS   -> room_0_OUTDOORS (gate 1 to yard)
-    LOCATION(60), // 100             // marked
-    DOOR( 1),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 1)
-    DOOR( 0),                 // room_0_OUTDOORS   -> room_0_OUTDOORS (return through gate 0)
-    DOOR( 4),                 // room_0_OUTDOORS   -> room_28_HUT1LEFT
-    DOOR(16),                 // room_28_HUT1LEFT  -> room_1_HUT1RIGHT
-    DOOR( 5 | door_REVERSE),  // room_1_HUT1RIGHT  -> room_0_OUTDOORS
-    LOCATION(11), // 51             // marked
-    DOOR( 7),                 // room_0_OUTDOORS   -> room_3_HUT2RIGHT
-    DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT  -> room_2_HUT2LEFT
-    DOOR( 6 | door_REVERSE),  // room_2_HUT2LEFT   -> room_0_OUTDOORS
-    DOOR( 8),                 // room_0_OUTDOORS   -> room_4_HUT3LEFT
-    DOOR(18),                 // room_4_HUT3LEFT   -> room_5_HUT3RIGHT
-    DOOR( 9 | door_REVERSE),  // room_5_HUT3RIGHT  -> room_0_OUTDOORS
-    LOCATION(45), // 85             // marked
-    DOOR(14),                 // room_0_OUTDOORS   -> room_8_CORRIDOR
-    DOOR(34),                 // room_8_CORRIDOR   -> room_9_CRATE
-    DOOR(34 | door_REVERSE),  // room_9_CRATE      -> room_8_CORRIDOR
-    DOOR(33),                 // room_8_CORRIDOR   -> room_10_LOCKPICK
-    DOOR(33 | door_REVERSE),  // room_10_LOCKPICK  -> room_8_CORRIDOR
+    LOCATION(46),
+    DOOR(31),                 // room_11_PAPERS   -> room_13_CORRIDOR
+    DOOR(29),                 // room_13_CORRIDOR -> room_16_CORRIDOR
+    DOOR(32),                 // room_16_CORRIDOR -> room_7_CORRIDOR
+    DOOR(26),                 // room_7_CORRIDOR  -> room_17_CORRIDOR
+    DOOR(35),                 // room_17_CORRIDOR -> room_12_CORRIDOR
+    DOOR(25 | door_REVERSE),  // room_12_CORRIDOR -> room_18_RADIO
+    DOOR(22 | door_REVERSE),  // room_18_RADIO    -> room_19_FOOD
+    DOOR(21 | door_REVERSE),  // room_19_FOOD     -> room_23_BREAKFAST
+    DOOR(20 | door_REVERSE),  // room_23_BREAKFAST-> room_21_CORRIDOR
+    DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
+    LOCATION(42),
+    DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
+    DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
+    DOOR(11),                 // room_0_OUTDOORS  -> room_20_REDCROSS
+    DOOR(11 | door_REVERSE),  // room_20_REDCROSS -> room_0_OUTDOORS
+    DOOR(12),                 // room_0_OUTDOORS  -> room_15_UNIFORM
+    DOOR(27 | door_REVERSE),  // room_15_UNIFORM  -> room_14_TORCH
+    DOOR(28),                 // room_14_TORCH    -> room_16_CORRIDOR
+    DOOR(29 | door_REVERSE),  // room_16_CORRIDOR -> room_13_CORRIDOR
+    DOOR(13 | door_REVERSE),  // room_13_CORRIDOR -> room_0_OUTDOORS
+    LOCATION(11),             // charevnt_handler_6 jumps to this offset
+    LOCATION(55),
+    DOOR( 0 | door_REVERSE),  // room_0_OUTDOORS  -> room_0_OUTDOORS (gate 0 to yard)
+    DOOR( 1 | door_REVERSE),  // room_0_OUTDOORS  -> room_0_OUTDOORS (gate 1 to yard)
+    LOCATION(60),
+    DOOR( 1),                 // room_0_OUTDOORS  -> room_0_OUTDOORS (return through gate 1)
+    DOOR( 0),                 // room_0_OUTDOORS  -> room_0_OUTDOORS (return through gate 0)
+    DOOR( 4),                 // room_0_OUTDOORS  -> room_28_HUT1LEFT
+    DOOR(16),                 // room_28_HUT1LEFT -> room_1_HUT1RIGHT
+    DOOR( 5 | door_REVERSE),  // room_1_HUT1RIGHT -> room_0_OUTDOORS
+    LOCATION(11),
+    DOOR( 7),                 // room_0_OUTDOORS  -> room_3_HUT2RIGHT
+    DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
+    DOOR( 6 | door_REVERSE),  // room_2_HUT2LEFT  -> room_0_OUTDOORS
+    DOOR( 8),                 // room_0_OUTDOORS  -> room_4_HUT3LEFT
+    DOOR(18),                 // room_4_HUT3LEFT  -> room_5_HUT3RIGHT
+    DOOR( 9 | door_REVERSE),  // room_5_HUT3RIGHT -> room_0_OUTDOORS
+    LOCATION(45),
+    DOOR(14),                 // room_0_OUTDOORS  -> room_8_CORRIDOR
+    DOOR(34),                 // room_8_CORRIDOR  -> room_9_CRATE
+    DOOR(34 | door_REVERSE),  // room_9_CRATE     -> room_8_CORRIDOR
+    DOOR(33),                 // room_8_CORRIDOR  -> room_10_LOCKPICK
+    DOOR(33 | door_REVERSE),  // room_10_LOCKPICK -> room_8_CORRIDOR
     routebyte_END
   };
   static const uint8_t data_77CD[] =
   {
-    LOCATION(43), // 83             // marked
-    LOCATION(44), // 84             // marked
+    LOCATION(43),
+    LOCATION(44),
     routebyte_END
   };
   static const uint8_t route_exit_hut2[] =
   {
     DOOR(7 | door_REVERSE),   // room_3_HUT2RIGHT -> room_0_OUTDOORS
-    LOCATION(11), // 51             // marked
-    LOCATION(12), // 52             // marked
+    LOCATION(11),
+    LOCATION(12),
     routebyte_END
   };
   static const uint8_t route_exit_hut3[] =
   {
     DOOR(9 | door_REVERSE),   // room_5_HUT3RIGHT -> room_0_OUTDOORS
-    LOCATION(45), // 85             // marked
-    LOCATION(14), // 54             // marked
+    LOCATION(45),
+    LOCATION(14),
     routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_1[] =
   {
-    LOCATION(46), // 86             // marked
+    LOCATION(46),
     routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_2[] =
   {
-    LOCATION(47), // 87             // marked
+    LOCATION(47),
     routebyte_END
   };
   static const uint8_t route_prisoner_sleeps_3[] =
   {
-    LOCATION(48), // 88             // marked
+    LOCATION(48),
     routebyte_END
   };
   static const uint8_t data_77DE[] =
   {
-    LOCATION(52), // 92             // marked
-    LOCATION(53), // 93             // marked
+    LOCATION(52),
+    LOCATION(53),
     routebyte_END
   };
   static const uint8_t data_77E1[] =
   {
-    LOCATION(11), // 51             // marked
-    LOCATION(55), // 95             // marked
-    DOOR(0 | door_REVERSE), // move through gates
-    DOOR(1 | door_REVERSE), // move through gates to yard
-    LOCATION(56), // 96             // marked
+    LOCATION(11),
+    LOCATION(55),
+    DOOR(0 | door_REVERSE),   // move through gates
+    DOOR(1 | door_REVERSE),   // move through gates to yard
+    LOCATION(56),
     routebyte_END
   };
   static const uint8_t data_77E7[] =
   {
-    LOCATION(12), // 52             // marked
+    LOCATION(12),
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
@@ -9626,94 +9625,94 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_77EC[] =
   {
-    LOCATION(16), // 56             // marked
-    LOCATION(12), // 52             // marked
-    DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
-    DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
+    LOCATION(16),
+    LOCATION(12),
+    DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
+    DOOR(20),                 // room_21_CORRIDOR -> room_23_BREAKFAST
     routebyte_END
   };
   static const uint8_t route_prisoner_sits_1[] =
   {
-    LOCATION(64), // 104             // marked
+    LOCATION(64),
     routebyte_END
   };
   static const uint8_t route_prisoner_sits_2[] =
   {
-    LOCATION(65), // 105             // marked
+    LOCATION(65),
     routebyte_END
   };
   static const uint8_t route_prisoner_sits_3[] =
   {
-    LOCATION(66), // 106             // marked
+    LOCATION(66),
     routebyte_END
   };
   static const uint8_t route_guardA_breakfast[] =
   {
-    LOCATION(68), // 108             // marked
+    LOCATION(68),
     routebyte_END
   };
   static const uint8_t route_guardB_breakfast[] =
   {
-    LOCATION(69), // 109             // marked
+    LOCATION(69),
     routebyte_END
   };
   static const uint8_t route_guard_12_roll_call[] =
   {
-    LOCATION(9), // 49             // marked
+    LOCATION(9),
     routebyte_END
   };
   static const uint8_t route_guard_13_roll_call[] =
   {
-    LOCATION(11), // 51             // marked
+    LOCATION(11),
     routebyte_END
   };
   static const uint8_t route_guard_14_roll_call[] =
   {
-    LOCATION(17), // 57             // marked
+    LOCATION(17),
     routebyte_END
   };
   static const uint8_t route_guard_15_roll_call[] =
   {
-    LOCATION(49), // 89             // marked
+    LOCATION(49),
     routebyte_END
   };
   static const uint8_t route_prisoner_1_roll_call[] =
   {
-    LOCATION(72), // 112             // marked
+    LOCATION(72),
     routebyte_END
   };
   static const uint8_t route_prisoner_2_roll_call[] =
   {
-    LOCATION(73), // 113             // marked
+    LOCATION(73),
     routebyte_END
   };
   static const uint8_t route_prisoner_3_roll_call[] =
   {
-    LOCATION(74), // 114             // marked
+    LOCATION(74),
     routebyte_END
   };
   static const uint8_t route_prisoner_4_roll_call[] =
   {
-    LOCATION(75), // 115             // marked
+    LOCATION(75),
     routebyte_END
   };
   static const uint8_t route_prisoner_5_roll_call[] =
   {
-    LOCATION(76), // 116             // marked
+    LOCATION(76),
     routebyte_END
   };
   static const uint8_t route_prisoner_6_roll_call[] =
   {
-    LOCATION(77), // 117             // marked
+    LOCATION(77),
     routebyte_END
   };
   static const uint8_t route_go_to_solitary[] =
   {
-    LOCATION(14), // 54             // marked
+    LOCATION(14),
     DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     DOOR(24 | door_REVERSE),  // room_22_REDKEY   -> room_24_SOLITARY
-    LOCATION(42),             // 82             // marked
+    LOCATION(42),
     routebyte_END
   };
   static const uint8_t route_hero_leave_solitary[] =
@@ -9721,42 +9720,42 @@ const uint8_t *get_route(uint8_t index)
     DOOR(24),                 // room_24_SOLITARY -> room_22_REDKEY
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
     DOOR(10 | door_REVERSE),  // room_21_CORRIDOR -> room_0_OUTDOORS
-    LOCATION(14),             // 54             // marked
+    LOCATION(14),
     routebyte_END
   };
   static const uint8_t route_guard_12_bed[] =
   {
-    LOCATION(12), // 52
-    LOCATION(11), // 51
+    LOCATION(12),
+    LOCATION(11),
     DOOR(7),                  // room_0_OUTDOORS -> room_3_HUT2RIGHT
-    LOCATION(52), // 92
+    LOCATION(52),
     routebyte_END
   };
   static const uint8_t route_guard_13_bed[] =
   {
-    LOCATION(12), // 52             // marked
-    LOCATION(11), // 51             // marked
+    LOCATION(12),
+    LOCATION(11),
     DOOR(7),                  // room_0_OUTDOORS  -> room_3_HUT2RIGHT
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(53), // 93             // marked
+    LOCATION(53),
     routebyte_END
   };
   static const uint8_t route_guard_14_bed[] =
   {
-    LOCATION(12), // 52             // marked
-    LOCATION(11), // 51             // marked
-    LOCATION(45), // 85             // marked
+    LOCATION(12),
+    LOCATION(11),
+    LOCATION(45),
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(52), // 92             // marked
+    LOCATION(52),
     routebyte_END
   };
   static const uint8_t route_guard_15_bed[] =
   {
-    LOCATION(12), // 52             // marked
-    LOCATION(11), // 51             // marked
-    LOCATION(45), // 85             // marked
+    LOCATION(12),
+    LOCATION(11),
+    LOCATION(45),
     DOOR(9),                  // room_0_OUTDOORS -> room_5_HUT3RIGHT
-    LOCATION(53), // 92             // marked
+    LOCATION(53),
     routebyte_END
   };
   static const uint8_t route_hut2_left_to_right[] =
@@ -9766,18 +9765,18 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t data_7833[] =
   {
-    LOCATION(67), // 107             // marked
+    LOCATION(67),
     routebyte_END
   };
   static const uint8_t route_hut2_right_to_left[] =
   {
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(70), // 110             // marked
+    LOCATION(70),
     routebyte_END
   };
   static const uint8_t route_hero_roll_call[] =
   {
-    LOCATION(50), // 90             // marked
+    LOCATION(50),
     routebyte_END
   };
 #undef DOOR
