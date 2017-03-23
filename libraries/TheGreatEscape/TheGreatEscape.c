@@ -9474,7 +9474,7 @@ reverse_route:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CB79: Return a pointer to the route with the specified index.
+ * $CB79: Return a route.
  *
  * Used by the routines at get_target and bribes_solitary_food.
  *
@@ -9498,14 +9498,14 @@ const uint8_t *get_route(uint8_t index)
   /** Specifies a location index (in locations[]) within a route. */
 #define LOCATION(d) (d + 40)
 
-  static const uint8_t data_7795[] =
+  static const uint8_t route_7795[] =
   {
     LOCATION(32),
     LOCATION(33),
     LOCATION(34),
     routebyte_END
   };
-  static const uint8_t data_7799[] =
+  static const uint8_t route_7799[] =
   {
     LOCATION(35),
     LOCATION(36),
@@ -9565,7 +9565,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(33 | door_REVERSE),  // room_10_LOCKPICK -> room_8_CORRIDOR
     routebyte_END
   };
-  static const uint8_t data_77CD[] =
+  static const uint8_t route_77CD[] =
   {
     LOCATION(43),
     LOCATION(44),
@@ -9600,13 +9600,13 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(48),
     routebyte_END
   };
-  static const uint8_t data_77DE[] =
+  static const uint8_t route_77DE[] =
   {
     LOCATION(52),
     LOCATION(53),
     routebyte_END
   };
-  static const uint8_t data_77E1[] =
+  static const uint8_t route_77E1[] =
   {
     LOCATION(11),
     LOCATION(55),
@@ -9615,7 +9615,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(56),
     routebyte_END
   };
-  static const uint8_t data_77E7[] =
+  static const uint8_t route_77E7[] =
   {
     LOCATION(12),
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
@@ -9623,7 +9623,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
     routebyte_END
   };
-  static const uint8_t data_77EC[] =
+  static const uint8_t route_77EC[] =
   {
     LOCATION(16),
     LOCATION(12),
@@ -9763,7 +9763,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(17),                 // room_2_HUT2LEFT -> room_3_HUT2RIGHT
     routebyte_END
   };
-  static const uint8_t data_7833[] =
+  static const uint8_t route_7833[] =
   {
     LOCATION(67),
     routebyte_END
@@ -9787,68 +9787,68 @@ const uint8_t *get_route(uint8_t index)
    */
   static const uint8_t *routes[46] =
   {
-    NULL, /* was zero */              //  0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
+    NULL, /* was zero */            //  0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
 
-    &data_7795[0],                    //  1:
-    &data_7799[0],                    //  2:
-    &route_commandant[0],             //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
-    &data_77CD[0],                    //  4:
+    &route_7795[0],                 //  1:
+    &route_7799[0],                 //  2:
+    &route_commandant[0],           //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
+    &route_77CD[0],                 //  4:
 
-    &route_exit_hut2[0],              //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
-    &route_exit_hut3[0],              //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
+    &route_exit_hut2[0],            //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
+    &route_exit_hut3[0],            //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
 
     // character_sleeps routes
-    &route_prisoner_sleeps_1[0],      //  7: prisoner 1 by byte_A13E_common
-    &route_prisoner_sleeps_2[0],      //  8: prisoner 2 by byte_A13E_common
-    &route_prisoner_sleeps_3[0],      //  9: prisoner 3 by byte_A13E_common
-    &route_prisoner_sleeps_1[0],      // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
-    &route_prisoner_sleeps_2[0],      // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
-    &route_prisoner_sleeps_3[0],      // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
+    &route_prisoner_sleeps_1[0],    //  7: prisoner 1 by byte_A13E_common
+    &route_prisoner_sleeps_2[0],    //  8: prisoner 2 by byte_A13E_common
+    &route_prisoner_sleeps_3[0],    //  9: prisoner 3 by byte_A13E_common
+    &route_prisoner_sleeps_1[0],    // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
+    &route_prisoner_sleeps_2[0],    // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
+    &route_prisoner_sleeps_3[0],    // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
 
-    &data_77DE[0],                    // 13: (all hostiles) by byte_A13E_common
+    &route_77DE[0],                 // 13: (all hostiles) by byte_A13E_common
 
-    &data_77E1[0],                    // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
-    &data_77E1[0],                    // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
+    &route_77E1[0],                 // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
+    &route_77E1[0],                 // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
 
-    &data_77E7[0],                    // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
-    &data_77EC[0],                    // 17:                                                       prisoners_and_guards-2 by end_of_breakfast
+    &route_77E7[0],                 // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
+    &route_77EC[0],                 // 17:                                                       prisoners_and_guards-2 by end_of_breakfast
 
     // character_sits routes
-    &route_prisoner_sits_1[0],        // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
-    &route_prisoner_sits_2[0],        // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
-    &route_prisoner_sits_3[0],        // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
-    &route_prisoner_sits_1[0],        // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
-    &route_prisoner_sits_2[0],        // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
-    &route_prisoner_sits_3[0],        // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
+    &route_prisoner_sits_1[0],      // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
+    &route_prisoner_sits_2[0],      // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
+    &route_prisoner_sits_3[0],      // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
+    &route_prisoner_sits_1[0],      // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
+    &route_prisoner_sits_2[0],      // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
+    &route_prisoner_sits_3[0],      // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
 
-    &route_guardA_breakfast[0],       // 24: "even guard" by byte_A13E_anotherone_common
-    &route_guardB_breakfast[0],       // 25: "odd guard" by byte_A13E_anotherone_common
+    &route_guardA_breakfast[0],     // 24: "even guard" by byte_A13E_anotherone_common
+    &route_guardB_breakfast[0],     // 25: "odd guard" by byte_A13E_anotherone_common
 
-    &route_guard_12_roll_call[0],     // 26: character_12_GUARD_12   by go_to_roll_call
-    &route_guard_13_roll_call[0],     // 27: character_13_GUARD_13   by go_to_roll_call
-    &route_prisoner_1_roll_call[0],   // 28: character_20_PRISONER_1 by go_to_roll_call
-    &route_prisoner_2_roll_call[0],   // 29: character_21_PRISONER_2 by go_to_roll_call
-    &route_prisoner_3_roll_call[0],   // 30: character_22_PRISONER_3 by go_to_roll_call
-    &route_guard_14_roll_call[0],     // 31: character_14_GUARD_14   by go_to_roll_call
-    &route_guard_15_roll_call[0],     // 32: character_15_GUARD_15   by go_to_roll_call
-    &route_prisoner_4_roll_call[0],   // 33: character_23_PRISONER_4 by go_to_roll_call
-    &route_prisoner_5_roll_call[0],   // 34: character_24_PRISONER_5 by go_to_roll_call
-    &route_prisoner_6_roll_call[0],   // 35: character_25_PRISONER_6 by go_to_roll_call
+    &route_guard_12_roll_call[0],   // 26: character_12_GUARD_12   by go_to_roll_call
+    &route_guard_13_roll_call[0],   // 27: character_13_GUARD_13   by go_to_roll_call
+    &route_prisoner_1_roll_call[0], // 28: character_20_PRISONER_1 by go_to_roll_call
+    &route_prisoner_2_roll_call[0], // 29: character_21_PRISONER_2 by go_to_roll_call
+    &route_prisoner_3_roll_call[0], // 30: character_22_PRISONER_3 by go_to_roll_call
+    &route_guard_14_roll_call[0],   // 31: character_14_GUARD_14   by go_to_roll_call
+    &route_guard_15_roll_call[0],   // 32: character_15_GUARD_15   by go_to_roll_call
+    &route_prisoner_4_roll_call[0], // 33: character_23_PRISONER_4 by go_to_roll_call
+    &route_prisoner_5_roll_call[0], // 34: character_24_PRISONER_5 by go_to_roll_call
+    &route_prisoner_6_roll_call[0], // 35: character_25_PRISONER_6 by go_to_roll_call
 
-    &route_go_to_solitary[0],         // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by route_ended
-    &route_hero_leave_solitary[0],    // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
+    &route_go_to_solitary[0],       // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by route_ended
+    &route_hero_leave_solitary[0],  // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
 
-    &route_guard_12_bed[0],           // 38: guard 12 at 'time for bed', 'search light'
-    &route_guard_13_bed[0],           // 39: guard 13 at 'time for bed', 'search light'
-    &route_guard_14_bed[0],           // 40: guard 14 at 'time for bed', 'search light'
-    &route_guard_15_bed[0],           // 41: guard 15 at 'time for bed', 'search light'
+    &route_guard_12_bed[0],         // 38: guard 12 at 'time for bed', 'search light'
+    &route_guard_13_bed[0],         // 39: guard 13 at 'time for bed', 'search light'
+    &route_guard_14_bed[0],         // 40: guard 14 at 'time for bed', 'search light'
+    &route_guard_15_bed[0],         // 41: guard 15 at 'time for bed', 'search light'
 
-    &route_hut2_left_to_right[0],     // 42:
+    &route_hut2_left_to_right[0],   // 42:
 
-    &data_7833[0],                    // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
-    &route_hut2_right_to_left[0],     // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
+    &route_7833[0],                 // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
+    &route_hut2_right_to_left[0],   // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
 
-    &route_hero_roll_call[0],         // 45: (hero) by go_to_roll_call
+    &route_hero_roll_call[0],       // 45: (hero) by go_to_roll_call
 
     // original game has an FF byte here
   };
