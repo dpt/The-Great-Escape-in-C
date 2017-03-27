@@ -9962,7 +9962,7 @@ void solitary(tgestate_t *state)
   /**
    * $CC31: Partial character struct.
    */
-  static const uint8_t solitary_hero_reset_data[6] =
+  static const uint8_t solitary_commandant_reset_data[6] =
   {
     room_0_OUTDOORS,  // room
     0x74, 0x64, 0x03, // pos
@@ -10037,7 +10037,8 @@ next:
 
   reset_map_and_characters(state);
 
-  memcpy(&state->character_structs[0].room, &solitary_hero_reset_data, 6);
+  /* Set the commandant on a path which results in the hero being released. */
+  memcpy(&state->character_structs[character_0_COMMANDANT].room, &solitary_commandant_reset_data, 6);
 
   queue_message_for_display(state, message_YOU_ARE_IN_SOLITARY);
   queue_message_for_display(state, message_WAIT_FOR_RELEASE);
