@@ -8868,7 +8868,7 @@ void follow_suspicious_character(tgestate_t *state)
 
     vischar = state->IY; // cache
 
-    if (vischar->flags != 0)
+    if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
     {
       character_t character; /* was A */
 
