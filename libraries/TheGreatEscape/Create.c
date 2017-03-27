@@ -81,106 +81,6 @@ static void tge_initialise(tgestate_t *state)
     { item_COMPASS,          room_NONE,        { 52, 28,  4 }, { 126, 244 } },
   };
 
-  /**
-   * $783A: Default map locations.
-   */
-  static const xy_t locations[78] =
-  {
-    // reset_visible_character guard dogs 1 & 2 use 0..7
-    // character_behaviour uss this range also, for dog behaviour
-    {  68, 104 }, // 0
-    {  68,  84 }, // 1
-    {  68,  70 }, // 2
-    {  64, 102 }, // 3
-    {  64,  64 }, // 4
-    {  68,  68 }, // 5
-    {  64,  64 }, // 6
-    {  68,  64 }, // 7
-
-    // charevnt_handler_0 uses 8..15
-    { 104, 112 }, // 8
-    {  96, 112 }, // 9 used by route_guard_12_roll_call
-    { 106, 102 }, // 10
-    {  93, 104 }, // 11 used by route_commandant, route_exit_hut2, data_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
-    { 124, 101 }, // 12 used by route_exit_hut2, data_77E7, data_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
-    { 124, 112 }, // 13
-    { 116, 104 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
-    { 112, 100 }, // 15
-
-    // charevnt_handler_1 uses 16..23
-    { 120,  96 }, // 16 used by data_77EC
-    { 128,  88 }, // 17 used by route_guard_14_roll_call
-    { 112,  96 }, // 18
-    { 116,  84 }, // 19
-    { 124, 100 }, // 20
-    { 124, 112 }, // 21
-    { 116, 104 }, // 22
-    { 112, 100 }, // 23
-
-    // reset_visible_character guard dogs 3 & 4 use 24..31
-    { 102,  68 }, // 24
-    { 102,  64 }, // 25
-    {  96,  64 }, // 26
-    {  92,  68 }, // 27
-    {  86,  68 }, // 28
-    {  84,  64 }, // 29
-    {  74,  68 }, // 30
-    {  74,  64 }, // 31
-
-    { 102,  68 }, // 32 used by data_7795
-    {  68,  68 }, // 33 used by data_7795
-    {  68, 104 }, // 34 used by data_7795
-
-    { 107,  69 }, // 35 used by data_7799
-    { 107,  45 }, // 36 used by data_7799
-    {  77,  45 }, // 37 used by data_7799
-    {  77,  61 }, // 38 used by data_7799
-    {  61,  61 }, // 39 used by data_7799
-    {  61, 103 }, // 40 used by data_7799
-
-    { 116,  76 }, // 41
-    {  44,  42 }, // 42 used by route_commandant, route_go_to_solitary
-    { 106,  72 }, // 43 used by data_77CD
-    { 110,  72 }, // 44 used by data_77CD
-    {  81, 104 }, // 45 used by route_commandant, route_exit_hut3, route_guard_14_bed, route_guard_15_bed
-
-    {  52,  60 }, // 46 used by route_commandant, route_prisoner_sleeps_1
-    {  52,  44 }, // 47 used by route_prisoner_sleeps_2
-    {  52,  28 }, // 48 used by route_prisoner_sleeps_3
-    { 119, 107 }, // 49 used by route_guard_15_roll_call
-    { 122, 110 }, // 50 used by route_hero_roll_call
-    {  52,  28 }, // 51 
-    {  40,  60 }, // 52 used by data_77DE, route_guard_14_bed
-    {  36,  34 }, // 53 used by data_77DE, route_guard_13_bed, route_guard_15_bed
-    {  80,  76 }, // 54
-    {  89,  76 }, // 55 used by route_commandant, data_77E1
-
-    // charevnt_handler_2 uses 56..63
-    {  89,  60 }, // 56 used by data_77E1
-    { 100,  61 }, // 57
-    {  92,  54 }, // 58
-    {  84,  50 }, // 59
-    { 102,  48 }, // 60 used by route_commandant
-    {  96,  56 }, // 61
-    {  79,  59 }, // 62
-    { 103,  47 }, // 63
-
-    {  52,  54 }, // 64 character walks into breakfast room, used by route_prisoner_sits_1
-    {  52,  46 }, // 65 used by route_prisoner_sits_2
-    {  52,  36 }, // 66 used by route_prisoner_sits_3
-    {  52,  62 }, // 67 used by data_7833
-    {  32,  56 }, // 68 used by route_guardA_breakfast
-    {  52,  24 }, // 69 used by route_guardB_breakfast
-    {  42,  46 }, // 70 used by route_hut2_right_to_left
-    {  34,  34 }, // 71
-    { 120, 110 }, // 72 roll call used by route_prisoner_1_roll_call
-    { 118, 110 }, // 73 roll call used by route_prisoner_2_roll_call
-    { 116, 110 }, // 74 roll call used by route_prisoner_3_roll_call
-    { 121, 109 }, // 75 roll call used by route_prisoner_4_roll_call
-    { 119, 109 }, // 76 roll call used by route_prisoner_5_roll_call
-    { 117, 109 }, // 77 roll call used by route_prisoner_6_roll_call
-  };
-
   /* $AD3E: Searchlight movement pattern for L-shaped gap? */
   static const uint8_t movement_0[] =
   {
@@ -412,9 +312,6 @@ static void tge_initialise(tgestate_t *state)
 
   /* $76C8 */
   memcpy(state->item_structs, item_structs, sizeof(item_structs));
-
-  /* $783A */
-  memcpy(state->locations, locations, sizeof(locations));
 
   /* $7CFC */
   memset(&state->messages.queue[0], 0, message_queue_LENGTH);
