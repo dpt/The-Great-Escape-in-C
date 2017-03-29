@@ -264,8 +264,8 @@ void go_to_time_for_bed(tgestate_t *state);
 void set_prisoners_and_guards_route(tgestate_t *state, route_t *route);
 void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *route);
 void set_character_route(tgestate_t  *state,
-                          character_t character,
-                          route_t     route);
+                         character_t character,
+                         route_t     route);
 void set_route(tgestate_t *state, vischar_t *vischar);
 
 INLINE void store_route(route_t route, route_t *proute);

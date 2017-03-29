@@ -29,22 +29,22 @@ static uint8_t zx_in(zxspectrum_t *state, uint16_t address)
 
   switch (address)
   {
-    case port_KEYBOARD_12345:
-    case port_KEYBOARD_09876:
-    case port_KEYBOARD_QWERT:
-    case port_KEYBOARD_POIUY:
-    case port_KEYBOARD_ASDFG:
-    case port_KEYBOARD_ENTERLKJH:
-    case port_KEYBOARD_SHIFTZXCV:
-    case port_KEYBOARD_SPACESYMSHFTMNB:
-      return prv->config.key(address, prv->config.opaque);
+  case port_KEYBOARD_12345:
+  case port_KEYBOARD_09876:
+  case port_KEYBOARD_QWERT:
+  case port_KEYBOARD_POIUY:
+  case port_KEYBOARD_ASDFG:
+  case port_KEYBOARD_ENTERLKJH:
+  case port_KEYBOARD_SHIFTZXCV:
+  case port_KEYBOARD_SPACESYMSHFTMNB:
+    return prv->config.key(address, prv->config.opaque);
 
-    case port_KEMPSTON_JOYSTICK:
-      return 0x00;
+  case port_KEMPSTON_JOYSTICK:
+    return 0x00;
 
-    default:
-      assert("zx_in not implemented for that port" == NULL);
-      return 0x00;
+  default:
+    assert("zx_in not implemented for that port" == NULL);
+    return 0x00;
   }
 }
 
@@ -52,12 +52,12 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
 {
   switch (address)
   {
-    case port_BORDER:
-      break;
+  case port_BORDER:
+    break;
 
-    default:
-      assert("zx_out not implemented for that port" == NULL);
-      break;
+  default:
+    assert("zx_out not implemented for that port" == NULL);
+    break;
   }
 }
 

@@ -268,26 +268,26 @@ void setup_movable_items(tgestate_t *state)
 
   switch (state->room_index)
   {
-    case room_2_HUT2LEFT:
-      movableitem = &state->movable_items[movable_item_STOVE1];
-      character   = character_26_STOVE_1;
-      setup_movable_item(state, movableitem, character);
-      break;
+  case room_2_HUT2LEFT:
+    movableitem = &state->movable_items[movable_item_STOVE1];
+    character   = character_26_STOVE_1;
+    setup_movable_item(state, movableitem, character);
+    break;
 
-    case room_4_HUT3LEFT:
-      movableitem = &state->movable_items[movable_item_STOVE2];
-      character   = character_27_STOVE_2;
-      setup_movable_item(state, movableitem, character);
-      break;
+  case room_4_HUT3LEFT:
+    movableitem = &state->movable_items[movable_item_STOVE2];
+    character   = character_27_STOVE_2;
+    setup_movable_item(state, movableitem, character);
+    break;
 
-    case room_9_CRATE:
-      movableitem = &state->movable_items[movable_item_CRATE];
-      character   = character_28_CRATE;
-      setup_movable_item(state, movableitem, character);
-      break;
+  case room_9_CRATE:
+    movableitem = &state->movable_items[movable_item_CRATE];
+    character   = character_28_CRATE;
+    setup_movable_item(state, movableitem, character);
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
 
   spawn_characters(state);
@@ -5236,8 +5236,8 @@ middle_bit:
       int column;
       int row;
 
-      column = (int16_t) ((B << 8) | C);
-      row    = (int16_t) ((H << 8) | L);
+      column = (int16_t)((B << 8) | C);
+      row    = (int16_t)((H << 8) | L);
 
       // HL must be row, BC must be column
       attrs = &state->speccy->attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
@@ -8572,7 +8572,7 @@ trigger_event:
 
       /* This unpleasant cast turns HLtinypos (assigned in get_target)
        * back into a door_t. */
-      HLdoor = (door_t *) ((char *) HLtinypos - 1);
+      HLdoor = (door_t *)((char *) HLtinypos - 1);
       assert(HLdoor >= &doors[0]);
       assert(HLdoor < &doors[door_MAX * 2]);
 

@@ -326,7 +326,7 @@ static void tge_initialise(tgestate_t *state)
 
   /* $A141 */
   state->moraleflag_screen_address =
-      &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
+    &state->speccy->screen[0x5002 - SCREEN_START_ADDRESS];
 
   /** $A263 */
   state->red_cross_parcel_current_contents = item_NONE;
@@ -406,10 +406,10 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
 
   /* Allocate buffers. */
 
-  game_window_start_offsets = calloc(1, (size_t) ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets));
-  tile_buf                  = calloc(1, (size_t) (state->columns * state->rows));
-  window_buf                = calloc(1, (size_t) (state->columns * state->rows * 8));
-  map_buf                   = calloc(1, (size_t) (state->st_columns * state->st_rows));
+  game_window_start_offsets = calloc(1, (size_t)((state->rows - 1) * 8) * sizeof(*game_window_start_offsets));
+  tile_buf                  = calloc(1, (size_t)(state->columns * state->rows));
+  window_buf                = calloc(1, (size_t)(state->columns * state->rows * 8));
+  map_buf                   = calloc(1, (size_t)(state->st_columns * state->st_rows));
 
   if (game_window_start_offsets == NULL ||
       tile_buf                  == NULL ||
