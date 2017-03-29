@@ -9019,8 +9019,8 @@ void follow_suspicious_character(tgestate_t *state)
   }
   while (--iters);
 
-  /* Inhibit hero automatic behaviour when the flag is red, or otherwise
-   * inhibited. */
+  /* Engage automatic behaviour for the hero unless the flag is red, the
+   * hero is in solitary or an input event was recently received. */
   if (!state->red_flag &&
       (state->in_solitary || state->automatic_player_counter == 0))
   {
@@ -9043,7 +9043,6 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   uint8_t    counter_and_flags; /* was B */
   uint8_t    iters;             /* was B */
   vischar_t *vischar2;          /* was HL */
-  uint8_t    A;                 /* was A */
   uint8_t    Cdash;             /* was C' */
   uint8_t    scale;             /* Conv: added */
 
@@ -9148,15 +9147,14 @@ bribed_visible:
     }
   }
 
-  A = vischar2->route.index;
-  if (A == 0) /* Stand still */
+  if (vischar2->route.index == 0) /* Stand still */
   {
-    character_behaviour_set_input(state, vischar, A /* new_input */);
+    character_behaviour_set_input(state, vischar, 0 /* new_input */);
     return; // exit via
   }
 
 end_bit:
-  Cdash = A = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
+  Cdash = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
   /* The original code self modifies the vischar_at_pos_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
@@ -9177,20 +9175,21 @@ end_bit:
   else
     scale = 8; /* Outdoors. */
 
-  // Still trying to figure ot this IMPEDED flag. If it's clear and the vischar matches its stored 'pos' then we enter bribes_solitary_food(), else we character_behaviour_set_input(). However, if IMPEDED is set then that is reversed.
+  // I'm still trying to figure ot this IMPEDED flag. If it's clear and the
+  // vischar matches its stored 'pos' then we enter bribes_solitary_food(),
+  // else we character_behaviour_set_input(). However, if IMPEDED is set then
+  // that is reversed.
 
   if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc?
-    character_behaviour_impeded(state, vischar, A, scale);
+    character_behaviour_impeded(state, vischar, scale); // exit via
   else if (vischar_at_pos_x(state, vischar, scale) == 0 &&
            vischar_at_pos_y(state, vischar, scale) == 0)
     /* Character is at stored pos. */
-    bribes_solitary_food(state, vischar);
+    bribes_solitary_food(state, vischar); // exit via
   else
-  {
-    A = 0; // from return value in A of vischar_at_pos_x/y
-    assert(A < 9);
-    character_behaviour_set_input(state, vischar, A /* new_input */); /* was fallthrough */
-  }
+    /* The zero passed in as the third argument here (new_input) is the
+     * return value of 'A' in vischar_at_pos_x/y. */
+    character_behaviour_set_input(state, vischar, 0); /* was fallthrough */
 }
 
 /**
@@ -9219,28 +9218,25 @@ void character_behaviour_set_input(tgestate_t *state,
  similar to end of $C918 but the sense is reversed...
 
  *
- * \param[in] state     Pointer to game state.
- * \param[in] vischar   Pointer to visible character.   (was IY)
- * \param[in] new_input Flags (of another character...) (was A)
- * \param[in] scale     Scale factor (replaces self-modifying code in original).
+ * \param[in] state   Pointer to game state.
+ * \param[in] vischar Pointer to visible character.   (was IY)
+ * \param[in] scale   Scale factor (replaces self-modifying code in original).
  */
 void character_behaviour_impeded(tgestate_t *state,
                                  vischar_t  *vischar,
-                                 uint8_t     new_input,
                                  int         scale)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
-  // assert(new_input);
   assert(scale == 1 || scale == 4 || scale == 8);
 
   /* Note: The y,x order here looks unusual but it matches the original code. */
   if (vischar_at_pos_y(state, vischar, scale) == 0 &&
       vischar_at_pos_x(state, vischar, scale) == 0)
     /* Character is at stored pos. */
-    character_behaviour_set_input(state, vischar, new_input);
+    character_behaviour_set_input(state, vischar, 0);
   else
-    bribes_solitary_food(state, vischar);
+    bribes_solitary_food(state, vischar); // exit via
 }
 
 /* ----------------------------------------------------------------------- */

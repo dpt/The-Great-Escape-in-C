@@ -509,7 +509,6 @@ void character_behaviour_set_input(tgestate_t *state,
                                    uint8_t     new_input);
 void character_behaviour_impeded(tgestate_t *state,
                                  vischar_t  *vischar,
-                                 uint8_t     new_input,
                                  int         scale);
 
 uint8_t vischar_at_pos_x(tgestate_t *state,
