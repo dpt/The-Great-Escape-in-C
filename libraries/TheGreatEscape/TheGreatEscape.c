@@ -5658,6 +5658,8 @@ int collision(tgestate_t *state)
     input = vischar->input & ~input_KICK; // sampled HL = $806D, $804D, $802D, $808D, $800D
     if (input)
     {
+      assert(input < 9);
+
       direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
       if (direction != state->IY->direction)
       {
@@ -5685,6 +5687,7 @@ b0d0:
       new_direction = state->IY->direction;
       assert(new_direction < 4);
       state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
+      assert((state->IY->input & ~input_KICK) < 9);
       if ((new_direction & 1) == 0) /* TL or BR */
         state->IY->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
       else
@@ -6646,10 +6649,14 @@ void called_from_main_loop_9(tgestate_t *state)
     if (vischar->flags == vischar_FLAGS_EMPTY_SLOT)
       goto next;
 
+    assert((vischar->input & ~input_KICK) < 9);
+
     vischar->flags |= vischar_FLAGS_NO_COLLIDE;
 
     if (vischar->input & input_KICK)
       goto kicked; /* force an update */
+
+    assert(vischar->input < 9);
 
     anim = vischar->anim;
     animindex = vischar->animindex;
@@ -6726,10 +6733,14 @@ next:
 
 kicked:
   vischar->input &= ~input_KICK;
+  assert(vischar->input < 9);
 
 end_bit:
+  assert(vischar->input < 9);
+  assert(vischar->direction < 8);
   C = byte_CDAA[vischar->direction][vischar->input];
   // Conv: Original game uses ADD A,A to double A and in doing so discards top flag bit. We mask it off instead.
+  assert((C & ~I) < 24);
   DE = vischar->animbase[C & ~I]; // sampled animbase always $CDF2 == &animations[0]
   vischar->anim = DE;
   if ((C & I) == 0)
@@ -9199,6 +9210,7 @@ void character_behaviour_set_input(tgestate_t *state,
 
   if (new_input != vischar->input)
     vischar->input = new_input | input_KICK;
+  assert((vischar->input & ~input_KICK) < 9);
 }
 
 /**
