@@ -482,6 +482,7 @@ int change_by_delta(int8_t         max,
                     const uint8_t *second,
                     uint8_t       *first);
 
+// this is small enough to INLINE
 characterstruct_t *get_character_struct(tgestate_t *state,
                                         character_t character);
 
