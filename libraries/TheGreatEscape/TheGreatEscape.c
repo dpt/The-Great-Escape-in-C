@@ -9027,8 +9027,8 @@ bribed_visible:
     }
   }
 
-  A = vischar2->route.step = 0; // makes no sense - check again
-  if (A == 0)
+  A = vischar2->route.index;
+  if (A == 0) /* Stand still */
   {
     character_behaviour_set_input(state, vischar, A /* new_input */);
     return; // exit via
@@ -9065,7 +9065,11 @@ end_bit:
     /* Character is at stored pos. */
     bribes_solitary_food(state, vischar);
   else
+  {
+    A = 0; // from return value in A of vischar_at_pos_x/y
+    assert(A < 9);
     character_behaviour_set_input(state, vischar, A /* new_input */); /* was fallthrough */
+  }
 }
 
 /**
