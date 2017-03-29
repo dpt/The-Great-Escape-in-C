@@ -9231,8 +9231,8 @@ void character_behaviour_impeded(tgestate_t *state,
   assert(scale == 1 || scale == 4 || scale == 8);
 
   /* Note: The y,x order here looks unusual but it matches the original code. */
-  if (vischar_at_pos_y(state, vischar, scale) == 0 &&
-      vischar_at_pos_x(state, vischar, scale) == 0)
+  if (vischar_at_pos_y(state, vischar, scale) != 0 ||
+      vischar_at_pos_x(state, vischar, scale) != 0)
     /* Character is at stored pos. */
     character_behaviour_set_input(state, vischar, 0);
   else
