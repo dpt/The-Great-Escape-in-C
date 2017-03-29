@@ -29,8 +29,8 @@ extern "C"
 #    endif
 #  endif
 #endif
-  
-  
+
+
 #include "ZXSpectrum/Spectrum.h"
 
 
@@ -69,7 +69,7 @@ TGE_API void tge_setup(tgestate_t *state);
  * Invoke the game instance.
  */
 TGE_API void tge_main(tgestate_t *state);
-  
+
 
 #ifdef __cplusplus
 }

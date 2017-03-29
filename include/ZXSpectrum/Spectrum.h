@@ -114,7 +114,7 @@ struct zxspectrum
    * OUT
    */
   void (*out)(zxspectrum_t *state, uint16_t address, uint8_t byte);
-  
+
   /**
    * Call the implementer when screen or attributes have changed.
    */
@@ -138,13 +138,13 @@ typedef struct zxconfig
 {
   /** An opaque pointer passed into callbacks. */
   void *opaque;
-  
+
   /** Called when there's a new frame to draw. */
   void (*draw)(unsigned int *pixels, zxbox_t *dirty, void *opaque);
 
   /** Called when there's nothing to do. */
   void (*sleep)(int duration, sleeptype_t sleeptype, void *opaque);
-  
+
   /** Called when a key is tested. */
   int (*key)(uint16_t port, void *opaque);
 }
@@ -156,7 +156,7 @@ zxconfig_t;
  * \return New ZXSpectrum.
  */
 zxspectrum_t *zxspectrum_create(const zxconfig_t *config);
- 
+
 /**
  * Destroy a logical ZX Spectrum.
  *

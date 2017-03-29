@@ -539,7 +539,7 @@ void menu_screen(tgestate_t *state)
       while (--iters);
     }
     while (--overall_delay);
-    
+
     state->speccy->draw(state->speccy, NULL);
     state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
   }

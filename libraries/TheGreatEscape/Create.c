@@ -377,15 +377,15 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
 
   if (!config)
     goto failure;
-  
+
   /* Allocate state structure. */
 
   state = calloc(1, sizeof(*state));
   if (state == NULL)
     goto failure;
-  
+
   /* Configure. */
-  
+
   state->width      = config->width;
   state->height     = config->height;
 
@@ -403,9 +403,9 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
    * it's wider than I expected it to be. */
   state->st_columns = 7;
   state->st_rows    = 5;
-  
+
   /* Allocate buffers. */
-  
+
   game_window_start_offsets = calloc(1, (size_t) ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets));
   tile_buf                  = calloc(1, (size_t) (state->columns * state->rows));
   window_buf                = calloc(1, (size_t) (state->columns * state->rows * 8));
@@ -416,20 +416,20 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
       window_buf                == NULL ||
       map_buf                   == NULL)
     goto failure;
-  
+
   state->game_window_start_offsets = game_window_start_offsets;
   state->tile_buf                  = tile_buf;
   state->window_buf                = window_buf;
   state->map_buf                   = map_buf;
-  
+
   state->prng_index                = 0;
 
   /* Initialise additional variables. */
-  
+
   state->speccy = speccy;
-  
+
   /* Initialise original game variables. */
-  
+
   tge_initialise(state);
 
   return state;
@@ -442,7 +442,7 @@ failure:
   free(window_buf);
   free(tile_buf);
   free(state);
-  
+
   return NULL;
 }
 

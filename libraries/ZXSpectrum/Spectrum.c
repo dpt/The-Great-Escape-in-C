@@ -18,7 +18,7 @@ typedef struct zxspectrum_private
 {
   zxspectrum_t        pub;
   zxconfig_t          config;
-  
+
   unsigned int       *screen; /* Converted screen */
 }
 zxspectrum_private_t;
@@ -54,7 +54,7 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
   {
     case port_BORDER:
       break;
-      
+
     default:
       assert("zx_out not implemented for that port" == NULL);
       break;
@@ -64,7 +64,7 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
 static void zx_draw(zxspectrum_t *state, zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
-  
+
   zxscreen_convert(prv->pub.screen, prv->screen);
 
   prv->config.draw(prv->screen, dirty, prv->config.opaque);
@@ -82,7 +82,7 @@ static void zx_sleep(zxspectrum_t *state,
 zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 {
   zxspectrum_private_t *prv;
-  
+
   prv = malloc(sizeof(*prv));
   if (prv == NULL)
     return NULL;
@@ -93,16 +93,16 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
   prv->pub.sleep = zx_sleep;
 
   prv->config = *config;
-  
+
   /* Converted screen */
-  
+
   prv->screen = malloc(256 * 192 * sizeof(*prv->screen));
   if (prv->screen == NULL)
   {
     free(prv);
     return NULL;
   }
-  
+
   zxscreen_initialise();
 
   return &prv->pub;
@@ -112,7 +112,7 @@ void zxspectrum_destroy(zxspectrum_t *doomed)
 {
   if (doomed == NULL)
     return;
-  
+
   zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
 
   free(prv->screen);

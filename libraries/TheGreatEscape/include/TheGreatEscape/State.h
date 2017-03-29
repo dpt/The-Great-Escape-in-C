@@ -47,7 +47,7 @@ struct tgestate
   /**
    * $69AE: Movable items.
    *
-   * Used by setup_movable_items and reset_visible_character. 
+   * Used by setup_movable_items and reset_visible_character.
    */
   movableitem_t   movable_items[movable_item__LIMIT];
 
@@ -75,17 +75,17 @@ struct tgestate
     /** $7CFC: Queue of message indexes.
      * (Pairs of bytes + terminator). */
     uint8_t       queue[message_queue_LENGTH];
-    
+
     /** $7D0F: Decrementing counter which shows the next message when it
      * reaches zero. */
     uint8_t       display_delay;
-    
+
     /** $7D10: Index into the message we're displaying or wiping. */
     uint8_t       display_index;
-    
+
     /** $7D11: Pointer to the next available slot in the message queue. */
     uint8_t      *queue_pointer;
-    
+
     /** $7D13: Pointer to the next message character to be displayed. */
     const char   *current_character;
   }
@@ -321,7 +321,7 @@ struct tgestate
   uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left:    height loop                       = clipped_height & 0xFF
   uint8_t         self_E363; // masked_sprite_plotter_16_wide_right:   height loop                       = clipped_height & 0xFF
 
-  /* Note that these adjacent chunks actually overlap in the original game 
+  /* Note that these adjacent chunks actually overlap in the original game
    * but I've divided them here for clarity. */
 
   /** $E188 .. $E290: (Formerly) Self-modified disabled instructions. */

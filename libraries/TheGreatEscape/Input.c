@@ -270,7 +270,7 @@ static input_t inputroutine_sinclair(tgestate_t *state)
     fire = input_FIRE;
   else
     fire = 0;
-  
+
   return fire + left_right + up_down; /* Combine axis */
 }
 
