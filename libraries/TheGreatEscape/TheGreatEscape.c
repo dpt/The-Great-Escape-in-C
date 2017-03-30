@@ -5689,9 +5689,9 @@ b0d0:
       state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
       assert((state->IY->input & ~input_KICK) < 9);
       if ((new_direction & 1) == 0) /* TL or BR */
-        state->IY->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
+        state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
       else
-        state->IY->counter_and_flags |= vischar_BYTE7_IMPEDED;
+        state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
       goto b0d0;
     }
 
@@ -5796,7 +5796,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
         state->saved_pos.pos.height >= minheight  &&
         state->saved_pos.pos.height <  maxheight + 2)
     {
-      vischar->counter_and_flags ^= vischar_BYTE7_IMPEDED;
+      vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
       return 1; // NZ
     }
 
@@ -6040,7 +6040,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 
 stop:
     /* Found. */
-    vischar->counter_and_flags ^= vischar_BYTE7_IMPEDED;
+    vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
     return 1; /* return NZ */
 
 next:
@@ -9156,7 +9156,7 @@ bribed_visible:
 end_bit:
   Cdash = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-  /* The original code self modifies the vischar_at_pos_x/y routines. */
+  /* The original code self modifies the vischar_move_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
 //    HLdash = &multiply_by_1;
 //  else if (Cdash & vischar_FLAGS_DOOR_THING)
@@ -9164,8 +9164,8 @@ end_bit:
 //  else
 //    HLdash = &multiply_by_8;
 //
-//  self_CA13 = HLdash; // self-modify vischar_at_pos_x:$CA13
-//  self_CA4B = HLdash; // self-modify vischar_at_pos_y:$CA4B
+//  self_CA13 = HLdash; // self-modify vischar_move_x:$CA13
+//  self_CA4B = HLdash; // self-modify vischar_move_y:$CA4B
 
   /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
@@ -9175,21 +9175,33 @@ end_bit:
   else
     scale = 8; /* Outdoors. */
 
-  // I'm still trying to figure ot this IMPEDED flag. If it's clear and the
-  // vischar matches its stored 'pos' then we enter bribes_solitary_food(),
-  // else we character_behaviour_set_input(). However, if IMPEDED is set then
-  // that is reversed.
-
-  if (vischar->counter_and_flags & vischar_BYTE7_IMPEDED) // hit a wall etc?
-    character_behaviour_impeded(state, vischar, scale); // exit via
-  else if (vischar_at_pos_x(state, vischar, scale) == 0 &&
-           vischar_at_pos_y(state, vischar, scale) == 0)
-    /* Character is at stored pos. */
-    bribes_solitary_food(state, vischar); // exit via
+  /* If the vischar_BYTE7_Y_DOMINANT flag is set then
+   * character_behaviour_move_y_dominant is used instead of the code below,
+   * which is x dominant. ie. It means "try moving y then x, rather than x
+   * then y". This is the code which makes characters alternate left/right
+   * when navigating. */
+  if (vischar->counter_and_flags & vischar_BYTE7_Y_DOMINANT)
+  {
+    character_behaviour_move_y_dominant(state, vischar, scale); // exit via
+  }
   else
-    /* The zero passed in as the third argument here (new_input) is the
-     * return value of 'A' in vischar_at_pos_x/y. */
-    character_behaviour_set_input(state, vischar, 0); /* was fallthrough */
+  {
+    input_t input;
+
+    input = vischar_move_x(state, vischar, scale);
+    if (input)
+    {
+      character_behaviour_set_input(state, vischar, input);
+    }
+    else
+    {
+      input = vischar_move_y(state, vischar, scale);
+      if (input)
+        character_behaviour_set_input(state, vischar, input);
+      else
+        bribes_solitary_food(state, vischar); // exit via
+    }
+  }
 }
 
 /**
@@ -9213,38 +9225,42 @@ void character_behaviour_set_input(tgestate_t *state,
 }
 
 /**
- * $C9FF: Called when a character is (was) impeded.
-
- similar to end of $C918 but the sense is reversed...
-
+ * $C9FF: This is the same as the end of character_behaviour above but the
+ * movement order is reversed to be y-x rather than x-y.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character.   (was IY)
  * \param[in] scale   Scale factor (replaces self-modifying code in original).
  */
-void character_behaviour_impeded(tgestate_t *state,
-                                 vischar_t  *vischar,
-                                 int         scale)
+void character_behaviour_move_y_dominant(tgestate_t *state,
+                                         vischar_t  *vischar,
+                                         int         scale)
 {
+  input_t input;
+
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(scale == 1 || scale == 4 || scale == 8);
 
-  /* Note: The y,x order here looks unusual but it matches the original code. */
-  if (vischar_at_pos_y(state, vischar, scale) != 0 ||
-      vischar_at_pos_x(state, vischar, scale) != 0)
-    /* Character is at stored pos. */
-    character_behaviour_set_input(state, vischar, 0);
+  input = vischar_move_y(state, vischar, scale);
+  if (input)
+  {
+    character_behaviour_set_input(state, vischar, input);
+  }
   else
-    bribes_solitary_food(state, vischar); // exit via
+  {
+    input = vischar_move_x(state, vischar, scale);
+    if (input)
+      character_behaviour_set_input(state, vischar, input);
+    else
+      bribes_solitary_food(state, vischar); // exit via
+  }
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA11: How close is this vischar to its 'pos.x' coord?
- *
- * Note: Callers only ever test the return code against zero.
+ * $CA11: Return the input_t which moves us closer to our X target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9254,9 +9270,9 @@ void character_behaviour_impeded(tgestate_t *state,
  *         4 => x <  pos.x
  *         0 => x == pos.x
  */
-uint8_t vischar_at_pos_x(tgestate_t *state,
-                         vischar_t  *vischar,
-                         int         scale)
+input_t vischar_move_x(tgestate_t *state,
+                       vischar_t  *vischar,
+                       int         scale)
 {
   int16_t delta; /* was DE */
 
@@ -9268,27 +9284,30 @@ uint8_t vischar_at_pos_x(tgestate_t *state,
    * same vischar on entry. */
   assert(vischar == state->IY);
 
+  // which one's the target value?
+  // one will be "where i am" one will be "where i need to be"
+  // suspect that mi.pos.x is "where i am"
+  // and that pos.x is "where i need to be"
+
   delta = vischar->mi.pos.x - vischar->pos.x * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
-    return 8;
+    return input_RIGHT + input_DOWN;
   else if (delta <= -3)
-    return 4;
+    return input_LEFT + input_UP;
   else
   {
-    vischar->counter_and_flags |= vischar_BYTE7_IMPEDED; // doubting that this is an impeded flag
-    return 0;
+    vischar->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
+    return input_NONE;
   }
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA49: How close is this vischar to its 'pos.y' coord?
+ * $CA49: Return the input_t which moves us closer to our Y target.
  *
- * Nearly identical to vischar_at_pos_x.
- *
- * Note: Callers only ever test the return code against zero.
+ * Nearly identical to vischar_move_x.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9298,9 +9317,9 @@ uint8_t vischar_at_pos_x(tgestate_t *state,
  *         7 => y <  pos.y
  *         0 => y == pos.y
  */
-uint8_t vischar_at_pos_y(tgestate_t *state,
-                         vischar_t  *vischar,
-                         int         scale)
+input_t vischar_move_y(tgestate_t *state,
+                       vischar_t  *vischar,
+                       int         scale)
 {
   int16_t delta; /* was DE */
 
@@ -9315,13 +9334,13 @@ uint8_t vischar_at_pos_y(tgestate_t *state,
   delta = vischar->mi.pos.y - vischar->pos.y * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
-    return 5;
+    return input_LEFT + input_DOWN;
   else if (delta <= -3)
-    return 7;
+    return input_RIGHT + input_UP;
   else
   {
-    vischar->counter_and_flags &= ~vischar_BYTE7_IMPEDED;
-    return 0;
+    vischar->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
+    return input_NONE;
   }
 }
 

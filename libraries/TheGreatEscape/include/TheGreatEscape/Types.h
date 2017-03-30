@@ -201,7 +201,7 @@ enum vischar_flags
 
   vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
-  vischar_BYTE7_IMPEDED                = 1 << 5, // set when hero is at stored pos x, cleared when hero is at stored pos y
+  vischar_BYTE7_Y_DOMINANT             = 1 << 5, // set when vischar_move_x() arrives at destination, cleared when vischar_move_y() arrives
   vischar_BYTE7_TOUCHING               = 1 << 6, // set when touch() sees a character touching. stops the map moving
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
@@ -411,7 +411,7 @@ tinypos_t;
  */
 typedef struct movableitem
 {
-  pos_t              pos;
+  pos_t              pos; // what coordinate space?
   const spritedef_t *sprite;
   spriteindex_t      sprite_index;
 }
@@ -434,7 +434,7 @@ typedef struct vischar
   /** $8004 position */
   // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
   // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
-  // used in vischar_at_pos_x/y
+  // used in vischar_move_x/y
   tinypos_t       pos;
 
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
