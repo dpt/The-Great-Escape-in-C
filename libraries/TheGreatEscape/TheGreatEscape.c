@@ -5520,9 +5520,8 @@ int collision(tgestate_t *state)
   character_t character;    /* was A */
   uint8_t     B;
   uint8_t     C;
-  character_t tmpA;
   uint8_t     input;
-  uint8_t     direction;
+  uint8_t     direction;     /* was A (CHECK) */
   uint16_t    new_direction; /* was BC */
 
   assert(state != NULL);
@@ -5599,51 +5598,59 @@ int collision(tgestate_t *state)
     {
       /* Movable items: Stove 1, Stove 2 or Crate */
 
+      // Stoves move on which axis? screenwise it's bottom-left to top-right
+      // Crate moves on which axis? screenwise it's bottom-right to top-left
+
       // PUSH HL
       uint16_t *coord; /* was HL */
 
-      coord = &vischar->mi.pos.y;
+      coord = &vischar->mi.pos.y; // ok
 
-      tmpA = character;
-      B = 7; // min y (and min x too?)
-      C = 35; // max y
-      A = state->IY->direction; // interleaved
-      if (tmpA == character_28_CRATE)
+      B = 7; // permitted range from centre point C
+      C = 35; // cetre point (29 .. 35 .. 42)
+      direction = state->IY->direction; // was interleaved
+      if (character == character_28_CRATE)
       {
-        // crate must move on x axis only
+        /* Crate moves on x(?) axis only. */
         coord--; // -> HL->mi.pos.x
-        C = 54; // max x
-        A ^= 1; /* swap direction: left <=> right */
+        C = 54; // cetre point (47 .. 54 .. 61)
+        direction ^= 1; /* swap direction: left <=> right */
       }
-      if (A == 0) // test direction
+
+      switch (direction)
       {
-        A = *coord; // note: narrowing
-        if (A != C) // equivalent to the goto b0b8 it replaces
-        {
-          // Conv: Replaced[-2]+1 trick
-          if (C > A)
-            (*coord)--;
-          else
+        case direction_TOP_LEFT:
+          /* The player is pushing the movable item forward so centre it. */
+          A = *coord; // note: narrowing // orig code loads bytes here?
+          if (A != C) // hit when hero pushes to top-left (screenwise)
+          {
+            // Conv: Replaced[-2]+1 trick
+            if (A > C)
+              (*coord)--;
+            else
+              (*coord)++;
+          }
+          break;
+
+        case direction_TOP_RIGHT: // hit when hero pushes to top-right (screenwise)
+          if (*coord != (C + B))
             (*coord)++;
-        }
-      }
-      else if (A == 1)
-      {
-        A = C + B;
-        if (A != *coord)
-          (*coord)++;
-      }
-      else if (A == 2)
-      {
-        A = C - B;
-        *coord = A;
-      }
-      else
-      {
-        A = C - B;
-        if (A != *coord)
-          (*coord)--;
-      }
+          break;
+
+        case direction_BOTTOM_RIGHT: // likely never happens in game
+          *coord = C - B;
+          break;
+
+        case direction_BOTTOM_LEFT: // hit when hero pushes to bottom-left (screenwise)
+          if (*coord != (C - B))
+            (*coord)--;
+          break;
+
+        default:
+          assert("Should not happen" == NULL);
+          break;
+       }
+
       // POP HL
       // POP BC
     }
