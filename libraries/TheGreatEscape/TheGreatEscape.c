@@ -1970,7 +1970,7 @@ set_route_then_set_flag_green:
 
       route2.index = state->vischars[0].route.index;
       route2.step  = BC; /* loop counter */
-      set_hero_route(state, route2);
+      set_hero_route(state, &route2);
     }
     goto set_flag_green;
 
@@ -2560,7 +2560,7 @@ void event_night_time(tgestate_t *state)
   if (state->hero_in_bed == 0)
   {
     static const route_t t = { 44, 1 }; /* was BC */
-    set_hero_route(state, t);
+    set_hero_route(state, &t);
   }
   set_day_or_night(state, 255);
 }
@@ -2808,7 +2808,7 @@ void wake_up(tgestate_t *state)
   state->hero_in_bed = 0;
 
   static const route_t t42 = { 42, 0 }; /* was BC */
-  set_hero_route(state, t42);
+  set_hero_route(state, &t42);
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -2869,7 +2869,7 @@ void end_of_breakfast(tgestate_t *state)
   }
 
   static const route_t t = { 16 | route_REVERSED, 3 }; /* was BC */
-  set_hero_route(state, t);
+  set_hero_route(state, &t);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -2917,12 +2917,12 @@ void end_of_breakfast(tgestate_t *state)
  * \param[in] state  Pointer to game state.
  * \param[in] route  Route.                (was BC)
  */
-void set_hero_route(tgestate_t *state, route_t route)
+void set_hero_route(tgestate_t *state, const route_t *route)
 {
   vischar_t *vischar; /* was HL */
 
   assert(state != NULL);
-  ASSERT_ROUTE_VALID(route);
+  ASSERT_ROUTE_VALID(*route);
 
   if (state->in_solitary)
     return; /* Ignore. */
@@ -2930,7 +2930,7 @@ void set_hero_route(tgestate_t *state, route_t route)
   vischar = &state->vischars[0];
 
   vischar->flags &= ~vischar_FLAGS_DOOR_THING;
-  vischar->route = route;
+  vischar->route = *route;
   set_route(state, vischar);
 }
 
@@ -2946,7 +2946,7 @@ void go_to_time_for_bed(tgestate_t *state)
   assert(state != NULL);
 
   static const route_t t5 = { 5 | route_REVERSED, 2 }; /* was BC */
-  set_hero_route(state, t5);
+  set_hero_route(state, &t5);
 
   route_t t5_also = { 5 | route_REVERSED, 2 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5_also);
@@ -2985,7 +2985,7 @@ void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
   }
   while (--iters);
 
-  *proute = route;
+  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3027,7 +3027,7 @@ void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
   }
   while (--iters);
 
-  *proute = route;
+  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3201,8 +3201,8 @@ void byte_A13E_is_zero(tgestate_t *state,
   {
     // hero moving in reaction to the commandant... exiting solitary?
 
-    route_t t = { 44, 0 }; /* was BC */
-    set_hero_route(state, t);
+    static const route_t t = { 44, 0 }; /* was BC */
+    set_hero_route(state, &t);
   }
   else
   {
@@ -3469,7 +3469,7 @@ void set_route_0x0E00(tgestate_t *state)
   assert(state != NULL);
 
   static const route_t t14 = { 14, 0 };
-  set_hero_route(state, t14);
+  set_hero_route(state, &t14);
 
   route_t t14_also = { 14, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t14_also);
@@ -3488,8 +3488,8 @@ void set_route_0x8E04(tgestate_t *state)
 
   // route $E is 5 long, so offset 4 could be the final byte and the '128' flag is a reverse
 
-  route_t t14 = { 14 | route_REVERSED, 4 };
-  set_hero_route(state, t14);
+  static const route_t t14 = { 14 | route_REVERSED, 4 };
+  set_hero_route(state, &t14);
 
   route_t t14_also = { 14 | route_REVERSED, 4 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t14_also);
@@ -3504,8 +3504,8 @@ void set_route_0x1000(tgestate_t *state)
 {
   assert(state != NULL);
 
-  route_t t16 = { 16, 0 };
-  set_hero_route(state, t16);
+  static const route_t t16 = { 16, 0 };
+  set_hero_route(state, &t16);
 
   route_t t16_also = { 16, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t16_also);
@@ -3554,7 +3554,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   if (character == character_0_COMMANDANT)
   {
     static const route_t t = { 43, 0 }; /* was BC */
-    set_hero_route(state, t);
+    set_hero_route(state, &t);
   }
   else
   {
@@ -3615,7 +3615,7 @@ void go_to_roll_call(tgestate_t *state)
   set_prisoners_and_guards_route(state, &t26);
 
   static const route_t t45 = { 45, 0 };
-  set_hero_route(state, t45);
+  set_hero_route(state, &t45);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8858,7 +8858,7 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
   state->automatic_player_counter = 0; /* Force automatic control */
 
   static const route_t route_37 = { 37, 0 }; /* was BC */
-  set_hero_route(state, route_37); // original jump was $A344, but have moved it
+  set_hero_route(state, &route_37); // original jump was $A344, but have moved it
 }
 
 /**
