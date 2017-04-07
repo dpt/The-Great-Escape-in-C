@@ -2865,9 +2865,9 @@ void end_of_breakfast(tgestate_t *state)
   {
     state->vischars[0].mi.pos.x = 52;
     state->vischars[0].mi.pos.y = 62;
+    state->hero_in_breakfast = 0; /* Conv: Moved into if block. */
   }
 
-  state->hero_in_breakfast = 0;
   const route_t t = { 16 | route_REVERSED, 3 }; /* was BC */
   set_hero_route(state, t);
 
