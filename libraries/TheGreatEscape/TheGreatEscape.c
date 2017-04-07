@@ -1910,7 +1910,7 @@ void in_permitted_area(tgestate_t *state)
     // 1 => Hut area
     // 2 => Yard area
     area = ((route.step & ~7) == 8) ? 1 : 2;
-    if (in_permitted_area_end_bit(state, area) == 0) /* within bounds */
+    if (in_permitted_area_end_bit(state, area))
       goto set_flag_green;
     else
       goto set_flag_red;
@@ -1937,13 +1937,13 @@ void in_permitted_area(tgestate_t *state)
     goto set_flag_green;
 
 found:
-    // route.index (route index) was found in byte_to_pointer
+    // route index was found in byte_to_pointer
 
     HL = tab->pointer;
     // loc.y = 0; // not needed
     HL += route.step; // original code used B=0
     // *HL must be a room_and_flags... unsure
-    if (in_permitted_area_end_bit(state, *HL) == 0) /* within bounds */
+    if (in_permitted_area_end_bit(state, *HL))
       goto set_flag_green;
 
     if (state->vischars[0].route.index & route_REVERSED) // FUTURE: route index is already in 'route'
@@ -1957,7 +1957,7 @@ found:
       foo = HL[BC]; // likely; A is room_and_flags
       if (foo == 255) /* hit end of list */
         goto pop_and_set_flag_red;
-      if (in_permitted_area_end_bit(state, foo) == 0)
+      if (in_permitted_area_end_bit(state, foo))
         goto set_route_then_set_flag_green;
       BC++;
     }
@@ -2012,7 +2012,7 @@ set_flag_red:
  * \param[in] state          Pointer to game state.
  * \param[in] room_and_flags If bit 7 is set then bits 0..6 contain a room index. Otherwise it's an area index as passed into within_camp_bounds. (was A)
  *
- * \return 0 if the position is within the area bounds, 1 otherwise.
+ * \return true if in permitted area.
  */
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 {
@@ -2026,12 +2026,12 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 
   if (room_and_flags & (1 << 7)) // flag means a room is specified
   {
-    assert((room_and_flags & ~(1 << 7)) < room__LIMIT);
-    return *proom == (room_and_flags & ~(1 << 7)); /* Return room only. */
+    ASSERT_ROOM_VALID(room_and_flags & ~(1 << 7));
+    return *proom == (room_and_flags & ~(1 << 7)); // permitted if eq
   }
 
   if (*proom != room_0_OUTDOORS)
-    return 0; /* Indoors. */
+    return 0; // correct?
 
   return within_camp_bounds(room_and_flags, &state->hero_map_position);
 }
@@ -2042,7 +2042,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  * \param[in] area Index (0..2) into permitted_bounds[] table. (was A)
  * \param[in] pos  Pointer to position. (was HL)
  *
- * \return 0 if the position is within the area bounds, 1 otherwise.
+ * \return true if in permitted area.
  */
 int within_camp_bounds(uint8_t          area, // ought to be an enum
                        const tinypos_t *pos)
@@ -2063,8 +2063,8 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
   assert(pos != NULL);
 
   bounds = &permitted_bounds[area];
-  return pos->x < bounds->x0 || pos->x >= bounds->x1 ||
-         pos->y < bounds->y0 || pos->y >= bounds->y1;
+  return pos->x >= bounds->x0 && pos->x < bounds->x1 &&
+         pos->y >= bounds->y0 && pos->y < bounds->y1;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10148,7 +10148,7 @@ void solitary(tgestate_t *state)
       do
         /* If the item is within the camp bounds then it will be discovered.
          */
-        if (within_camp_bounds(area, itempos) == 0)
+        if (within_camp_bounds(area, itempos))
           goto discovered;
       while (++area != 3);
 
