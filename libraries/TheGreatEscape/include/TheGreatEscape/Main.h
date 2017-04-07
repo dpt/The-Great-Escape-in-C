@@ -252,8 +252,6 @@ timedevent_handler_t event_time_for_bed;
 timedevent_handler_t event_search_light;
 void set_guards_route(tgestate_t *state, route_t route);
 
-extern const character_t prisoners_and_guards[10];
-
 void wake_up(tgestate_t *state);
 void end_of_breakfast(tgestate_t *state);
 

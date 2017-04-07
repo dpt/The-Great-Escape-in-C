@@ -2769,7 +2769,7 @@ void set_guards_route(tgestate_t *state, route_t route)
  * Used by set_prisoners_and_guards_route and
  * set_prisoners_and_guards_route_B.
  */
-const character_t prisoners_and_guards[10] =
+static const character_t prisoners_and_guards[10] =
 {
   character_12_GUARD_12,
   character_13_GUARD_13,
