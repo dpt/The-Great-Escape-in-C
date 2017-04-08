@@ -607,14 +607,14 @@ typedef uint8_t doorindex_t;
 typedef void (*item_action_t)(tgestate_t *state);
 
 /**
- * Stores a byte-to-pointer mapping.
+ * Stores a route-to-permitted list mapping.
  */
-typedef struct byte_to_pointer
+typedef struct route_to_permitted
 {
-  uint8_t        byte;
-  const uint8_t *pointer;
+  uint8_t        routeindex;
+  const uint8_t *permitted;
 }
-byte_to_pointer_t;
+route_to_permitted_t;
 
 /**
  * Holds a boundary.

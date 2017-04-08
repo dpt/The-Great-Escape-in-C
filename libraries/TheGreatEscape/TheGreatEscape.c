@@ -1813,35 +1813,40 @@ void cutting_wire(tgestate_t *state)
  */
 void in_permitted_area(tgestate_t *state)
 {
-#define R (1<<7) // specifies a room index
+#define R (1<<7) /* Encodes a room index. */
 
   /**
-   * $9EF9: Variable-length arrays, 255 terminated.
+   * $9EF9: Variable-length arrays, 255 terminated, which encode rooms or
+   * permitted areas for a given route and step within the route.
    */
-  static const uint8_t byte_9EF9[] = { R| 2, R|  2,   255                         };
-  static const uint8_t byte_9EFC[] = { R| 3,     1,     1,     1,   255           };
-  static const uint8_t byte_9F01[] = {    1,     1,     1,     0,     2,   2, 255 };
-  static const uint8_t byte_9F08[] = {    1,     1, R| 21, R| 23, R| 25, 255      }; // breakfasty?
-  static const uint8_t byte_9F0E[] = { R| 3, R|  2,   255                         };
-  static const uint8_t byte_9F11[] = { R|25,   255                                };
-  static const uint8_t byte_9F13[] = {    1,   255                                };
+  static const uint8_t permitted_route42[] = { R| 2, R|2,                      255 }; /* for route_hut2_left_to_right */
+  static const uint8_t permitted_route5[]  = { R| 3,   1,    1,    1,          255 }; /* for route_exit_hut2 */
+  static const uint8_t permitted_route14[] = {    1,   1,    1,    0,    2, 2, 255 }; /* for route_go_to_yard */
+  static const uint8_t permitted_route16[] = {    1,   1, R|21, R|23, R|25,    255 }; /* for route_77E7 (breakfasty) */
+  static const uint8_t permitted_route44[] = { R| 3, R|2,                      255 }; /* for route_hut2_right_to_left */
+  static const uint8_t permitted_route43[] = { R|25,                           255 }; /* for route_7833 */
+  static const uint8_t permitted_route45[] = {    1,                           255 }; /* for route_hero_roll_call */
 
-#undef T
+  // While routes encode transitions (go here, go there) this table encodes
+  // areas (or rooms) so remember that these are one entry longer than the
+  // matching route.
+
+#undef R
 
   /**
    * $9EE4: Maps route indicies to pointers to the above arrays.
    *
    * Suspect that this means "if you're in <this> route you can be in <these> places."
    */
-  static const byte_to_pointer_t byte_to_pointer[7] =
+  static const route_to_permitted_t route_to_permitted[7] =
   {
-    { 42, &byte_9EF9[0] },
-    {  5, &byte_9EFC[0] },
-    { 14, &byte_9F01[0] },
-    { 16, &byte_9F08[0] },
-    { 44, &byte_9F0E[0] },
-    { 43, &byte_9F11[0] },
-    { 45, &byte_9F13[0] },
+    { 42, &permitted_route42[0] },
+    {  5, &permitted_route5[0]  },
+    { 14, &permitted_route14[0] },
+    { 16, &permitted_route16[0] },
+    { 44, &permitted_route44[0] },
+    { 43, &permitted_route43[0] },
+    { 45, &permitted_route45[0] },
   };
 
   pos_t       *vcpos;      /* was HL */
@@ -1849,7 +1854,7 @@ void in_permitted_area(tgestate_t *state)
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
   route_t      route;      /* was CA */
-  uint16_t     BC;         /* was BC */
+  uint16_t     i;          /* was BC */
   uint8_t      red_flag;   /* was A */
 
   assert(state != NULL);
@@ -1900,6 +1905,7 @@ void in_permitted_area(tgestate_t *state)
     goto set_flag_green;
 
   route = state->vischars[0].route;
+  ASSERT_ROUTE_VALID(route);
   if (route.index & route_REVERSED)
     route.step++;
 
@@ -1917,66 +1923,59 @@ void in_permitted_area(tgestate_t *state)
   }
   else // en route
   {
-    const byte_to_pointer_t *tab;   /* was HL */
-    uint8_t                  iters; /* was B */
-    const uint8_t           *HL;
+    const route_to_permitted_t *tab;       /* was HL */
+    uint8_t                     iters;     /* was B */
+    const uint8_t              *permitted; /* was HL */
 
     // A is a route index
     routeindex = route.index & ~route_REVERSED; // added to coax A back from route
-    tab = &byte_to_pointer[0]; // table mapping bytes to offsets
-    iters = NELEMS(byte_to_pointer);
+    tab = &route_to_permitted[0]; // table mapping bytes to offsets
+    iters = NELEMS(route_to_permitted);
     do
     {
-      if (routeindex == tab->byte)
+      if (routeindex == tab->routeindex)
         goto found;
       tab++;
     }
     while (--iters);
 
-    // anything not found in byte_to_pointer => green flag
+    // anything not found in route_to_permitted => green flag
     goto set_flag_green;
 
 found:
-    // route index was found in byte_to_pointer
+    // route index was found in route_to_permitted
 
-    HL = tab->pointer;
+    permitted = tab->permitted;
     // loc.y = 0; // not needed
-    HL += route.step; // original code used B=0
-    // *HL must be a room_and_flags... unsure
-    if (in_permitted_area_end_bit(state, *HL))
-      goto set_flag_green;
-
-    if (state->vischars[0].route.index & route_REVERSED) // FUTURE: route index is already in 'route'
-      HL++;
-
-    BC = 0;
-    for (;;)
+    permitted += route.step; // original code used B=0
+    if (!in_permitted_area_end_bit(state, *permitted))
     {
-      uint8_t foo; /* was A */
+      if (state->vischars[0].route.index & route_REVERSED) // FUTURE: route index is already in 'route'
+        permitted++;
 
-      foo = HL[BC]; // likely; A is room_and_flags
-      if (foo == 255) /* hit end of list */
-        goto pop_and_set_flag_red;
-      if (in_permitted_area_end_bit(state, foo))
-        goto set_route_then_set_flag_green;
-      BC++;
+      i = 0;
+      for (;;)
+      {
+        uint8_t room_or_area; /* was A */
+
+        room_or_area = permitted[i]; // likely; A is room_and_flags
+        if (room_or_area == 255) /* hit end of list */
+          goto set_flag_red; /* Conv: Jump adjusted */
+        if (in_permitted_area_end_bit(state, room_or_area))
+          break; /* green */
+        i++;
+      }
+
+      {
+        route_t route2; /* was BC */
+
+        assert(i < 256);
+
+        route2.index = state->vischars[0].route.index;
+        route2.step  = i; /* loop counter */
+        set_hero_route(state, &route2);
+      }
     }
-
-set_route_then_set_flag_green:
-    {
-      route_t route2; /* was BC */
-
-      assert(BC < 256);
-
-      route2.index = state->vischars[0].route.index;
-      route2.step  = BC; /* loop counter */
-      set_hero_route(state, &route2);
-    }
-    goto set_flag_green;
-
-    // FUTURE remove this needless jump
-pop_and_set_flag_red:
-    goto set_flag_red;
   }
 
   /* Green flag code path. */
@@ -9736,7 +9735,7 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(53),
     routebyte_END
   };
-  static const uint8_t route_77E1[] =
+  static const uint8_t route_go_to_yard[] =
   {
     LOCATION(11),
     LOCATION(55),
@@ -9937,8 +9936,8 @@ const uint8_t *get_route(uint8_t index)
 
     &route_77DE[0],                 // 13: (all hostiles) by byte_A13E_common
 
-    &route_77E1[0],                 // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
-    &route_77E1[0],                 // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
+    &route_go_to_yard[0],           // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
+    &route_go_to_yard[0],           // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
 
     &route_77E7[0],                 // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
     &route_77EC[0],                 // 17:                                                       prisoners_and_guards-2 by end_of_breakfast
