@@ -2015,28 +2015,28 @@ set_flag_red:
  */
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 {
-  room_t *proom; /* was HL */
+  room_t room; /* was HL */
 
   assert(state != NULL);
 
-  // FUTURE: Just dereference proom once.
+  room = state->room_index; /* Conv: Dereferenced up-front once. */
 
-  proom = &state->room_index;
-
-  if (room_and_flags & (1 << 7)) // flag means a room is specified
+  /* The (1 << 7) flag indicates that a room index is specified. */
+  if (room_and_flags & (1 << 7))
   {
     ASSERT_ROOM_VALID(room_and_flags & ~(1 << 7));
-    return *proom == (room_and_flags & ~(1 << 7)); // permitted if eq
+    return room == (room_and_flags & ~(1 << 7));
   }
 
-  if (*proom != room_0_OUTDOORS)
-    return 0; // correct?
+  if (room == room_0_OUTDOORS)
+    return within_camp_bounds(room_and_flags, &state->hero_map_position);
 
-  return within_camp_bounds(room_and_flags, &state->hero_map_position);
+  /* Any other room is not permitted. */
+  return 0;
 }
 
 /**
- * $A01A: Is the specified position within the bounds of the indexed area?
+ * $A01A: For outdoor areas is the specified position within the bounds of the area?
  *
  * \param[in] area Index (0..2) into permitted_bounds[] table. (was A)
  * \param[in] pos  Pointer to position. (was HL)
@@ -2047,7 +2047,7 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
                        const tinypos_t *pos)
 {
   /**
-   * $9F15: Boundings of the three main exterior areas.
+   * $9F15: Bounds of the three main exterior areas.
    */
   static const bounds_t permitted_bounds[3] =
   {
