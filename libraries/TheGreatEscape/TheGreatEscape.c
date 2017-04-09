@@ -6928,7 +6928,7 @@ void reset_map_and_characters(tgestate_t *state)
   iters = beds_LENGTH;
   bed = &beds[0];
   do
-    **bed = interiorobject_OCCUPIED_BED;
+    **bed++ = interiorobject_OCCUPIED_BED;
   while (--iters);
 
   /* Clear the mess halls. */
