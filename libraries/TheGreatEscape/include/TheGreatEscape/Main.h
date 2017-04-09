@@ -522,9 +522,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
 uint8_t get_target_and_handle_it(tgestate_t *state,
                                  vischar_t  *vischar,
                                  route_t   *route);
-uint8_t route_ended(tgestate_t *state,
-                    vischar_t  *vischar,
-                    route_t    *route);
+uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);
 

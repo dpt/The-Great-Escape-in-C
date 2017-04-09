@@ -9488,10 +9488,7 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  get_target_result = get_target(state,
-                                 route,
-                                 &doorpos,
-                                 &location);
+  get_target_result = get_target(state, route, &doorpos, &location);
   if (get_target_result != get_target_ROUTE_ENDS)
   {
     /* Didn't hit end of list case. */
@@ -9530,11 +9527,9 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t route_ended(tgestate_t *state,
-                    vischar_t  *vischar,
-                    route_t    *route)
+uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 {
-  character_t character;  /* was A */
+  character_t character; /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
