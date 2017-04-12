@@ -8207,10 +8207,12 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     if (character >= character_16_GUARD_DOG_1 &&
         character <= character_19_GUARD_DOG_4)
     {
+      // Choose random locations in the fenced off area (right side)
       vischar->route.index = route_WANDER; /* Choose random locations[]. */
       vischar->route.step  = 0; /* 0..7 */
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
       {
+        // Choose random locations in the fenced off area (bottom side)
         vischar->route.index = route_WANDER; /* Choose random locations[]. */
         vischar->route.step  = 24; /* 24..31 */
       }
@@ -8869,6 +8871,25 @@ void charevnt_handler_1(tgestate_t *state,
   // When .x is set to $FF it says to pick a random location from the
   // locations[] array from .y to .y+7.
 
+  // Set route to wander between random locations in the left part of the map:
+  //
+  //    _________________               |
+  //   |*******          |              |
+  //   |*******          |______________|
+  //   |*******                     :   :
+  //   |*******HUT   HUT   HUT      :   :
+  //  _|*******ONE   TWO   TRE     X:   :
+  // | ********HUT   HUT   HUT      :   :
+  // | ********ONE   TWO   TRE      :   :
+  //  |                            X:   :
+  // _|_______GATE_|~~~~~~~DD~~~~~~~'   :
+  //              :                     :
+  //              :~~~~~~~~DD~~~~~~~~~~~'
+  //             X:             :
+  //              :             :
+  //              :            X:
+  //              '~~~~~~~~~~~~~'
+
   route->index = route_WANDER; /* Choose random locations[]. */
   route->step  = 16; /* locations 16..23 */
 }
@@ -8879,18 +8900,54 @@ void charevnt_handler_1(tgestate_t *state,
 void charevnt_handler_2(tgestate_t *state,
                         route_t    *route)
 {
+  // Set route to wander between random locations in the exercise yard:
+  //
+  //    _________________               |
+  //   |                 |              |
+  //   |                 |______________|
+  //   |                            :   :
+  //   |       HUT   HUT   HUT      :   :
+  //  _|       ONE   TWO   TRE     X:   :
+  // |         HUT   HUT   HUT      :   :
+  // |         ONE   TWO   TRE      :   :
+  //  |                            X:   :
+  // _|_______GATE_|~~~~~~~DD~~~~~~~'   :
+  //              :                     :
+  //              :~~~~~~~~DD~~~~~~~~~~~'
+  //             X:*************:
+  //              :*************:
+  //              :************X:
+  //              '~~~~~~~~~~~~~'
+
   route->index = route_WANDER; /* Choose random locations[]. */
   route->step  = 56; /* locations 56..63 */
 }
 
 /**
  * $C864: Sets route to wander around locations 8..15.
- *
- * \param[in] route ? (was HL)
  */
 void charevnt_handler_0(tgestate_t *state,
                         route_t    *route)
 {
+  // Set route to wander between random locations in the top part of the map:
+  //
+  //    _________________               |
+  //   |*****************|              |
+  //   |*****************|______________|
+  //   |*****************           :   :
+  //   |       HUT   HUT   HUT      :   :
+  //  _|       ONE   TWO   TRE     X:   :
+  // |         HUT   HUT   HUT      :   :
+  // |         ONE   TWO   TRE      :   :
+  //  |                            X:   :
+  // _|_______GATE_|~~~~~~~DD~~~~~~~'   :
+  //              :                     :
+  //              :~~~~~~~~DD~~~~~~~~~~~'
+  //             X:             :
+  //              :             :
+  //              :            X:
+  //              '~~~~~~~~~~~~~'
+
   route->index = route_WANDER; /* Choose random locations[]. */
   route->step  = 8; /* locations 8..15 */
 }
@@ -9090,6 +9147,8 @@ set_pos:
       }
       else
       {
+        // Choose random locations in the fenced off area (right side)
+
         vischar2->flags       = 0;
         vischar2->route.index = route_WANDER; /* Choose random locations[]. */
         vischar2->route.step  = 0; /* 0..7 */
@@ -9913,10 +9972,10 @@ const uint8_t *get_route(uint8_t index)
   {
     NULL, /* was zero */            //  0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
 
-    &route_7795[0],                 //  1:
-    &route_7799[0],                 //  2:
+    &route_7795[0],                 //  1: L-shaped route in the fenced area
+    &route_7799[0],                 //  2: guard's route around the front perimeter wall
     &route_commandant[0],           //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
-    &route_77CD[0],                 //  4:
+    &route_77CD[0],                 //  4: guard's route marching over the front gate
 
     &route_exit_hut2[0],            //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
     &route_exit_hut3[0],            //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed

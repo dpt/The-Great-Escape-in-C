@@ -30,26 +30,26 @@ static void tge_initialise(tgestate_t *state)
    */
   static const characterstruct_t character_structs[character_structs__LIMIT] =
   {
-    { character_0_COMMANDANT,   room_11_PAPERS,   {  46,  46, 24 }, {   3,  0 } },
-    { character_1_GUARD_1,      room_0_OUTDOORS,  { 102,  68,  3 }, {   1,  0 } },
-    { character_2_GUARD_2,      room_0_OUTDOORS,  {  68, 104,  3 }, {   1,  2 } },
-    { character_3_GUARD_3,      room_16_CORRIDOR, {  46,  46, 24 }, {   3, 19 } },
-    { character_4_GUARD_4,      room_0_OUTDOORS,  {  61, 103,  3 }, {   2,  4 } },
-    { character_5_GUARD_5,      room_0_OUTDOORS,  { 106,  56, 13 }, {   0,  0 } },
-    { character_6_GUARD_6,      room_0_OUTDOORS,  {  72,  94, 13 }, {   0,  0 } },
-    { character_7_GUARD_7,      room_0_OUTDOORS,  {  72,  70, 13 }, {   0,  0 } },
-    { character_8_GUARD_8,      room_0_OUTDOORS,  {  80,  46, 13 }, {   0,  0 } },
-    { character_9_GUARD_9,      room_0_OUTDOORS,  { 108,  71, 21 }, {   4,  0 } },
-    { character_10_GUARD_10,    room_0_OUTDOORS,  {  92,  52,  3 }, { 255, 56 } }, // route_WANDER
-    { character_11_GUARD_11,    room_0_OUTDOORS,  { 109,  69,  3 }, {   0,  0 } },
+    { character_0_COMMANDANT,   room_11_PAPERS,   {  46,  46, 24 }, {   3,  0 } }, // commandant route
+    { character_1_GUARD_1,      room_0_OUTDOORS,  { 102,  68,  3 }, {   1,  0 } }, // L-shaped route in fenced area
+    { character_2_GUARD_2,      room_0_OUTDOORS,  {  68, 104,  3 }, {   1,  2 } }, // L-shaped route in fenced area
+    { character_3_GUARD_3,      room_16_CORRIDOR, {  46,  46, 24 }, {   3, 19 } }, // commandant's route but later on
+    { character_4_GUARD_4,      room_0_OUTDOORS,  {  61, 103,  3 }, {   2,  4 } }, // guard route front perimeter wall
+    { character_5_GUARD_5,      room_0_OUTDOORS,  { 106,  56, 13 }, {   0,  0 } }, // standing still in tower near front gate
+    { character_6_GUARD_6,      room_0_OUTDOORS,  {  72,  94, 13 }, {   0,  0 } }, // standing still in the rightmost watchtower
+    { character_7_GUARD_7,      room_0_OUTDOORS,  {  72,  70, 13 }, {   0,  0 } }, // standing still in the corner watchtower
+    { character_8_GUARD_8,      room_0_OUTDOORS,  {  80,  46, 13 }, {   0,  0 } }, // standing still in the yard watchtower
+    { character_9_GUARD_9,      room_0_OUTDOORS,  { 108,  71, 21 }, {   4,  0 } }, // the guard that marches back and forth above the main gate
+    { character_10_GUARD_10,    room_0_OUTDOORS,  {  92,  52,  3 }, { 255, 56 } }, // wander in the exercise yard
+    { character_11_GUARD_11,    room_0_OUTDOORS,  { 109,  69,  3 }, {   0,  0 } }, // standing still near the main gate
     { character_12_GUARD_12,    room_3_HUT2RIGHT, {  40,  60, 24 }, {   0,  8 } },
     { character_13_GUARD_13,    room_2_HUT2LEFT,  {  36,  48, 24 }, {   0,  8 } },
     { character_14_GUARD_14,    room_5_HUT3RIGHT, {  40,  60, 24 }, {   0, 16 } },
     { character_15_GUARD_15,    room_5_HUT3RIGHT, {  36,  34, 24 }, {   0, 16 } },
-    { character_16_GUARD_DOG_1, room_0_OUTDOORS,  {  68,  84,  1 }, { 255,  0 } }, // route_WANDER
-    { character_17_GUARD_DOG_2, room_0_OUTDOORS,  {  68, 104,  1 }, { 255,  0 } }, // route_WANDER
-    { character_18_GUARD_DOG_3, room_0_OUTDOORS,  { 102,  68,  1 }, { 255, 24 } }, // route_WANDER
-    { character_19_GUARD_DOG_4, room_0_OUTDOORS,  {  88,  68,  1 }, { 255, 24 } }, // route_WANDER
+    { character_16_GUARD_DOG_1, room_0_OUTDOORS,  {  68,  84,  1 }, { 255,  0 } }, // wander in the right fenced off hand
+    { character_17_GUARD_DOG_2, room_0_OUTDOORS,  {  68, 104,  1 }, { 255,  0 } }, // wander in the right fenced off hand
+    { character_18_GUARD_DOG_3, room_0_OUTDOORS,  { 102,  68,  1 }, { 255, 24 } }, // wander in the bottom fenced off area
+    { character_19_GUARD_DOG_4, room_0_OUTDOORS,  {  88,  68,  1 }, { 255, 24 } }, // wander in the bottom fenced off area
     { character_20_PRISONER_1,  room_NONE,        {  52,  60, 24 }, {   0,  8 } }, // wake_up, breakfast_time
     { character_21_PRISONER_2,  room_NONE,        {  52,  44, 24 }, {   0,  8 } }, // wake_up, breakfast_time
     { character_22_PRISONER_3,  room_NONE,        {  52,  28, 24 }, {   0,  8 } }, // wake_up, breakfast_time
