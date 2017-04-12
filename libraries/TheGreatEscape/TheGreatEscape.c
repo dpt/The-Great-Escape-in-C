@@ -324,8 +324,7 @@ void setup_movable_item(tgestate_t          *state,
   /* Conv: Reset data inlined. */
 
   vischar1->flags             = 0;
-  vischar1->route.index       = 0;
-  vischar1->route.step        = 0;
+  vischar1->route             = (route_t) { 0, 0 };
   vischar1->pos.x             = 0;
   vischar1->pos.y             = 0;
   vischar1->pos.height        = 0;
@@ -1700,23 +1699,19 @@ void process_player_input(tgestate_t *state)
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
-        state->vischars[0].route.index    = 43;
-        state->vischars[0].route.step     = 0;
-        state->vischars[0].mi.pos.x       = 52;
-        state->vischars[0].mi.pos.y       = 62;
+        state->vischars[0].route    = (route_t) { 43, 0 };
+        state->vischars[0].mi.pos.x = 52;
+        state->vischars[0].mi.pos.y = 62;
         roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
         state->hero_in_breakfast = 0;
       }
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].route.index    = 44;
-        state->vischars[0].route.step     = 1;
-        state->vischars[0].pos.x          = 46;
-        state->vischars[0].pos.y          = 46;
-        state->vischars[0].mi.pos.x       = 46;
-        state->vischars[0].mi.pos.y       = 46;
-        state->vischars[0].mi.pos.height  = 24;
+        state->vischars[0].route  = (route_t) { 44, 1 };
+        state->vischars[0].pos.x  = 46;
+        state->vischars[0].pos.y  = 46;
+        state->vischars[0].mi.pos = (pos_t) { 46, 46, 24 };
         roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
         state->hero_in_bed = 0;
       }
@@ -1971,8 +1966,7 @@ found:
 
         assert(i < 256);
 
-        route2.index = state->vischars[0].route.index;
-        route2.step  = i; /* loop counter */
+        route2 = (route_t) { state->vischars[0].route.index, i };
         set_hero_route(state, &route2);
       }
     }
@@ -6965,9 +6959,7 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos.x       = reset->x;
-    charstr->pos.y       = reset->y;
-    charstr->pos.height  = 18; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
+    charstr->pos         = (tinypos_t) { reset->x, reset->y, 18 }; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
     charstr->route.index = 0; /* Stand still */
     charstr++;
     reset++;
@@ -8207,14 +8199,12 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     if (character >= character_16_GUARD_DOG_1 &&
         character <= character_19_GUARD_DOG_4)
     {
-      // Choose random locations in the fenced off area (right side)
-      vischar->route.index = route_WANDER; /* Choose random locations[]. */
-      vischar->route.step  = 0; /* 0..7 */
+      /* Choose random locations in the fenced off area (right side). */
+      vischar->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
       {
-        // Choose random locations in the fenced off area (bottom side)
-        vischar->route.index = route_WANDER; /* Choose random locations[]. */
-        vischar->route.step  = 24; /* 24..31 */
+        /* Choose random locations in the fenced off area (bottom side). */
+        vischar->route = (route_t) { route_WANDER, 24 }; /* 24..31 */
       }
     }
 
@@ -8839,8 +8829,7 @@ void charevnt_handler_6(tgestate_t *state,
 {
   // this is something like: commandant walks to yard
 
-  route->index = 3; // route_commandant
-  route->step  = 21; // offset $15
+  *route = (route_t) { 3, 21 }; // route_commandant
 }
 
 /**
@@ -8853,8 +8842,7 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
   // hero he repeatedly re-enters the room instead of turning around and
   // leaving.
 
-  route->index = 36 | route_REVERSED;
-  route->step  = 3;
+  *route = (route_t) { 36 | route_REVERSED, 3 };
 
   state->automatic_player_counter = 0; /* Force automatic control */
 
@@ -8890,8 +8878,7 @@ void charevnt_handler_1(tgestate_t *state,
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  route->index = route_WANDER; /* Choose random locations[]. */
-  route->step  = 16; /* locations 16..23 */
+  *route = (route_t) { route_WANDER, 16 }; /* 16..23 */
 }
 
 /**
@@ -8919,8 +8906,7 @@ void charevnt_handler_2(tgestate_t *state,
   //              :************X:
   //              '~~~~~~~~~~~~~'
 
-  route->index = route_WANDER; /* Choose random locations[]. */
-  route->step  = 56; /* locations 56..63 */
+  *route = (route_t) { route_WANDER, 56 }; /* 56..63 */
 }
 
 /**
@@ -8948,8 +8934,7 @@ void charevnt_handler_0(tgestate_t *state,
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  route->index = route_WANDER; /* Choose random locations[]. */
-  route->step  = 8; /* locations 8..15 */
+  *route = (route_t) { route_WANDER, 8 }; /* 8..15 */
 }
 
 // Conv: Inlined set_route_ffxx() in the above functions.
@@ -8984,8 +8969,7 @@ void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
 void charevnt_handler_7(tgestate_t *state,
                         route_t    *route)
 {
-  route->index = 5; // route_exit_hut2
-  route->step  = 0;
+  *route = (route_t) { 5, 0 }; // route_exit_hut2
 }
 
 /**
@@ -9147,11 +9131,9 @@ set_pos:
       }
       else
       {
-        // Choose random locations in the fenced off area (right side)
-
-        vischar2->flags       = 0;
-        vischar2->route.index = route_WANDER; /* Choose random locations[]. */
-        vischar2->route.step  = 0; /* 0..7 */
+        /* Choose random locations in the fenced off area (right side). */
+        vischar2->flags = 0;
+        vischar2->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
         (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
         return;
       }
