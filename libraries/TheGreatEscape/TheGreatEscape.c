@@ -1817,7 +1817,7 @@ void in_permitted_area(tgestate_t *state)
   static const uint8_t permitted_route42[] = { R| 2, R|2,                      255 }; /* for route_hut2_left_to_right */
   static const uint8_t permitted_route5[]  = { R| 3,   1,    1,    1,          255 }; /* for route_exit_hut2 */
   static const uint8_t permitted_route14[] = {    1,   1,    1,    0,    2, 2, 255 }; /* for route_go_to_yard */
-  static const uint8_t permitted_route16[] = {    1,   1, R|21, R|23, R|25,    255 }; /* for route_77E7 (breakfasty) */
+  static const uint8_t permitted_route16[] = {    1,   1, R|21, R|23, R|25,    255 }; /* for route_breakfast_room_25 (breakfasty) */
   static const uint8_t permitted_route44[] = { R| 3, R|2,                      255 }; /* for route_hut2_right_to_left */
   static const uint8_t permitted_route43[] = { R|25,                           255 }; /* for route_7833 */
   static const uint8_t permitted_route45[] = {    1,                           255 }; /* for route_hero_roll_call */
@@ -2609,7 +2609,7 @@ void event_go_to_breakfast_time(tgestate_t *state)
 
   state->bell = bell_RING_40_TIMES;
   queue_message_for_display(state, message_BREAKFAST_TIME);
-  set_route_0x1000(state);
+  set_route_go_to_breakfast(state);
 }
 
 void event_end_of_breakfast(tgestate_t *state)
@@ -2631,15 +2631,15 @@ void event_go_to_exercise_time(tgestate_t *state)
   state->locked_doors[0] = 0; /* Index into doors + clear locked flag. */
   state->locked_doors[1] = 1;
 
-  set_route_0x0E00(state);
+  set_route_go_to_yard(state);
 }
 
-void event_exercise_time(tgestate_t *state)
+void event_exercise_time(tgestate_t *state) // end of exercise time?
 {
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  set_route_0x8E04(state);
+  set_route_go_to_yard_reversed(state);
 }
 
 void event_go_to_time_for_bed(tgestate_t *state)
@@ -3153,19 +3153,20 @@ void store_route(route_t route, route_t *proute)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A3F3: entered_move_characters is non-zero.
+ * $A3F3: Send a character to bed.
+ *
+ * (entered_move_characters is non-zero.)
  *
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to route. (was HL)
  */
-void byte_A13E_is_nonzero(tgestate_t *state,
-                          route_t    *route)
+void character_bed_state(tgestate_t *state, route_t *route)
 {
   assert(state != NULL);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  byte_A13E_common(state, state->character_index, route);
+  character_bed_common(state, state->character_index, route);
 }
 
 /**
@@ -3176,8 +3177,7 @@ void byte_A13E_is_nonzero(tgestate_t *state,
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to route. (was HL)
  */
-void byte_A13E_is_zero(tgestate_t *state,
-                       route_t    *route)
+void character_bed_vischar(tgestate_t *state, route_t *route)
 {
   character_t character;
   vischar_t  *vischar;
@@ -3192,35 +3192,35 @@ void byte_A13E_is_zero(tgestate_t *state,
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    // hero moving in reaction to the commandant... exiting solitary?
+    // Hero moves to bed in reaction to the commandant...
 
-    static const route_t t = { 44, 0 }; /* was BC */
+    static const route_t t = { 44, 0 }; /* was BC */ // route_hut2_right_to_left
     set_hero_route(state, &t);
   }
   else
   {
-    byte_A13E_common(state, character, route); /* was fallthrough */
+    character_bed_common(state, character, route); /* was fallthrough */
   }
 }
 
 /**
- * $A404: Common end of above two routines.
+ * $A404: Use character index to assign a "walk to bed" route to the specified character.
  *
- * Assigns route.index from character number.
+ * Common end of above two routines.
  *
  * \param[in] state     Pointer to game state.
- * \param[in] character Character index.       (was A)
- * \param[in] route     Pointer to route.      (was HL)
+ * \param[in] character Character index.  (was A)
+ * \param[in] route     Pointer to route. (was HL)
  */
-void byte_A13E_common(tgestate_t *state,
-                      character_t character,
-                      route_t    *route)
+void character_bed_common(tgestate_t *state,
+                          character_t character,
+                          route_t    *route)
 {
   uint8_t routeindex; /* was A */
 
-  assert(state    != NULL);
+  assert(state != NULL);
   ASSERT_CHARACTER_VALID(character);
-  assert(route   != NULL);
+  assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
   route->step = 0;
@@ -3235,6 +3235,7 @@ void byte_A13E_common(tgestate_t *state,
   else
   {
     /* All hostiles */
+    // which exactly?
 
     routeindex = 13;
     if (character & 1) /* Odd numbered characters? */
@@ -3258,7 +3259,7 @@ void byte_A13E_common(tgestate_t *state,
  * - 21..22 go to room_23_BREAKFAST
  *
  * \param[in] state      Pointer to game state.
- * \param[in] routeindex                   (was A)
+ * \param[in] routeindex Index of route.   (was A)
  * \param[in] route      Pointer to route. (was HL)
  */
 void character_sits(tgestate_t *state,
@@ -3453,11 +3454,11 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4A9: Set route 14.
+ * $A4A9: Set "go to yard" route.
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_0x0E00(tgestate_t *state)
+void set_route_go_to_yard(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -3469,13 +3470,11 @@ void set_route_0x0E00(tgestate_t *state)
 }
 
 /**
- * $A4B7: Set route 14 reversed.
- *
- * Reverse of the route selected above?
+ * $A4B7: Set "go to yard" route reversed.
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_0x8E04(tgestate_t *state)
+void set_route_go_to_yard_reversed(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -3493,7 +3492,7 @@ void set_route_0x8E04(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_0x1000(tgestate_t *state)
+void set_route_go_to_breakfast(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -3514,14 +3513,13 @@ void set_route_0x1000(tgestate_t *state)
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to character struct. (was HL)
  */
-void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     route_t    *route)
+void charevnt_breakfast_state(tgestate_t *state, route_t *route)
 {
   assert(state != NULL);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  byte_A13E_anotherone_common(state, state->character_index, route);
+  charevnt_breakfast_common(state, state->character_index, route);
 }
 
 /**
@@ -3530,8 +3528,7 @@ void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to route. (was HL)
  */
-void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  route_t    *route)
+void charevnt_breakfast_vischar(tgestate_t *state, route_t *route)
 {
   character_t character;
   vischar_t  *vischar;
@@ -3551,7 +3548,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
   }
   else
   {
-    byte_A13E_anotherone_common(state, character, route); /* was fallthrough */
+    charevnt_breakfast_common(state, character, route); /* was fallthrough */
   }
 }
 
@@ -3564,7 +3561,7 @@ void byte_A13E_is_zero_anotherone(tgestate_t *state,
  * \param[in] character Character index.       (was A)
  * \param[in] route     Pointer to route.      (was HL)
  */
-void byte_A13E_anotherone_common(tgestate_t *state,
+void charevnt_breakfast_common(tgestate_t *state,
                                  character_t character,
                                  route_t    *route)
 {
@@ -8254,7 +8251,7 @@ uint8_t get_target(tgestate_t       *state,
     {  64,  64 }, // 6
     {  68,  64 }, // 7
 
-    // charevnt_handler_0 uses 8..15
+    // charevnt_wander_top uses 8..15
     { 104, 112 }, // 8
     {  96, 112 }, // 9 used by route_guard_12_roll_call
     { 106, 102 }, // 10
@@ -8264,7 +8261,7 @@ uint8_t get_target(tgestate_t       *state,
     { 116, 104 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
     { 112, 100 }, // 15
 
-    // charevnt_handler_1 uses 16..23
+    // charevnt_wander_left uses 16..23
     { 120,  96 }, // 16 used by data_77EC
     { 128,  88 }, // 17 used by route_guard_14_roll_call
     { 112,  96 }, // 18
@@ -8312,7 +8309,7 @@ uint8_t get_target(tgestate_t       *state,
     {  80,  76 }, // 54
     {  89,  76 }, // 55 used by route_commandant, data_77E1
 
-    // charevnt_handler_2 uses 56..63
+    // charevnt_wander_yard uses 56..63
     {  89,  60 }, // 56 used by data_77E1
     { 100,  61 }, // 57
     {  92,  54 }, // 58
@@ -8753,17 +8750,17 @@ void character_event(tgestate_t *state, route_t *route)
   /* $C829 */
   static charevnt_handler_t *const handlers[] =
   {
-    &charevnt_handler_0,
-    &charevnt_handler_1,
-    &charevnt_handler_2,
-    &charevnt_handler_3_check_var_A13E,
-    &charevnt_handler_4_solitary_ends,
-    &charevnt_handler_5_check_var_A13E_anotherone,
-    &charevnt_handler_6,
-    &charevnt_handler_7,
-    &charevnt_handler_8_hero_sleeps,
-    &charevnt_handler_9_hero_sits,
-    &charevnt_handler_10_hero_released_from_solitary
+    &charevnt_wander_top,
+    &charevnt_wander_left,
+    &charevnt_wander_yard,
+    &charevnt_bed,
+    &charevnt_solitary_ends,
+    &charevnt_breakfast,
+    &charevnt_commandant_to_yard,
+    &charevnt_exit_hut2,
+    &charevnt_hero_sleeps,
+    &charevnt_hero_sits,
+    &charevnt_hero_release
   };
 
   uint8_t              routeindex; /* was A */
@@ -8814,18 +8811,16 @@ void character_event(tgestate_t *state, route_t *route)
 /**
  * $C83F: Ends solitary.
  */
-void charevnt_handler_4_solitary_ends(tgestate_t *state,
-                                      route_t    *route)
+void charevnt_solitary_ends(tgestate_t *state, route_t *route)
 {
   state->in_solitary = 0; /* Enable player control */
-  charevnt_handler_0(state, route); // ($FF,$08)
+  charevnt_wander_top(state, route); // ($FF,$08)
 }
 
 /**
  * $C845: Sets route to { 3, 21 }.
  */
-void charevnt_handler_6(tgestate_t *state,
-                        route_t    *route)
+void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 {
   // this is something like: commandant walks to yard
 
@@ -8835,8 +8830,7 @@ void charevnt_handler_6(tgestate_t *state,
 /**
  * $C84C: Sets route to route 36 in reverse. Sets hero to route 37.
  */
-void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
-                                                     route_t    *route)
+void charevnt_hero_release(tgestate_t *state, route_t *route)
 {
   // If I remove the 128 here then when the commandant arrives to pick up the
   // hero he repeatedly re-enters the room instead of turning around and
@@ -8853,14 +8847,12 @@ void charevnt_handler_10_hero_released_from_solitary(tgestate_t *state,
 /**
  * $C85C: Sets route to wander around locations 16..23.
  */
-void charevnt_handler_1(tgestate_t *state,
-                        route_t    *route)
+void charevnt_wander_left(tgestate_t *state, route_t *route)
 {
   // When .x is set to $FF it says to pick a random location from the
   // locations[] array from .y to .y+7.
 
   // Set route to wander between random locations in the left part of the map:
-  //
   //    _________________               |
   //   |*******          |              |
   //   |*******          |______________|
@@ -8884,11 +8876,9 @@ void charevnt_handler_1(tgestate_t *state,
 /**
  * $C860: Sets route to wander around locations 56..63.
  */
-void charevnt_handler_2(tgestate_t *state,
-                        route_t    *route)
+void charevnt_wander_yard(tgestate_t *state, route_t *route)
 {
   // Set route to wander between random locations in the exercise yard:
-  //
   //    _________________               |
   //   |                 |              |
   //   |                 |______________|
@@ -8912,11 +8902,9 @@ void charevnt_handler_2(tgestate_t *state,
 /**
  * $C864: Sets route to wander around locations 8..15.
  */
-void charevnt_handler_0(tgestate_t *state,
-                        route_t    *route)
+void charevnt_wander_top(tgestate_t *state, route_t *route)
 {
   // Set route to wander between random locations in the top part of the map:
-  //
   //    _________________               |
   //   |*****************|              |
   //   |*****************|______________|
@@ -8942,32 +8930,29 @@ void charevnt_handler_0(tgestate_t *state,
 /**
  * $C86C:
  */
-void charevnt_handler_3_check_var_A13E(tgestate_t *state,
-                                       route_t    *route)
+void charevnt_bed(tgestate_t *state, route_t *route)
 {
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero(state, route);
+    character_bed_vischar(state, route);
   else
-    byte_A13E_is_nonzero(state, route);
+    character_bed_state(state, route);
 }
 
 /**
  * $C877:
  */
-void charevnt_handler_5_check_var_A13E_anotherone(tgestate_t *state,
-                                                  route_t    *route)
+void charevnt_breakfast(tgestate_t *state, route_t *route)
 {
   if (state->entered_move_characters == 0)
-    byte_A13E_is_zero_anotherone(state, route);
+    charevnt_breakfast_vischar(state, route);
   else
-    byte_A13E_is_nonzero_anotherone(state, route);
+    charevnt_breakfast_state(state, route);
 }
 
 /**
  * $C882: Sets route to ($05,$00).
  */
-void charevnt_handler_7(tgestate_t *state,
-                        route_t    *route)
+void charevnt_exit_hut2(tgestate_t *state, route_t *route)
 {
   *route = (route_t) { 5, 0 }; // route_exit_hut2
 }
@@ -8975,8 +8960,7 @@ void charevnt_handler_7(tgestate_t *state,
 /**
  * $C889: Hero sits.
  */
-void charevnt_handler_9_hero_sits(tgestate_t *state,
-                                  route_t    *route)
+void charevnt_hero_sits(tgestate_t *state, route_t *route)
 {
   hero_sits(state);
 }
@@ -8984,8 +8968,7 @@ void charevnt_handler_9_hero_sits(tgestate_t *state,
 /**
  * $C88D: Hero sleeps.
  */
-void charevnt_handler_8_hero_sleeps(tgestate_t *state,
-                                    route_t    *route)
+void charevnt_hero_sleeps(tgestate_t *state, route_t *route)
 {
   hero_sleeps(state);
 }
@@ -9705,7 +9688,7 @@ const uint8_t *get_route(uint8_t index)
     DOOR(28),                 // room_14_TORCH    -> room_16_CORRIDOR
     DOOR(29 | door_REVERSE),  // room_16_CORRIDOR -> room_13_CORRIDOR
     DOOR(13 | door_REVERSE),  // room_13_CORRIDOR -> room_0_OUTDOORS
-    LOCATION(11),             // charevnt_handler_6 jumps to this offset
+    LOCATION(11),             // charevnt_commandant_to_yard jumps to this offset
     LOCATION(55),
     DOOR( 0 | door_REVERSE),  // room_0_OUTDOORS  -> room_0_OUTDOORS (gate 0 to yard)
     DOOR( 1 | door_REVERSE),  // room_0_OUTDOORS  -> room_0_OUTDOORS (gate 1 to yard)
@@ -9780,15 +9763,15 @@ const uint8_t *get_route(uint8_t index)
     LOCATION(56),
     routebyte_END
   };
-  static const uint8_t route_77E7[] =
+  static const uint8_t route_breakfast_room_25[] =
   {
-    LOCATION(12),
+    LOCATION(12),             // 93,104
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
     DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
     DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
     routebyte_END
   };
-  static const uint8_t route_77EC[] =
+  static const uint8_t route_breakfast_room_23[] =
   {
     LOCATION(16),
     LOCATION(12),
@@ -9930,13 +9913,13 @@ const uint8_t *get_route(uint8_t index)
   };
   static const uint8_t route_7833[] =
   {
-    LOCATION(67),
+    LOCATION(67),             // 52,62
     routebyte_END
   };
   static const uint8_t route_hut2_right_to_left[] =
   {
     DOOR(17 | door_REVERSE),  // room_3_HUT2RIGHT -> room_2_HUT2LEFT
-    LOCATION(70),
+    LOCATION(70),             // 42,46 // go to bed?
     routebyte_END
   };
   static const uint8_t route_hero_roll_call[] =
@@ -9956,38 +9939,38 @@ const uint8_t *get_route(uint8_t index)
 
     &route_7795[0],                 //  1: L-shaped route in the fenced area
     &route_7799[0],                 //  2: guard's route around the front perimeter wall
-    &route_commandant[0],           //  3: set by charevnt_handler_6 [longest of all the routes -- comandants's route perhaps?]
+    &route_commandant[0],           //  3: set by charevnt_commandant_to_yard [longest of all the routes -- comandants's route perhaps?]
     &route_77CD[0],                 //  4: guard's route marching over the front gate
 
     &route_exit_hut2[0],            //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
     &route_exit_hut3[0],            //  6: character_1x_GUARD_14/15, character_2x_PRISONER_4/5/6 by wake_up & go_to_time_for_bed
 
     // character_sleeps routes
-    &route_prisoner_sleeps_1[0],    //  7: prisoner 1 by byte_A13E_common
-    &route_prisoner_sleeps_2[0],    //  8: prisoner 2 by byte_A13E_common
-    &route_prisoner_sleeps_3[0],    //  9: prisoner 3 by byte_A13E_common
-    &route_prisoner_sleeps_1[0],    // 10: prisoner 4 by byte_A13E_common /* dupes index 7 */
-    &route_prisoner_sleeps_2[0],    // 11: prisoner 5 by byte_A13E_common /* dupes index 8 */
-    &route_prisoner_sleeps_3[0],    // 12: prisoner 6 by byte_A13E_common /* dupes index 9 */
+    &route_prisoner_sleeps_1[0],    //  7: prisoner 1 by character_bed_common
+    &route_prisoner_sleeps_2[0],    //  8: prisoner 2 by character_bed_common
+    &route_prisoner_sleeps_3[0],    //  9: prisoner 3 by character_bed_common
+    &route_prisoner_sleeps_1[0],    // 10: prisoner 4 by character_bed_common /* dupes index 7 */
+    &route_prisoner_sleeps_2[0],    // 11: prisoner 5 by character_bed_common /* dupes index 8 */
+    &route_prisoner_sleeps_3[0],    // 12: prisoner 6 by character_bed_common /* dupes index 9 */
 
-    &route_77DE[0],                 // 13: (all hostiles) by byte_A13E_common
+    &route_77DE[0],                 // 13: (all hostiles) by character_bed_common
 
-    &route_go_to_yard[0],           // 14: set by set_route_0x8E04 (for hero, prisoners_and_guards-1), set_route_0x0E00 (for hero, prisoners_and_guards-1)
-    &route_go_to_yard[0],           // 15: set by set_route_0x8E04 (for hero, prisoners_and_guards-2), set_route_0x0E00 (for hero, prisoners_and_guards-2)  /* dupes index 14 */
+    &route_go_to_yard[0],           // 14: set by set_route_go_to_yard_reversed (for hero, prisoners_and_guards-1), set_route_go_to_yard (for hero, prisoners_and_guards-1)
+    &route_go_to_yard[0],           // 15: set by set_route_go_to_yard_reversed (for hero, prisoners_and_guards-2), set_route_go_to_yard (for hero, prisoners_and_guards-2)  /* dupes index 14 */
 
-    &route_77E7[0],                 // 16: set by set_route_0x1000, end_of_breakfast (for hero), prisoners_and_guards-1 by end_of_breakfast
-    &route_77EC[0],                 // 17:                                                       prisoners_and_guards-2 by end_of_breakfast
+    &route_breakfast_room_25[0],    // 16: set by set_route_go_to_breakfast, end_of_breakfast (for hero, reversed), prisoners_and_guards-1 by end_of_breakfast
+    &route_breakfast_room_23[0],    // 17:                                                                          prisoners_and_guards-2 by end_of_breakfast
 
     // character_sits routes
-    &route_prisoner_sits_1[0],      // 18: character_20_PRISONER_1 by byte_A13E_anotherone_common  // character next to player when player seated
-    &route_prisoner_sits_2[0],      // 19: character_21_PRISONER_2 by byte_A13E_anotherone_common
-    &route_prisoner_sits_3[0],      // 20: character_22_PRISONER_3 by byte_A13E_anotherone_common
-    &route_prisoner_sits_1[0],      // 21: character_23_PRISONER_4 by byte_A13E_anotherone_common  /* dupes index 18 */
-    &route_prisoner_sits_2[0],      // 22: character_24_PRISONER_5 by byte_A13E_anotherone_common  /* dupes index 19 */
-    &route_prisoner_sits_3[0],      // 23: character_25_PRISONER_6 by byte_A13E_anotherone_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
+    &route_prisoner_sits_1[0],      // 18: character_20_PRISONER_1 by charevnt_breakfast_common  // character next to player when player seated
+    &route_prisoner_sits_2[0],      // 19: character_21_PRISONER_2 by charevnt_breakfast_common
+    &route_prisoner_sits_3[0],      // 20: character_22_PRISONER_3 by charevnt_breakfast_common
+    &route_prisoner_sits_1[0],      // 21: character_23_PRISONER_4 by charevnt_breakfast_common  /* dupes index 18 */
+    &route_prisoner_sits_2[0],      // 22: character_24_PRISONER_5 by charevnt_breakfast_common  /* dupes index 19 */
+    &route_prisoner_sits_3[0],      // 23: character_25_PRISONER_6 by charevnt_breakfast_common  /* dupes index 20 */ // looks like it belongs with above chunk but not used (bug)
 
-    &route_guardA_breakfast[0],     // 24: "even guard" by byte_A13E_anotherone_common
-    &route_guardB_breakfast[0],     // 25: "odd guard" by byte_A13E_anotherone_common
+    &route_guardA_breakfast[0],     // 24: "even guard" by charevnt_breakfast_common
+    &route_guardB_breakfast[0],     // 25: "odd guard" by charevnt_breakfast_common
 
     &route_guard_12_roll_call[0],   // 26: character_12_GUARD_12   by go_to_roll_call
     &route_guard_13_roll_call[0],   // 27: character_13_GUARD_13   by go_to_roll_call
@@ -10000,8 +9983,8 @@ const uint8_t *get_route(uint8_t index)
     &route_prisoner_5_roll_call[0], // 34: character_24_PRISONER_5 by go_to_roll_call
     &route_prisoner_6_roll_call[0], // 35: character_25_PRISONER_6 by go_to_roll_call
 
-    &route_go_to_solitary[0],       // 36: set by charevnt_handler_10_hero_released_from_solitary (for commandant?), tested by route_ended
-    &route_hero_leave_solitary[0],  // 37: set by charevnt_handler_10_hero_released_from_solitary (for hero)
+    &route_go_to_solitary[0],       // 36: set by charevnt_hero_release (for commandant?), tested by route_ended
+    &route_hero_leave_solitary[0],  // 37: set by charevnt_hero_release (for hero)
 
     &route_guard_12_bed[0],         // 38: guard 12 at 'time for bed', 'search light'
     &route_guard_13_bed[0],         // 39: guard 13 at 'time for bed', 'search light'
@@ -10010,8 +9993,8 @@ const uint8_t *get_route(uint8_t index)
 
     &route_hut2_left_to_right[0],   // 42:
 
-    &route_7833[0],                 // 43: set by byte_A13E_is_zero_anotherone, process_player_input (was at breakfast case)
-    &route_hut2_right_to_left[0],   // 44: set by process_player_input (was in bed case), set by byte_A13E_is_zero (for the hero)
+    &route_7833[0],                 // 43: set by charevnt_breakfast_vischar, process_player_input (was at breakfast case)
+    &route_hut2_right_to_left[0],   // 44: set by process_player_input (was in bed case), set by character_bed_vischar (for the hero)
 
     &route_hero_roll_call[0],       // 45: (hero) by go_to_roll_call
 

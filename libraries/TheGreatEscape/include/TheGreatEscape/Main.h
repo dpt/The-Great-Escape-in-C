@@ -261,26 +261,26 @@ void go_to_time_for_bed(tgestate_t *state);
 
 void set_prisoners_and_guards_route(tgestate_t *state, route_t *route);
 void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *route);
-void set_character_route(tgestate_t  *state,
+void set_character_route(tgestate_t *state,
                          character_t character,
                          route_t     route);
 void set_route(tgestate_t *state, vischar_t *vischar);
 
 INLINE void store_route(route_t route, route_t *proute);
 
-void byte_A13E_is_nonzero(tgestate_t *state,
-                          route_t   *route);
-void byte_A13E_is_zero(tgestate_t *state,
-                       route_t   *route);
-void byte_A13E_common(tgestate_t *state,
-                      character_t character,
-                      route_t    *route);
+void character_bed_state(tgestate_t *state,
+                         route_t    *route);
+void character_bed_vischar(tgestate_t *state,
+                           route_t    *route);
+void character_bed_common(tgestate_t *state,
+                          character_t character,
+                          route_t    *route);
 
 void character_sits(tgestate_t *state,
-                    uint8_t     A,
+                    uint8_t     routeindex,
                     route_t    *route);
 void character_sleeps(tgestate_t *state,
-                      uint8_t     A,
+                      uint8_t     routeindex,
                       route_t   *route);
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
@@ -289,19 +289,19 @@ void select_room_and_plot(tgestate_t *state);
 
 void hero_sits(tgestate_t *state);
 void hero_sleeps(tgestate_t *state);
-void hero_sit_sleep_common(tgestate_t *state, uint8_t *HL);
+void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag);
 
-void set_route_0x0E00(tgestate_t *state);
-void set_route_0x8E04(tgestate_t *state);
-void set_route_0x1000(tgestate_t *state);
+void set_route_go_to_yard(tgestate_t *state);
+void set_route_go_to_yard_reversed(tgestate_t *state);
+void set_route_go_to_breakfast(tgestate_t *state);
 
-void byte_A13E_is_nonzero_anotherone(tgestate_t *state,
-                                     route_t    *route);
-void byte_A13E_is_zero_anotherone(tgestate_t *state,
-                                  route_t    *route);
-void byte_A13E_anotherone_common(tgestate_t  *state,
-                                 character_t  character,
-                                 route_t     *route);
+void charevnt_breakfast_state(tgestate_t *state,
+                              route_t    *route);
+void charevnt_breakfast_vischar(tgestate_t *state,
+                                route_t    *route);
+void charevnt_breakfast_common(tgestate_t  *state,
+                               character_t  character,
+                               route_t     *route);
 
 void go_to_roll_call(tgestate_t *state);
 
@@ -486,17 +486,17 @@ characterstruct_t *get_character_struct(tgestate_t *state,
 
 void character_event(tgestate_t *state, route_t *route);
 
-charevnt_handler_t charevnt_handler_4_solitary_ends;
-charevnt_handler_t charevnt_handler_6;
-charevnt_handler_t charevnt_handler_10_hero_released_from_solitary;
-charevnt_handler_t charevnt_handler_1;
-charevnt_handler_t charevnt_handler_2;
-charevnt_handler_t charevnt_handler_0;
-charevnt_handler_t charevnt_handler_3_check_var_A13E;
-charevnt_handler_t charevnt_handler_5_check_var_A13E_anotherone;
-charevnt_handler_t charevnt_handler_7;
-charevnt_handler_t charevnt_handler_9_hero_sits;
-charevnt_handler_t charevnt_handler_8_hero_sleeps;
+charevnt_handler_t charevnt_solitary_ends;
+charevnt_handler_t charevnt_commandant_to_yard;
+charevnt_handler_t charevnt_hero_release;
+charevnt_handler_t charevnt_wander_left;
+charevnt_handler_t charevnt_wander_yard;
+charevnt_handler_t charevnt_wander_top;
+charevnt_handler_t charevnt_bed;
+charevnt_handler_t charevnt_breakfast;
+charevnt_handler_t charevnt_exit_hut2;
+charevnt_handler_t charevnt_hero_sits;
+charevnt_handler_t charevnt_hero_sleeps;
 
 void follow_suspicious_character(tgestate_t *state);
 
