@@ -2922,7 +2922,7 @@ void set_hero_route(tgestate_t *state, const route_t *route)
 
   vischar = &state->vischars[0];
 
-  vischar->flags &= ~vischar_FLAGS_DOOR_THING;
+  vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
   vischar->route = *route;
   set_route(state, vischar);
 }
@@ -3075,7 +3075,7 @@ void set_character_route(tgestate_t *state,
 
   // FUTURE: Move this chunk into the body of the loop above.
 found_on_screen:
-  vischar->flags &= ~vischar_FLAGS_DOOR_THING;
+  vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
   store_route(route, &vischar->route);
 
   set_route(state, vischar); // was fallthrough
@@ -3128,7 +3128,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   }
   else if (get_target_result == get_target_DOOR)
   {
-    vischar->flags |= vischar_FLAGS_DOOR_THING;
+    vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
   }
 }
 
@@ -8080,7 +8080,7 @@ again:
     }
     else if (get_target_result == get_target_DOOR)
     {
-      vischar->flags |= vischar_FLAGS_DOOR_THING;
+      vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
     }
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
@@ -9183,7 +9183,7 @@ end_bit:
   /* The original code self modifies the vischar_move_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
 //    HLdash = &multiply_by_1;
-//  else if (Cdash & vischar_FLAGS_DOOR_THING)
+//  else if (Cdash & vischar_FLAGS_TARGET_IS_DOOR)
 //    HLdash = &multiply_by_4;
 //  else
 //    HLdash = &multiply_by_8;
@@ -9194,7 +9194,7 @@ end_bit:
   /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
-  else if (Cdash & vischar_FLAGS_DOOR_THING)
+  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
     scale = 4; /* Outdoors + door thing. */
   else
     scale = 8; /* Outdoors. */
@@ -9427,7 +9427,7 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  if (flags_all & vischar_FLAGS_DOOR_THING)
+  if (flags_all & vischar_FLAGS_TARGET_IS_DOOR)
   {
     /* Results in character entering. */
 
@@ -9467,8 +9467,8 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     if (vischarHL == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
     {
       /* Hero's vischar only. */
-      vischarHL->flags &= ~vischar_FLAGS_DOOR_THING;
       (void) get_target_and_handle_it(state, vischarHL, &vischarHL->route);
+      vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
     }
 
     // POP HL_tinypos
@@ -9519,7 +9519,7 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
     /* Chunk from $CB61 */
 
     if (get_target_result == get_target_DOOR)
-      vischar->flags |= vischar_FLAGS_DOOR_THING;
+      vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
 
     // Conv: Cope with get_target returning results in different vars.
     // Original game just transfers x,y across.
