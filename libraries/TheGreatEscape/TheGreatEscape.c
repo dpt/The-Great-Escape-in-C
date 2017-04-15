@@ -9545,9 +9545,8 @@ uint8_t get_target_assign_pos(tgestate_t *state,
 }
 
 /**
- * $CB2D: get_target has run out of route.
- *
- * Called by spawn_character, get_target_and_handle_it.
+ * $CB2D: Called by spawn_character and get_target_assign_pos when
+ * get_target has run out of route.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9555,8 +9554,6 @@ uint8_t get_target_assign_pos(tgestate_t *state,
  */
 uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 {
-  character_t character; /* was A */
-
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(route != NULL);
@@ -9565,13 +9562,17 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
   /* If not the hero's vischar ... */
   if (route != &state->vischars[0].route) /* Conv: was (L != 2) */
   {
+    character_t character; /* was A */
+
     character = vischar->character & vischar_CHARACTER_MASK;
 
-    /* Call character event for every step of the commandant route 36. */
+    /* Call character_event at the end of commandant route 36. */
     if (character == character_0_COMMANDANT)
       if ((route->index & ~route_REVERSED) == 36)
         goto do_character_event;
 
+    /* Reverse the route for guards 1..11. */
+    // Guards 1..11 have fixed roles so either stand still or march back and forth along their route.
     if (character <= character_11_GUARD_11)
       goto reverse_route;
   }
@@ -9579,7 +9580,7 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 do_character_event:
   /* We arrive here if:
    * - vischar is the hero, or
-   * - character is character_0_COMMANDANT and (route.index & 0x7F) == 36, or
+   * - character is character_0_COMMANDANT and route index is 36, or
    * - character is >= character_12_GUARD_12
    */
 
@@ -9592,7 +9593,7 @@ do_character_event:
 reverse_route:
   /* We arrive here if:
    * - vischar is not the hero, and
-   *   - character is character_0_COMMANDANT and (route.index & 0x7F) != 36, or
+   *   - character is character_0_COMMANDANT and route index is not 36, or
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
