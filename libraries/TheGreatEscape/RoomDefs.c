@@ -5,6 +5,9 @@
 
 /* Room defintions are not const as they are updated when objects are altered. */
 
+/* FUTURE: Wrap access to these defs in a function which reads from state
+ * when one of the mutable bytes is altered. */
+
 /**
  * $6BAD: Room and tunnel definitions.
  */
