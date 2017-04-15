@@ -3124,7 +3124,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   if (get_target_result == get_target_ROUTE_ENDS)
   {
     state->IY = vischar;
-    (void) get_target_and_handle_it(state, vischar, &vischar->route);
+    (void) get_target_assign_pos(state, vischar, &vischar->route);
   }
   else if (get_target_result == get_target_DOOR)
   {
@@ -5717,7 +5717,7 @@ void accept_bribe(tgestate_t *state)
 
   state->IY->flags = 0;
 
-  (void) get_target_and_handle_it(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
+  (void) get_target_assign_pos(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
 
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
@@ -9100,7 +9100,7 @@ set_pos:
       // hero is under automatic control
 
       vischar2->flags = 0;
-      (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
+      (void) get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
     }
     else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
@@ -9117,7 +9117,7 @@ set_pos:
         /* Choose random locations in the fenced off area (right side). */
         vischar2->flags = 0;
         vischar2->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
-        (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
+        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9143,7 +9143,7 @@ set_pos:
 
       /* Bribed character was not visible. */
       vischar2->flags = 0;
-      (void) get_target_and_handle_it(state, vischar2, &vischar2->route);
+      (void) get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
 
 bribed_visible:
@@ -9467,8 +9467,8 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
     if (vischarHL == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
     {
       /* Hero's vischar only. */
-      (void) get_target_and_handle_it(state, vischarHL, &vischarHL->route);
       vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
+      (void) get_target_assign_pos(state, vischar, &vischar->route);
     }
 
     // POP HL_tinypos
@@ -9489,19 +9489,19 @@ void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
       vischar->route.step++;
   }
 
-  (void) get_target_and_handle_it(state, vischar, &vischar->route); // was fallthrough
+  (void) get_target_assign_pos(state, vischar, &vischar->route); // was fallthrough
 }
 
 /**
- * $CB23: Calls get_target
+ * $CB23: Calls get_target then puts target coords in vischar->pos and set flags.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t get_target_and_handle_it(tgestate_t *state,
-                                 vischar_t  *vischar,
-                                 route_t    *route)
+uint8_t get_target_assign_pos(tgestate_t *state,
+                              vischar_t  *vischar,
+                              route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
   const tinypos_t *doorpos;           /* was HL */
@@ -9516,7 +9516,7 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
   if (get_target_result != get_target_ROUTE_ENDS)
   {
     /* Didn't hit end of list case. */
-    /* Chunk from $CB61 */
+    /* Conv: Inlined chunk from $CB61 handle_target here. */
 
     if (get_target_result == get_target_DOOR)
       vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
@@ -9534,12 +9534,14 @@ uint8_t get_target_and_handle_it(tgestate_t *state,
       vischar->pos.y = location->y;
     }
 
-    return 1 << 7;
+    return 1 << 7; // get_target_DOOR?
   }
   else
   {
     return route_ended(state, vischar, route); // was fallthrough
   }
+
+  /* FUTURE: The return values never seem to be used, so remove them. */
 }
 
 /**
@@ -9584,7 +9586,8 @@ do_character_event:
   character_event(state, route);
   if (route->index == 0) /* standing still */
     return 0;
-  return get_target_and_handle_it(state, vischar, route); // re-enter
+  else
+    return get_target_assign_pos(state, vischar, route); // re-enter
 
 reverse_route:
   /* We arrive here if:
