@@ -7946,7 +7946,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   pos_t                       *saved_pos;         /* was HL */
   character_t                  character;         /* was A */
   const character_class_data_t *metadata;         /* was DE */
-  int                          Z;
+  int                          Z;                 /* flag */
   room_t                       room;              /* was A */
   uint8_t                      get_target_result; /* was A */
   const tinypos_t             *doorpos;           /* was HL */
@@ -7969,7 +7969,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   }
   while (--iters);
 
-  return 0; // check
+  return 0; // Z
 
 
 found_empty_slot:
@@ -8005,20 +8005,20 @@ found_empty_slot:
     Z = bounds_check(state, vischar);
   // if Z == 1 then within wall bounds
 
-  // POP DE (charstr2)
+  // POP DE (charstr)
   // POP HL (vischar)
 
   if (Z == 1) // if collision or bounds_check is nonzero, then return
     return 0; // check
 
-  character = charstr2->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character */
-  charstr2->character_and_flags = character;
+  character = charstr->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character */
+  charstr->character_and_flags = character;
 
   character &= characterstruct_CHARACTER_MASK;
   vischar->character = character;
   vischar->flags     = 0;
 
-  // PUSH DE (charstr2)
+  // PUSH DE (charstr)
 
   metadata = &character_class_data[0]; /* Commandant */
   if (character != 0)
@@ -8034,13 +8034,13 @@ found_empty_slot:
     }
   }
 
-  // EX DE, HL (DE = vischar, HL = charstr)
+  // EX DE,HL (DE = vischar, HL = metadata)
 
   vischar->animbase  = metadata->animbase; // seems to be a constant
   vischar->mi.sprite = metadata->sprite;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
 
-  // POP HL
+  // POP HL (charstr)
 
   //HL += 5; // -> charstr->route
   //DE += 7; // -> vischar->room
@@ -8053,29 +8053,35 @@ found_empty_slot:
     play_speaker(state, sound_CHARACTER_ENTERS_1);
   }
 
-  //DE -= 26; // -> vischar->route
-  //*DE++ = *HL++;
-  //*DE++ = *HL++;
+  // DE -= 26; // -> vischar->route
   vischar->route = charstr->route;
-  //HL -= 2; // -> charstr->route
+  // HL -= 2; // -> charstr->route
 
+  route_t *HLroute;
+
+  HLroute = &charstr->route;
 again:
-  if (charstr->route.index != 0) /* if not stood still */
+  if (HLroute->index != 0) /* if not stood still */
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
     get_target_result = get_target(state,
-                                   &charstr->route,
+                                   HLroute,
                                    &doorpos,
                                    &location);
     if (get_target_result == get_target_ROUTE_ENDS)
     {
-      // POP HL // HL = DE
+      // POP HL // -> vischar->pos
       // HL -= 2; // -> vischar->route
-      // PUSH HL
+      // PUSH HL // save vischar->route
       (void) route_ended(state, vischar, &vischar->route);
       // POP HL
       // DE = HL + 2; // -> vischar->pos
+
+      // To match the original code this should jump to 'again' with HL now
+      // pointing to vischar->route, not charstr->route as on the first go.
+      HLroute = &vischar->route;
+
       goto again;
     }
     else if (get_target_result == get_target_DOOR)
