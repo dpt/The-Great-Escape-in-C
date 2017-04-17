@@ -5598,13 +5598,13 @@ int collision(tgestate_t *state)
       coord = &vischar->mi.pos.y; // ok
 
       B = 7; // permitted range from centre point C
-      C = 35; // cetre point (29 .. 35 .. 42)
+      C = 35; // centre point (29 .. 35 .. 42)
       direction = state->IY->direction; // was interleaved
       if (character == character_28_CRATE)
       {
         /* Crate moves on x(?) axis only. */
         coord--; // -> HL->mi.pos.x
-        C = 54; // cetre point (47 .. 54 .. 61)
+        C = 54; // centre point (47 .. 54 .. 61)
         direction ^= 1; /* swap direction: left <=> right */
       }
 
