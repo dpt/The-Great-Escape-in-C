@@ -8227,10 +8227,10 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * If the route specifies 'wander' then one of eight random locations is
  * chosen starting from route.step.
  *
- * \param[in] state     Pointer to game state.
- * \param[in] route     Pointer to route.                            (was HL)
- * \param[in] doorpos   Receives doorpos when moving to a door.      (was HL)
- * \param[in] location  Receives location when moving to a location. (was HL)
+ * \param[in]  state    Pointer to game state.
+ * \param[in]  route    Pointer to route.                            (was HL)
+ * \param[out] doorpos  Receives doorpos when moving to a door.      (was HL)
+ * \param[out] location Receives location when moving to a location. (was HL)
  *
  * \retval get_target_ROUTE_ENDS The route has ended.
  * \retval get_target_DOOR       The next target is a door.
