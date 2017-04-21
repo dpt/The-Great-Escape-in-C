@@ -199,7 +199,7 @@ enum vischar_flags
   // cleared by set_hero_route, set_character_route (store_to_vischar case), target_reached (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), target_reached (character entering door chunk)
 
-  vischar_BYTE7_MASK_LO                = 0x0F,
+  vischar_BYTE7_COUNTER_MASK           = 0x0F,
   vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
