@@ -9200,7 +9200,7 @@ end_bit:
   /* The original code self modifies the vischar_move_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
 //    HLdash = &multiply_by_1;
-//  else if (Cdash & vischar_FLAGS_TARGET_IS_DOOR)
+//  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
 //    HLdash = &multiply_by_4;
 //  else
 //    HLdash = &multiply_by_8;
