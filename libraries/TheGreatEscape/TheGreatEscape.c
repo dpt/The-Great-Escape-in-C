@@ -325,9 +325,9 @@ void setup_movable_item(tgestate_t          *state,
 
   vischar1->flags             = 0;
   vischar1->route             = (route_t) { 0, 0 };
-  vischar1->pos.x             = 0;
-  vischar1->pos.y             = 0;
-  vischar1->pos.height        = 0;
+  vischar1->target.x          = 0;
+  vischar1->target.y          = 0;
+  vischar1->target.height     = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
@@ -1708,10 +1708,10 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].route  = (route_t) { 44, 1 };
-        state->vischars[0].pos.x  = 46;
-        state->vischars[0].pos.y  = 46;
-        state->vischars[0].mi.pos = (pos_t) { 46, 46, 24 };
+        state->vischars[0].route    = (route_t) { 44, 1 };
+        state->vischars[0].target.x = 46;
+        state->vischars[0].target.y = 46;
+        state->vischars[0].mi.pos   = (pos_t) { 46, 46, 24 };
         roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
         state->hero_in_bed = 0;
       }
@@ -3092,7 +3092,7 @@ found_on_screen:
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          get_target_result; /* was A */
-  tinypos_t       *pos;               /* was DE */
+  tinypos_t       *target;            /* was DE */
   const tinypos_t *doorpos;           /* was HL */
   const xy_t      *location;          /* was HL */
 
@@ -3109,16 +3109,16 @@ void set_route(tgestate_t *state, vischar_t *vischar)
                                  &location);
 
   /* Stash the target coordinates in 'pos'. */
-  pos = &vischar->pos;
+  target = &vischar->target;
   if (get_target_result == get_target_LOCATION)
   {
-    pos->x = location->x;
-    pos->y = location->y;
+    target->x = location->x;
+    target->y = location->y;
   }
   else if (get_target_result == get_target_DOOR)
   {
-    pos->x = doorpos->x;
-    pos->y = doorpos->y;
+    target->x = doorpos->x;
+    target->y = doorpos->y;
   }
 
   if (get_target_result == get_target_ROUTE_ENDS)
@@ -3147,6 +3147,7 @@ void store_route(route_t route, route_t *proute)
   ASSERT_ROUTE_VALID(route);
   assert(proute != NULL);
 
+  // FUTURE: inline into set_character_route.
   *proute = route;
 }
 
@@ -8061,11 +8062,11 @@ found_empty_slot:
   // DE += 2, HL += 2; // DE -> vischar->pos
   // HL -= 2; // -> charstr->route
 
-  tinypos_t *DEpos;
+  tinypos_t *DEtarget;
   route_t   *HLroute;
 
-  DEpos   = &vischar->pos;
-  HLroute = &charstr->route;
+  DEtarget = &vischar->target;
+  HLroute  = &charstr->route;
 again:
   if (HLroute->index != 0) /* if not stood still */
   {
@@ -8086,9 +8087,9 @@ again:
 
       // To match the original code this should jump to 'again' with HL now
       // pointing to vischar->route, not charstr->route as on the first go.
-      // DEpos is likely not necessary - it's only ever assigned in this code.
-      DEpos   = &vischar->pos;
-      HLroute = &vischar->route;
+      // DEtarget is likely not necessary - it's only ever assigned in this code.
+      DEtarget = &vischar->target;
+      HLroute  = &vischar->route;
 
       goto again;
     }
@@ -8101,12 +8102,12 @@ again:
     // it seems that get_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
     if (get_target_result == get_target_DOOR)
     {
-      vischar->pos = *doorpos;
+      vischar->target = *doorpos;
     }
     else
     {
-      vischar->pos.x = location->x;
-      vischar->pos.y = location->y;
+      vischar->target.x = location->x;
+      vischar->target.y = location->y;
     }
     //memcpy(&vischar->pos, route, sizeof(tinypos_t));
     // pointers incremented in original?
@@ -8387,7 +8388,7 @@ uint8_t get_target(tgestate_t       *state,
        * route's final byte (255) in all cases. That's not going to work with
        * the way routes are defined in the portable version of the game so
        * instead just set routebyte to 255. */
-      routebyte = 255;
+      routebyte = routebyte_END;
     else
       routebyte = routebytes[step]; // HL was temporary
 
@@ -8731,28 +8732,28 @@ void character_event(tgestate_t *state, route_t *route)
   /* $C7F9 */
   static const route2event_t eventmap[24] =
   {
-    { 38 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
-    { 39 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
-    { 40 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
-    { 41 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
+    { 38 | route_REVERSED,  0 }, /* wander between locations 8..15 */
+    { 39 | route_REVERSED,  0 }, /* wander between locations 8..15 */
+    { 40 | route_REVERSED,  1 }, /* wander between locations 16..23 */
+    { 41 | route_REVERSED,  1 }, /* wander between locations 16..23 */
 
-    {  5,                   0 }, /* target wanders locations 8..15 */
-    {  6,                   1 }, /* target wanders locations 16..23 */
+    {  5,                   0 }, /* wander between locations 8..15 */
+    {  6,                   1 }, /* wander between locations 16..23 */
     {  5 | route_REVERSED,  3 },
     {  6 | route_REVERSED,  3 },
 
-    { 14,                   2 }, /* target wanders locations 56..63 */
-    { 15,                   2 }, /* target wanders locations 56..63 */
-    { 14 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
-    { 15 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
+    { 14,                   2 }, /* wander between locations 56..63 */
+    { 15,                   2 }, /* wander between locations 56..63 */
+    { 14 | route_REVERSED,  0 }, /* wander between locations 8..15 */
+    { 15 | route_REVERSED,  1 }, /* wander between locations 16..23 */
 
     { 16,                   5 },
     { 17,                   5 },
-    { 16 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
-    { 17 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
+    { 16 | route_REVERSED,  0 }, /* wander between locations 8..15 */
+    { 17 | route_REVERSED,  1 }, /* wander between locations 16..23 */
 
-    { 32 | route_REVERSED,  0 }, /* target wanders locations 8..15 */
-    { 33 | route_REVERSED,  1 }, /* target wanders locations 16..23 */
+    { 32 | route_REVERSED,  0 }, /* wander between locations 8..15 */
+    { 33 | route_REVERSED,  1 }, /* wander between locations 16..23 */
     { 42,                   7 },
     { 44,                   8 }, /* hero sleeps */
     { 43,                   9 }, /* hero sits */
@@ -9104,8 +9105,8 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
     if (flags == vischar_FLAGS_BRIBE_PENDING) // == 1
     {
 set_pos:
-      vischar2->pos.x = state->hero_map_position.x;
-      vischar2->pos.y = state->hero_map_position.y;
+      vischar2->target.x = state->hero_map_position.x;
+      vischar2->target.y = state->hero_map_position.y;
       goto end_bit;
     }
     else if (flags == vischar_FLAGS_PERSUE) // == 2
@@ -9124,8 +9125,8 @@ set_pos:
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
         // Moves dog toward poisoned food?
-        vischar2->pos.x = state->item_structs[item_FOOD].pos.x;
-        vischar2->pos.y = state->item_structs[item_FOOD].pos.y;
+        vischar2->target.x = state->item_structs[item_FOOD].pos.x;
+        vischar2->target.y = state->item_structs[item_FOOD].pos.y;
         goto end_bit;
       }
       else
@@ -9169,7 +9170,7 @@ bribed_visible:
         tinypos_t *tinypos; /* was DE */
 
         pos     = &found->mi.pos;
-        tinypos = &vischar2->pos;
+        tinypos = &vischar2->target;
         if (state->room_index > room_0_OUTDOORS)
         {
           /* Indoors */
@@ -9330,7 +9331,7 @@ input_t vischar_move_x(tgestate_t *state,
   // suspect that mi.pos.x is "where i am"
   // and that pos.x is "where i need to be"
 
-  delta = vischar->mi.pos.x - vischar->pos.x * scale;
+  delta = (int16_t) vischar->mi.pos.x - (int16_t) vischar->target.x * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_RIGHT + input_DOWN;
@@ -9372,7 +9373,7 @@ input_t vischar_move_y(tgestate_t *state,
    * same vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = vischar->mi.pos.y - vischar->pos.y * scale;
+  delta = (int16_t) vischar->mi.pos.y - (int16_t) vischar->target.y * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_LEFT + input_DOWN;
@@ -9503,7 +9504,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 }
 
 /**
- * $CB23: Calls get_target then puts target coords in vischar->pos and set flags.
+ * $CB23: Calls get_target then puts coords in vischar->target and set flags.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9535,13 +9536,13 @@ uint8_t get_target_assign_pos(tgestate_t *state,
     // Original game just transfers x,y across.
     if (get_target_result == get_target_DOOR)
     {
-      vischar->pos.x = doorpos->x;
-      vischar->pos.y = doorpos->y;
+      vischar->target.x = doorpos->x;
+      vischar->target.y = doorpos->y;
     }
     else
     {
-      vischar->pos.x = location->x;
-      vischar->pos.y = location->y;
+      vischar->target.x = location->x;
+      vischar->target.y = location->y;
     }
 
     return 1 << 7; // get_target_DOOR?

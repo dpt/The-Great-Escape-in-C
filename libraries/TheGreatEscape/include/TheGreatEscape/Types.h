@@ -432,11 +432,11 @@ typedef struct vischar
   /** $8002 route */
   route_t         route;
 
-  /** $8004 position */
+  /** $8004 target position */
   // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
   // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
   // used in vischar_move_x/y
-  tinypos_t       pos;
+  tinypos_t       target;
 
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
