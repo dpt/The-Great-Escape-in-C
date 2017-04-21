@@ -1540,7 +1540,7 @@ void main_loop(tgestate_t *state)
   in_permitted_area(state);
   restore_tiles(state);
   move_characters(state);
-  follow_suspicious_character(state);
+  automatics(state);
   purge_invisible_characters(state);
   spawn_characters(state);
   mark_nearby_items(state);
@@ -8982,7 +8982,7 @@ void charevnt_hero_sleeps(tgestate_t *state, route_t *route)
  *
  * \param[in] state Pointer to game state.
  */
-void follow_suspicious_character(tgestate_t *state)
+void automatics(tgestate_t *state)
 {
   uint8_t iters; /* was B */
 

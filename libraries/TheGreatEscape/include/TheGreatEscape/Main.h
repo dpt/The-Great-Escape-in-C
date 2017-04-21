@@ -498,7 +498,7 @@ charevnt_handler_t charevnt_exit_hut2;
 charevnt_handler_t charevnt_hero_sits;
 charevnt_handler_t charevnt_hero_sleeps;
 
-void follow_suspicious_character(tgestate_t *state);
+void automatics(tgestate_t *state);
 
 void character_behaviour(tgestate_t *state,
                          vischar_t  *vischar);
