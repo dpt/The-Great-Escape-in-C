@@ -5656,7 +5656,7 @@ int collision(tgestate_t *state)
 
 b0d0:
         // is the 5 a character_behaviour delay field?
-        state->IY->counter_and_flags = (state->IY->counter_and_flags & vischar_BYTE7_MASK_HI) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
+        state->IY->counter_and_flags = (state->IY->counter_and_flags & ~vischar_BYTE7_MASK_LO) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
         // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
         //if (!Z)
           return 1; /* odd -- returning with Z not set */
