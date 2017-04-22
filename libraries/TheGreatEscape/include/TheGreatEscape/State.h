@@ -64,7 +64,7 @@ struct tgestate
    *
    * Used by item_to_itemstruct, find_nearby_item, event_new_red_cross_parcel,
    * accept_bribe, action_red_cross_parcel, action_poison,
-   * follow_suspicious_character, character_behaviour, bribes_solitary_food,
+   * follow_suspicious_character, character_behaviour, target_reached,
    * solitary, is_item_discoverable, is_item_discoverable_interior,
    * mark_nearby_items and get_greatest_itemstruct.
    */

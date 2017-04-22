@@ -799,7 +799,7 @@ uint8_t *const beds[beds_LENGTH] =
 /**
  * $78D6: Door positions.
  *
- * Used by setup_doors, get_door, door_handling and bribes_solitary_food.
+ * Used by setup_doors, get_door, door_handling and target_reached.
  */
 const door_t doors[door_MAX * 2] =
 {
@@ -9223,7 +9223,7 @@ end_bit:
       if (input)
         character_behaviour_set_input(state, vischar, input);
       else
-        bribes_solitary_food(state, vischar); // exit via
+        target_reached(state, vischar); // exit via
     }
   }
 }
@@ -9277,7 +9277,7 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
     if (input)
       character_behaviour_set_input(state, vischar, input);
     else
-      bribes_solitary_food(state, vischar); // exit via
+      target_reached(state, vischar); // exit via
   }
 }
 
@@ -9371,12 +9371,12 @@ input_t vischar_move_y(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA81: Bribes, solitary, food, 'character enters' sound.
+ * $CA81: Called when a character reaches its target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void bribes_solitary_food(tgestate_t *state, vischar_t *vischar)
+void target_reached(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          flags_lower6;            /* was A */
   uint8_t          flags_all;               /* was C */
@@ -9628,7 +9628,7 @@ reverse_route:
 /**
  * $CB79: Return a route.
  *
- * Used by the routines at get_target and bribes_solitary_food.
+ * Used by the routines at get_target and target_reached.
  *
  * \param[in] index Route index.
  *

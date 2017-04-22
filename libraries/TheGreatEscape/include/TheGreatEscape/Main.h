@@ -517,7 +517,7 @@ input_t vischar_move_y(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale);
 
-void bribes_solitary_food(tgestate_t *state, vischar_t *vischar);
+void target_reached(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_target_assign_pos(tgestate_t *state,
                               vischar_t  *vischar,
