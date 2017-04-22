@@ -6191,7 +6191,7 @@ void action_bribe(tgestate_t *state)
 
 found:
   state->bribed_character = character;
-  vischar->flags = vischar_FLAGS_BRIBE_PENDING;
+  vischar->flags = vischar_FLAGS_BRIBE_PENDING; /* Persue the bribed character. */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8989,7 +8989,10 @@ void charevnt_hero_sleeps(tgestate_t *state, route_t *route)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C892: Causes characters to follow the hero if he's being suspicious.
+ * $C892: Drives automatic behaviour for NPCs and the hero when the player
+ * idles.
+ *
+ * Causes characters to follow the hero if he's being suspicious.
  * Also: Food item discovery.
  * Also: Automatic hero behaviour.
  *
@@ -9103,6 +9106,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
     if (flags == vischar_FLAGS_BRIBE_PENDING) // == 1
     {
 set_pos:
+      /* Persue the hero. */
       vischar2->target.x = state->hero_map_position.x;
       vischar2->target.y = state->hero_map_position.y;
       goto end_bit;
@@ -10227,7 +10231,7 @@ next:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CC37: Guards follow suspicious character.
+ * $CC37: Hostiles follow the hero.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character (hostile only). (was IY / HL)
@@ -10239,32 +10243,31 @@ void guards_follow_suspicious_character(tgestate_t *state,
   tinypos_t   *tinypos;   /* was DE */
   pos_t       *pos;       /* was HL */
 
-  assert(state   != NULL);
+  assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Copy of vischar in HL factored out. */
 
   character = vischar->character;
 
-  /* Wearing the uniform stops anyone but the commandant from following the
-   * hero. */
+  /* When the uniform is worn only the commandant will recognise the hero. */
   if (character != character_0_COMMANDANT &&
       state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_1])
     return;
 
-  /* If this character saw the bribe being used then ignore the hero. */
+  /* If this (hostile) character saw the bribe being used then ignore the hero. */
   if (vischar->flags == vischar_FLAGS_SAW_BRIBE)
     return;
 
   pos = &vischar->mi.pos; /* was HL += 15 */
-  tinypos = &state->tinypos_stash; // find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering
+  tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
     tinypos_t *hero_map_pos;  /* was HL */
     int        dir;           /* Conv */
     uint8_t    direction;     /* was A / C */
 
-    pos_to_tinypos(pos, tinypos); // tinypos_stash becomes vischar mi pos
+    pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
 
     hero_map_pos = &state->hero_map_position;
     /* Conv: Dupe tinypos ptr factored out. */
