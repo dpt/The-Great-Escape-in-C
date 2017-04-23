@@ -9413,36 +9413,41 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   // In the original code HL is IY + 4 on entry.
   // In this version we replace HL references with IY ones.
 
-  flags_all = flags_lower6 = vischar->flags;
-  flags_lower6 &= vischar_FLAGS_MASK; // lower 6 bits only
-  if (flags_lower6)
+  flags_all = vischar->flags;
+  flags_lower6 = flags_all & vischar_FLAGS_MASK; // lower 6 bits only
+  if (flags_lower6) // if in one of these states: vischar_FLAGS_PURSUE || vischar_FLAGS_HASSLE || vischar_FLAGS_DOG_FOOD || vischar_FLAGS_SAW_BRIBE
   {
     if (flags_lower6 == vischar_FLAGS_PURSUE)
     {
       if (vischar->character == state->bribed_character)
         accept_bribe(state);
       else
-        solitary(state); // failed to bribe?
+        solitary(state); // caught pursued character (ie. the hero)
       return; // exit via // factored out
     }
     else if (flags_lower6 == vischar_FLAGS_HASSLE ||
              flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
-      /* Perhaps when hostiles are distracted food remains undiscovered? */
+      // nothing to do in these cases
       return;
     }
-
-    /* Decide how long until food is discovered. */
-    if ((state->item_structs[item_FOOD].item_and_flags & itemstruct_ITEM_FLAG_POISONED) == 0)
-      food_discovered_counter = 32; /* food is not poisoned */
     else
-      food_discovered_counter = 255; /* food is poisoned */
-    state->food_discovered_counter = food_discovered_counter;
+    {
+      assert(flags_lower6 == vischar_FLAGS_DOG_FOOD);
 
-    vischar->route.index = 0; /* Stand still. */
+      /* Decide how long until food is discovered. */
+      if ((state->item_structs[item_FOOD].item_and_flags & itemstruct_ITEM_FLAG_POISONED) == 0)
+        food_discovered_counter = 32; /* food is not poisoned */
+      else
+        food_discovered_counter = 255; /* food is poisoned */
+      state->food_discovered_counter = food_discovered_counter;
 
-    character_behaviour_set_input(state, vischar, 0 /* new_input */);
-    return;
+      vischar->route.index = 0; /* Stand still (ie. the dog is poisoned) */
+
+      character_behaviour_set_input(state, vischar, 0 /* new_input */);
+      return;
+    }
+    // FUTURE: Factor out all the return;s above to here.
   }
 
   if (flags_all & vischar_FLAGS_TARGET_IS_DOOR)
