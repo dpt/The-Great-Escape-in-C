@@ -9124,12 +9124,13 @@ set_pos:
     }
     else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
     {
+      /* If food is nearby... */
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
         /* Set dog target to poisoned food. */
         vischar2->target.x = state->item_structs[item_FOOD].pos.x;
         vischar2->target.y = state->item_structs[item_FOOD].pos.y;
-        goto end_bit;
+        goto move;
       }
       else
       {
@@ -9184,7 +9185,7 @@ bribed_visible:
           tinypos->x = pos->x; // note: narrowing
           tinypos->y = pos->y; // note: narrowing
         }
-        goto end_bit;
+        goto move;
       }
 
     }
@@ -9196,7 +9197,7 @@ bribed_visible:
     return; // exit via
   }
 
-end_bit:
+move:
   vischar2flags = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
   /* The original code self modifies the vischar_move_x/y routines. */
