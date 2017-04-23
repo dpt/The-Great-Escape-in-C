@@ -10689,13 +10689,12 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    xy_t screenpos = itemstruct->screenpos; /* new */
+    const xy_t screenpos = itemstruct->screenpos; /* new */
 
-    /* Conv: Ranges adjusted. */
-    // todo: 25, 17 need updating to be state->tb_columns etc.
+    /* Conv: Ranges adjusted. */ // but it still looks asymmetric...
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (screenpos.x >= map_xy.x - 1 && screenpos.x <= map_xy.x + 25 - 1) &&
-        (screenpos.y >= map_xy.y     && screenpos.y <= map_xy.y + 17    ))
+        (screenpos.x >= map_xy.x - 1 && screenpos.x <= map_xy.x + (state->columns + 1) - 1) &&
+        (screenpos.y >= map_xy.y     && screenpos.y <= map_xy.y + state->rows))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
