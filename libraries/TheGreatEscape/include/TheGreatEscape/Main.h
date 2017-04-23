@@ -539,7 +539,7 @@ void solitary(tgestate_t *state);
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar);
 
-void hostiles_persue(tgestate_t *state);
+void hostiles_pursue(tgestate_t *state);
 
 void is_item_discoverable(tgestate_t *state);
 

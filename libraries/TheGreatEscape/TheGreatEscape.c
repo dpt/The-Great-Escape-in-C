@@ -5557,7 +5557,7 @@ int collision(tgestate_t *state)
 
     /* If current vischar character has a bribe pending... */
     // Odd: 0x0F is *not* vischar_FLAGS_MASK, which is 0x3F
-    if ((state->IY->flags & 0x0F) == vischar_FLAGS_BRIBE_PENDING) // sampled IY=$8020, $8040, $8060, $8000
+    if ((state->IY->flags & 0x0F) == vischar_FLAGS_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
     {
       /* and current vischar is not the hero... */
       if (vischar != &state->vischars[0])
@@ -6191,7 +6191,7 @@ void action_bribe(tgestate_t *state)
 
 found:
   state->bribed_character = character;
-  vischar->flags = vischar_FLAGS_BRIBE_PENDING; /* Persue the bribed character. */
+  vischar->flags = vischar_FLAGS_PURSUE; /* Pursue the bribed character. */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9007,9 +9007,9 @@ void automatics(tgestate_t *state)
   /* (I've still no idea what this flag means). */
   state->entered_move_characters = 0;
 
-  /* If the bell is ringing, hostiles persue. */
+  /* If the bell is ringing, hostiles pursue. */
   if (state->bell)
-    hostiles_persue(state);
+    hostiles_pursue(state);
 
   /* If food was dropped then count down until it is discovered. */
   if (state->food_discovered_counter != 0 &&
@@ -9103,15 +9103,15 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   flags = vischar2->flags;
   if (flags != 0)
   {
-    if (flags == vischar_FLAGS_BRIBE_PENDING) // == 1
+    if (flags == vischar_FLAGS_PURSUE) // == 1 // pursue immediately?
     {
 set_pos:
-      /* Persue the hero. */
+      /* Pursue the hero. */
       vischar2->target.x = state->hero_map_position.x;
       vischar2->target.y = state->hero_map_position.y;
-      goto end_bit;
+      goto move;
     }
-    else if (flags == vischar_FLAGS_PERSUE) // == 2
+    else if (flags == vischar_FLAGS_HASSLE) // == 2 // pursue if player controlled?
     {
       if (state->automatic_player_counter > 0) // under player control, not automatic
         goto set_pos;
@@ -9417,7 +9417,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   flags_lower6 &= vischar_FLAGS_MASK; // lower 6 bits only
   if (flags_lower6)
   {
-    if (flags_lower6 == vischar_FLAGS_BRIBE_PENDING)
+    if (flags_lower6 == vischar_FLAGS_PURSUE)
     {
       if (vischar->character == state->bribed_character)
         accept_bribe(state);
@@ -9425,7 +9425,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
         solitary(state); // failed to bribe?
       return; // exit via // factored out
     }
-    else if (flags_lower6 == vischar_FLAGS_PERSUE ||
+    else if (flags_lower6 == vischar_FLAGS_HASSLE ||
              flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
       /* Perhaps when hostiles are distracted food remains undiscovered? */
@@ -10303,28 +10303,28 @@ void guards_follow_suspicious_character(tgestate_t *state,
 
   if (!state->red_flag)
   {
-    /* Hostiles *not* in guard towers persue the hero. */
+    /* Hostiles *not* in guard towers pursue the hero. */
     if (vischar->mi.pos.height < 32) /* uses A as temporary */
-      vischar->flags = vischar_FLAGS_PERSUE;
+      vischar->flags = vischar_FLAGS_HASSLE;
   }
   else
   {
     state->bell = bell_RING_PERPETUAL;
-    hostiles_persue(state);
+    hostiles_pursue(state);
   }
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CCAB: Hostiles persue prisoners.
+ * $CCAB: Hostiles pursue prisoners.
  *
- * For all visible, hostile characters, at height < 32, set the bribed/persue
+ * For all visible, hostile characters, at height < 32, set the bribed/pursue
  * flag.
  *
  * \param[in] state Pointer to game state.
  */
-void hostiles_persue(tgestate_t *state)
+void hostiles_pursue(tgestate_t *state)
 {
   vischar_t *vischar; /* was HL */
   uint8_t    iters;   /* was B */
@@ -10337,7 +10337,7 @@ void hostiles_persue(tgestate_t *state)
   {
     if (vischar->character <= character_19_GUARD_DOG_4 &&
         vischar->mi.pos.height < 32) /* Excludes the guards high up in towers. */
-      vischar->flags = vischar_FLAGS_BRIBE_PENDING;
+      vischar->flags = vischar_FLAGS_PURSUE;
     vischar++;
   }
   while (--iters);
@@ -10349,7 +10349,7 @@ void hostiles_persue(tgestate_t *state)
  * $CCCD: Is item discoverable?
  *
  * Searches item_structs for items dropped nearby. If items are found the
- * hostiles are made to persue the hero.
+ * hostiles are made to pursue the hero.
  *
  * Green key and food items are ignored.
  *
@@ -10368,7 +10368,7 @@ void is_item_discoverable(tgestate_t *state)
   if (room != room_0_OUTDOORS)
   {
     if (is_item_discoverable_interior(state, room, NULL) == 0) /* Item found */
-      hostiles_persue(state);
+      hostiles_pursue(state);
   }
   else
   {
@@ -10397,7 +10397,7 @@ nearby:
      * decremented to access item_and_flags but is not re-adjusted
      * afterwards. */
 
-    hostiles_persue(state);
+    hostiles_pursue(state);
   }
 }
 
@@ -12205,7 +12205,7 @@ void event_roll_call(tgestate_t *state)
 not_at_roll_call:
   state->bell = bell_RING_PERPETUAL;
   queue_message_for_display(state, message_MISSED_ROLL_CALL);
-  hostiles_persue(state); // exit via
+  hostiles_pursue(state); // exit via
 }
 
 /* ----------------------------------------------------------------------- */

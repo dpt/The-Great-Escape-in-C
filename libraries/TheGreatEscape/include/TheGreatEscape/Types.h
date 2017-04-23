@@ -186,8 +186,9 @@ enum vischar_flags
   vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only? */
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only? */
 
-  vischar_FLAGS_BRIBE_PENDING          = 1 << 0, /* NPCs only? */ // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_persue.
-  vischar_FLAGS_PERSUE                 = 2 << 0, /* NPCs only? */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
+  /* Four persuit modes. */
+  vischar_FLAGS_PURSUE                 = 1 << 0, /* NPCs only? */ // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_persue.
+  vischar_FLAGS_HASSLE                 = 2 << 0, /* NPCs only? */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPCs only? */ // dog+food flag
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
 
@@ -432,7 +433,7 @@ typedef struct vischar
   route_t         route;
 
   /** $8004 target position */
-  // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
+  // gets set to state->hero_map_position when vischar_FLAGS_PURSUE
   // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
