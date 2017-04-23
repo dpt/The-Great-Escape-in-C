@@ -5490,7 +5490,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AFDF: (unknown) Definitely something to do with moving objects around. Collisions?
+ * $AFDF: Handle collisions.
  *
  * \param[in] state         Pointer to game state.
  *
@@ -5516,6 +5516,7 @@ int collision(tgestate_t *state)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(state->IY);
 
+  // Iterate over characters being collided with (e.g. stove).
   vischar = &state->vischars[0];
   iters = vischars_LENGTH - 1;
   do
@@ -5555,14 +5556,15 @@ int collision(tgestate_t *state)
     if (delta >= 24)
       goto pop_next;
 
-    /* If current vischar character has a bribe pending... */
+    /* If IY vischar is pursuing... */
     // Odd: 0x0F is *not* vischar_FLAGS_MASK, which is 0x3F
     if ((state->IY->flags & 0x0F) == vischar_FLAGS_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
     {
-      /* and current vischar is not the hero... */
+      /* and CURRENT vischar is not the hero... */
       if (vischar != &state->vischars[0])
       {
-        if (state->bribed_character == state->IY->character)
+        // the bribed character must pursue the hero until it accepts the bribe
+        if (state->IY->character == state->bribed_character)
         {
           accept_bribe(state);
         }
@@ -6191,7 +6193,7 @@ void action_bribe(tgestate_t *state)
 
 found:
   state->bribed_character = character;
-  vischar->flags = vischar_FLAGS_PURSUE; /* Pursue the bribed character. */
+  vischar->flags = vischar_FLAGS_PURSUE; /* Pursue the bribed character? Or pursue the hero - needs verifying. */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7161,7 +7163,7 @@ next:
     int Z;
 
     found_itemstruct->room_and_flags &= ~itemstruct_ROOM_FLAG_NEARBY_6;
-    Z = (found_itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_6) == 0; // was BIT 6,HL[1] // this tests the bit we've just cleared
+    Z = (found_itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_6) == 0; // was BIT 6,HL[1] // Odd: This tests the bit we've just cleared.
 
     *pitemstruct = found_itemstruct; // Conv: Additional code.
 
@@ -9118,7 +9120,7 @@ set_pos:
 
       // hero is under automatic control
 
-      vischar2->flags = 0;
+      vischar2->flags = 0; // stop hassling
       (void) get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
     }
@@ -10265,6 +10267,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (vischar->flags == vischar_FLAGS_SAW_BRIBE)
     return;
 
+  // this must be line of sight checking (outdoors only)
+
   pos = &vischar->mi.pos; /* was HL += 15 */
   tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
@@ -10281,12 +10285,11 @@ void guards_follow_suspicious_character(tgestate_t *state,
     direction = vischar->direction; /* This character's direction. */
     /* Conv: Avoided shifting 'direction' here. Propagated shift into later ops. */
 
-    /* Guess: This is orienting the hostile to face the hero. */
-
     if ((direction & 1) == 0) /* TL or BR */
     {
       // range check (uses A as temporary)
-      if (tinypos->y - 1 >= hero_map_pos->y || tinypos->y + 1 < hero_map_pos->y)
+      if (tinypos->y - 1 >= hero_map_pos->y ||
+          tinypos->y + 1 <  hero_map_pos->y)
         return;
 
       dir = tinypos->x < hero_map_pos->x;
@@ -10297,7 +10300,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
     }
 
     // range check (uses A as temporary)
-    if (tinypos->x - 1 >= hero_map_pos->x || tinypos->x + 1 < hero_map_pos->x)
+    if (tinypos->x - 1 >= hero_map_pos->x ||
+        tinypos->x + 1 <  hero_map_pos->x)
       return;
 
     dir = tinypos->height < hero_map_pos->height;
@@ -10325,8 +10329,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
 /**
  * $CCAB: Hostiles pursue prisoners.
  *
- * For all visible, hostile characters, at height < 32, set the bribed/pursue
- * flag.
+ * For all visible, hostile characters, at height < 32, set the pursue flag.
  *
  * \param[in] state Pointer to game state.
  */
@@ -10503,7 +10506,7 @@ void item_discovered(tgestate_t *state, item_t item)
 
   if (room == room_0_OUTDOORS)
   {
-    /* Conv: The original code just assigned A/'room' here, as it's already zero. */
+    /* Conv: The original code assigned 'room' here since it's already zero. */
     itemstruct->pos.height = 0;
     calc_exterior_item_screenpos(itemstruct);
   }
