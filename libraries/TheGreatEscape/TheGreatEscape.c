@@ -12392,6 +12392,9 @@ TGE_API void tge_setup(tgestate_t *state)
   while (reversed != &state->reversed[256]); // was ((HL & 0xFF) != 0);
 
   /* Initialise all visible characters. */
+  // Future: Fold this to:
+  // for (vischar = &state->vischars[0]; vischar < &state->vischars[vischars_LENGTH]; vischar++)
+  //   *vischar = vischar_initial;
   vischar = &state->vischars[0];
   iters = vischars_LENGTH;
   do
@@ -12412,7 +12415,6 @@ TGE_API void tge_setup(tgestate_t *state)
     vischar++;
   }
   while (--iters);
-
 
   // Conv: Set up a jmpbuf so the game will return here.
   if (setjmp(state->jmpbuf_main) == 0)
