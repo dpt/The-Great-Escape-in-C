@@ -1584,7 +1584,7 @@ void check_morale(tgestate_t *state)
   if (state->morale >= 2)
     return;
 
-  queue_message_for_display(state, message_MORALE_IS_ZERO);
+  queue_message(state, message_MORALE_IS_ZERO);
 
   /* Inhibit user input. */
   state->morale_exhausted = 255;
@@ -1745,7 +1745,7 @@ void picking_lock(tgestate_t *state)
 
   /* Countdown reached: Unlock the door. */
   *state->ptr_to_door_being_lockpicked &= ~door_LOCKED;
-  queue_message_for_display(state, message_IT_IS_OPEN);
+  queue_message(state, message_IT_IS_OPEN);
 
   state->vischars[0].flags &= ~(vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE);
 }
@@ -2559,7 +2559,7 @@ void event_another_day_dawns(tgestate_t *state)
 {
   assert(state != NULL);
 
-  queue_message_for_display(state, message_ANOTHER_DAY_DAWNS);
+  queue_message(state, message_ANOTHER_DAY_DAWNS);
   decrease_morale(state, 25);
   set_day_or_night(state, 0x00);
 }
@@ -2587,7 +2587,7 @@ void event_wake_up(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  queue_message_for_display(state, message_TIME_TO_WAKE_UP);
+  queue_message(state, message_TIME_TO_WAKE_UP);
   wake_up(state);
 }
 
@@ -2596,7 +2596,7 @@ void event_go_to_roll_call(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  queue_message_for_display(state, message_ROLL_CALL);
+  queue_message(state, message_ROLL_CALL);
   go_to_roll_call(state);
 }
 
@@ -2605,7 +2605,7 @@ void event_go_to_breakfast_time(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  queue_message_for_display(state, message_BREAKFAST_TIME);
+  queue_message(state, message_BREAKFAST_TIME);
   set_route_go_to_breakfast(state);
 }
 
@@ -2622,7 +2622,7 @@ void event_go_to_exercise_time(tgestate_t *state)
   assert(state != NULL);
 
   state->bell = bell_RING_40_TIMES;
-  queue_message_for_display(state, message_EXERCISE_TIME);
+  queue_message(state, message_EXERCISE_TIME);
 
   /* Unlock the gates. */
   state->locked_doors[0] = 0; /* Index into doors + clear locked flag. */
@@ -2649,7 +2649,7 @@ void event_go_to_time_for_bed(tgestate_t *state)
   state->locked_doors[0] = 0 | door_LOCKED; /* Index into doors + set locked flag. */
   state->locked_doors[1] = 1 | door_LOCKED;
 
-  queue_message_for_display(state, message_TIME_FOR_BED);
+  queue_message(state, message_TIME_FOR_BED);
   go_to_time_for_bed(state);
 }
 
@@ -2704,7 +2704,7 @@ found:
   memcpy(&state->item_structs[item_RED_CROSS_PARCEL].room_and_flags,
          &red_cross_parcel_reset_data.room_and_flags,
          6);
-  queue_message_for_display(state, message_RED_CROSS_PARCEL);
+  queue_message(state, message_RED_CROSS_PARCEL);
 }
 
 void event_time_for_bed(tgestate_t *state)
@@ -5741,8 +5741,8 @@ void accept_bribe(tgestate_t *state)
   }
   while (--iters);
 
-  queue_message_for_display(state, message_HE_TAKES_THE_BRIBE);
-  queue_message_for_display(state, message_AND_ACTS_AS_DECOY);
+  queue_message(state, message_HE_TAKES_THE_BRIBE);
+  queue_message(state, message_AND_ACTS_AS_DECOY);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -5841,7 +5841,7 @@ int is_door_locked(tgestate_t *state)
       if ((*door & door_LOCKED) == 0)
         return 0; /* Door is open. */
 
-      queue_message_for_display(state, message_THE_DOOR_IS_LOCKED);
+      queue_message(state, message_THE_DOOR_IS_LOCKED);
       return 1; /* Door is locked. */
     }
     door++;
@@ -6156,7 +6156,7 @@ void action_red_cross_parcel(tgestate_t *state)
 
   drop_item_tail(state, state->red_cross_parcel_current_contents);
 
-  queue_message_for_display(state, message_YOU_OPEN_THE_BOX);
+  queue_message(state, message_YOU_OPEN_THE_BOX);
   increase_morale_by_10_score_by_50(state);
 }
 
@@ -6360,7 +6360,7 @@ action_wiresnips_tail:
   state->vischars[0].mi.pos.height  = 12;
   state->vischars[0].mi.sprite      = &sprites[sprite_PRISONER_FACING_AWAY_1];
   state->player_locked_out_until = state->game_counter + 96;
-  queue_message_for_display(state, message_CUTTING_THE_WIRE);
+  queue_message(state, message_CUTTING_THE_WIRE);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6383,7 +6383,7 @@ void action_lockpick(tgestate_t *state)
   state->ptr_to_door_being_lockpicked = pdoor;
   state->player_locked_out_until = state->game_counter + 255;
   state->vischars[0].flags = vischar_FLAGS_PICKING_LOCK;
-  queue_message_for_display(state, message_PICKING_THE_LOCK);
+  queue_message(state, message_PICKING_THE_LOCK);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6453,7 +6453,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
     message = message_IT_IS_OPEN;
   }
 
-  queue_message_for_display(state, message);
+  queue_message(state, message);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10220,9 +10220,9 @@ next:
   /* Set the commandant on a path which results in the hero being released. */
   memcpy(&state->character_structs[character_0_COMMANDANT].room, &solitary_commandant_reset_data, 6);
 
-  queue_message_for_display(state, message_YOU_ARE_IN_SOLITARY);
-  queue_message_for_display(state, message_WAIT_FOR_RELEASE);
-  queue_message_for_display(state, message_ANOTHER_DAY_DAWNS);
+  queue_message(state, message_YOU_ARE_IN_SOLITARY);
+  queue_message(state, message_WAIT_FOR_RELEASE);
+  queue_message(state, message_ANOTHER_DAY_DAWNS);
 
   state->in_solitary = 255; /* inhibit user input */
   state->automatic_player_counter = 0; /* immediately take automatic control of hero */
@@ -10491,7 +10491,7 @@ void item_discovered(tgestate_t *state, item_t item)
 
   item &= itemstruct_ITEM_MASK;
 
-  queue_message_for_display(state, message_ITEM_DISCOVERED);
+  queue_message(state, message_ITEM_DISCOVERED);
   decrease_morale(state, 5);
 
   default_item_location = &default_item_locations[item];
@@ -12212,7 +12212,7 @@ void event_roll_call(tgestate_t *state)
 
 not_at_roll_call:
   state->bell = bell_RING_PERPETUAL;
-  queue_message_for_display(state, message_MISSED_ROLL_CALL);
+  queue_message(state, message_MISSED_ROLL_CALL);
   hostiles_pursue(state); // exit via
 }
 

@@ -34,8 +34,8 @@ typedef enum message
 message_t;
 
 /* $7D15 */
-void queue_message_for_display(tgestate_t *state,
-                               message_t   message_index);
+void queue_message(tgestate_t *state,
+                   message_t   message_index);
 /* $7D48 */
 void message_display(tgestate_t *state);
 
