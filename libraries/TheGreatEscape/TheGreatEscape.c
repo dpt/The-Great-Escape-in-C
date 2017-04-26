@@ -9106,45 +9106,54 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   flags = vischar2->flags;
   if (flags != 0)
   {
-    if (flags == vischar_FLAGS_PURSUE) // == 1 // pursue immediately?
+    /* Mode 1: Hero is chased by hostiles and sent to solitary if caught. */
+    if (flags == vischar_FLAGS_PURSUE)
     {
-set_pos:
+pursue_hero:
       /* Pursue the hero. */
       vischar2->target.x = state->hero_map_position.x;
       vischar2->target.y = state->hero_map_position.y;
       goto move;
     }
-    else if (flags == vischar_FLAGS_HASSLE) // == 2 // pursue if player controlled?
+    /* Mode 2: Hero is chased by hostiles if under player control. */
+    else if (flags == vischar_FLAGS_HASSLE)
     {
-      if (state->automatic_player_counter > 0) // under player control, not automatic
-        goto set_pos;
-
-      // hero is under automatic control
-
-      vischar2->flags = 0; // stop hassling
-      (void) get_target_assign_pos(state, vischar2, &vischar2->route);
-      return;
+      if (state->automatic_player_counter > 0)
+      {
+        /* The hero is under player control: pursue. */
+        goto pursue_hero;
+      }
+      else
+      {
+        /* The hero is under automatic control: hostiles lose interest and
+         * resume following their original route. */
+        vischar2->flags = 0; /* clear vischar_FLAGS_HASSLE */
+        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+        return;
+      }
     }
-    else if (flags == vischar_FLAGS_DOG_FOOD) // == 3
+    /* Mode 3: The food item is near a guard dog. */
+    else if (flags == vischar_FLAGS_DOG_FOOD)
     {
-      /* If food is nearby... */
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
-        /* Set dog target to poisoned food. */
+        /* Food is nearby: Dog moves to food. */
         vischar2->target.x = state->item_structs[item_FOOD].pos.x;
         vischar2->target.y = state->item_structs[item_FOOD].pos.y;
         goto move;
       }
       else
       {
-        /* Choose random locations in the fenced off area (right side). */
-        vischar2->flags = 0;
+        /* Food is no longer nearby: Choose random locations in the fenced-
+         * off area (right side). */
+        vischar2->flags = 0; /* clear vischar_FLAGS_DOG_FOOD */
         vischar2->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
         (void) get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
-    else if (flags == vischar_FLAGS_SAW_BRIBE) // == 4
+    /* Mode 4: Character witnessed a bribe being given (in accept_bribe). */
+    else if (flags == vischar_FLAGS_SAW_BRIBE)
     {
       character_t  bribed_character; /* was A */
       vischar_t   *found;            /* was HL */
@@ -9164,33 +9173,33 @@ set_pos:
         while (--iters);
       }
 
-      /* Bribed character was not visible. */
-      vischar2->flags = 0;
+      /* Bribed character was not visible: hostiles lose interest and resume
+       * following their original route. */
+      vischar2->flags = 0; /* clear vischar_FLAGS_SAW_BRIBE */
       (void) get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
 
 bribed_visible:
-      /* Found bribed character in vischars. */
+      /* Found the bribed character in vischars: hostiles target him. */
       {
-        pos_t     *pos;     /* was HL */
-        tinypos_t *tinypos; /* was DE */
+        pos_t     *pos;    /* was HL */
+        tinypos_t *target; /* was DE */
 
-        pos     = &found->mi.pos;
-        tinypos = &vischar2->target;
+        pos    = &found->mi.pos;
+        target = &vischar2->target;
         if (state->room_index > room_0_OUTDOORS)
         {
           /* Indoors */
-          pos_to_tinypos(pos, tinypos);
+          pos_to_tinypos(pos, target);
         }
         else
         {
           /* Outdoors */
-          tinypos->x = pos->x; // note: narrowing
-          tinypos->y = pos->y; // note: narrowing
+          target->x = pos->x; // note: narrowing
+          target->y = pos->y; // note: narrowing
         }
         goto move;
       }
-
     }
   }
 
@@ -9432,7 +9441,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     else if (flags_lower6 == vischar_FLAGS_HASSLE ||
              flags_lower6 == vischar_FLAGS_SAW_BRIBE)
     {
-      // nothing to do in these cases
+      /* Nothing to do in these cases. */
       return;
     }
     else
