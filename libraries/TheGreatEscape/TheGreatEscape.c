@@ -5707,9 +5707,9 @@ next:
  */
 void accept_bribe(tgestate_t *state)
 {
-  item_t    *item;     /* was DE */
-  uint8_t    iters;    /* was B */
-  vischar_t *vischar2; /* was HL */
+  item_t    *item;    /* was DE */
+  uint8_t    iters;   /* was B */
+  vischar_t *vischar; /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(state->IY);
@@ -5731,13 +5731,13 @@ void accept_bribe(tgestate_t *state)
   draw_all_items(state);
 
   /* Set the vischar_FLAGS_SAW_BRIBE flag on all visible hostiles. */
-  iters    = vischars_LENGTH - 1;
-  vischar2 = &state->vischars[1];
+  iters   = vischars_LENGTH - 1;
+  vischar = &state->vischars[1];
   do
   {
-    if (vischar2->character <= character_19_GUARD_DOG_4)
-      vischar2->flags = vischar_FLAGS_SAW_BRIBE;
-    vischar2++;
+    if (vischar->character <= character_19_GUARD_DOG_4)
+      vischar->flags = vischar_FLAGS_SAW_BRIBE;
+    vischar++;
   }
   while (--iters);
 
