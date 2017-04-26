@@ -5563,7 +5563,8 @@ int collision(tgestate_t *state)
       /* and CURRENT vischar is not the hero... */
       if (vischar != &state->vischars[0])
       {
-        // the bribed character must pursue the hero until it accepts the bribe
+        /* A bribed character pursues the hero. When caught the bribe
+         * will be accepted. */
         if (state->IY->character == state->bribed_character)
         {
           accept_bribe(state);
@@ -5700,9 +5701,9 @@ next:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B107: Character accepts the bribe.
+ * $B107: A character accepted a bribe from the hero.
  *
- * \param[in] state   Pointer to game state.
+ * \param[in] state Pointer to game state.
  */
 void accept_bribe(tgestate_t *state)
 {
@@ -5715,28 +5716,27 @@ void accept_bribe(tgestate_t *state)
 
   increase_morale_by_10_score_by_50(state);
 
-  state->IY->flags = 0;
+  state->IY->flags = 0; // this clears vischar_FLAGS_PURSUE. does it clear anything else?
 
   (void) get_target_assign_pos(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
 
+  /* Return early if we have no bribes. */
   item = &state->items_held[0];
   if (*item != item_BRIBE && *++item != item_BRIBE)
-    return; /* Have no bribes. */
+    return;
 
-  /* We have a bribe, take it away. */
+  /* Remove the bribe item. */
   *item = item_NONE;
-
   state->item_structs[item_BRIBE].room_and_flags = (room_t) itemstruct_ROOM_NONE;
-
   draw_all_items(state);
 
-  /* Iterate over visible hostiles. */
+  /* Set the vischar_FLAGS_SAW_BRIBE flag on all visible hostiles. */
   iters    = vischars_LENGTH - 1;
   vischar2 = &state->vischars[1];
   do
   {
-    if (vischar2->character <= character_19_GUARD_DOG_4) /* All hostiles. */
-      vischar2->flags = vischar_FLAGS_SAW_BRIBE; // hostile will look for bribed character?
+    if (vischar2->character <= character_19_GUARD_DOG_4)
+      vischar2->flags = vischar_FLAGS_SAW_BRIBE;
     vischar2++;
   }
   while (--iters);
@@ -6165,7 +6165,8 @@ void action_red_cross_parcel(tgestate_t *state)
 /**
  * $B3A8: The hero tries to bribe a prisoner.
  *
- * This searches visible friendly characters only and returns the first found.
+ * This searches visible friendly characters only, returning the first one
+ * found. It then makes that character pursue the hero to accept the bribe.
  *
  * \param[in] state Pointer to game state.
  */
@@ -6193,7 +6194,7 @@ void action_bribe(tgestate_t *state)
 
 found:
   state->bribed_character = character;
-  vischar->flags = vischar_FLAGS_PURSUE; /* Pursue the bribed character? Or pursue the hero - needs verifying. */
+  vischar->flags = vischar_FLAGS_PURSUE; /* Bribed character pursues hero. */
 }
 
 /* ----------------------------------------------------------------------- */
