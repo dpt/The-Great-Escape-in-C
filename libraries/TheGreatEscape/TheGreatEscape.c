@@ -2805,7 +2805,7 @@ void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
-  const route_t t42 = { 42 | route_REVERSED, 0 }; /* was BC */
+  const route_t t42 = { 42, 0 }; /* was BC */
   set_hero_route(state, t42);
 
   /* Position all six prisoners. */
