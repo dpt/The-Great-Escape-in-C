@@ -11827,7 +11827,7 @@ void pos_to_tinypos(const pos_t *in, tinypos_t *out)
 
     low = *pcoordin++;
     high = *pcoordin++;
-    divide_by_8_with_rounding(&high, &low);
+    divide_by_8_with_rounding(&low, &high);
     *pcoordout++ = low;
   }
   while (--iters);
