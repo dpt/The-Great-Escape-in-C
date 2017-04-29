@@ -12017,25 +12017,27 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
  */
 void pos_to_tinypos(const pos_t *in, tinypos_t *out)
 {
-  const uint8_t *pcoordin;  /* was HL */
-  uint8_t       *pcoordout; /* was DE */
-  uint8_t        iters;     /* was B */
+  const uint16_t *pcoordin;  /* was HL */
+  uint8_t        *pcoordout; /* was DE */
+  uint8_t         iters;     /* was B */
 
   assert(in  != NULL);
   assert(out != NULL);
 
   /* Use knowledge of the structure layout to cast the pointers to array[3]
    * of their respective types. */
-  pcoordin = (const uint8_t *) &in->x;
+  pcoordin  = (const uint16_t *) &in->x;
   pcoordout = (uint8_t *) &out->x;
 
   iters = 3;
   do
   {
-    uint8_t low, high; /* was A, C */
+    uint16_t coord; // Conv: added
+    uint8_t  low, high; /* was A, C */
 
-    low = *pcoordin++;
-    high = *pcoordin++;
+    coord = *pcoordin++;
+    low  = coord & 0xFF;
+    high = coord >> 8;
     divide_by_8_with_rounding(&low, &high);
     *pcoordout++ = low;
   }
