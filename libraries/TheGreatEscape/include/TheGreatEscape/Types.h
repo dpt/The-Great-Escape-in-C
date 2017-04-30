@@ -412,9 +412,9 @@ tinypos_t;
  */
 typedef struct movableitem
 {
-  pos_t              pos; // what coordinate space?
-  const spritedef_t *sprite;
-  spriteindex_t      sprite_index;
+  pos_t              pos;           /**< map position */
+  const spritedef_t *sprite;        /**< sprite def */
+  spriteindex_t      sprite_index;  /**< index into def */
 }
 movableitem_t;
 
