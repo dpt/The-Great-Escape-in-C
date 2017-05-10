@@ -97,18 +97,18 @@ static void check_map_buf(tgestate_t *state)
  * The hero or a non-player character changes room.
  *
  * \param[in] state   Pointer to game state.
- * \param[in] pos     Pointer to pos. (was HL)
+ * \param[in] tinypos Pointer to pos. (was HL)
  *
  * \remarks Exits using longjmp in the hero case.
  */
 void transition(tgestate_t      *state,
-                const tinypos_t *pos)
+                const tinypos_t *tinypos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
 
-  assert(state != NULL);
-  assert(pos   != NULL);
+  assert(state   != NULL);
+  assert(tinypos != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -121,9 +121,9 @@ void transition(tgestate_t      *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = multiply_by_4(pos->x);
-    vischar->mi.pos.y      = multiply_by_4(pos->y);
-    vischar->mi.pos.height = multiply_by_4(pos->height);
+    vischar->mi.pos.x      = multiply_by_4(tinypos->x);
+    vischar->mi.pos.y      = multiply_by_4(tinypos->y);
+    vischar->mi.pos.height = multiply_by_4(tinypos->height);
   }
   else
   {
@@ -133,9 +133,9 @@ void transition(tgestate_t      *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = pos->x;
-    vischar->mi.pos.y      = pos->y;
-    vischar->mi.pos.height = pos->height;
+    vischar->mi.pos.x      = tinypos->x;
+    vischar->mi.pos.y      = tinypos->y;
+    vischar->mi.pos.height = tinypos->height;
   }
 
   if (vischar != &state->vischars[0])
