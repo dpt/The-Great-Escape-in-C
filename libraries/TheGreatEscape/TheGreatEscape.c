@@ -94,7 +94,7 @@ static void check_map_buf(tgestate_t *state)
 /**
  * $68A2: Transition.
  *
- * The hero or a non-player character changes room.
+ * The current character (in state->IY) changes room.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] tinypos Pointer to pos. (was HL)
@@ -5896,7 +5896,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* Select a start position in doors based on the direction the hero is
+  /* Select a start position in doors[] based on the direction the hero is
    * facing. */
   door_pos = &doors[0];
   direction = vischar->direction;
@@ -6805,6 +6805,8 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
 
 /**
  * $B729: Calculate screen position for the specified vischar from saved_pos.
+ *
+ * Result has three bits of fixed point accuracy.
  *
  * \see drop_item_tail_interior.
  *
@@ -9482,7 +9484,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
       character_behaviour_set_input(state, vischar, 0 /* new_input */);
       return;
     }
-    // FUTURE: Factor out all the return;s above to here.
+    // FUTURE: Factor out all of the returns above to here.
   }
 
   if (flags_all & vischar_FLAGS_TARGET_IS_DOOR)
