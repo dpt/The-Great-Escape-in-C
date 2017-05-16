@@ -9488,10 +9488,10 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 
     if ((door->room_and_flags & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
       /* TOP_LEFT or TOP_RIGHT */
-      tinypos = &door[1].pos; // was HL += 5; // next door pos
+      tinypos = &door[1].pos; // was HL += 5;
     else
       /* BOTTOM_RIGHT or BOTTOM_LEFT */
-      tinypos = &door[0].pos; // was HL -= 3; // current door pos
+      tinypos = &door[-1].pos; // was HL -= 3;
 
     // PUSH HL_tinypos
 
