@@ -101,10 +101,10 @@ do {                                                          \
 // These limits were determined by checking the original game and cover the main map only. They'll need adjusting.
 #define ASSERT_MAP_POSITION_VALID(p)                          \
 do {                                                          \
-  assert(p.x >= 0x00);                                        \
-  assert(p.x < 0xBE);                                         \
-  assert(p.y >= 0x06);                                        \
-  assert(p.y < 0x78);                                         \
+  assert(p.x >= 0);                                           \
+  assert(p.x < 190);                                          \
+  assert(p.y >= 6);                                           \
+  assert(p.y < 120);                                          \
 } while (0)
 
 #define ASSERT_ROUTE_VALID(r)                                 \
