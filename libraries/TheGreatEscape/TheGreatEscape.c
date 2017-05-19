@@ -8304,26 +8304,24 @@ uint8_t get_next_target(tgestate_t       *state,
  */
 void move_characters(tgestate_t *state)
 {
-  character_t        character;   /* was A */
-  characterstruct_t *charstr;     /* was HL */
-  room_t             room;        /* was A */
-  item_t             item;        /* was C */
-  uint8_t            get_next_target_result;           /* was A */
-  route_t           *HLroute;     /* was HL */
-
-  uint8_t            B;           /* was B */
-  uint8_t            max;         /* was A' */
-  pos_t             *HLpos;       /* was HL */
-  tinypos_t         *DEcharstr_tinypos; /* was DE */
-  door_t            *HLdoor;      /* was HL */
-  const tinypos_t   *HLtinypos;   /* was HL */
-  characterstruct_t *DEcharstr;   /* was DE */
-  uint8_t            routeindex;  /* was A */
-
-  xy_t              *HLlocation;  /* was HL */
+  character_t        character;               /* was A */
+  characterstruct_t *charstr;                 /* was HL */
+  room_t             room;                    /* was A */
+  item_t             item;                    /* was C */
+  uint8_t            get_next_target_result;  /* was A */
+  route_t           *HLroute;                 /* was HL */
+  const tinypos_t   *HLtinypos;               /* was HL */
+  xy_t              *HLlocation;              /* was HL */
+  uint8_t            routeindex;              /* was A */
+  characterstruct_t *DEcharstr;               /* was DE */
+  uint8_t            max;                     /* was A' */
+  uint8_t            B;                       /* was B */
+  door_t            *HLdoor;                  /* was HL */
+  tinypos_t         *DEcharstr_tinypos;       /* was DE */
 
   assert(state != NULL);
 
+  /* This makes future character events use state->character_index. */
   state->entered_move_characters = 255;
 
   /* Move to the next character, wrapping around after character 26. */
@@ -8364,19 +8362,18 @@ void move_characters(tgestate_t *state)
                                            &HLlocation);
   if (get_next_target_result == get_next_target_ROUTE_ENDS)
   {
+    /* When the route ends reverse the route. */
+
     character = state->character_index;
     if (character != character_0_COMMANDANT)
     {
       /* Not the commandant. */
 
       if (character >= character_12_GUARD_12)
-        goto character_12_or_higher;
-
-      // TODO: A -> route
+        goto trigger_event;
 
       /* Characters 1..11. */
-back:
-      /* These ops modify the locations[] table. */ // which looks odd...
+reverse_route:
       HLroute->index = routeindex = HLroute->index ^ route_REVERSED;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
@@ -8395,9 +8392,12 @@ back:
       // sampled HL = $7617 (characterstruct + 5)
       routeindex = HLroute->index & ~route_REVERSED;
       if (routeindex != 36)
-        goto back;
+        goto reverse_route;
 
-character_12_or_higher:
+trigger_event:
+      /* We arrive here if character >= character_12_GUARD_12 or if
+       * commandant on route 36. */
+
       // POP DE_pos
       character_event(state, HLroute);
       return; // exit via
@@ -8436,22 +8436,17 @@ character_12_or_higher:
 
       DEcharstr_tinypos = &DEcharstr->pos;
 
-      // here HLpos is pointing to 16-bit coords but change_by_delta needs/wants 8-bit...
-      B = 0;
-      B = change_by_delta(max, B, &HLtinypos->x, &DEcharstr_tinypos->x); // max, rc, second, first
-      // DE++;
-      // HL++;
+      B = change_by_delta(max, 0, &HLtinypos->x, &DEcharstr_tinypos->x); // max, rc, second, first
       B = change_by_delta(max, B, &HLtinypos->y, &DEcharstr_tinypos->y);
-
-      // POP HL_route
-
       if (B != 2)
         return; /* Managed to move. */
 
       // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
       // => character_structs.room
 
-      HLdoor = (door_t *) ((char *) HLtinypos - 1); // ugly cast to undo +1
+      // Ugly cast to turn HLtinypos back into a door_t.
+      // I'm unsure how this can work in the OUTDOORS case when HLtinypos points at state->saved_pos.
+      HLdoor = (door_t *) ((char *) HLtinypos - 1);
       assert(HLdoor >= &doors[0]);
       assert(HLdoor < &doors[door_MAX * 2]);
 
