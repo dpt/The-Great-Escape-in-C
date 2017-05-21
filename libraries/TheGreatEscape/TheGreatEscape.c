@@ -7498,6 +7498,9 @@ int vischar_visible(tgestate_t      *state,
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
+  *clipped_width  = 65535;
+  *clipped_height = 65535;
+
   /* Conv: Jump to exit for invisible case turned into immediate returns. */
 
   /* Width part. */
