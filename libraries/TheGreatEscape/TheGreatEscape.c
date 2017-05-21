@@ -9053,17 +9053,19 @@ void automatics(tgestate_t *state)
 
       character_behaviour(state, vischar);
     }
+
     state->IY++;
   }
   while (--iters);
 
   /* Engage automatic behaviour for the hero unless the flag is red, the
    * hero is in solitary or an input event was recently received. */
-  if (!state->red_flag &&
-      (state->in_solitary || state->automatic_player_counter == 0))
+  if (state->red_flag)
+    return;
+  if (state->in_solitary || state->automatic_player_counter == 0)
   {
     state->IY = &state->vischars[0];
-    character_behaviour(state, &state->vischars[0]);
+    character_behaviour(state, state->IY);
   }
 }
 
@@ -9081,7 +9083,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   uint8_t    counter_and_flags; /* was B */
   uint8_t    iters;             /* was B */
   vischar_t *vischar2;          /* was HL */
-  uint8_t    Cdash;             /* was C' */
+  uint8_t    vischar2flags;             /* was C' */
   uint8_t    scale;             /* Conv: added */
 
   assert(state != NULL);
