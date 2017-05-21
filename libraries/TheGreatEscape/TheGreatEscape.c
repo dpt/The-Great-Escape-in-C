@@ -9194,7 +9194,7 @@ end_bit:
   /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
-  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
+  else if (Cdash & vischar_FLAGS_TARGET_IS_DOOR)
     scale = 4; /* Outdoors + door thing. */
   else
     scale = 8; /* Outdoors. */
