@@ -9401,10 +9401,8 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   uint8_t          step;                    /* was C */
   uint8_t          route;                   /* was A */
   doorindex_t      doorindex;               /* was A */
-  uint8_t          route2;                  /* was A */
   const door_t    *door;                    /* was HL */
   const tinypos_t *tinypos;                 /* was HL */
-  vischar_t       *vischarHL;               /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9458,14 +9456,11 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     if (route & route_REVERSED) /* Conv: avoid needless reload */
       doorindex ^= door_REVERSE;
 
-    // PUSH AF
-    route2 = vischar->route.index; // $8002, ... // needless reload
     // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (route2 & route_REVERSED)
+    if (route & route_REVERSED) /* Conv: avoid needless reload */
       vischar->route.step--;
     else
       vischar->route.step++;
-    // POP AF
 
     door = get_door(doorindex); // door related
     vischar->room = (door->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
@@ -9479,8 +9474,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 
     // PUSH HL_tinypos
 
-    vischarHL = vischar;
-    if (vischarHL == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
+    if (vischar == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
     {
       /* Hero's vischar only. */
       vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
