@@ -9222,6 +9222,7 @@ end_bit:
    * when navigating. */
   if (vischar->counter_and_flags & vischar_BYTE7_Y_DOMINANT)
   {
+    // FUTURE: inline it here
     character_behaviour_move_y_dominant(state, vischar, scale); // exit via
   }
   else
