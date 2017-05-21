@@ -11408,7 +11408,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(state != NULL);
   // assert(x);
 
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+  //ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   x = (~x & 3) * 6; // jump table offset (on input, A is 0..3 => 3..0) // 6 = length of asm chunk
@@ -11845,6 +11845,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   }
 
   sprite = vischar->mi.sprite;
+  // banked in A'
 
   state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
@@ -11872,7 +11873,10 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // PUSH clipped_width
   // PUSH clipped_height
 
-  E = clipped_height & 0xFF; // must be no of visible rows?
+  E = clipped_height & 0xFF; // must be no of visible rows? // Conv: added
+
+  assert((clipped_width & 0xFF) < 100);
+  assert(E < 100);
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
   {
@@ -11891,10 +11895,12 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     enables = &masked_sprite_plotter_24_enables[0];
   }
 
-  // PUSH HL
+  // PUSH HL_enables
 
   self_E4C0 = A; // self-modify
-  if ((clipped_width & 0xFF00) == 0) // no lefthand skip: start with 'on'
+  // E = A
+  // A = B
+  if ((clipped_width >> 8) == 0) // no lefthand skip: start with 'on'
   {
     instr = 119; /* opcode of 'LD (HL),A' */
     offset = clipped_width & 0xFF; // process this many bytes before clipping
@@ -11905,10 +11911,11 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     offset = A - (clipped_width & 0xFF); // clip until this many bytes have been processed
   }
 
-  // POP HLdash // entry point
+  // EXX
+  // POP HL_enables
 
   /* Set the addresses in the jump table to NOP or LD (HL),A. */
-  //unused? Cdash = offset; // must be no of columns?
+  //Cdash = offset; // must be no of columns?
   iters = self_E4C0; /* 3 or 4 iterations */
   do
   {
@@ -11919,28 +11926,50 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   }
   while (--iters);
 
+  // EXX
+
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0) // top skippage
-    y = (vischar->floogle.y - (state->map_position.y * 8)) * 24;
+    y = (vischar->floogle.y - state->map_position.y * 8) * state->columns;
 
   x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
+  assert(x >= -32768);
+  assert(x < 32678);
+  assert(y >= -32768);
+  assert(y < 32678);
+
+  uint8_t *winbufend = &state->window_buf[state->columns * state->rows * 8];
   state->window_buf_pointer = &state->window_buf[x + y]; // screen buffer start address
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
+  uint8_t *winbufptr = state->window_buf_pointer + clipped_height * state->columns - 1; // clipped_height right?
+  if (winbufptr >= winbufend)
+  {
+    printf("%p - %p = %ld\n", winbufptr, winbufend, winbufptr - winbufend);
+    printf("height=%d offset=%d\n", clipped_height & 0xff, (clipped_height & 0xff00) >> 8);
+    //state->window_buf_pointer = &state->window_buf[0];
+  }
+
+  // So is it valid for window_buf_pointer to point outside of window_buf[]?
+
+  // Work out what these asserts should permit.
+
+//  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
+//  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
 
   maskbuf = &state->mask_buffer[0];
 
-  // POP DE  // get clipped_height
+  // POP DE_clipped_height
   // PUSH DE
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4; // i *think* its clipped_height -- check
+  assert(((clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4) < 255);
+
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4;
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
-  // POP DE  // pop clipped_height
+  // POP DE_clipped_height
 
-  A = clipped_height >> 8; // sign?
+  A = clipped_height >> 8; // offset/skip
   if (A)
   {
     /* Conv: The original game has a generic multiply loop here. In this
