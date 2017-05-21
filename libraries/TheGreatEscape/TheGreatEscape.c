@@ -9165,7 +9165,7 @@ set_pos:
 bribed_visible:
       /* Found bribed character in vischars. */
       {
-        pos_t     *pos; /* was HL */
+        pos_t     *pos;     /* was HL */
         tinypos_t *tinypos; /* was DE */
 
         pos     = &found->mi.pos;
@@ -9227,7 +9227,7 @@ end_bit:
   }
   else
   {
-    input_t input;
+    input_t input; /* was ? */
 
     input = vischar_move_x(state, vischar, scale);
     if (input)
@@ -9277,7 +9277,7 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
                                          vischar_t  *vischar,
                                          int         scale)
 {
-  input_t input;
+  input_t input; /* was ? */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9438,7 +9438,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 
     vischar->route.index = 0; /* Stand still. */
 
-    character_behaviour_set_input(state, vischar, 0 /* new_input */); // character_behaviour:$C9F5;
+    character_behaviour_set_input(state, vischar, 0 /* new_input */);
     return;
   }
 
