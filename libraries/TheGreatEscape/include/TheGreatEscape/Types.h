@@ -436,6 +436,7 @@ typedef struct vischar
   // gets set to state->hero_map_position when vischar_FLAGS_BRIBE_PENDING
   // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
   // used in vischar_move_x/y
+  // The .height member of this is never used.
   tinypos_t       target;
 
   /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */

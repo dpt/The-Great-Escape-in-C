@@ -325,9 +325,7 @@ void setup_movable_item(tgestate_t          *state,
 
   vischar1->flags             = 0;
   vischar1->route             = (route_t) { 0, 0 };
-  vischar1->target.x          = 0;
-  vischar1->target.y          = 0;
-  vischar1->target.height     = 0;
+  vischar1->target            = (tinypos_t) { 0, 0, 0 };
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
