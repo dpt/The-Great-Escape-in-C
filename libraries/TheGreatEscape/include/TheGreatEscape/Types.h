@@ -201,7 +201,7 @@ enum vischar_flags
 
   vischar_BYTE7_MASK_LO                = 0x0F,
   vischar_BYTE7_MASK_HI                = 0xF0,
-  vischar_BYTE7_Y_DOMINANT             = 1 << 5, // set when vischar_move_x() arrives at destination, cleared when vischar_move_y() arrives
+  vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
   vischar_BYTE7_TOUCHING               = 1 << 6, // set when touch() sees a character touching. stops the map moving
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 

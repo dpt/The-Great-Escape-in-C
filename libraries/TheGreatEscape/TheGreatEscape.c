@@ -314,8 +314,7 @@ void setup_movable_item(tgestate_t          *state,
   assert(movableitem != NULL);
   assert(character >= 0 && character < character__LIMIT);
 
-  /* The movable item takes the place of the first non-player visible
-   * character. */
+  /* The movable item uses the first non-player visible character slot. */
   vischar1 = &state->vischars[1];
 
   vischar1->character         = character;
@@ -3106,7 +3105,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
                                  &doorpos,
                                  &location);
 
-  /* Stash the target coordinates in 'pos'. */
+  /* Set the target coordinates. */
   target = &vischar->target;
   if (get_target_result == get_target_LOCATION)
   {
@@ -6676,7 +6675,7 @@ decrement:
       state->saved_pos.pos.height = vischar->mi.pos.height - SXT_8_16(DE);
 
       if (touch(state, vischar, Adash /* sprite_index */))
-        goto pop_next;
+        goto pop_next; // don't animate if collided
 
       vischar->animindex--;
     }
@@ -6702,7 +6701,7 @@ increment:
       SWAP(uint8_t, A, Adash);
 
       if (touch(state, vischar, Adash /* sprite_index */))
-        goto pop_next;
+        goto pop_next; // don't animate if collided
 
       vischar->animindex++;
     }
@@ -8085,7 +8084,8 @@ again:
 
       // To match the original code this should jump to 'again' with HL now
       // pointing to vischar->route, not charstr->route as on the first go.
-      // DEtarget is likely not necessary - it's only ever assigned in this code.
+      // DEtarget is likely not necessary - it's only ever assigned in this
+      // code.
       DEtarget = &vischar->target;
       HLroute  = &vischar->route;
 
@@ -9122,7 +9122,7 @@ set_pos:
     {
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
-        // Moves dog toward poisoned food?
+        /* Set dog target to poisoned food. */
         vischar2->target.x = state->item_structs[item_FOOD].pos.x;
         vischar2->target.y = state->item_structs[item_FOOD].pos.y;
         goto end_bit;
