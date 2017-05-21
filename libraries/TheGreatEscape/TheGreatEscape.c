@@ -7423,7 +7423,7 @@ pop_next:
   while (--iters);
 
   /* Dump the mask buffer to the top-left of the screen. */
-  if (1)
+  if (0)
   {
     uint8_t *slp;
     int      yy;
