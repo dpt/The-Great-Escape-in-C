@@ -9454,10 +9454,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     step  = vischar->route.step; // check order
     route = vischar->route.index;
 
-    // A must be a door index
     doorindex = get_route(route)[step]; // follow this through
-    if (vischar->route.index & route_REVERSED) // needless reload
-      doorindex ^= door_REVERSE; // later given to get_door, so must be a doorindex_t, so the flag must be door_REVERSE
+    if (route & route_REVERSED) /* Conv: avoid needless reload */
+      doorindex ^= door_REVERSE;
 
     // PUSH AF
     route2 = vischar->route.index; // $8002, ... // needless reload
