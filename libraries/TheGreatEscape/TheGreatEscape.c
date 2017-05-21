@@ -8058,10 +8058,13 @@ found_empty_slot:
 
   // DE -= 26; // -> vischar->route
   vischar->route = charstr->route;
+  // DE += 2, HL += 2; // DE -> vischar->pos
   // HL -= 2; // -> charstr->route
 
-  route_t *HLroute;
+  tinypos_t *DEpos;
+  route_t   *HLroute;
 
+  DEpos   = &vischar->pos;
   HLroute = &charstr->route;
 again:
   if (HLroute->index != 0) /* if not stood still */
@@ -8078,11 +8081,13 @@ again:
       // HL -= 2; // -> vischar->route
       // PUSH HL // save vischar->route
       (void) route_ended(state, vischar, &vischar->route);
-      // POP HL
+      // POP HL // restore vischar->route
       // DE = HL + 2; // -> vischar->pos
 
       // To match the original code this should jump to 'again' with HL now
       // pointing to vischar->route, not charstr->route as on the first go.
+      // DEpos is likely not necessary - it's only ever assigned in this code.
+      DEpos   = &vischar->pos;
       HLroute = &vischar->route;
 
       goto again;
