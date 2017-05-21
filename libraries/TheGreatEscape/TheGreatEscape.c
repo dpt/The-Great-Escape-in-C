@@ -9083,7 +9083,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   uint8_t    counter_and_flags; /* was B */
   uint8_t    iters;             /* was B */
   vischar_t *vischar2;          /* was HL */
-  uint8_t    vischar2flags;             /* was C' */
+  uint8_t    vischar2flags;     /* was C' */
   uint8_t    scale;             /* Conv: added */
 
   assert(state != NULL);
@@ -9194,7 +9194,7 @@ bribed_visible:
   }
 
 end_bit:
-  Cdash = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
+  vischar2flags = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
   /* The original code self modifies the vischar_move_x/y routines. */
 //  if (state->room_index > room_0_OUTDOORS)
@@ -9210,7 +9210,7 @@ end_bit:
   /* Replacement code passes down a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
-  else if (Cdash & vischar_FLAGS_TARGET_IS_DOOR)
+  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
     scale = 4; /* Outdoors + door thing. */
   else
     scale = 8; /* Outdoors. */
