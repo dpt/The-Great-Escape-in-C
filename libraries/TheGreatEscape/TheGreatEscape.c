@@ -7508,10 +7508,10 @@ int vischar_visible(tgestate_t      *state,
                     uint16_t        *clipped_height)
 {
   int8_t   amount_visible_right;  /* was A */
-  uint16_t new_width; /* was BC */
-  uint16_t Y1;  /* was HL */
-  uint16_t new_height;  /* was DE */
-  uint16_t Y2;  /* was HL */
+  uint16_t new_width;             /* was BC */
+  uint16_t Y1;                    /* was HL */
+  uint16_t new_height;            /* was DE */
+  uint16_t Y2;                    /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
