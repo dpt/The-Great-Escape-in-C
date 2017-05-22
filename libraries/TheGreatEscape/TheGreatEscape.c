@@ -3100,6 +3100,12 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
+  if (vischar == &state->vischars[0])
+    printf("(hero) get_target(route=%d%s step=%d)\n",
+           vischar->route.index & ~route_REVERSED,
+           (vischar->route.index & route_REVERSED) ? " reversed" : "",
+           vischar->route.step);
+
   get_target_result = get_target(state,
                                  &vischar->route,
                                  &doorpos,
@@ -3109,13 +3115,26 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   target = &vischar->target;
   if (get_target_result == get_target_LOCATION)
   {
+    if (vischar == &state->vischars[0])
+      printf("(hero) get_target returned location (%d,%d)\n",
+             location->x, location->y);
+
     target->x = location->x;
     target->y = location->y;
   }
   else if (get_target_result == get_target_DOOR)
   {
+    if (vischar == &state->vischars[0])
+      printf("(hero) get_target returned door (%d,%d)\n",
+             doorpos->x, doorpos->y);
+
     target->x = doorpos->x;
     target->y = doorpos->y;
+  }
+  else
+  {
+    if (vischar == &state->vischars[0])
+      printf("(hero) get_target returned route ends\n");
   }
 
   if (get_target_result == get_target_ROUTE_ENDS)
@@ -8365,6 +8384,8 @@ uint8_t get_target(tgestate_t       *state,
   *doorpos  = NULL; /* Conv: Added. */
   *location = NULL; /* Conv: Added. */
 
+  printf("get_target(route.index=%d, route.step=%d)\n", route->index, route->step);
+
   routeindex = route->index;
   if (routeindex == route_WANDER)
   {
@@ -9423,6 +9444,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
+  if (vischar == &state->vischars[0])
+    printf("(hero) target_reached\n");
+
   // In the original code HL is IY + 4 on entry.
   // In this version we replace HL references with IY ones.
 
@@ -9589,6 +9613,9 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
   ASSERT_VISCHAR_VALID(vischar);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
+
+  if (vischar == &state->vischars[0])
+    printf("(hero) route_ended\n");
 
   /* If not the hero's vischar ... */
   if (route != &state->vischars[0].route) /* Conv: was (L != 2) */
