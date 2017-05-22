@@ -466,7 +466,8 @@ typedef struct vischar
 
   /** $8018,$801A 16-bit screen x,y coord */
   // in_permitted_area testing this against absolute values to determine the position tells me
-  // that this is a isometric projected map coord, not a screen coord as previously suspected
+  // that this is a isometric projected map coord with 3 bits of fixed point, not a screen coord as previously suspected
+  // setup_vischar_plotting divides it by 8
   bigxy_t         floogle; // scaled 13.3 format
 
   /** $801C current room index */
