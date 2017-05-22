@@ -7525,9 +7525,9 @@ int vischar_visible(tgestate_t      *state,
 
   /* Width part. */
 
-  /* Conv: Re-read of map_position_related removed. */
   /* Bail out if the vischar is off the right hand side of the screen. */
-  // like: if (state->screenpos.x > state->map_position.x + state->columns) ...
+  /* Conv: Re-read of map_position removed. */
+  // similar to "if (state->screenpos.x > state->map_position.x + state->columns)" but we save the computed value and reuse it below
   amount_visible_right = state->map_position.x + state->columns - state->screenpos.x; // columns was 24
   if (amount_visible_right <= 0)
     goto invisible;
