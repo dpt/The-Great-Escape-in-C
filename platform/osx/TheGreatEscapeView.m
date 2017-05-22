@@ -223,7 +223,7 @@ failure:
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(0, w, 0, h, 0.1, 1);
-  glPixelZoom(1, -1);
+  glPixelZoom(1.0, -1.0); // needed?
   glRasterPos3f(0, h - 1, -0.3);
 }
 
