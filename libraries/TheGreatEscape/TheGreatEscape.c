@@ -7637,7 +7637,7 @@ void restore_tiles(tgestate_t *state)
     state->screenpos.y = vischar->floogle.y >> 3; // divide by 8 (16-to-8)
     state->screenpos.x = vischar->floogle.x >> 3; // divide by 8 (16-to-8)
 
-    if (vischar_visible(state, vischar, &clipped_width, &clipped_height) == 255)
+    if (vischar_visible(state, vischar, &clipped_width, &clipped_height))
       goto next; /* invisible */
 
     // $BBD3
@@ -11909,7 +11909,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
 
-  if (vischar_visible(state, vischar, &clipped_width, &clipped_height) != 0) // used A as temporary
+  if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
     return 0; /* invisible */
 
   // PUSH clipped_width
