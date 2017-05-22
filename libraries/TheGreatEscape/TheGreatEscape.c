@@ -8414,14 +8414,15 @@ uint8_t get_target(tgestate_t       *state,
     else
       routebyte = routebytes[step]; // HL was temporary
 
-    if (routebyte == routebyte_END) // needs a better end byte
-    {
+    if (routebyte == routebyte_END)
       /* Route byte == 255: End of route */
       return get_target_ROUTE_ENDS; /* Conv: Was a goto to a return. */
-    }
-    else if ((routebyte & ~door_REVERSE) < 40) // (0..39 || 128..167)
+
+    routebyte &= ~door_REVERSE;
+    if (routebyte < 40) // (0..39 || 128..167)
     {
       /* Route byte < 40: A door */
+      routebyte = routebytes[step];
       if (route->index & route_REVERSED)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
