@@ -7521,7 +7521,7 @@ int vischar_visible(tgestate_t      *state,
   *clipped_width  = 65535;
   *clipped_height = 65535;
 
-  /* Conv: Jump to exit for invisible case turned into immediate returns. */
+  /* Conv: Jump to exit for invisible case turned into immediate returns. */ // doesn't seem true, or i've reversed the sense of the comment when writing it
 
   /* Width part. */
 
