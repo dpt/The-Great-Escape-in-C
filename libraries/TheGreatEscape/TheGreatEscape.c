@@ -9068,14 +9068,11 @@ void automatics(tgestate_t *state)
         if (state->red_flag || state->automatic_player_counter > 0)
           guards_follow_suspicious_character(state, vischar);
 
-        if (character >= character_16_GUARD_DOG_1)
-        {
-          /* Guard dogs 1..4 (characters 16..19). */
-
-          /* Is the food nearby? */
-          if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
-            vischar->flags = vischar_FLAGS_DOG_FOOD; // guards dogs are near the food (not necesarily poisoned?)
-        }
+        /* If there is (poisoned) food nearby then put the guard dogs
+         * (characters 16..19) into vischar_FLAGS_DOG_FOOD pursue mode. */
+        if (character >= character_16_GUARD_DOG_1 &&
+            state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
+            vischar->flags = vischar_FLAGS_DOG_FOOD;
       }
 
       character_behaviour(state, vischar);
