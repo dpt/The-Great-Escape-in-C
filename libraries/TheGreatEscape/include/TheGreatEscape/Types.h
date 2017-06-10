@@ -186,8 +186,8 @@ enum vischar_flags
   vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only */
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only */
 
-  /* Four persuit modes. */
-  vischar_FLAGS_PURSUE                 = 1 << 0, /* NPCs only */ // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_persue.
+  /* Four pursuit modes. */
+  vischar_FLAGS_PURSUE                 = 1 << 0, /* NPCs only */ // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_pursue
   vischar_FLAGS_HASSLE                 = 2 << 0, /* NPCs only */ // this flag is set in guards_follow_suspicious_character when a hostile is following the hero
   vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPCs only */ // set when food is in the vicinity of a dog
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
