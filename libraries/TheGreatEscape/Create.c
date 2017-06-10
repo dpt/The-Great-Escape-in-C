@@ -321,6 +321,9 @@ static void tge_initialise(tgestate_t *state)
   state->messages.display_index = 1 << 7; // message_NEXT
   state->messages.queue_pointer = &state->messages.queue[2];
 
+  /* $A130 */
+  state->bell = bell_STOP;
+
   /* $A13C */
   state->morale = morale_MAX;
 

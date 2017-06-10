@@ -9035,7 +9035,7 @@ void automatics(tgestate_t *state)
   state->entered_move_characters = 0;
 
   /* If the bell is ringing, hostiles pursue. */
-  if (state->bell)
+  if (state->bell == bell_RING_PERPETUAL)
     hostiles_pursue(state);
 
   /* If food was dropped then count down until it is discovered. */
