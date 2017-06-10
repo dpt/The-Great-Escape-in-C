@@ -10345,7 +10345,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
 
   if (!state->red_flag)
   {
-    /* Hostiles *not* in guard towers pursue the hero. */
+    /* Hostiles *not* in guard towers hassle the hero. */
     if (vischar->mi.pos.height < 32) /* uses A as temporary */
       vischar->flags = vischar_FLAGS_HASSLE;
   }
