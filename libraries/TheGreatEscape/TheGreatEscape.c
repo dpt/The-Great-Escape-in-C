@@ -11122,14 +11122,9 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
   if ((x = (vischar->floogle.x & 7)) < 4)
   {
-    uint8_t self_E161, self_E143;
-
     /* Shift right? */
 
-    x = (~x & 3) * 8; // jump table offset (on input, A is 0..3)
-
-    self_E161 = x; // self-modify: jump into mask rotate
-    self_E143 = x; // self-modify: jump into bitmap rotate
+    x = ~x & 3; // jump table offset (on input, A is 0..3)
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -11144,6 +11139,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       uint8_t bm0, bm1, bm2, bm3;         // was B, C, E, D
       uint8_t mask0, mask1, mask2, mask3; // was B', C', E', D'
       int     carry = 0;
+      uint8_t p;                          /* was A */
 
       /* Load bitmap bytes into B,C,E. */
       bm0 = *bitmapptr++;
@@ -11168,21 +11164,21 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       bm3 = 0;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E143 <= 0)
+      if (x <= 0)
       {
         SRL(bm0);
         RR(bm1);
         RR(bm2);
         RR(bm3);
       }
-      if (self_E143 <= 8)
+      if (x <= 1)
       {
         SRL(bm0);
         RR(bm1);
         RR(bm2);
         RR(bm3);
       }
-      if (self_E143 <= 16)
+      if (x <= 2)
       {
         SRL(bm0);
         RR(bm1);
@@ -11195,21 +11191,21 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       mask3 = 0xFF;
       carry = 1;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E161 <= 0)
+      if (x <= 0)
       {
         RR(mask0);
         RR(mask1);
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 <= 8)
+      if (x <= 1)
       {
         RR(mask0);
         RR(mask1);
         RR(mask2);
         RR(mask3);
       }
-      if (self_E161 <= 16)
+      if (x <= 2)
       {
         RR(mask0);
         RR(mask1);
@@ -11219,30 +11215,30 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       /* Plot, using foreground mask. */
 
-      x = MASK(bm0, mask0);
+      p = MASK(bm0, mask0);
       foremaskptr++;
       if (state->enable_E188)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm1, mask1);
+      p = MASK(bm1, mask1);
       foremaskptr++;
       if (state->enable_E199)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm2, mask2);
+      p = MASK(bm2, mask2);
       foremaskptr++;
       if (state->enable_E1AA)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm3, mask3);
+      p = MASK(bm3, mask3);
       foremaskptr++;
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E1BF)
-        *screenptr = x;
+        *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
@@ -11252,15 +11248,9 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
   }
   else
   {
-    uint8_t self_E22A, self_E204;
-
     /* Shift left? */
 
-    x -= 4; // (on input, A is 4..7)
-    x = (x << 3) | (x >> 5); // was 3 x RLCA
-
-    self_E22A = x; // self-modify: jump into mask rotate
-    self_E204 = x; // self-modify: jump into bitmap rotate
+    x -= 4; // (on input, A is 4..7 -> 0..3)
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -11276,6 +11266,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       uint8_t bm0, bm1, bm2, bm3;         // was E, C, B, D
       uint8_t mask0, mask1, mask2, mask3; // was E', C', B', D'
       int     carry = 0;
+      uint8_t p;                          /* was A */
 
       /* Load bitmap bytes into B,C,E. */
       bm2 = *bitmapptr++;
@@ -11300,28 +11291,28 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       bm3 = 0;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E204 <= 0)
+      if (x <= 0)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 <= 8)
+      if (x <= 1)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 <= 16)
+      if (x <= 2)
       {
         SLA(bm0);
         RL(bm1);
         RL(bm2);
         RL(bm3);
       }
-      if (self_E204 <= 24)
+      if (x <= 3)
       {
         SLA(bm0);
         RL(bm1);
@@ -11334,28 +11325,28 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       mask3 = 0xFF;
       carry = 1;
       // Conv: Replaced self-modified goto with if-else chain.
-      if (self_E22A <= 0)
+      if (x <= 0)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A <= 8)
+      if (x <= 1)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A <= 16)
+      if (x <= 2)
       {
         RL(mask0);
         RL(mask1);
         RL(mask2);
         RL(mask3);
       }
-      if (self_E22A <= 24)
+      if (x <= 3)
       {
         RL(mask0);
         RL(mask1);
@@ -11365,29 +11356,29 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       /* Plot, using foreground mask. */
 
-      x = MASK(bm3, mask3);
+      p = MASK(bm3, mask3);
       foremaskptr++;
       if (state->enable_E259)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm2, mask2);
+      p = MASK(bm2, mask2);
       foremaskptr++;
       if (state->enable_E26A)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm1, mask1);
+      p = MASK(bm1, mask1);
       foremaskptr++;
       if (state->enable_E27B)
-        *screenptr = x;
+        *screenptr = p;
       screenptr++;
 
-      x = MASK(bm0, mask0);
+      p = MASK(bm0, mask0);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
       if (state->enable_E290)
-        *screenptr = x;
+        *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
@@ -11439,7 +11430,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   const uint8_t *bitmapptr;   /* was ? */
   const uint8_t *foremaskptr; /* was ? */
   uint8_t       *screenptr;   /* was ? */
-  uint8_t        self_E2DC, self_E2F4;
+  uint8_t        p;           /* was A */
 
   assert(state != NULL);
   // assert(x);
@@ -11447,10 +11438,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   //ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
-  x = (~x & 3) * 6; // jump table offset (on input, A is 0..3 => 3..0) // 6 = length of asm chunk
-
-  self_E2DC = x; // self-modify: jump into mask rotate
-  self_E2F4 = x; // self-modify: jump into bitmap rotate
+  x = (~x & 3); // jump table offset (on input, A is 0..3 => 3..0)
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -11491,19 +11479,19 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
     carry = 1; // mask OFF
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E2DC <= 0)
+    if (x <= 0)
     {
       RR(mask0);
       RR(mask1);
       RR(mask2);
     }
-    if (self_E2DC <= 6)
+    if (x <= 1)
     {
       RR(mask0);
       RR(mask1);
       RR(mask2);
     }
-    if (self_E2DC <= 12)
+    if (x <= 2)
     {
       RR(mask0);
       RR(mask1);
@@ -11515,19 +11503,19 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     bm2 = 0; // all bits clear => pixels OFF
     //carry = 0; in original code but never read in practice
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E2F4 <= 0)
+    if (x <= 0)
     {
       SRL(bm0);
       RR(bm1);
       RR(bm2);
     }
-    if (self_E2F4 <= 6)
+    if (x <= 1)
     {
       SRL(bm0);
       RR(bm1);
       RR(bm2);
     }
-    if (self_E2F4 <= 12)
+    if (x <= 2)
     {
       SRL(bm0);
       RR(bm1);
@@ -11540,23 +11528,23 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    x = MASK(bm0, mask0);
+    p = MASK(bm0, mask0);
     foremaskptr++;
     if (state->enable_E319)
-      *screenptr = x;
+      *screenptr = p;
     screenptr++;
 
-    x = MASK(bm1, mask1);
+    p = MASK(bm1, mask1);
     foremaskptr++;
     if (state->enable_E32A)
-      *screenptr = x;
+      *screenptr = p;
     screenptr++;
 
-    x = MASK(bm2, mask2);
+    p = MASK(bm2, mask2);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_E340)
-      *screenptr = x;
+      *screenptr = p;
 
     screenptr += state->columns - 2; // was 22
     if (iters > 1)
@@ -11581,7 +11569,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   const uint8_t *bitmapptr;   /* was ? */
   const uint8_t *foremaskptr; /* was ? */
   uint8_t       *screenptr;   /* was ? */
-  uint8_t        self_E39A, self_E37D;
+  uint8_t        p;           /* was A */
 
   assert(state != NULL);
   // assert(x);
@@ -11589,10 +11577,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
-  x = (x - 4) * 6; // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
-
-  self_E39A = x; // self-modify: jump into bitmap rotate
-  self_E37D = x; // self-modify: jump into mask rotate
+  x = (x - 4); // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -11629,25 +11614,25 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
     carry = 1; // mask OFF
     // Conv: Replaced self-modified goto with if-else chain.
-    if (self_E39A <= 0)
+    if (x <= 0)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A <= 6)
+    if (x <= 1)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A <= 12)
+    if (x <= 2)
     {
       RL(mask0);
       RL(mask1);
       RL(mask2);
     }
-    if (self_E39A <= 18)
+    if (x <= 3)
     {
       RL(mask0);
       RL(mask1);
@@ -11658,25 +11643,25 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     bm2 = 0; // all bits clear => pixels OFF
     // no carry reset in this variant?
-    if (self_E37D <= 0)
+    if (x <= 0)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D <= 6)
+    if (x <= 1)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D <= 12)
+    if (x <= 2)
     {
       SLA(bm0);
       RL(bm1);
       RL(bm2);
     }
-    if (self_E37D <= 18)
+    if (x <= 3)
     {
       SLA(bm0);
       RL(bm1);
@@ -11688,23 +11673,23 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
 
-    x = MASK(bm2, mask2); // 'x' should probably be another variable here
+    p = MASK(bm2, mask2); // 'x' should probably be another variable here
     foremaskptr++;
     if (state->enable_E3C5)
-      *screenptr = x;
+      *screenptr = p;
     screenptr++;
 
-    x = MASK(bm1, mask1);
+    p = MASK(bm1, mask1);
     foremaskptr++;
     if (state->enable_E3D6)
-      *screenptr = x;
+      *screenptr = p;
     screenptr++;
 
-    x = MASK(bm0, mask0);
+    p = MASK(bm0, mask0);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_E3EC)
-      *screenptr = x;
+      *screenptr = p;
 
     screenptr += state->columns - 2; // was 22
     if (iters > 1)
