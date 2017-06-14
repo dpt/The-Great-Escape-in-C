@@ -7816,13 +7816,13 @@ void spawn_characters(tgestate_t *state)
   characterstruct_t *charstr;                       /* was HL */
   uint8_t            iters;                         /* was B */
   room_t             room;                          /* was A */
-  uint8_t            y, x;                          /* was C, C */
+  uint8_t            y, x;                          /* was C, A */
 
   assert(state != NULL);
 
   /* Form a clamped map position in DE. */
-  map_y = state->map_position.y;
   map_x = state->map_position.x;
+  map_y = state->map_position.y;
   map_x_clamped = (map_x < 8) ? 0 : map_x;
   map_y_clamped = (map_y < 8) ? 0 : map_y;
 
@@ -7841,17 +7841,12 @@ void spawn_characters(tgestate_t *state)
           /* Outdoors. */
 
           /* Screen Y calculation. */
-          y = 0x200 - charstr->pos.x - charstr->pos.y - charstr->pos.height; // 0x200 is represented as zero in original code.
+          y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height; // 0x100 is represented as zero in original code. (CHECK 0x100 is right)
           if (y <= map_y_clamped || y > MIN(map_y_clamped + 32, 0xFF))
             goto skip; // check
 
-          // move down and to the left
-          // why move the character here?
-          charstr->pos.y += 64;
-          charstr->pos.x -= 64;
-
           /* Screen X calculation. */
-          x = 0x80;
+          x = (0x40 - charstr->pos.x + charstr->pos.y) * 2;
           if (x <= map_x_clamped || x > MIN(map_x_clamped + 40, 0xFF))
             goto skip; // check
         }
