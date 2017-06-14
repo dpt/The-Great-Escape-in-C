@@ -56,6 +56,12 @@ do {                                                  \
   assert((p) < &state->vischars[vischars_LENGTH]);    \
 } while (0)
 
+#define ASSERT_ITEMSTRUCT_VALID(p)                    \
+do {                                                  \
+  assert((p) >= &state->item_structs[0]);             \
+  assert((p) < &state->item_structs[item__LIMIT]);    \
+} while (0)
+
 // non-state
 
 #define ASSERT_CHARACTER_VALID(c)                             \
