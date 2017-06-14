@@ -312,7 +312,7 @@ void setup_movable_item(tgestate_t          *state,
 
   assert(state       != NULL);
   assert(movableitem != NULL);
-  assert(character >= 0 && character < character__LIMIT);
+  ASSERT_CHARACTER_VALID(character);
 
   /* The movable item uses the first non-player visible character slot. */
   vischar1 = &state->vischars[1];
