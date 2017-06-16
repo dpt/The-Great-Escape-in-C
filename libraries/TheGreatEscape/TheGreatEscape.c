@@ -2892,7 +2892,7 @@ void end_of_breakfast(tgestate_t *state)
 
   /* Redraw current room if the game is showing an affected scene. */
   if (state->room_index >= room_1_HUT1RIGHT &&
-      state->room_index < room_28_HUT1LEFT)
+      state->room_index <= room_28_HUT1LEFT)
   {
     setup_room(state);
     plot_interior_tiles(state);
