@@ -11247,7 +11247,8 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
         *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      if (iters > 1)
+        ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11387,7 +11388,8 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
         *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      if (iters > 1)
+        ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
