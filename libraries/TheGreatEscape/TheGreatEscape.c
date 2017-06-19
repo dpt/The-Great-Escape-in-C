@@ -5542,7 +5542,7 @@ int collision(tgestate_t *state)
 
   // Iterate over characters being collided with (e.g. stove).
   vischar = &state->vischars[0];
-  iters = vischars_LENGTH - 1;
+  iters = vischars_LENGTH;
   do
   {
     if (vischar->flags & vischar_FLAGS_NO_COLLIDE) // sampled = $8001, $8021, ...
