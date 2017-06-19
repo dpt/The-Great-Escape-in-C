@@ -184,6 +184,7 @@ void enter_room(tgestate_t *state)
 
   state->game_window_offset.x = 0;
   state->game_window_offset.y = 0;
+  // FUTURE: replace with call to setup_room_and_plot
   setup_room(state);
   plot_interior_tiles(state);
   state->map_position.x = 116;
@@ -1133,6 +1134,7 @@ void pick_up_item(tgestate_t *state)
   else
   {
     /* Indoors. */
+    // FUTURE: replace with call to setup_room_and_plot
     setup_room(state);
     plot_interior_tiles(state);
     attrs = choose_game_window_attributes(state);
@@ -1713,6 +1715,7 @@ void process_player_input(tgestate_t *state)
         state->hero_in_bed = 0;
       }
 
+      // FUTURE: replace with call to setup_room_and_plot
       setup_room(state);
       plot_interior_tiles(state);
     }
@@ -2832,6 +2835,7 @@ void wake_up(tgestate_t *state)
   roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
   if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
   {
+    // FUTURE: replace with call to setup_room_and_plot
     setup_room(state);
     plot_interior_tiles(state);
   }
@@ -2894,6 +2898,7 @@ void end_of_breakfast(tgestate_t *state)
   if (state->room_index >= room_1_HUT1RIGHT &&
       state->room_index <= room_28_HUT1LEFT)
   {
+    // FUTURE: replace with call to setup_room_and_plot
     setup_room(state);
     plot_interior_tiles(state);
   }
@@ -3397,7 +3402,7 @@ void character_sit_sleep_common(tgestate_t *state,
     vc = structof(route, vischar_t, route);
     vc->room = room_NONE;
 
-    select_room_and_plot(state);
+    setup_room_and_plot(state);
   }
 }
 
@@ -3406,7 +3411,7 @@ void character_sit_sleep_common(tgestate_t *state,
  *
  * \param[in] state Pointer to game state.
  */
-void select_room_and_plot(tgestate_t *state)
+void setup_room_and_plot(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -3465,7 +3470,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 
   calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
 
-  select_room_and_plot(state);
+  setup_room_and_plot(state);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6291,6 +6296,7 @@ void action_shovel(tgestate_t *state)
   /* Remove blockage graphic. */
   roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_STRAIGHT_TUNNEL_SW_NE;
 
+  // FUTURE: setup_room_and_plot could replace the setup_room and plot_interior_tiles calls
   setup_room(state);
   choose_game_window_attributes(state);
   plot_interior_tiles(state);

@@ -291,7 +291,7 @@ void character_sleeps(tgestate_t *state,
 void character_sit_sleep_common(tgestate_t *state,
                                 room_t      room,
                                 route_t    *route);
-void select_room_and_plot(tgestate_t *state);
+void setup_room_and_plot(tgestate_t *state);
 
 void hero_sits(tgestate_t *state);
 void hero_sleeps(tgestate_t *state);
