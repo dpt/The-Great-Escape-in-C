@@ -42,9 +42,13 @@
   tgestate_t   *game;
   
   unsigned int *pixels;
-  float         scale;
   pthread_t     thread;
   zxkeyset_t    keys;
+
+  float         scale;
+
+  int           speed;
+  BOOL          paused;
 }
 
 @end
@@ -74,7 +78,19 @@ static void draw_handler(unsigned int *pixels, zxbox_t *dirty, void *opaque)
 
 static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 {
-  usleep(duration); // duration is taken literally for now
+  TheGreatEscapeView *view = (__bridge id) opaque;
+
+  if (view->paused)
+  {
+    // Check twice per second for unpausing
+    // FIXME: Slow spinwait without any synchronisation
+    while (view->paused)
+      usleep(500000);
+  }
+  else
+  {
+    usleep(duration * 100 / view->speed);
+  }
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -90,8 +106,9 @@ static int key_handler(uint16_t port, void *opaque)
 
 static void *tge_thread(void *arg)
 {
-  tgestate_t *game = arg;
-  
+  TheGreatEscapeView *view = (__bridge id) arg;
+  tgestate_t         *game = view->game;
+
   tge_setup(game);
 
   for (;;) // while (!quit)
@@ -128,8 +145,15 @@ static void *tge_thread(void *arg)
 
   zx     = NULL;
   game   = NULL;
+
   pixels = NULL;
+  thread = NULL;
+  keys   = 0ULL;
+
   scale  = 1.0f;
+
+  speed  = 100;
+  paused = NO;
 
 
   NSWindow *w = [self window];
@@ -153,7 +177,7 @@ static void *tge_thread(void *arg)
   if (game == NULL)
     goto failure;
   
-  pthread_create(&thread, NULL /* pthread_attr_t */, tge_thread, game);
+  pthread_create(&thread, NULL /* pthread_attr_t */, tge_thread, (__bridge void *)(self));
   
   return;
   
@@ -308,6 +332,47 @@ failure:
   [[self window] setContentSize:size];
 
   [self setFrame:NSMakeRect(0, 0, size.width, size.height)];
+}
+
+- (IBAction)setSpeed:(id)sender
+{
+  const int max_speed = 100000; // percent
+
+  NSInteger tag;
+
+  tag = [sender tag];
+
+  if (tag == 0) // pause/unpause
+  {
+    paused = !paused;
+    return;
+  }
+
+  // any other action results in unpausing
+  paused = NO;
+
+  switch (tag)
+  {
+    default:
+    case 100: // normal speed
+      speed = 100;
+      break;
+
+    case 1: // increase speed
+      speed += 25;
+      break;
+
+    case 2: // decrease speed
+      speed -= 25;
+      break;
+
+    case -1: // maximum speed
+      speed = max_speed;
+      break;
+  }
+
+  if (speed > max_speed)
+    speed = max_speed;
 }
 
 - (void)keyDown:(NSEvent*)event

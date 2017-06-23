@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11129.15" systemVersion="15F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11129.15"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -90,6 +91,40 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Speed" id="HeK-po-uS9" userLabel="Speed">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Speed" id="3hW-Ob-ROY">
+                        <items>
+                            <menuItem title="Pause" keyEquivalent="p" id="qOr-pu-Obp">
+                                <connections>
+                                    <action selector="setSpeed:" target="537" id="xP1-Ks-1is"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="mat-6x-6rh"/>
+                            <menuItem title="100%" tag="100" keyEquivalent="-" id="hvk-Sm-oMC">
+                                <connections>
+                                    <action selector="setSpeed:" target="537" id="OxB-XH-JJo"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Maximum" tag="-1" keyEquivalent="=" id="RbD-x3-pLf">
+                                <connections>
+                                    <action selector="setSpeed:" target="537" id="UXD-kz-pp3"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="tmV-v2-PIo"/>
+                            <menuItem title="Faster" tag="1" keyEquivalent="]" id="aIM-kk-uf7">
+                                <connections>
+                                    <action selector="setSpeed:" target="537" id="ypK-Wq-frL"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Slower" tag="2" keyEquivalent="[" id="wlM-Rt-uEM">
+                                <connections>
+                                    <action selector="setSpeed:" target="537" id="WcH-RX-fAD"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="Window" id="19">
                     <menu key="submenu" title="Window" systemMenu="window" id="24">
                         <items>
@@ -146,10 +181,5 @@
                 <outlet property="window" destination="371" id="532"/>
             </connections>
         </customObject>
-        <menuItem title="Actual size" keyEquivalent="0" id="pli-u3-6tU">
-            <connections>
-                <action selector="zoom:" target="537" id="ljG-go-bVw"/>
-            </connections>
-        </menuItem>
     </objects>
 </document>
