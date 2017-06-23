@@ -5914,7 +5914,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   do
   {
     if ((door_pos->room_and_flags & door_FLAGS_MASK_DIRECTION) == direction)
-      if (door_in_range(state, door_pos))
+      if (door_in_range(state, door_pos) == 0)
         goto found;
     door_pos += 2;
   }
@@ -5945,14 +5945,14 @@ found:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B252: Door in range. Called for exterior doors only.
+ * $B252: Test whether an exterior door is in range.
  *
  * (saved_X,saved_Y) within (-2,+2) of HL[1..] scaled << 2
  *
  * \param[in] state Pointer to game state.
  * \param[in] door  Pointer to door_t. (was HL)
  *
- * \return 1 if in range, 0 if not. (was carry flag)
+ * \return Zero if door is in range, non-zero otherwise. (was carry flag)
  */
 int door_in_range(tgestate_t *state, const door_t *door)
 {
@@ -5965,13 +5965,13 @@ int door_in_range(tgestate_t *state, const door_t *door)
 
   x = multiply_by_4(door->pos.x);
   if (state->saved_pos.pos.x < x - halfdist || state->saved_pos.pos.x >= x + halfdist)
-    return 0;
+    return 1;
 
   y = multiply_by_4(door->pos.y);
   if (state->saved_pos.pos.y < y - halfdist || state->saved_pos.pos.y >= y + halfdist)
-    return 0;
+    return 1;
 
-  return 1;
+  return 0;
 }
 
 /* ----------------------------------------------------------------------- */
