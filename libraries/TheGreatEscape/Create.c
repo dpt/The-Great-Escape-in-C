@@ -373,10 +373,9 @@ static void tge_initialise(tgestate_t *state)
          sizeof(locked_doors));
 
 #ifndef NDEBUG
-  // temporary
-  memset(state->tile_buf,   0x55,  state->columns * state->rows);
-  memset(state->window_buf, 0x55, (state->columns * state->rows * 8));
-  memset(state->map_buf,    0x55,  state->st_columns * state->st_rows);
+  memset(state->tile_buf,   0x55, state->tile_buf_size);
+  memset(state->window_buf, 0x55, state->window_buf_size);
+  memset(state->map_buf,    0x55, state->map_buf_size);
 #endif
 }
 
@@ -390,6 +389,11 @@ static void tge_initialise(tgestate_t *state)
 TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
 {
   tgestate_t       *state                     = NULL;
+  size_t            game_window_start_offsets_size;
+  size_t            tile_buf_size;
+  size_t            window_buf_stride;
+  size_t            window_buf_size;
+  size_t            map_buf_size;
   uint16_t         *game_window_start_offsets = NULL;
   tileindex_t      *tile_buf                  = NULL;
   uint8_t          *window_buf                = NULL;
@@ -426,12 +430,23 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
   state->st_columns = 7;
   state->st_rows    = 5;
 
-  /* Allocate buffers. */
+  /* Size and allocate buffers. */
 
-  game_window_start_offsets = calloc(1, (size_t)((state->rows - 1) * 8) * sizeof(*game_window_start_offsets));
-  tile_buf                  = calloc(1, (size_t)(state->columns * state->rows));
-  window_buf                = calloc(1, (size_t)(state->columns * state->rows * 8));
-  map_buf                   = calloc(1, (size_t)(state->st_columns * state->st_rows));
+  game_window_start_offsets_size = ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets);
+  tile_buf_size                  = state->columns * state->rows;
+  window_buf_stride              = state->columns * 8;
+  window_buf_size                = (window_buf_stride * state->rows) + 8;
+  map_buf_size                   = state->st_columns * state->st_rows;
+
+  state->tile_buf_size     = tile_buf_size;
+  state->window_buf_stride = window_buf_stride;
+  state->window_buf_size   = window_buf_size;
+  state->map_buf_size      = map_buf_size;
+
+  game_window_start_offsets = calloc(1, game_window_start_offsets_size);
+  tile_buf                  = calloc(1, tile_buf_size);
+  window_buf                = calloc(1, window_buf_size);
+  map_buf                   = calloc(1, map_buf_size);
 
   if (game_window_start_offsets == NULL ||
       tile_buf                  == NULL ||

@@ -35,19 +35,19 @@ do {                                                  \
 #define ASSERT_TILE_BUF_PTR_VALID(p)                  \
 do {                                                  \
   assert((p) >= state->tile_buf);                     \
-  assert((p) < state->tile_buf + (state->columns * state->rows)); \
+  assert((p) < state->tile_buf + state->tile_buf_size); \
 } while (0)
 
 #define ASSERT_WINDOW_BUF_PTR_VALID(p)                \
 do {                                                  \
   assert((p) >= state->window_buf);                   \
-  assert((p) < state->window_buf + (state->columns * state->rows * 8)); \
+  assert((p) < state->window_buf + state->window_buf_size); \
 } while (0)
 
 #define ASSERT_MAP_BUF_PTR_VALID(p)                   \
 do {                                                  \
   assert((p) >= state->map_buf);                      \
-  assert((p) < state->map_buf + (state->st_columns * state->st_rows)); \
+  assert((p) < state->map_buf + state->map_buf_size); \
 } while (0)
 
 #define ASSERT_VISCHAR_VALID(p)                       \

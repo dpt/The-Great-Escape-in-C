@@ -28,6 +28,11 @@ struct tgestate
 
   jmp_buf         jmpbuf_main;
 
+  size_t          tile_buf_size; /* byte length of tile_buf */
+  size_t          window_buf_stride; /* byte length of window_buf 's stride*/
+  size_t          window_buf_size; /* byte length of window_buf */
+  size_t          map_buf_size; /* byte length of map_buf */
+
 
   /* REGISTER VARIABLES */
   vischar_t      *IY;
@@ -363,15 +368,15 @@ struct tgestate
   uint16_t        music_channel1_index;
 
 
-  /* replacing direct access to $F0F8 .. $F28F. 24 x 17. */
+  /* replacing direct access to $F0F8 .. $F28F. 24 x 17 = 408 */
   tileindex_t    *tile_buf;
 
-  /* replacing direct access to $F290 .. $FE8F. 24 x 17 x 8. */
+  /* replacing direct access to $F290 .. $FF4F. 24 x 17 x 8 = 3,264 */
   uint8_t        *window_buf; // tilerow_t?
 
-  // $FE90 - 200 bytes unaccounted for
+  // $FF50 - 8 bytes unaccounted for .. or that's plotter slack space?
 
-  /* replacing direct access to $FF58 .. $FF7A. 7 x 5. */
+  /* replacing direct access to $FF58 .. $FF7A. 7 x 5 = 35 */
   supertileindex_t *map_buf;
 };
 

@@ -450,7 +450,7 @@ void wipe_visible_tiles(tgestate_t *state)
 {
   assert(state != NULL);
 
-  memset(state->tile_buf, 0, state->columns * state->rows); /* was 24 * 17 */
+  memset(state->tile_buf, 0, state->tile_buf_size); /* was 24 * 17 */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4317,7 +4317,7 @@ uint8_t *plot_tile_then_advance(tgestate_t             *state,
 {
   assert(state != NULL);
 
-  return plot_tile(state, tile_index, maptiles, scr) + state->columns * 8 - 1; // -1 compensates the +1 in plot_tile // was 191
+  return plot_tile(state, tile_index, maptiles, scr) + state->window_buf_stride - 1; // -1 compensates the +1 in plot_tile // was 191
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4868,7 +4868,7 @@ void zoombox_fill(tgestate_t *state)
   uint8_t  *prev_dst;   /* was stack */
 
   /* Conv: Simplified calculation to use a single multiply. */
-  offset = state->zoombox.y * state->columns * 8 + state->zoombox.x;
+  offset = state->zoombox.y * state->window_buf_stride + state->zoombox.x;
   src = &state->window_buf[offset + 1];
   ASSERT_WINDOW_BUF_PTR_VALID(src);
   dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
@@ -7716,7 +7716,7 @@ clamp_height: // was $BBF8
     else
       y = 0; // was interleaved
 
-    windowbuf = &state->window_buf[y * state->columns * 8 + x];
+    windowbuf = &state->window_buf[y * state->window_buf_stride + x];
     ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
 
     tilebuf = &state->tile_buf[x + y * state->columns];
@@ -10924,7 +10924,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0)
-    y = (state->screenpos.y - state->map_position.y) * 24 * 8; // temp: HL
+    y = (state->screenpos.y - state->map_position.y) * state->window_buf_stride; // temp: HL // move by buffer rows
 
   // state->screenpos.y - state->map_position.y never seems to exceed $10 in the original game, but does for me
   // state->screenpos.y seems to match, but state->map_position.y is 2 bigger
@@ -11984,7 +11984,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   assert(y >= -32768);
   assert(y < 32678);
 
-  uint8_t *winbufend = &state->window_buf[state->columns * state->rows * 8];
+  uint8_t *winbufend = &state->window_buf[state->window_buf_size];
   state->window_buf_pointer = &state->window_buf[x + y]; // screen buffer start address
   uint8_t *winbufptr = state->window_buf_pointer + clipped_height * state->columns - 1; // clipped_height right?
   if (winbufptr >= winbufend)
