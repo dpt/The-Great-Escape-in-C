@@ -10541,9 +10541,9 @@ void item_discovered(tgestate_t *state, item_t item)
   if (item == item_NONE)
     return;
 
-  ASSERT_ITEM_VALID(item);
-
   item &= itemstruct_ITEM_MASK;
+
+  ASSERT_ITEM_VALID(item);
 
   queue_message(state, message_ITEM_DISCOVERED);
   decrease_morale(state, 5);
