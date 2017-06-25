@@ -300,7 +300,24 @@ static void tge_initialise(tgestate_t *state)
 
   /* Initialise in structure order. */
 
-  // Future: Table drive this copying.
+  // Future: Table drive this initialisation copying:
+  //
+  //  static const struct
+  //  {
+  //    ptrdiff_t   offset;
+  //    const void *src;
+  //    size_t      len;
+  //  }
+  //  inittab[] =
+  //  {
+  //    /* $69AE */ { offsetof(tgestate_t, movable_items), &movable_items, sizeof(movable_items) },
+  //    /* $7612 */ { offsetof(tgestate_t, character_structs), &character_structs, sizeof(character_structs) },
+  //    /* $76C8 */ { offsetof(tgestate_t, item_structs), &item_structs, sizeof(item_structs) },
+  //    /* $AD29 */ { offsetof(tgestate_t, searchlight.states), searchlight_states, sizeof(searchlight_states) },
+  //    /* $DD69 */ { offsetof(tgestate_t, item_attributes), item_attributes, sizeof(item_attributes) },
+  //    /* $EDD3 */ { offsetof(tgestate_t, game_window_start_offsets), game_window_start_offsets, sizeof(game_window_start_offsets) },
+  //    /* $F05D */ { offsetof(tgestate_t, locked_doors), locked_doors, sizeof(locked_doors) },
+  //  };
 
   /* $69AE */
   memcpy(state->movable_items, movable_items, sizeof(movable_items));
