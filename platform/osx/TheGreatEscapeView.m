@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/10/2014.
-//  Copyright (c) 2014-2016 David Thomas. All rights reserved.
+//  Copyright (c) 2014-2017 David Thomas. All rights reserved.
 //
 
 #import <ctype.h>
@@ -57,9 +57,19 @@
 
 #pragma mark - Game thread callbacks
 
+// we should probably just schedule events rather than doing UI things from
+// these handlers - these are entered from the game thread, not the UI thread
 static void draw_handler(unsigned int *pixels, zxbox_t *dirty, void *opaque)
 {
-  [(__bridge id) opaque setPixels:pixels withDirtyRect:dirty];
+  // FUTURE: Might be a better idea to save up all dirty rects then dispatch
+  // them in one go periodically (i.e. capped at 60fps).
+
+  TheGreatEscapeView *view = (__bridge id) opaque;
+
+  view->pixels = pixels;
+
+  // Odd: This refreshes the whole window no matter what size of rect is specified
+  [view setNeedsDisplayInRect:NSMakeRect(0, 0, WIDTH * view->scale, HEIGHT * view->scale)];
 }
 
 static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
@@ -97,14 +107,6 @@ static void *tge_thread(void *arg)
 // -----------------------------------------------------------------------------
 
 #pragma mark - blah
-
-- (void)setPixels:(unsigned int *)data withDirtyRect:(zxbox_t *)dirty
-{
-  pixels = data;
-
-  // Odd: This refreshes the whole window no matter what size of rect is specified
-  [self setNeedsDisplayInRect:NSMakeRect(0, 0, WIDTH * scale, HEIGHT * scale)];
-}
 
 - (void)awakeFromNib
 {

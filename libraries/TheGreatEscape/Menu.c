@@ -99,6 +99,9 @@ static void wipe_game_window(tgestate_t *state)
     memset(p, 0, state->columns - 1); /* 23 columns (not 24 like the window buffer) */
   }
   while (--iters);
+
+  // FUTURE: dirty_rect(screen + state->game_window_start_offsets[0], state->columns, (state->rows - 1) * 8);
+  state->speccy->draw(state->speccy, NULL);
 }
 
 /* ----------------------------------------------------------------------- */

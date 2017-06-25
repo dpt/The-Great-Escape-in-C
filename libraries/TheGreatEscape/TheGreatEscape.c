@@ -1455,6 +1455,9 @@ void plot_bitmap(tgestate_t    *state,
     dst = get_next_scanline(state, dst);
   }
   while (--height);
+
+  // FUTURE: state->speccy->draw(state->speccy, sleeptype_DELAY, <<dst-to-x,y>, width, height>);
+  state->speccy->draw(state->speccy, NULL);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1483,6 +1486,9 @@ void screen_wipe(tgestate_t *state,
     dst = get_next_scanline(state, dst);
   }
   while (--height);
+
+  // FUTURE: state->speccy->draw(state->speccy, sleeptype_DELAY, <<dst-to-x,y>, width, height>);
+  state->speccy->draw(state->speccy, NULL);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1558,13 +1564,6 @@ void main_loop(tgestate_t *state)
   wave_morale_flag(state);
   if ((state->game_counter & 63) == 0)
     dispatch_timed_event(state);
-
-  // This is temporary: each part of the code which updates the display
-  // should call the draw entry point with a correct dirty rectangle.
-  //
-  // Might be a better idea to save up all dirty rects then dispatch them in
-  // one go each time around this loop.
-  state->speccy->draw(state->speccy, NULL);
 
   // Conv: Added this overall slowdown factor.
   // Perhaps I should run main_loop on a timer instead of pratting around with sleep calls.
@@ -2134,6 +2133,8 @@ void set_morale_flag_screen_attributes(tgestate_t *state, attribute_t attrs)
     pattrs += state->width;
   }
   while (--iters);
+
+  state->speccy->draw(state->speccy, NULL); // FUTURE: Pass an appropriate dirty rect.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2482,6 +2483,8 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
     attributes += stride;
   }
   while (--rows);
+
+  state->speccy->draw(state->speccy, NULL); // FUTURE: Pass an appropriate dirty rect.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3873,6 +3876,9 @@ const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
     screen = plot_glyph(string++, screen);
   while (--length);
 
+  // FUTURE: Hoist this to the higher level if possible.
+  state->speccy->draw(state->speccy, NULL);
+
   return slstring + 1;
 }
 
@@ -4838,8 +4844,8 @@ void zoombox(tgestate_t *state)
     zoombox_fill(state);
     zoombox_draw_border(state);
 
+    state->speccy->draw(state->speccy, NULL); // <<scrbase>, state->zoombox.width, state->zoombox.height>
     state->speccy->sleep(state->speccy, sleeptype_DELAY, 10000 /* 1/10th sec */);
-    state->speccy->draw(state->speccy, NULL);
   }
   while (state->zoombox.height + state->zoombox.width < 35);
 }
@@ -7478,6 +7484,8 @@ pop_next:
       memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
       slp = get_next_scanline(state, slp);
     }
+
+    state->speccy->draw(state->speccy, NULL); // <<dst-to-x,y>, MASK_BUFFER_WIDTHBYTES / 8, MASK_BUFFER_HEIGHT * 8>
   }
 }
 
@@ -12207,6 +12215,8 @@ void plot_game_window(tgestate_t *state)
     }
     while (--y_iters_B);
   }
+
+  state->speccy->draw(state->speccy, NULL); // <<scrbase>, state->zoombox.width, state->zoombox.height>
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12334,8 +12344,6 @@ int user_confirm(tgestate_t *state)
   assert(state != NULL);
 
   screenlocstring_plot(state, &screenlocstring_confirm_y_or_n);
-
-  state->speccy->draw(state->speccy, NULL);
 
   /* Keyscan. */
   for (;;)
