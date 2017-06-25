@@ -262,6 +262,7 @@ void wake_up(tgestate_t *state);
 void end_of_breakfast(tgestate_t *state);
 
 void set_hero_route(tgestate_t *state, const route_t *route);
+void set_hero_route_force(tgestate_t *state, const route_t *route);
 
 void go_to_time_for_bed(tgestate_t *state);
 

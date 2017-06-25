@@ -2907,7 +2907,7 @@ void end_of_breakfast(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A33F: Set the hero's route.
+ * $A33F: Set the hero's route, unless in solitary.
  *
  * \param[in] state  Pointer to game state.
  * \param[in] route  Route.                (was BC)
@@ -2921,6 +2921,22 @@ void set_hero_route(tgestate_t *state, const route_t *route)
 
   if (state->in_solitary)
     return; /* Ignore. */
+
+  set_hero_route_force(state, route);
+}
+
+/**
+ * $A344: Set the hero's route, even if solitary.
+ *
+ * \param[in] state  Pointer to game state.
+ * \param[in] route  Route.                (was BC)
+ */
+void set_hero_route_force(tgestate_t *state, const route_t *route)
+{
+  vischar_t *vischar; /* was HL */
+
+  assert(state != NULL);
+  ASSERT_ROUTE_VALID(*route);
 
   vischar = &state->vischars[0];
 
@@ -8882,7 +8898,7 @@ void charevnt_hero_release(tgestate_t *state, route_t *route)
   state->automatic_player_counter = 0; /* Force automatic control */
 
   static const route_t route_37 = { 37, 0 }; /* was BC */
-  set_hero_route(state, &route_37); // original jump was $A344, but have moved it
+  set_hero_route_force(state, &route_37);
 }
 
 /**
