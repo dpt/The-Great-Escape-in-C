@@ -372,10 +372,12 @@ static void tge_initialise(tgestate_t *state)
          locked_doors,
          sizeof(locked_doors));
 
+#ifndef NDEBUG
   // temporary
   memset(state->tile_buf,   0x55,  state->columns * state->rows);
   memset(state->window_buf, 0x55, (state->columns * state->rows * 8));
   memset(state->map_buf,    0x55,  state->st_columns * state->st_rows);
+#endif
 }
 
 /**
