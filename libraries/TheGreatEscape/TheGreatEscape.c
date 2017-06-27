@@ -1561,13 +1561,13 @@ void main_loop(tgestate_t *state)
     nighttime(state);
   if (state->room_index > room_0_OUTDOORS)
     interior_delay_loop(state);
+  else
+    // Conv: Added this overall slowdown factor.
+    // Perhaps I should run main_loop on a timer instead of pratting around with sleep calls.
+    state->speccy->sleep(state->speccy, sleeptype_DELAY, (1 << 16)); // 1<<16 .. 1<<17
   wave_morale_flag(state);
   if ((state->game_counter & 63) == 0)
     dispatch_timed_event(state);
-
-  // Conv: Added this overall slowdown factor.
-  // Perhaps I should run main_loop on a timer instead of pratting around with sleep calls.
-  state->speccy->sleep(state->speccy, sleeptype_DELAY, 40000);
 }
 
 /* ----------------------------------------------------------------------- */
