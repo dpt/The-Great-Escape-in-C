@@ -108,9 +108,9 @@ do {                                                          \
 #define ASSERT_MAP_POSITION_VALID(p)                          \
 do {                                                          \
   assert(p.x >= 0);                                           \
-  assert(p.x < 190);                                          \
+  assert(p.x < 200);                                          \
   assert(p.y >= 6);                                           \
-  assert(p.y < 120);                                          \
+  assert(p.y < 130);                                          \
 } while (0)
 
 #define ASSERT_ROUTE_VALID(r)                                 \
