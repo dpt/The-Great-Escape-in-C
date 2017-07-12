@@ -5090,8 +5090,8 @@ void searchlight_movement(searchlight_movement_t *slstate)
     {
       slstate->counter = ++counter; /* count up */
     }
-    ptr = slstate->ptr;
-    if (ptr[counter * 2] == 255) /* end of list? */
+    ptr = slstate->ptr + counter * 2;
+    if (*ptr == 255) /* end of list? */
     {
       slstate->counter--; /* overshot? count down counter byte */
       slstate->counter |= 1 << 7; /* go negative */
