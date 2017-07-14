@@ -7472,7 +7472,7 @@ pop_next:
   while (--iters);
 
   /* Dump the mask buffer to the top-left of the screen. */
-  if (0)
+  if (/* DISABLES CODE */ (0))
   {
     uint8_t *slp;
     int      yy;
