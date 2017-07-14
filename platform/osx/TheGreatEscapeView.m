@@ -316,7 +316,7 @@ failure:
   NSString             *chars;
 
   // Ignore any modifiers except for shift.
-  modifierFlags = [event modifierFlags] & (NSDeviceIndependentModifierFlagsMask & ~NSShiftKeyMask);
+  modifierFlags = [event modifierFlags] & (NSEventModifierFlagDeviceIndependentFlagsMask & ~NSEventModifierFlagShift);
   if (modifierFlags != 0)
     return;
 
@@ -335,7 +335,7 @@ failure:
   NSString             *chars;
 
   // Ignore any modifiers except for shift.
-  modifierFlags = [event modifierFlags] & (NSDeviceIndependentModifierFlagsMask & ~NSShiftKeyMask);
+  modifierFlags = [event modifierFlags] & (NSEventModifierFlagDeviceIndependentFlagsMask & ~NSEventModifierFlagShift);
   if (modifierFlags != 0)
     return;
 
@@ -354,8 +354,8 @@ failure:
    * one of the modifier key states change, down or up. */
 
   NSEventModifierFlags modifierFlags = [event modifierFlags];
-  bool shift = (modifierFlags & NSShiftKeyMask) != 0;
-  bool alt   = (modifierFlags & NSAlternateKeyMask) != 0;
+  bool shift = (modifierFlags & NSEventModifierFlagShift) != 0;
+  bool alt   = (modifierFlags & NSEventModifierFlagOption) != 0;
 
   /* For reference:
    *
