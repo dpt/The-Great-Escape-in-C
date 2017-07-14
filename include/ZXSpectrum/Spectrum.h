@@ -79,7 +79,8 @@ enum
 typedef struct zxspectrum zxspectrum_t;
 
 /**
- * Indicates what type of operation is in progress when doing sleep (e.g. waiting for a menu, playing a sound).
+ * Indicates what type of operation is in progress when doing sleep
+ * (e.g. waiting for a menu, playing a sound).
  */
 typedef enum
 {

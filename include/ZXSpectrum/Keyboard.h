@@ -14,7 +14,7 @@ extern "C"
 #endif
 
 /**
- * One code for all 40 Spectrum keys.
+ * One code for each of the 40 Spectrum keys.
  */
 typedef enum zxkey
 {
