@@ -7253,6 +7253,8 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   vischar_t    *found_vischar;    /* was IY */
   itemstruct_t *found_itemstruct; /* was IY */
 
+  found_vischar = NULL; // shut up MSVC
+
   assert(state       != NULL);
   assert(pindex      != NULL);
   assert(pvischar    != NULL);
