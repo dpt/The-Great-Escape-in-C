@@ -1,4 +1,4 @@
-/* ZXSpectrum.c
+/* Spectrum.c
  *
  * Interface to a logical ZX Spectrum.
  *

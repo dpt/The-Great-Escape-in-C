@@ -1,4 +1,4 @@
-/* ZXScreen.h
+/* Screen.h
  *
  * ZX Spectrum screen decoding.
  *

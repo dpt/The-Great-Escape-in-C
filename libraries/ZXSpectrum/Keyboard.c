@@ -1,4 +1,4 @@
-/* ZXKeyboard.c
+/* Keyboard.c
  *
  * ZX Spectrum keyboard handling.
  *
