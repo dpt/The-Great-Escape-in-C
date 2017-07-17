@@ -48,6 +48,7 @@
 		558FC6B61A0EE15B00A4F50F /* StaticTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A61A0EE15B00A4F50F /* StaticTiles.c */; };
 		558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A71A0EE15B00A4F50F /* SuperTiles.c */; };
 		558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */; };
+		559B69731F1C30B2006FC753 /* Kempston.c in Sources */ = {isa = PBXBuildFile; fileRef = 559B69721F1C30B2006FC753 /* Kempston.c */; };
 		55AF25C51D363695002F5E0B /* Keyboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C21D363695002F5E0B /* Keyboard.c */; };
 		55AF25C61D363695002F5E0B /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C31D363695002F5E0B /* Screen.c */; };
 		55AF25C71D363695002F5E0B /* Spectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C41D363695002F5E0B /* Spectrum.c */; };
@@ -118,6 +119,8 @@
 		558FC6A61A0EE15B00A4F50F /* StaticTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = StaticTiles.c; sourceTree = "<group>"; };
 		558FC6A71A0EE15B00A4F50F /* SuperTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SuperTiles.c; sourceTree = "<group>"; };
 		558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = TheGreatEscape.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		559B69711F1C2FE6006FC753 /* Kempston.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Kempston.h; sourceTree = "<group>"; };
+		559B69721F1C30B2006FC753 /* Kempston.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Kempston.c; path = ../../libraries/ZXSpectrum/Kempston.c; sourceTree = "<group>"; };
 		55AF25BF1D363686002F5E0B /* Keyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Keyboard.h; sourceTree = "<group>"; };
 		55AF25C01D363686002F5E0B /* Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Screen.h; sourceTree = "<group>"; };
 		55AF25C11D363686002F5E0B /* Spectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spectrum.h; sourceTree = "<group>"; };
@@ -216,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				558FC67E1A0EE13600A4F50F /* include (public) */,
+				559B69721F1C30B2006FC753 /* Kempston.c */,
 				55AF25C21D363695002F5E0B /* Keyboard.c */,
 				55AF25C31D363695002F5E0B /* Screen.c */,
 				55AF25C41D363695002F5E0B /* Spectrum.c */,
@@ -227,6 +231,7 @@
 		558FC67E1A0EE13600A4F50F /* include (public) */ = {
 			isa = PBXGroup;
 			children = (
+				559B69711F1C2FE6006FC753 /* Kempston.h */,
 				55AF25BF1D363686002F5E0B /* Keyboard.h */,
 				55AF25C01D363686002F5E0B /* Screen.h */,
 				55AF25C11D363686002F5E0B /* Spectrum.h */,
@@ -423,6 +428,7 @@
 				558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */,
 				558FC6B11A0EE15B00A4F50F /* Music.c in Sources */,
 				558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */,
+				559B69731F1C30B2006FC753 /* Kempston.c in Sources */,
 				558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */,
 				558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */,
 				558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */,

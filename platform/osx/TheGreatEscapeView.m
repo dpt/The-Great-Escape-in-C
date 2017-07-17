@@ -20,6 +20,7 @@
 
 #import "ZXSpectrum/Spectrum.h"
 #import "ZXSpectrum/Keyboard.h"
+#import "ZXSpectrum/Kempston.h"
 
 #import "TheGreatEscape/TheGreatEscape.h"
 
@@ -44,6 +45,7 @@
   unsigned int *pixels;
   pthread_t     thread;
   zxkeyset_t    keys;
+  zxkempston_t  kempston;
 
   float         scale;
 
@@ -97,9 +99,12 @@ static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 
 static int key_handler(uint16_t port, void *opaque)
 {
-  TheGreatEscapeView *viewptr = (__bridge id) opaque;
-
-  return zxkeyset_for_port(port, viewptr->keys);
+  TheGreatEscapeView *view = (__bridge id) opaque;
+  
+  if (port == 0x001F)
+    return view->kempston;
+  else
+    return zxkeyset_for_port(port, view->keys);
 }
 
 // -----------------------------------------------------------------------------
@@ -377,48 +382,66 @@ failure:
     speed = max_speed;
 }
 
-- (void)keyDown:(NSEvent*)event
+- (void)keyUpOrDown:(NSEvent*)event isDown:(BOOL)down
 {
   NSEventModifierFlags  modifierFlags;
+  NSEventModifierFlags  modifiersToReject;
   NSString             *chars;
+  unichar               u;
+  zxjoystick_t          j;
 
-  // Ignore any modifiers except for shift.
-  modifierFlags = [event modifierFlags] & (NSEventModifierFlagDeviceIndependentFlagsMask & ~NSEventModifierFlagShift);
-  if (modifierFlags != 0)
+  modifierFlags = [event modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
+  modifiersToReject = NSEventModifierFlagControl |
+                      NSEventModifierFlagOption  |
+                      NSEventModifierFlagCommand;
+  if (modifierFlags & modifiersToReject)
     return;
 
   chars = [event characters];
   if ([chars length] == 0)
     return;
 
-  keys = zxkeyset_setchar(keys, [chars characterAtIndex:0]);
+  u = [chars characterAtIndex:0];
+  switch (u)
+  {
+    case NSUpArrowFunctionKey:    j = zxjoystick_UP;      break;
+    case NSDownArrowFunctionKey:  j = zxjoystick_DOWN;    break;
+    case NSLeftArrowFunctionKey:  j = zxjoystick_LEFT;    break;
+    case NSRightArrowFunctionKey: j = zxjoystick_RIGHT;   break;
+    case '.':                     j = zxjoystick_FIRE;    break;
+    default:                      j = zxjoystick_UNKNOWN; break;
+  }
 
-  // NSLog(@"Key pressed: %@", event);
+  if (j != zxjoystick_UNKNOWN)
+  {
+    zxkempston_assign(&kempston, j, down);
+  }
+  else
+  {
+    // zxkeyset_set/clearchar converts generic keypresses for us
+    if (down)
+      keys = zxkeyset_setchar(keys, u);
+    else
+      keys = zxkeyset_clearchar(keys, u);
+  }
 }
 
 - (void)keyUp:(NSEvent*)event
 {
-  NSEventModifierFlags  modifierFlags;
-  NSString             *chars;
-
-  // Ignore any modifiers except for shift.
-  modifierFlags = [event modifierFlags] & (NSEventModifierFlagDeviceIndependentFlagsMask & ~NSEventModifierFlagShift);
-  if (modifierFlags != 0)
-    return;
-
-  chars = [event characters];
-  if ([chars length] == 0)
-    return;
-
-  keys = zxkeyset_clearchar(keys, [chars characterAtIndex:0]);
-
+  [self keyUpOrDown:event isDown:NO];
   // NSLog(@"Key released: %@", event);
+}
+
+- (void)keyDown:(NSEvent*)event
+{
+  [self keyUpOrDown:event isDown:YES];
+  // NSLog(@"Key pressed: %@", event);
 }
 
 - (void)flagsChanged:(NSEvent*)event
 {
-  /* Unlike keyDown and keyUp, flagsChanged is a single event delivered when any
-   * one of the modifier key states change, down or up. */
+  /* Unlike keyDown and keyUp, flagsChanged is a single event delivered when
+   * any one of the modifier key states change, down or up. */
 
   NSEventModifierFlags modifierFlags = [event modifierFlags];
   bool shift = (modifierFlags & NSEventModifierFlagShift) != 0;
