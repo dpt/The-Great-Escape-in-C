@@ -49,23 +49,20 @@ struct tgestate
    */
   doorindex_t     current_door;
 
-  /**
-   * $69AE: Movable items.
+  /** $69AE: Movable items.
    *
    * Used by setup_movable_items and reset_visible_character.
    */
   movableitem_t   movable_items[movable_item__LIMIT];
 
-  /**
-   * $7612: Character structures.
+  /** $7612: Character structures.
    *
    * Used by wake_up, end_of_breakfast, reset_map_and_characters,
    * spawn_characters, get_character_struct and solitary.
    */
   characterstruct_t character_structs[character_structs__LIMIT];
 
-  /**
-   * $76C8: Item structs.
+  /** $76C8: Item structs.
    *
    * Used by item_to_itemstruct, find_nearby_item, event_new_red_cross_parcel,
    * accept_bribe, action_red_cross_parcel, action_poison,
@@ -96,8 +93,7 @@ struct tgestate
   }
   messages;
 
-  /**
-   * $7F00: A table of 256 bit-reversed bytes.
+  /** $7F00: A table of 256 bit-reversed bytes.
    *
    * Read by flip_16_masked_pixels and flip_24_masked_pixels only.
    */
@@ -133,8 +129,7 @@ struct tgestate
   /** $81B0: Input foreground mask pointer. Used by masked sprite plotters. */
   const uint8_t  *foreground_mask_pointer;
 
-  /**
-   * $81B2: (unknown) Used by masked sprite plotters.
+  /** $81B2: (unknown) Used by masked sprite plotters.
    *
    * Written by setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer, guards_follow_suspicious_character.
@@ -148,8 +143,7 @@ struct tgestate
    */
   xy_t            screenpos;
 
-  /**
-   * $81B7: Used by masked sprite plotters to flip characters left/right.
+  /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
    * Bit 7 controls flipping, the remainder is an index, but the index is
    * never read.
@@ -249,8 +243,7 @@ struct tgestate
   /** $A13F: The hero is in bed (flag: 0 or 255). */
   uint8_t         hero_in_bed;
 
-  /**
-   * $A140: Displayed morale.
+  /** $A140: Displayed morale.
    *
    * The displayed morale lags behind actual morale as the flag moves towards
    * its target.
