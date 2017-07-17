@@ -61,7 +61,7 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
   }
 }
 
-static void zx_draw(zxspectrum_t *state, zxbox_t *dirty)
+static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 

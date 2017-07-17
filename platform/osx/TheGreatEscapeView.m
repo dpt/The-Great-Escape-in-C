@@ -63,7 +63,9 @@
 
 // we should probably just schedule events rather than doing UI things from
 // these handlers - these are entered from the game thread, not the UI thread
-static void draw_handler(unsigned int *pixels, zxbox_t *dirty, void *opaque)
+static void draw_handler(unsigned int  *pixels,
+                         const zxbox_t *dirty,
+                         void          *opaque)
 {
   // FUTURE: Might be a better idea to save up all dirty rects then dispatch
   // them in one go periodically (i.e. capped at 60fps).

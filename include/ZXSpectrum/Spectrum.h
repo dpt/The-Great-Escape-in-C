@@ -118,7 +118,7 @@ struct zxspectrum
   /**
    * Call the implementer when screen or attributes have changed.
    */
-  void (*draw)(zxspectrum_t *state, zxbox_t *dirty);
+  void (*draw)(zxspectrum_t *state, const zxbox_t *dirty);
 
   /**
    * Call the implementer when we need to sleep.
@@ -140,7 +140,7 @@ typedef struct zxconfig
   void *opaque;
 
   /** Called when there's a new frame to draw. */
-  void (*draw)(unsigned int *pixels, zxbox_t *dirty, void *opaque);
+  void (*draw)(unsigned int *pixels, const zxbox_t *dirty, void *opaque);
 
   /** Called when there's nothing to do. */
   void (*sleep)(int duration, sleeptype_t sleeptype, void *opaque);
