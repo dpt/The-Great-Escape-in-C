@@ -343,6 +343,7 @@ failure:
 
 - (IBAction)setSpeed:(id)sender
 {
+  const int min_speed = 10;     // percent
   const int max_speed = 100000; // percent
 
   NSInteger tag;
@@ -378,7 +379,9 @@ failure:
       break;
   }
 
-  if (speed > max_speed)
+  if (speed < min_speed)
+    speed = min_speed;
+  else if (speed > max_speed)
     speed = max_speed;
 }
 
