@@ -14,13 +14,6 @@ extern "C"
 #endif
 
 /**
- * Build conversion tables.
- *
- * Can be called multiple times.
- */
-void zxscreen_initialise(void);
-
-/**
  * Convert the given screen into 0x00BBGGRR pixel format (or 0x00RRGGBB on Windows).
  *
  * \param[in] screen ZX Spectrum screen data.

@@ -15,37 +15,6 @@
 // Attribute bytes have the format:
 // 0bLRBBBFFF (L = flash, R = bright, B = background, F = foreground)
 
-/* Given a screen memory address with fixed and column bits discarded,
- * returns the linear offset. */
-static int rows[192];
-
-void zxscreen_initialise(void)
-{
-  static int initialised = 0;
-
-  int i;
-  // int band, line, row;
-
-  if (initialised)
-    return;
-
-  for (i = 0; i < 192; i++)
-  {
-    // band = (i >> 6) & 3;
-    // line = (i >> 3) & 7;
-    // row  = (i >> 0) & 7;
-    //
-    // rows[i] = (band << 6) | (row << 3) | (line >> 0);
-    // rows[i] = (i & ~63) | ((i & 56) >> 3) | ((i & 7) << 3); // 8 ops
-
-    /* Transpose fields using XOR. */
-    unsigned int x = (i ^ (i >> 3)) & 7; // XOR temporary
-    rows[i] = i ^ (x | (x << 3));
-  }
-
-  initialised = 1;
-}
-
 #ifdef _WIN32
 #define BK_ 0x00000000
 #define RD_ 0x00010000

@@ -101,8 +101,6 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
     return NULL;
   }
 
-  zxscreen_initialise();
-
   return &prv->pub;
 }
 
