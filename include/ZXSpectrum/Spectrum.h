@@ -2,7 +2,7 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013-2016. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2017. <dave@davespace.co.uk>
  */
 
 #ifndef ZXSPECTRUM_H
