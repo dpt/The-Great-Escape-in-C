@@ -233,6 +233,8 @@ static void plot_static_tiles(tgestate_t             *state,
                               const statictileline_t *stline,
                               int                     orientation)
 {
+  uint8_t       *saved_out = out;
+
   int            tiles_remaining; /* was A/B */
   const uint8_t *tiles;           /* was HL */
 
@@ -284,6 +286,13 @@ static void plot_static_tiles(tgestate_t             *state,
     ASSERT_SCREEN_PTR_VALID(out);
   }
   while (--tiles_remaining);
+
+  /* Conv: Invalidation added over the original game. */
+  tiles_remaining = stline->flags_and_length & ~statictileline_MASK;
+  if (orientation == 0) /* Horizontal */
+    invalidate_bitmap(state, saved_out, tiles_remaining * 8, 8);
+  else
+    invalidate_bitmap(state, saved_out, 8, tiles_remaining * 8);
 }
 
 /* ----------------------------------------------------------------------- */

@@ -100,8 +100,11 @@ static void wipe_game_window(tgestate_t *state)
   }
   while (--iters);
 
-  // FUTURE: dirty_rect(screen + state->game_window_start_offsets[0], state->columns, (state->rows - 1) * 8);
-  state->speccy->draw(state->speccy, NULL);
+  /* Conv: Invalidation added over the original game. */
+  invalidate_bitmap(state,
+                    screen + state->game_window_start_offsets[0],
+                    state->columns * 8,
+                    (state->rows - 1) * 8);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -206,17 +209,13 @@ static void choose_keys(tgestate_t *state)
       {
         // A = *HLstring; /* Conv: Present in original code but this is redundant when calling plot_glyph(). */
         ASSERT_SCREEN_PTR_VALID(screenptr);
-        screenptr = plot_glyph(string, screenptr);
+        screenptr = plot_glyph(state, string, screenptr);
         string++;
       }
       while (--iters);
       prompt++; /* Conv: Original has all data contiguous, but we need this in addition. */
     }
     while (--prompt_iters);
-
-
-    state->speccy->draw(state->speccy, NULL);
-
 
     /* Wipe keydefs. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
@@ -344,12 +343,10 @@ assign_keydef:
           {
             // glyph_and_flags = *pkeyname; // Conv: dead code? similar to other instances of calls to plot_glyph
             ASSERT_SCREEN_PTR_VALID(screenptr);
-            screenptr = plot_glyph(pkeyname, screenptr);
+            screenptr = plot_glyph(state, pkeyname, screenptr);
             pkeyname++;
           }
           while (--length);
-
-          state->speccy->draw(state->speccy, NULL);
         }
       }
       while (--prompt_iters);
@@ -392,6 +389,9 @@ void set_menu_item_attributes(tgestate_t *state,
   /* Draw */
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(pattr);
   memset(pattr, attrs, 10);
+  
+  /* Conv: Invalidation added over the original game. */
+  invalidate_attrs(state, pattr, 10 * 8, 8);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -543,7 +543,6 @@ void menu_screen(tgestate_t *state)
     }
     while (--overall_delay);
 
-    state->speccy->draw(state->speccy, NULL);
     state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
   }
 }

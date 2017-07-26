@@ -9,11 +9,8 @@
 
 #include "ZXSpectrum/Screen.h"
 
-// Spectrum screen memory has the arrangement:
-// 0b010BBLLLRRRCCCCC (B = band, L = line, R = row, C = column)
-//
-// Attribute bytes have the format:
-// 0bLRBBBFFF (L = flash, R = bright, B = background, F = foreground)
+/* Define to highlight dirty rectangles when they're drawn. */
+// #define SHOW_DIRTY_RECTS
 
 #ifdef _WIN32
 #define BK_ 0x00000000
@@ -57,30 +54,30 @@
 #define CYb BRIGHT(CY_)
 #define WHb BRIGHT(WH_)
 
-// Given a set of tokens: A, B, C
-//
-// Which have permutations:
-// (AA, AB, AC,
-//  BA, BB, BC,
-//  CA, CB, CC)
-//
-// They can be written out contiguously:
-// AAABACBABBBCCACBCC
-//
-// We can remove and index the redundant overlaps:
-// AABACBBCACC
-//
-// And produce a mapping:
-// (0, 1, 3,
-//  2, 5, 6,
-//  7, 4, 9)
-//
-// This is a De Bruijn sequence.
-//
-// Note that 'AC' occurs twice in the reduced output...
-//
-// The following palette is also a De Bruijn sequence.
-//
+/* Given a set of tokens: A, B, C
+ *
+ * Which have permutations:
+ * (AA, AB, AC,
+ *  BA, BB, BC,
+ *  CA, CB, CC)
+ *
+ * They can be written out contiguously:
+ * AAABACBABBBCCACBCC
+ *
+ * We can remove and index the redundant overlaps:
+ * AABACBBCACC
+ *
+ * And produce a mapping:
+ * (0, 1, 3,
+ *  2, 5, 6,
+ *  7, 4, 9)
+ *
+ * This is a De Bruijn sequence.
+ *
+ * Note that 'AC' occurs twice in the reduced output...
+ *
+ * The following palette is also a De Bruijn sequence.
+ */
 static const unsigned int palette[66 + 65] =
 {
   BKd, BKd, BLd, BKd, RDd, BKd, MGd, BKd,
@@ -138,34 +135,103 @@ do { \
   *poutput++ = pal[(input >> (shift + 0)) & 1]; \
 } while (0)
 
-void zxscreen_convert(const void *vscr, unsigned int *poutput)
+#define CLAMP(val, min, max) \
+  ((val < min) ? min : (val > max) ? max : val)
+
+/* For reference:
+ *
+ * Spectrum screen memory has the arrangement:
+ * 0b010BBLLLRRRCCCCC (B = band, L = line, R = row, C = column)
+ *
+ * Attribute bytes have the format:
+ * 0bLRBBBFFF (L = flash, R = bright, B = background, F = foreground)
+ */
+
+void zxscreen_convert(const void    *vscr,
+                      unsigned int  *poutput,
+                      const zxbox_t *dirty)
 {
-  const unsigned int *pattrs;
-  int                 x,y;
-  const unsigned int *pinput;
-  unsigned int        input;
-  unsigned int        attrs;
-  const unsigned int *pal;
+  static const zxbox_t fullscreen = { 0, 0, 256, 192 };
 
-  pattrs = (const unsigned int *) vscr + 8 * 192;
-  for (y = 0; y < 192; y++)
+  zxbox_t              box;
+  int                  height;
+  const unsigned int  *pattrs;
+  int                  width;
+  int                  x,linear_y;
+  const unsigned int  *pinput;
+  unsigned int         input;
+  unsigned int         attrs;
+  const unsigned int  *pal;
+
+#ifdef SHOW_DIRTY_RECTS
+  static int foo;
+  foo = 0x20202020 - foo;
+#endif
+
+  if (dirty)
   {
-    /* Transpose fields using XOR. */
-    unsigned int xt = (y ^ (y >> 3)) & 7;
-    int ny = y ^ (xt | (xt << 3));
+    /* If a dirty rectangle was given clamp it to the screen dimensions. */
+    box.x0 = CLAMP(dirty->x0, 0, 255);
+    box.y0 = CLAMP(dirty->y0, 0, 191);
+    box.x1 = CLAMP(dirty->x1, 1, 256);
+    box.y1 = CLAMP(dirty->y1, 1, 192);
+  }
+  else
+  {
+    /* If no dirty rectangle was specified then assume the full screen. */
+    box = fullscreen;
+  }
 
-    pinput = (const unsigned int *) vscr + (ny << 3);
-    for (x = 0; x < 8; x++)
+  /* The inner loop processes 32 pixels at a time so we convert x coordinates
+   * into chunks four attributes wide while rounding up and down as
+   * required. */
+  box.x0 = (box.x0     ) / 32; /* divide to 0..7 rounding down */
+  box.x1 = (box.x1 + 31) / 32; /* divide to 0..7 rounding up */
+
+  /* Convert y coordinates into screen space - (0,0) is top left. */
+  height = box.y1 - box.y0;
+  box.y0 = 192 - box.y1;
+  box.y1 = box.y0 + height;
+
+  pattrs = (const unsigned int *) vscr
+         + (SCREEN_BITMAP_LENGTH
+         + box.y0 / 8 * 32  /* 8 scanlines/row, 32 attrs/row */
+         + box.x0 * 4) / 4; /* 4 bytes/chunk, 4 bytes/word */
+
+  poutput += box.y0 * 256 /* 256 pixels/row (256 words) for output */
+           + box.x0 * 32; /* 32 pixels/chunk (32 words) */
+  
+  width = box.x1 - box.x0; /* hoisted out of loop */
+
+  for (linear_y = box.y0; linear_y < box.y1; linear_y++)
+  {
+    /* Transpose fields using XOR */
+    unsigned int tmp = (linear_y ^ (linear_y >> 3)) & 7;
+    int          y   = linear_y ^ (tmp | (tmp << 3));
+
+    pinput = (const unsigned int *) vscr
+           + (y     * 32           /* 32 bytes/row */
+           + box.x0 * 32 / 8) / 4; /* 32 bytes/row, 8 pixels/byte, 4 bytes/word */
+    for (x = width; x > 0; x--) /* x is unused in the loop body */
     {
       input = *pinput++;
       attrs = *pattrs++;
+#ifdef SHOW_DIRTY_RECTS
+      attrs ^= foo; /* force colour attrs to show redrawn areas */
+#endif
 
       WRITE8PIX(0);
       WRITE8PIX(8);
       WRITE8PIX(16);
       WRITE8PIX(24);
     }
-    if ((y & 7) != 7)
+
+    /* Skip to the start of the next row. */
+    pattrs  += 8   - width;
+    poutput += 256 - width * 32;
+
+    /* Rewind pattrs except at the end of an attribute row. */
+    if ((linear_y & 7) != 7)
       pattrs -= 8;
   }
 }

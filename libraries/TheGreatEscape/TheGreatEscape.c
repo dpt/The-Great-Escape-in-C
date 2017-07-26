@@ -88,6 +88,56 @@ static void check_map_buf(tgestate_t *state)
 }
 
 
+/* ----------------------------------------------------------------------- */
+
+void invalidate_bitmap(tgestate_t *state,
+                       uint8_t    *start,
+                       int         width,
+                       int         height)
+{
+  uint8_t   *base = &state->speccy->screen[0];
+  ptrdiff_t  offset;
+  int        x,y;
+  zxbox_t    dirty;
+
+  offset = start - base;
+
+  /* Convert screen offset to cartesian for the interface. */
+  x = (offset & 31) * 8;
+  y = ((offset & 0x0700) >> 8) |
+      ((offset & 0x00E0) >> 2) |
+      ((offset & 0x1800) >> 5);
+  y = 191 - y;    /* flip */
+  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
+  y = y - height; /* get min-y */
+
+  dirty = (zxbox_t) { x, y, x + width, y + height };
+  state->speccy->draw(state->speccy, &dirty);
+}
+
+void invalidate_attrs(tgestate_t *state,
+                      uint8_t    *start,
+                      int         width,
+                      int         height)
+{
+  uint8_t   *base = &state->speccy->screen[SCREEN_BITMAP_LENGTH];
+  ptrdiff_t  offset;
+  int        x,y;
+  zxbox_t    dirty;
+
+  offset = start - base;
+
+  /* Convert attribute offset to cartesian for the interface. */
+  x = (offset & 31) * 8;
+  y = (int) offset >> 5;
+  y = 23 - y;     /* flip */
+  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
+  y = y * 8;      /* scale */
+  y = y - height; /* get min-y */
+
+  dirty = (zxbox_t) { x, y, x + width, y + height };
+  state->speccy->draw(state->speccy, &dirty);
+}
 
 /* ----------------------------------------------------------------------- */
 
@@ -1342,7 +1392,7 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff)
   const spritedef_t *sprite; /* was HL */
 
   /* Wipe item. */
-  screen_wipe(state, 2, 16, screen + dstoff);
+  screen_wipe(state, screen + dstoff, 2, 16);
 
   if (item == item_NONE)
     return;
@@ -1362,7 +1412,7 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff)
 
   /* Plot the item bitmap. */
   sprite = &item_definitions[item];
-  plot_bitmap(state, sprite->width, sprite->height, sprite->bitmap, screen + dstoff);
+  plot_bitmap(state, sprite->bitmap, screen + dstoff, sprite->width, sprite->height);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1430,34 +1480,39 @@ next:
 /**
  * $7CBE: Plot a bitmap without masking.
  *
- * \param[in] state  Pointer to game state.
- * \param[in] width  Width, in bytes.     (was B)
- * \param[in] height Height.              (was C)
- * \param[in] src    Source address.      (was DE)
- * \param[in] dst    Destination address. (was HL)
+ * \param[in]  state  Pointer to game state.
+ * \param[in]  src    Source address.       (was DE)
+ * \param[out] dst    Destination address.  (was HL)
+ * \param[in]  width  Width, in bytes.      (was B)
+ * \param[in]  height Height, in scanlines. (was C)
  */
 void plot_bitmap(tgestate_t    *state,
-                 uint8_t        width,
-                 uint8_t        height,
                  const uint8_t *src,
-                 uint8_t       *dst)
+                 uint8_t       *dst,
+                 uint8_t        width,
+                 uint8_t        height)
 {
+  uint8_t  h;
+  uint8_t *curr_dst;
+
   assert(state != NULL);
-  assert(width  > 0);
-  assert(height > 0);
   assert(src   != NULL);
   assert(dst   != NULL);
+  assert(width  > 0);
+  assert(height > 0);
 
+  h        = height;
+  curr_dst = dst;
   do
   {
-    memcpy(dst, src, width);
+    memcpy(curr_dst, src, width);
     src += width;
-    dst = get_next_scanline(state, dst);
+    curr_dst = get_next_scanline(state, curr_dst);
   }
-  while (--height);
+  while (--h);
 
-  // FUTURE: state->speccy->draw(state->speccy, sleeptype_DELAY, <<dst-to-x,y>, width, height>);
-  state->speccy->draw(state->speccy, NULL);
+  /* Conv: Invalidation added over the original game. */
+  invalidate_bitmap(state, dst, width * 8, height);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1466,29 +1521,34 @@ void plot_bitmap(tgestate_t    *state,
  * $7CD4: Wipe the screen.
  *
  * \param[in] state  Pointer to game state.
- * \param[in] width  Width, in bytes.     (was B)
- * \param[in] height Height.              (was C)
- * \param[in] dst    Destination address. (was HL)
+ * \param[in] dst    Destination address.  (was HL)
+ * \param[in] width  Width, in bytes.      (was B)
+ * \param[in] height Height, in scanlines. (was C)
  */
 void screen_wipe(tgestate_t *state,
+                 uint8_t    *dst,
                  uint8_t     width,
-                 uint8_t     height,
-                 uint8_t    *dst)
+                 uint8_t     height)
 {
+  uint8_t  h;
+  uint8_t *curr_dst;
+
   assert(state != NULL);
+  assert(dst   != NULL);
   assert(width  > 0);
   assert(height > 0);
-  assert(dst   != NULL);
 
+  h        = height;
+  curr_dst = dst;
   do
   {
-    memset(dst, 0, width);
-    dst = get_next_scanline(state, dst);
+    memset(curr_dst, 0, width);
+    curr_dst = get_next_scanline(state, curr_dst);
   }
-  while (--height);
+  while (--h);
 
-  // FUTURE: state->speccy->draw(state->speccy, sleeptype_DELAY, <<dst-to-x,y>, width, height>);
-  state->speccy->draw(state->speccy, NULL);
+  /* Conv: Invalidation added over the original game. */
+  invalidate_bitmap(state, dst, width * 8, height);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2071,6 +2131,7 @@ void wave_morale_flag(tgestate_t *state)
   uint8_t       *pgame_counter;     /* was HL */
   uint8_t        morale;            /* was A */
   uint8_t       *pdisplayed_morale; /* was HL */
+  uint8_t       *scanline;          /* was HL */
   const uint8_t *flag_bitmap;       /* was DE */
 
   assert(state != NULL);
@@ -2090,21 +2151,21 @@ void wave_morale_flag(tgestate_t *state)
     {
       /* Decreasing morale. */
       (*pdisplayed_morale)--;
-      pdisplayed_morale = get_next_scanline(state, state->moraleflag_screen_address);
+      scanline = get_next_scanline(state, state->moraleflag_screen_address);
     }
     else
     {
       /* Increasing morale. */
       (*pdisplayed_morale)++;
-      pdisplayed_morale = get_prev_scanline(state, state->moraleflag_screen_address);
+      scanline = get_prev_scanline(state, state->moraleflag_screen_address);
     }
-    state->moraleflag_screen_address = pdisplayed_morale;
+    state->moraleflag_screen_address = scanline;
   }
 
   flag_bitmap = flag_down;
   if (*pgame_counter & 2)
     flag_bitmap = flag_up;
-  plot_bitmap(state, 3, 25, flag_bitmap, state->moraleflag_screen_address);
+  plot_bitmap(state, flag_bitmap, state->moraleflag_screen_address, 3, 25); // one is 22, one is 25
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2134,7 +2195,10 @@ void set_morale_flag_screen_attributes(tgestate_t *state, attribute_t attrs)
   }
   while (--iters);
 
-  state->speccy->draw(state->speccy, NULL); // FUTURE: Pass an appropriate dirty rect.
+  /* Conv: Invalidation added over the original game. */
+  invalidate_attrs(state,
+                   &state->speccy->attributes[morale_flag_attributes_offset],
+                   3 * 8, 19 * 8);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2264,9 +2328,9 @@ void plot_ringer(tgestate_t *state, const uint8_t *src)
   assert(src   != NULL);
 
   plot_bitmap(state,
-              1, 12, /* dimensions: 8 x 12 */
               src,
-              &state->speccy->screen[screenoffset_BELL_RINGER]);
+              &state->speccy->screen[screenoffset_BELL_RINGER],
+              1, 12 /* dimensions: 8 x 12 */);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2411,7 +2475,7 @@ void plot_score(tgestate_t *state)
   {
     char digit = '0' + *digits; /* Conv: Pass as ASCII. */
 
-    screen = plot_glyph(&digit, screen);
+    screen = plot_glyph(state, &digit, screen);
     digits++;
     screen++; /* Additionally to plot_glyph, so screen += 2 each iter. */
   }
@@ -2484,7 +2548,11 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
   }
   while (--rows);
 
-  state->speccy->draw(state->speccy, NULL); // FUTURE: Pass an appropriate dirty rect.
+  /* Conv: Invalidation added over the original game. */
+  invalidate_attrs(state,
+                   &state->speccy->attributes[0x0047],
+                   state->columns * 8,
+                   (state->rows - 1) * 8);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3873,11 +3941,11 @@ const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
   length = slstring->length;
   string = slstring->string;
   do
-    screen = plot_glyph(string++, screen);
+    screen = plot_glyph(state, string++, screen);
   while (--length);
 
-  // FUTURE: Hoist this to the higher level if possible.
-  state->speccy->draw(state->speccy, NULL);
+//  // FUTURE: Hoist this to the higher level if possible.
+//  state->speccy->draw(state->speccy, NULL);
 
   return slstring + 1;
 }
@@ -4844,7 +4912,12 @@ void zoombox(tgestate_t *state)
     zoombox_fill(state);
     zoombox_draw_border(state);
 
-    state->speccy->draw(state->speccy, NULL); // <<scrbase>, state->zoombox.width, state->zoombox.height>
+    /* Conv: Invalidation added over the original game. */
+    invalidate_bitmap(state,
+                      &state->speccy->screen[0] + state->game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
+                      (state->zoombox.width + 2) * 8,
+                      (state->zoombox.height + 2) * 8);
+
     state->speccy->sleep(state->speccy, sleeptype_DELAY, 10000 /* 1/10th sec */);
   }
   while (state->zoombox.height + state->zoombox.width < 35);
@@ -5476,7 +5549,11 @@ next_row:
   while (--iters);
 
 exit:
-  state->speccy->draw(state->speccy, NULL);
+  {
+    /* FUTURE: Make the dirty rectangle more accurate. */
+    static const zxbox_t dirty = { 7 * 8, 2 * 8, 29 * 8, 17 * 8 };
+    state->speccy->draw(state->speccy, &dirty);
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12215,7 +12292,10 @@ void plot_game_window(tgestate_t *state)
     while (--y_iters_B);
   }
 
-  state->speccy->draw(state->speccy, NULL); // <<scrbase>, state->zoombox.width, state->zoombox.height>
+  {
+    static const zxbox_t dirty = { 7*8, 6*8, 30*8, 22*8 };
+    state->speccy->draw(state->speccy, &dirty);
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12502,13 +12582,16 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
   assert(state != NULL);
   assert(state->speccy != NULL);
 
-  memset(&state->speccy->screen, 0, SCREEN_LENGTH);
+  memset(&state->speccy->screen, 0, SCREEN_BITMAP_LENGTH);
   memset(&state->speccy->attributes,
          attribute_WHITE_OVER_BLACK,
          SCREEN_ATTRIBUTES_LENGTH);
 
   /* Set the screen border to black. */
   state->speccy->out(state->speccy, port_BORDER, 0);
+
+  /* Redraw the whole screen. */
+  state->speccy->draw(state->speccy, NULL); // Conv: Added
 }
 
 /* ----------------------------------------------------------------------- */

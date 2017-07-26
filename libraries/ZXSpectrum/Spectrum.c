@@ -63,7 +63,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  zxscreen_convert(prv->pub.screen, prv->screen);
+  zxscreen_convert(prv->pub.screen, prv->screen, dirty);
 
   prv->config.draw(prv->screen, dirty, prv->config.opaque);
 }

@@ -86,7 +86,7 @@ void message_display(tgestate_t *state)
   {
     pmsgchr = state->messages.current_character;
     pscr    = &state->speccy->screen[screen_text_start_address + index];
-    (void) plot_glyph(pmsgchr, pscr);
+    (void) plot_glyph(state, pmsgchr, pscr);
 
     state->messages.display_index = index + 1; // Conv: Original used (pscr & 31). CHECK
 
@@ -130,7 +130,7 @@ void wipe_message(tgestate_t *state)
   scr = &state->speccy->screen[screen_text_start_address + index];
 
   /* Plot a single space character. */
-  (void) plot_single_glyph(' ', scr);
+  (void) plot_single_glyph(state, ' ', scr);
 }
 
 /* ----------------------------------------------------------------------- */

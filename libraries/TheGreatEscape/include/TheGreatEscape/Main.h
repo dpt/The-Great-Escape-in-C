@@ -17,7 +17,7 @@
 #define ASSERT_SCREEN_PTR_VALID(p)                    \
 do {                                                  \
   assert((p) >= &state->speccy->screen[0]);           \
-  assert((p) < &state->speccy->screen[SCREEN_LENGTH]); \
+  assert((p) < &state->speccy->screen[SCREEN_BITMAP_LENGTH]); \
 } while (0)
 
 #define ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(p)         \
@@ -123,6 +123,38 @@ while (0)
 
 /* ----------------------------------------------------------------------- */
 
+/* Invalidate (signal to redraw) the specified screen area where bitmap data
+ * has changed.
+ *
+ * Conv: This helper function was added over the original game.
+ *
+ * \param[in] state  Pointer to game state.
+ * \param[in] addr   Pointer to screen pixels written to.
+ * \param[in] width  Width in pixels of rectangle to invalidate.
+ * \param[in] height Height in pixels of rectangle to invalidate.
+ */
+void invalidate_bitmap(tgestate_t *state,
+                       uint8_t    *addr,
+                       int         width,
+                       int         height);
+
+/* Invalidate (signal to redraw) the specified screen area where attribute
+ * data has changed.
+ *
+ * Conv: This helper function was added over the original game.
+ *
+ * \param[in] state  Pointer to game state.
+ * \param[in] addr   Pointer to screen attributes written to.
+ * \param[in] width  Width in pixels of rectangle to invalidate.
+ * \param[in] height Height in pixels of rectangle to invalidate.
+ */
+void invalidate_attrs(tgestate_t *state,
+                      uint8_t    *addr,
+                      int         width,
+                      int         height);
+
+/* ----------------------------------------------------------------------- */
+
 // FORWARD REFERENCES
 //
 // (in original file order)
@@ -182,15 +214,15 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff);
 itemstruct_t *find_nearby_item(tgestate_t *state);
 
 void plot_bitmap(tgestate_t    *state,
-                 uint8_t        width,
-                 uint8_t        height,
                  const uint8_t *src,
-                 uint8_t       *dst);
+                 uint8_t       *dst,
+                 uint8_t        width,
+                 uint8_t        height);
 
 void screen_wipe(tgestate_t *state,
+                 uint8_t    *dst,
                  uint8_t     width,
-                 uint8_t     height,
-                 uint8_t    *dst);
+                 uint8_t     height);
 
 uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp);
 

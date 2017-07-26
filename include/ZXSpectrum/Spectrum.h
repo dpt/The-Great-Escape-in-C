@@ -63,7 +63,7 @@ enum
 /* Memory map */
 
 #define ROM_LENGTH                      0x4000
-#define SCREEN_LENGTH                   (256 / 8 * 192)
+#define SCREEN_BITMAP_LENGTH            (256 / 8 * 192)
 #define SCREEN_ATTRIBUTES_LENGTH        (256 / 8 * 192 / 8)
 
 #define ROM_START_ADDRESS               ((uint16_t) 0x0000)
@@ -126,7 +126,7 @@ struct zxspectrum
   void (*sleep)(zxspectrum_t *state, sleeptype_t type, int duration); // duration units are what?
 
 
-  uint8_t     screen[SCREEN_LENGTH];
+  uint8_t     screen[SCREEN_BITMAP_LENGTH];
   // if a gap appears here then ZXScreen will break!
   attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
 };

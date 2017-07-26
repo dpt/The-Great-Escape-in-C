@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include "TheGreatEscape/Font.h"
+#include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
 
@@ -14,12 +15,14 @@
  *
  * \return Pointer to next character along.
  */
-uint8_t *plot_glyph(const char *pcharacter, uint8_t *output)
+uint8_t *plot_glyph(tgestate_t *state,
+                    const char *pcharacter,
+                    uint8_t    *output)
 {
   assert(pcharacter != NULL);
   assert(output     != NULL);
 
-  return plot_single_glyph(*pcharacter, output);
+  return plot_single_glyph(state, *pcharacter, output);
 }
 
 /**
@@ -32,7 +35,7 @@ uint8_t *plot_glyph(const char *pcharacter, uint8_t *output)
  *
  * \return Pointer to next character along. (was DE)
  */
-uint8_t *plot_single_glyph(int character, uint8_t *output)
+uint8_t *plot_single_glyph(tgestate_t *state, int character, uint8_t *output)
 {
   const tile_t    *glyph;        /* was HL */
   const tilerow_t *row;          /* was HL */
@@ -53,6 +56,9 @@ uint8_t *plot_single_glyph(int character, uint8_t *output)
     output += 256; /* Advance to next row. */
   }
   while (--iters);
+
+  /* Conv: Invalidation added over the original game. */
+  invalidate_bitmap(state, saved_output, 8, 8);
 
   /* Return the position of the next character. */
   return ++saved_output;
