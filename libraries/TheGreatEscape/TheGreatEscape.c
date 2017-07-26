@@ -64,6 +64,7 @@
 #include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Messages.h"
 #include "TheGreatEscape/Music.h"
+#include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/RoomDefs.h"
 #include "TheGreatEscape/Rooms.h"
 #include "TheGreatEscape/SpriteBitmaps.h"
@@ -5416,22 +5417,22 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
    */
   static const uint8_t searchlight_shape[2 * 16] =
   {
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x01, 0x80,
-    0x07, 0xE0,
-    0x0F, 0xF0,
-    0x0F, 0xF0,
-    0x1F, 0xF8,
-    0x1F, 0xF8,
-    0x0F, 0xF0,
-    0x0F, 0xF0,
-    0x07, 0xE0,
-    0x01, 0x80,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00,
+    ________,________,
+    ________,________,
+    ________,________,
+    _______X,X_______,
+    _____XXX,XXX_____,
+    ____XXXX,XXXX____,
+    ____XXXX,XXXX____,
+    ___XXXXX,XXXXX___,
+    ___XXXXX,XXXXX___,
+    ____XXXX,XXXX____,
+    ____XXXX,XXXX____,
+    _____XXX,XXX_____,
+    _______X,X_______,
+    ________,________,
+    ________,________,
+    ________,________
   };
 
   assert(state != NULL);

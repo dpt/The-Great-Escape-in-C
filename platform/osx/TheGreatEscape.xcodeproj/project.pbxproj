@@ -59,6 +59,7 @@
 
 /* Begin PBXFileReference section */
 		551D73781D7775A0002F5E0B /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TheGreatEscape/Images.xcassets; sourceTree = SOURCE_ROOT; };
+		551E16A31F2955E4006FC753 /* Pixels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Pixels.h; path = TheGreatEscape/Pixels.h; sourceTree = "<group>"; };
 		552049361B16831C0075ED47 /* Masks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Masks.c; sourceTree = "<group>"; };
 		552049371B16831C0075ED47 /* Masks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Masks.h; path = TheGreatEscape/Masks.h; sourceTree = "<group>"; };
 		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -282,34 +283,35 @@
 		558FC6851A0EE15B00A4F50F /* include (private) */ = {
 			isa = PBXGroup;
 			children = (
+				55C068B01AEAFD3700C2AA88 /* Doors.h */,
 				558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */,
 				558FC6891A0EE15B00A4F50F /* Font.h */,
+				556D1A1B1B135E3C0036AED0 /* Input.h */,
 				558FC68A1A0EE15B00A4F50F /* InteriorObjectDefs.h */,
 				558FC68B1A0EE15B00A4F50F /* InteriorObjects.h */,
 				558FC68C1A0EE15B00A4F50F /* InteriorTiles.h */,
 				558FC68D1A0EE15B00A4F50F /* ItemBitmaps.h */,
 				558FC68E1A0EE15B00A4F50F /* Items.h */,
-				556D1A1B1B135E3C0036AED0 /* Input.h */,
+				556D1A1F1B1363780036AED0 /* Main.h */,
 				558FC68F1A0EE15B00A4F50F /* Map.h */,
 				552049371B16831C0075ED47 /* Masks.h */,
 				556D1A1C1B1361570036AED0 /* Menu.h */,
 				556D1A231B137A300036AED0 /* Messages.h */,
 				558FC6901A0EE15B00A4F50F /* Music.h */,
+				551E16A31F2955E4006FC753 /* Pixels.h */,
 				558FC6911A0EE15B00A4F50F /* RoomDefs.h */,
 				558FC6921A0EE15B00A4F50F /* Rooms.h */,
-				55C068B01AEAFD3700C2AA88 /* Doors.h */,
 				558FC6931A0EE15B00A4F50F /* SpriteBitmaps.h */,
 				558FC6941A0EE15B00A4F50F /* Sprites.h */,
 				558FC6951A0EE15B00A4F50F /* State.h */,
 				558FC6961A0EE15B00A4F50F /* StaticGraphics.h */,
 				558FC6971A0EE15B00A4F50F /* StaticTiles.h */,
 				558FC6981A0EE15B00A4F50F /* SuperTiles.h */,
+				556D1A201B1379B50036AED0 /* Text.h */,
 				558FC6991A0EE15B00A4F50F /* TGEObject.h */,
 				558FC69A1A0EE15B00A4F50F /* Tiles.h */,
-				556D1A201B1379B50036AED0 /* Text.h */,
 				558FC69B1A0EE15B00A4F50F /* Types.h */,
 				558FC69C1A0EE15B00A4F50F /* Utils.h */,
-				556D1A1F1B1363780036AED0 /* Main.h */,
 			);
 			name = "include (private)";
 			path = include;
