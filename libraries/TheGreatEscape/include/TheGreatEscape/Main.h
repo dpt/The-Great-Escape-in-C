@@ -1,6 +1,8 @@
 #ifndef THEGREATESCAPE_H
 #define THEGREATESCAPE_H
 
+#include <stdlib.h>
+
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "TheGreatEscape/Doors.h"
