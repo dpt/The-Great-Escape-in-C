@@ -416,7 +416,9 @@ void nighttime(tgestate_t *state);
 void searchlight_movement(searchlight_movement_t *slstate);
 void searchlight_caught(tgestate_t                *state,
                         const searchlight_movement_t *slstate);
-void searchlight_plot(tgestate_t *state, attribute_t *DE);
+void searchlight_plot(tgestate_t  *state,
+                      attribute_t *attrs,
+                      int          clip_left);
 
 int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index);
 

@@ -5138,6 +5138,8 @@ void zoombox_draw_tile(tgestate_t     *state,
 
 /* ----------------------------------------------------------------------- */
 
+#define REVERSE (1 << 7)
+
 /**
  * $AD59: Decides searchlight movement.
  *
@@ -5148,7 +5150,7 @@ void zoombox_draw_tile(tgestate_t     *state,
 void searchlight_movement(searchlight_movement_t *slstate)
 {
   uint8_t        x,y;       /* was E,D */
-  uint8_t        counter;   /* was A */
+  uint8_t        index;     /* was A */
   const uint8_t *ptr;       /* was BC */
   direction_t    direction; /* was A */
 
@@ -5156,43 +5158,48 @@ void searchlight_movement(searchlight_movement_t *slstate)
 
   x = slstate->xy.x;
   y = slstate->xy.y;
-  if (--slstate->step == 0)
+  if (--slstate->counter == 0)
   {
-    counter = slstate->counter; // sampled HL = $AD3B, $AD34, $AD2D
-    if (counter & (1 << 7))
+    /* End of previous sweep: work out the next. */
+
+    index = slstate->index; // sampled HL = $AD3B, $AD34, $AD2D
+    if (index & REVERSE) /* reverse direction bit set */
     {
-      counter &= 0x7F;
-      if (counter == 0)
+      index &= ~REVERSE;
+      if (index == 0)
       {
-        slstate->counter &= ~(1 << 7); /* clear sign bit when magnitude hits zero */
+        slstate->index &= ~REVERSE; /* clear direction bit when index hits zero */
       }
       else
       {
-        slstate->counter--; /* count down */
-        counter--; /* just a copy */
+        slstate->index--; /* count down */
+        index--; /* just a copy sans direction bit */
+        assert(index == (slstate->index ^ REVERSE));
       }
     }
     else
     {
-      slstate->counter = ++counter; /* count up */
+      slstate->index = ++index; /* count up */
     }
-    ptr = slstate->ptr + counter * 2;
+    assert(index >= 0);
+    assert(index <= 8); // movement_1 is the longest
+    ptr = slstate->ptr + index * 2;
     if (*ptr == 255) /* end of list? */
     {
-      slstate->counter--; /* overshot? count down counter byte */
-      slstate->counter |= 1 << 7; /* go negative */
+      slstate->index--; /* overshot? count down counter byte */
+      slstate->index |= REVERSE; /* go negative */
       ptr -= 2;
-      // A = *ptr; /* This is a flaw in original code: A is fetched but never used again. */
+      // A = *ptr; /* Bug: This is a flaw in original code: A is fetched but never used again. */
     }
     /* Copy counter + direction_t. */
-    slstate->step = ptr[0];
+    slstate->counter   = ptr[0];
     slstate->direction = ptr[1];
   }
   else
   {
     direction = slstate->direction;
-    if (slstate->counter & (1 << 7)) /* test sign */
-      direction ^= 2; /* up-down direction toggle */
+    if (slstate->index & REVERSE) /* test sign */
+      direction ^= 2; /* toggle direction */
 
     /* Conv: This is the [-2]+1 pattern which works out -1/+1. */
     if (direction <= direction_TOP_RIGHT) /* direction_TOP_* */
@@ -5206,8 +5213,8 @@ void searchlight_movement(searchlight_movement_t *slstate)
     else
       x -= 2; /* direction_*_LEFT */
 
+    slstate->xy.x = x; // Conv: Reversed store order.
     slstate->xy.y = y;
-    slstate->xy.x = x;
   }
 }
 
@@ -5219,23 +5226,23 @@ void searchlight_movement(searchlight_movement_t *slstate)
  */
 void nighttime(tgestate_t *state)
 {
-  uint8_t                 map_y;           /* was D */
-  uint8_t                 map_x;           /* was E */
-  uint8_t                 H;               /* was H */
-  uint8_t                 L;               /* was L */
-  uint8_t                 caught_y;        /* was H */
-  uint8_t                 caught_x;        /* was L */
-  int                     iters;           /* was B */
-  uint8_t                 y;               /* was A' */
-  attribute_t            *attrs;           /* was BC */
-  searchlight_movement_t *slstate;         /* was HL */
-  uint8_t                 use_full_window; /* was A */
-  uint8_t                 B, C;
+  uint8_t                 map_y;     /* was D */
+  uint8_t                 map_x;     /* was E */
+  uint8_t                 caught_y;  /* was H */
+  uint8_t                 caught_x;  /* was L */
+  int                     iters;     /* was B */
+  attribute_t            *attrs;     /* was BC */
+  searchlight_movement_t *slstate;   /* was HL */
+  uint8_t                 clip_left; /* was A */
+  int16_t                 column;    /* was BC */
+  int16_t                 row;       /* was HL */
 
   assert(state != NULL);
 
   if (state->searchlight_state != searchlight_STATE_SEARCHING)
   {
+    /* Caught. */
+
     if (state->room_index > room_0_OUTDOORS)
     {
       /* If the hero goes indoors then the searchlight loses track. */
@@ -5243,7 +5250,7 @@ void nighttime(tgestate_t *state)
       return;
     }
 
-    /* The hero is outdoors. */
+    /* Otherwise the hero is outdoors. */
 
     /* If the searchlight previously caught the hero then track him. */
 
@@ -5299,67 +5306,38 @@ void nighttime(tgestate_t *state)
   iters = 3; // 3 iterations == three searchlights
   do
   {
-    // PUSH BC
-    // PUSH HL
     searchlight_movement(slstate);
-    // POP HL
-    // PUSH HL
     searchlight_caught(state, slstate);
-    // POP HL
-    // PUSH HL
 
-    map_x = state->map_position.x;
-    map_y = state->map_position.y;
+    map_x = state->map_position.x; // in E
+    map_y = state->map_position.y; // in D
 
     /* Would the searchlight intersect with the game window? */
-
-    // if (slstate->xy.x >= map_x + 23 || slstate->xy.x < map_x - 16) equivalent?
-    if (map_x + 23 < slstate->xy.x || slstate->xy.x + 16 < map_x)
-      goto next;
-
-    //if (slstate->xy.y >= map_y + 16 || slstate->xy.y < map_y - 16) equivalent?
-    if (map_y + 16 < slstate->xy.y || slstate->xy.y + 16 < map_y)
+    // Conv: Reordered into the expected series
+    // first check is if the spotlight image is off the left hand side
+    // second check is if the spotlight image is off the right hand side
+    // etc.
+    if (slstate->xy.x + 16 < map_x || slstate->xy.x >= map_x + state->columns ||
+        slstate->xy.y + 16 < map_y || slstate->xy.y >= map_y + state->rows)
       goto next;
 
 middle_bit:
-    // if searchlight.use_full_window == 0:
-    //   the light is clipped to the left side of the window
-    use_full_window = 0; // flag
-    // EX AF,AF'
+    clip_left = 0; // flag // the light is clipped to the left side of the window
 
-    // HL -> slstate->x OR -> state->searchlight.caught_coord.x
-    B = 0;
-    if (slstate->xy.x < map_x)
-    {
-      B = 255; // -ve
-      use_full_window = ~use_full_window; // toggle flag 0 <-> 255
-    }
-    C = slstate->xy.x; // x
-    // now BC is ready here
+    // HL points to slstate->xy OR -> state->searchlight.caught_coord depending on how it's entered
 
-    // HL -> slstate->y OR -> state->searchlight.caught_coord.y
-    y = slstate->xy.y;
-    H = 0;
-    if (y < map_y)
-      H = 255; // -ve
-    L = y;
-    // now HL is ready here
+    column = slstate->xy.x - map_x;
+    if (column < 0) // partly off the left hand side of the window
+      clip_left = ~clip_left; // toggle flag 0 -> 255
 
-    {
-      // Conv: cast the original game vars into proper signed offsets
+    row = slstate->xy.y - map_y;
 
-      int column;
-      int row;
+    // note that row & column _can_ be out of bounds...
 
-      column = (int16_t)((B << 8) | C);
-      row    = (int16_t)((H << 8) | L);
+    attrs = &state->speccy->attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
 
-      // HL must be row, BC must be column
-      attrs = &state->speccy->attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
-    }
-
-    state->searchlight.use_full_window = use_full_window;
-    searchlight_plot(state, attrs); // DE turned into HL from EX above
+    // Conv: clip_left turned from state variable into function parameter.
+    searchlight_plot(state, attrs, clip_left); // DE turned into HL from EX above
 
 next:
     // POP HL
@@ -5378,23 +5356,22 @@ next:
 void searchlight_caught(tgestate_t                   *state,
                         const searchlight_movement_t *slstate)
 {
-  uint8_t map_y, map_x; /* was D,E */
+  uint8_t mappos_y, mappos_x; /* was D,E */
+  uint8_t y, x;
 
   assert(state   != NULL);
   assert(slstate != NULL);
 
-  map_y = state->map_position.y;
-  map_x = state->map_position.x;
+  /* Note that this code can get hit even when the hero is in bed... */
 
-  if ((slstate->xy.x + 5 >= map_x + 12 || slstate->xy.x + 10 < map_x + 10) ||
-      (slstate->xy.y + 5 >= map_y + 10 || slstate->xy.y + 12 < map_y +  6))
+  mappos_y = state->map_position.y;
+  mappos_x = state->map_position.x;
+  x        = slstate->xy.x;
+  y        = slstate->xy.y;
+
+  if (x + 5 >= mappos_x + 12 || x + 10 <  mappos_x + 10 ||
+      y + 5 >= mappos_y + 10 || y + 12 <= mappos_y + 6)
     return;
-
-  // FUTURE: We could rearrange the above like this:
-  //if ((slm->x >= map_x + 7 || slm->x < map_x    ) ||
-  //    (slm->y >= map_y + 5 || slm->y < map_y - 6))
-  //  return;
-  // But that needs checking for edge cases.
 
   /* It seems odd to not do this (cheaper) test sooner. */
   if (state->searchlight_state == searchlight_STATE_CAUGHT)
@@ -5413,10 +5390,13 @@ void searchlight_caught(tgestate_t                   *state,
 /**
  * $AEB8: Searchlight plotter.
  *
- * \param[in] state Pointer to game state.
- * \param[in] attrs Pointer to screen attributes. (was DE)
+ * \param[in] state     Pointer to game state.
+ * \param[in] attrs     Pointer to screen attributes (can be out of bounds!) (was DE)
+ * \param[in] clip_left Spotlight is to the left of the main window. (was $AE75)
  */
-void searchlight_plot(tgestate_t *state, attribute_t *attrs)
+void searchlight_plot(tgestate_t  *state,
+                      attribute_t *attrs,
+                      int          clip_left)
 {
   /**
    * $AF3E: Searchlight circle shape.
@@ -5442,61 +5422,70 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
   };
 
   assert(state != NULL);
+  /* We can't ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs) here as expected as
+   * the attrs pointer can be out of bounds... */
 
   attribute_t *const attrs_base = &state->speccy->attributes[0];
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs_base);
 
   const uint8_t *shape;       /* was DE' */
   uint8_t        iters;       /* was C' */
-  uint8_t        use_full_window; /* was A */
+  ptrdiff_t      x;           /* was A */
   attribute_t   *max_y_attrs; /* was HL */
   attribute_t   *saved_attrs; /* was stack */
-  attribute_t   *pattrs2;     /* was HL */
+  attribute_t   *min_y_attrs; /* was HL */
   uint8_t        iters2;      /* was B' */
-  int            carry = 0;
+  int            carry = 0;   /* added */
+
+  /* Screen coords are x = 0..31, y = 0..23.
+   * Game window occupies attribute rows 2..17 and columns 7..29 (inclusive).
+   * Attribute row 18 is the row beyond the bottom edge of the game window.
+   */
+
+  // Conv: clip_left code was made a parameter, code handling it is hoisted.
 
   shape = &searchlight_shape[0];
   iters = 16; /* height */
   do
   {
-    ptrdiff_t x; /* was A */
+    x = (attrs - attrs_base) % state->width; // Conv: was '& 31'. hoisted.
 
-    use_full_window = state->searchlight.use_full_window; // a clipping flag maybe?
+    // Finish if we're beyond the maximum y
 
-    /* Screen coords are x = 0..31, y = 0..23.
-     * Game window occupies attribute rows 2..17 and columns 7..29 (inclusive).
-     * Attribute row 18 is the row beyond the bottom edge of the game window. */
-
-    x = (attrs - attrs_base) & 31; // '& 31' -> '% state->width'  Conv: hoisted
-
-    // pattrs1 must be y limit
-    max_y_attrs = &attrs_base[32 * 18]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
-    if (use_full_window)
+    max_y_attrs = &attrs_base[18 * state->width]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
+    if (clip_left)
     {
+      // Bug: This chunk seems to do nothing useful but allow the bottom
+      // border to be overwritten. FUTURE: Remove.
       // Conv: was: if ((E & 31) >= 22) L = 32;
-      // E & 31 => 4th to last row, or later
       if (x >= 22) // 22 => 8 attrs away from the edge maybe?
-        max_y_attrs = &attrs_base[32 * 19]; // colors in bottom border
+        max_y_attrs = &attrs_base[19 * state->width]; // row 19, column 0
     }
     if (attrs >= max_y_attrs) // gone off the end of the game screen?
-      goto exit; // Conv: Original code just returned, goto exit instead so I can force a screen refresh down there.
+      /* Conv: Original code just returned, instead goto exit so I can force
+       * a screen refresh down there. */
+      goto exit;
 
     saved_attrs = attrs; // PUSH DE
 
-    pattrs2 = &attrs_base[32 * 2]; // screen attribute address (row 2, column 0)
-    if (use_full_window)
+    // Clip/skip rows until we're in bounds
+
+    min_y_attrs = &attrs_base[2 * state->width]; // screen attribute address (row 2, column 0)
+    if (clip_left)
     {
+      // Bug: Again, this chunk seems to do nothing useful but allow the
+      // bottom border to be overwritten. FUTURE: Remove.
       // Conv: was: if (E & 31) >= 7) L = 32;
       if (x >= 7)
-        pattrs2 = &attrs_base[32 * 1]; // (row 1, column 0) // seems responsible for colouring in the top border
+        min_y_attrs = &attrs_base[1 * state->width]; // row 1, column 0
     }
-    if (attrs < pattrs2)
+    if (attrs < min_y_attrs)
     {
       shape += 2;
       goto next_row;
     }
 
-    iters2 = 2; /* iterations */ // bytes per row
+    iters2 = 2; /* iterations - rowbytes */
     do
     {
       uint8_t iters3; /* was B */
@@ -5504,38 +5493,40 @@ void searchlight_plot(tgestate_t *state, attribute_t *attrs)
 
       pixels = *shape; // Conv: Original uses A as temporary.
 
-      iters3 = 8; /* iterations */ // bits per byte
+      iters3 = 8; /* iterations - bits per byte */
       do
       {
-        x = (attrs - attrs_base) & 31; // Conv: was interleaved; '& 31's hoisted from below; '& 31' -> '% state->width' as above
-        if (!use_full_window)
+        x = (attrs - attrs_base) % state->width;  // Conv: was '& 31'. was interleaved; '& 31's hoisted from below
+
+        /* clip right hand edge */
+
+        // i don't presently see any evidence that this chunk affects anything in the game, bcbw
+        // does this stop us sliding into the next scanline of data?
+        if (clip_left)
         {
           if (x >= 22)
-            // don't render right of the game window
-            goto dont_plot;
+            goto dont_plot; // this doesn't skip the whole remainder of the row unlike the case below
         }
         else
         {
           if (x >= 30) // Conv: Constant 30 was in E
           {
-            // don't render right of the game window
-            do
-              shape++;
-            while (--iters2);
-
-            goto next_row;
+            shape += iters2; /* Conv: Was a loop. */
+            goto next_row; // skip whole row
           }
         }
 
-        // plot
+        /* clip left hand edge */
+
         if (x < 7) // Conv: Constant 7 was in D
         {
-          // don't render left of the game window
+          /* Don't render leftwards of the game window */
 dont_plot:
           RL(pixels); // no plot
         }
         else
         {
+          // plot
           RL(pixels);
           if (carry)
             *attrs = attribute_YELLOW_OVER_BLACK;

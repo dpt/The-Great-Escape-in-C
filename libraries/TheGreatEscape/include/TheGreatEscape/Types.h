@@ -670,10 +670,10 @@ character_class_data_t;
 typedef struct searchlight_movement
 {
   xy_t           xy;
-  uint8_t        step;     // step counter thing
+  uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
-  uint8_t        counter;  // sign magnitude counter
-  const uint8_t *ptr;
+  uint8_t        index;     /**< Index + direction in top bit. */
+  const uint8_t *ptr;       /**< Points into searchlight movement data. */
 }
 searchlight_movement_t;
 
