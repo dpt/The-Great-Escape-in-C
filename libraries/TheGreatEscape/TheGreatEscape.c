@@ -8517,17 +8517,33 @@ uint8_t get_target(tgestate_t       *state,
   {
     step = route->step;
 
+    /* Control can arrive here with routeindex set to zero. This happens when
+     * the hero stands up during breakfast, is pursued by guards, then when
+     * left to idle sits down and the pursuing guards resume their original
+     * positions. get_route() will return in that case a NULL routebytes
+     * pointer. This is not a conversion issue but happens even in the
+     * original game where it starts fetching from $0001. In the Spectrum ROM
+     * location $0001 holds XOR A ($AF).
+     */
+
     routebytes = get_route(routeindex);
-    assert(routebytes != NULL);
 
     if (step == 255)
+    {
       /* Conv: Original code was relying on being able to fetch the preceding
        * route's final byte (255) in all cases. That's not going to work with
        * the way routes are defined in the portable version of the game so
        * instead just set routebyte to 255. */
       routebyte = routebyte_END;
+    }
     else
-      routebyte = routebytes[step]; // HL was temporary
+    {
+      /* Conv: If routebytes is NULL then mimic the ROM fetch bug. */
+      if (routebytes == NULL)
+        routebyte = 0xAF; /* location 7 + door_REVERSE (nonsensical) */
+      else
+        routebyte = routebytes[step]; // HL was temporary
+    }
 
     if (routebyte == routebyte_END)
       /* Route byte == 255: End of route */
