@@ -585,6 +585,7 @@
 					../../include,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_CFLAGS = "-DNDEBUG";
 				SDKROOT = macosx;
 				USE_HEADERMAP = NO;
 				USE_HEADERMAPS = NO;
