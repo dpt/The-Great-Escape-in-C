@@ -20,6 +20,7 @@ typedef struct zxspectrum_private
   zxconfig_t          config;
 
   unsigned int       *screen; /* Converted screen */
+  unsigned int        prev_border;
 }
 zxspectrum_private_t;
 
@@ -48,9 +49,21 @@ static uint8_t zx_in(zxspectrum_t *state, uint16_t address)
 
 static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
 {
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
+
   switch (address)
   {
   case port_BORDER_EAR_MIC:
+    {
+      unsigned int border;
+
+      border = byte & port_MASK_BORDER;
+      if (border != prv->prev_border)
+      {
+        prv->config.border(border, prv->config.opaque);
+        prv->prev_border = border;
+      }
+    }
     break;
 
   default:
@@ -100,6 +113,8 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
     free(prv);
     return NULL;
   }
+
+  prv->prev_border = ~0;
 
   return &prv->pub;
 }

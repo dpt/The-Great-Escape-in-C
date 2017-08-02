@@ -107,6 +107,28 @@ static int key_handler(uint16_t port, void *opaque)
     return zxkeyset_for_port(port, view->keys);
 }
 
+static void border_handler(int colour, void *opaque)
+{
+  TheGreatEscapeView *view = (__bridge id) opaque;
+  NSColor            *c;
+
+  switch (colour)
+  {
+    default:
+    case 0: c = NSColor.blackColor;   break;
+    case 1: c = NSColor.blueColor;    break;
+    case 2: c = NSColor.redColor;     break;
+    case 3: c = NSColor.magentaColor; break;
+    case 4: c = NSColor.greenColor;   break;
+    case 5: c = NSColor.cyanColor;    break;
+    case 6: c = NSColor.yellowColor;  break;
+    case 7: c = NSColor.whiteColor;   break;
+  }
+
+  // FIXME: Do this on the UI thread.
+  [[view window] setBackgroundColor:c];
+}
+
 // -----------------------------------------------------------------------------
 
 #pragma mark - Game thread
@@ -140,6 +162,7 @@ static void *tge_thread(void *arg)
     &draw_handler,
     &sleep_handler,
     &key_handler,
+    &border_handler
   };
 
   /* Configuration of The Great Escape instance. */

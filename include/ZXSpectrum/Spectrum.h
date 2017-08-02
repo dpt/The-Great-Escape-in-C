@@ -158,6 +158,9 @@ typedef struct zxconfig
 
   /** Called when a key is tested. */
   int (*key)(uint16_t port, void *opaque);
+
+  /** Called when the border colour is changed. */
+  void (*border)(int colour, void *opaque);
 }
 zxconfig_t;
 
