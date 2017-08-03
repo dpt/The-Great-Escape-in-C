@@ -2163,10 +2163,13 @@ void wave_morale_flag(tgestate_t *state)
     state->moraleflag_screen_address = scanline;
   }
 
-  flag_bitmap = flag_down;
+  flag_bitmap = &flag_down[0];
   if (*pgame_counter & 2)
-    flag_bitmap = flag_up;
-  plot_bitmap(state, flag_bitmap, state->moraleflag_screen_address, 3, 25); // one is 22, one is 25
+    flag_bitmap = &flag_up[0];
+  plot_bitmap(state,
+              flag_bitmap,
+              state->moraleflag_screen_address,
+              3, 25);
 }
 
 /* ----------------------------------------------------------------------- */
