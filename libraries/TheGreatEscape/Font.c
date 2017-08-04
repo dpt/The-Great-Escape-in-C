@@ -1,3 +1,4 @@
+#include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/Tiles.h"
 
 #include "TheGreatEscape/Font.h"
@@ -7,44 +8,425 @@
  */
 const tile_t bitmap_font[38] =
 {
-  /*  0 */ { { 0x00, 0x7C, 0xFE, 0xEE, 0xEE, 0xEE, 0xFE, 0x7C } }, // 0 or O
-  /*  1 */ { { 0x00, 0x1E, 0x3E, 0x6E, 0x0E, 0x0E, 0x0E, 0x0E } }, // 1
-  /*  2 */ { { 0x00, 0x7C, 0xFE, 0xCE, 0x1C, 0x70, 0xFE, 0xFE } }, // 2
-  /*  3 */ { { 0x00, 0xFC, 0xFE, 0x0E, 0x3C, 0x0E, 0xFE, 0xFC } }, // 3
-  /*  4 */ { { 0x00, 0x0E, 0x1E, 0x3E, 0x6E, 0xFE, 0x0E, 0x0E } }, // 4
-  /*  5 */ { { 0x00, 0xFC, 0xC0, 0xFC, 0x7E, 0x0E, 0xFE, 0xFC } }, // 5
-  /*  6 */ { { 0x00, 0x38, 0x60, 0xFC, 0xFE, 0xC6, 0xFE, 0x7C } }, // 6
-  /*  7 */ { { 0x00, 0xFE, 0x0E, 0x0E, 0x1C, 0x1C, 0x38, 0x38 } }, // 7
-  /*  8 */ { { 0x00, 0x7C, 0xEE, 0xEE, 0x7C, 0xEE, 0xEE, 0x7C } }, // 8
-  /*  9 */ { { 0x00, 0x7C, 0xFE, 0xC6, 0xFE, 0x7E, 0x0C, 0x38 } }, // 9
-  /* 10 */ { { 0x00, 0x38, 0x7C, 0x7C, 0xEE, 0xEE, 0xFE, 0xEE } }, // A
-  /* 11 */ { { 0x00, 0xFC, 0xEE, 0xEE, 0xFC, 0xEE, 0xEE, 0xFC } }, // B
-  /* 12 */ { { 0x00, 0x1E, 0x7E, 0xFE, 0xF0, 0xFE, 0x7E, 0x1E } }, // C
-  /* 13 */ { { 0x00, 0xF0, 0xFC, 0xEE, 0xEE, 0xEE, 0xFC, 0xF0 } }, // D
-  /* 14 */ { { 0x00, 0xFE, 0xFE, 0xE0, 0xFE, 0xE0, 0xFE, 0xFE } }, // E
-  /* 15 */ { { 0x00, 0xFE, 0xFE, 0xE0, 0xFC, 0xE0, 0xE0, 0xE0 } }, // F
-  /* 16 */ { { 0x00, 0x1E, 0x7E, 0xF0, 0xEE, 0xF2, 0x7E, 0x1E } }, // G
-  /* 17 */ { { 0x00, 0xEE, 0xEE, 0xEE, 0xFE, 0xEE, 0xEE, 0xEE } }, // H
-  /* 18 */ { { 0x00, 0x38, 0x38, 0x38, 0x38, 0x38, 0x38, 0x38 } }, // I
-  /* 19 */ { { 0x00, 0xFE, 0x38, 0x38, 0x38, 0x38, 0xF8, 0xF0 } }, // J
-  /* 20 */ { { 0x00, 0xEE, 0xEE, 0xFC, 0xF8, 0xFC, 0xEE, 0xEE } }, // K
-  /* 21 */ { { 0x00, 0xE0, 0xE0, 0xE0, 0xE0, 0xE0, 0xFE, 0xFE } }, // L
-  /* 22 */ { { 0x00, 0x6C, 0xFE, 0xFE, 0xD6, 0xD6, 0xC6, 0xC6 } }, // M
-  /* 23 */ { { 0x00, 0xE6, 0xF6, 0xFE, 0xFE, 0xEE, 0xE6, 0xE6 } }, // N
-  /* 24 */ { { 0x00, 0xFC, 0xEE, 0xEE, 0xEE, 0xFC, 0xE0, 0xE0 } }, // P
-  /* 25 */ { { 0x00, 0x7C, 0xFE, 0xEE, 0xEE, 0xEE, 0xFC, 0x7E } }, // Q
-  /* 26 */ { { 0x00, 0xFC, 0xEE, 0xEE, 0xFC, 0xF8, 0xEC, 0xEE } }, // R
-  /* 27 */ { { 0x00, 0x7E, 0xFE, 0xF0, 0x7C, 0x1E, 0xFE, 0xFC } }, // S
-  /* 28 */ { { 0x00, 0xFE, 0xFE, 0x38, 0x38, 0x38, 0x38, 0x38 } }, // T
-  /* 29 */ { { 0x00, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xFE, 0x7C } }, // U
-  /* 30 */ { { 0x00, 0xEE, 0xEE, 0xEE, 0xEE, 0x6C, 0x7C, 0x38 } }, // V
-  /* 31 */ { { 0x00, 0xC6, 0xC6, 0xC6, 0xD6, 0xFE, 0xEE, 0xC6 } }, // W
-  /* 32 */ { { 0x00, 0xC6, 0xEE, 0x7C, 0x38, 0x7C, 0xEE, 0xC6 } }, // X
-  /* 33 */ { { 0x00, 0xC6, 0xEE, 0x7C, 0x38, 0x38, 0x38, 0x38 } }, // Y
-  /* 34 */ { { 0x00, 0xFE, 0xFE, 0x0E, 0x38, 0xE0, 0xFE, 0xFE } }, // Z
-  /* 35 */ { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // SPACE
-  /* 36 */ { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x30 } }, // FULL STOP
-  /* 37 */ { { 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA } }, // UNKNOWN (added)
+  { /* Used for both zero and letter 'O' characters. */
+    { ________,
+      _XXXXX__,
+      XXXXXXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXXX_,
+      _XXXXX__
+    }
+  },
+  {
+    { ________,
+      ___XXXX_,
+      __XXXXX_,
+      _XX_XXX_,
+      ____XXX_,
+      ____XXX_,
+      ____XXX_,
+      ____XXX_
+    }
+  },
+  {
+    { ________,
+      _XXXXX__,
+      XXXXXXX_,
+      XX__XXX_,
+      ___XXX__,
+      _XXX____,
+      XXXXXXX_,
+      XXXXXXX_
+    }
+  },
+  {
+    { ________,
+      XXXXXX__,
+      XXXXXXX_,
+      ____XXX_,
+      __XXXX__,
+      ____XXX_,
+      XXXXXXX_,
+      XXXXXX__
+    }
+  },
+  {
+    { ________,
+      ____XXX_,
+      ___XXXX_,
+      __XXXXX_,
+      _XX_XXX_,
+      XXXXXXX_,
+      ____XXX_,
+      ____XXX_
+    }
+  },
+  {
+    { ________,
+      XXXXXX__,
+      XX______,
+      XXXXXX__,
+      _XXXXXX_,
+      ____XXX_,
+      XXXXXXX_,
+      XXXXXX__
+    }
+  },
+  {
+    { ________,
+      __XXX___,
+      _XX_____,
+      XXXXXX__,
+      XXXXXXX_,
+      XX___XX_,
+      XXXXXXX_,
+      _XXXXX__
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      ____XXX_,
+      ____XXX_,
+      ___XXX__,
+      ___XXX__,
+      __XXX___,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      _XXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      _XXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      _XXXXX__
+    }
+  },
+  {
+    { ________,
+      _XXXXX__,
+      XXXXXXX_,
+      XX___XX_,
+      XXXXXXX_,
+      _XXXXXX_,
+      ____XX__,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      __XXX___,
+      _XXXXX__,
+      _XXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXXX_,
+      XXX_XXX_
+    }
+  },
+  {
+    { ________,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__
+    }
+  },
+  {
+    { ________,
+      ___XXXX_,
+      _XXXXXX_,
+      XXXXXXX_,
+      XXXX____,
+      XXXXXXX_,
+      _XXXXXX_,
+      ___XXXX_
+    }
+  },
+  {
+    { ________,
+      XXXX____,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      XXXX____
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      XXXXXXX_,
+      XXX_____,
+      XXXXXXX_,
+      XXX_____,
+      XXXXXXX_,
+      XXXXXXX_
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      XXXXXXX_,
+      XXX_____,
+      XXXXXX__,
+      XXX_____,
+      XXX_____,
+      XXX_____
+    }
+  },
+  {
+    { ________,
+      ___XXXX_,
+      _XXXXXX_,
+      XXXX____,
+      XXX_XXX_,
+      XXXX__X_,
+      _XXXXXX_,
+      ___XXXX_
+    }
+  },
+  {
+    { ________,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_
+    }
+  },
+  {
+    { ________,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      XXXXX___,
+      XXXX____
+    }
+  },
+  {
+    { ________,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      XXXXX___,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_
+    }
+  },
+  {
+    { ________,
+      XXX_____,
+      XXX_____,
+      XXX_____,
+      XXX_____,
+      XXX_____,
+      XXXXXXX_,
+      XXXXXXX_
+    }
+  },
+  {
+    { ________,
+      _XX_XX__,
+      XXXXXXX_,
+      XXXXXXX_,
+      XX_X_XX_,
+      XX_X_XX_,
+      XX___XX_,
+      XX___XX_
+    }
+  },
+  {
+    { ________,
+      XXX__XX_,
+      XXXX_XX_,
+      XXXXXXX_,
+      XXXXXXX_,
+      XXX_XXX_,
+      XXX__XX_,
+      XXX__XX_
+    }
+  },
+  {
+    { ________,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      XXX_____,
+      XXX_____
+    }
+  },
+  {
+    { ________,
+      _XXXXX__,
+      XXXXXXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      _XXXXXX_
+    }
+  },
+  {
+    { ________,
+      XXXXXX__,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXX__,
+      XXXXX___,
+      XXX_XX__,
+      XXX_XXX_
+    }
+  },
+  {
+    { ________,
+      _XXXXXX_,
+      XXXXXXX_,
+      XXXX____,
+      _XXXXX__,
+      ___XXXX_,
+      XXXXXXX_,
+      XXXXXX__
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      XXXXXXX_,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXXXXXX_,
+      _XXXXX__
+    }
+  },
+  {
+    { ________,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      XXX_XXX_,
+      _XX_XX__,
+      _XXXXX__,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      XX___XX_,
+      XX___XX_,
+      XX___XX_,
+      XX_X_XX_,
+      XXXXXXX_,
+      XXX_XXX_,
+      XX___XX_
+    }
+  },
+  {
+    { ________,
+      XX___XX_,
+      XXX_XXX_,
+      _XXXXX__,
+      __XXX___,
+      _XXXXX__,
+      XXX_XXX_,
+      XX___XX_
+    }
+  },
+  {
+    { ________,
+      XX___XX_,
+      XXX_XXX_,
+      _XXXXX__,
+      __XXX___,
+      __XXX___,
+      __XXX___,
+      __XXX___
+    }
+  },
+  {
+    { ________,
+      XXXXXXX_,
+      XXXXXXX_,
+      ____XXX_,
+      __XXX___,
+      XXX_____,
+      XXXXXXX_,
+      XXXXXXX_
+    }
+  },
+  {
+    { ________,
+      ________,
+      ________,
+      ________,
+      ________,
+      ________,
+      ________,
+      ________
+    }
+  },
+  {
+    { ________,
+      ________,
+      ________,
+      ________,
+      ________,
+      ________,
+      __XX____,
+      __XX____
+    }
+  },
+  { /* Conv: Added to represent unknown glyphs. */
+    {
+      _X_X_X_X,
+      X_X_X_X_,
+      _X_X_X_X,
+      X_X_X_X_,
+      _X_X_X_X,
+      X_X_X_X_,
+      _X_X_X_X,
+      X_X_X_X_
+    }
+  },
 };
 
 /**
