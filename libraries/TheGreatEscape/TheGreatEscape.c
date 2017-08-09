@@ -6106,10 +6106,18 @@ uint16_t multiply_by_4(uint8_t A)
  */
 int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 {
+  /* Like a bounds_t but the elements are in a wacky order. */
+  // FUTURE: Re-order the structure members into a bounds_t.
+  typedef struct wackybounds
+  {
+    uint8_t x1, x0, y1, y0;
+  }
+  wackybounds_t;
+
   /**
    * $6B85: Room dimensions.
    */
-  static const bounds_t roomdef_bounds[10] =
+  static const wackybounds_t roomdef_bounds[10] =
   {
     {  66, 26,  70, 22 },
     {  62, 22,  58, 26 },
@@ -6123,10 +6131,10 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     {  56, 50,  88, 10 },
   };
 
-  const bounds_t *room_bounds;   /* was BC */
-  const pos_t    *saved_pos;     /* was HL */
-  const bounds_t *object_bounds; /* was HL */
-  uint8_t         nbounds;       /* was B */
+  const wackybounds_t *room_bounds;   /* was BC */
+  const pos_t         *saved_pos;     /* was HL */
+  const bounds_t      *object_bounds; /* was HL */
+  uint8_t              nbounds;       /* was B */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
