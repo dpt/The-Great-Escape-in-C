@@ -3469,7 +3469,7 @@ void character_sit_sleep_common(tgestate_t *state,
   // $8022 -> vischar[1]->route
   // others -> character_structs->route
 
-  route->index = route_WANDER; /* Choose random locations[]. */
+  route->index = route_HALT; /* Stand still. */
 
   if (state->room_index != room)
   {
@@ -3553,7 +3553,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   *pflag = 255;
 
   /* Reset only the route index. */
-  state->vischars[0].route.index = 0; /* Stand still. */
+  state->vischars[0].route.index = route_HALT; /* Stand still. */
 
   /* Set hero position (x,y) to zero. */
   state->vischars[0].mi.pos.x = 0;
@@ -8194,7 +8194,7 @@ found_empty_slot:
   DEtarget = &vischar->target;
   HLroute  = &charstr->route;
 again:
-  if (HLroute->index != 0) /* if not stood still */
+  if (HLroute->index != route_HALT) /* if not stood still */
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
@@ -8608,7 +8608,7 @@ void move_characters(tgestate_t *state)
   // HL += 3; // point at charstr->route
 
   /* If standing still, return. */
-  if (charstr->route.index == 0) /* temp was A */
+  if (charstr->route.index == route_HALT) /* temp was A */
     // POP HL_pos
     return;
 
@@ -8950,7 +8950,7 @@ void character_event(tgestate_t *state, route_t *route)
 
   // POP route (HL)
 
-  route->index = 0; /* Stand still. */
+  route->index = route_HALT; /* Stand still. */
 }
 
 /**
@@ -9329,7 +9329,7 @@ bribed_visible:
     }
   }
 
-  if (vischar2->route.index == 0) /* Stand still */
+  if (vischar2->route.index == route_HALT) /* Stand still */
   {
     character_behaviour_set_input(state, vischar, 0 /* new_input */);
     return; // exit via
@@ -9584,7 +9584,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
         food_discovered_counter = 255; /* food is poisoned */
       state->food_discovered_counter = food_discovered_counter;
 
-      vischar->route.index = 0; /* Stand still (ie. the dog is poisoned) */
+      vischar->route.index = route_HALT; /* Stand still (ie. the dog is poisoned) */
 
       character_behaviour_set_input(state, vischar, 0 /* new_input */);
       return;
@@ -9748,7 +9748,7 @@ do_character_event:
    */
 
   character_event(state, route);
-  if (route->index == 0) /* standing still */
+  if (route->index == route_HALT) /* standing still */
     return 0;
   else
     return get_target_assign_pos(state, vischar, route); // re-enter
@@ -10372,7 +10372,7 @@ next:
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
-  state->vischars[0].route.index = 0; /* Stand still. */ // stores a byte, not a word
+  state->vischars[0].route.index = route_HALT; /* Stand still. */ // stores a byte, not a word
   transition(state, &solitary_pos);
 
   NEVER_RETURNS;

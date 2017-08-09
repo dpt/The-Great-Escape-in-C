@@ -362,7 +362,7 @@ typedef uint8_t eventtime_t;
  */
 typedef struct route
 {
-// FUTURE: Add route_STOP or route_HALT for 0
+#define route_HALT 0x00
 #define route_WANDER 0xFF
 #define route_REVERSED (1 << 7)
   uint8_t index; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
