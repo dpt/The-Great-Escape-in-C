@@ -6147,10 +6147,13 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 
   room_bounds = &roomdef_bounds[state->roomdef_bounds_index];
   saved_pos = &state->saved_pos.pos;
-  /* Conv: Merged conditions. */
-  if (room_bounds->x0     < saved_pos->x || room_bounds->x1 + 4 >= saved_pos->x ||
-      room_bounds->y0 - 4 < saved_pos->y || room_bounds->y1     >= saved_pos->y)
-    goto stop;
+  /* Conv: Merged conditions, flipped compares and reordered. */
+  // inclusive/exclusive bounds look strange here
+  if (saved_pos->x <= room_bounds->x0 + 4 || saved_pos->x > room_bounds->x1 ||
+      saved_pos->y <= room_bounds->y0     || saved_pos->y > room_bounds->y1 - 4)
+  {
+    goto hit_bounds;
+  }
 
   object_bounds = &state->roomdef_object_bounds[0]; /* Conv: Moved around. */
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
@@ -6169,8 +6172,8 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     if (y < object_bounds->y0 || y >= object_bounds->y1)
       goto next;
 
-stop:
-    /* Found. */
+hit_bounds:
+    /* Toggle movement direction preference. */
     vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
     return 1; /* return NZ */
 
@@ -6179,7 +6182,7 @@ next:
     object_bounds++;
   }
 
-  /* Not found. */
+  /* Encountered no bounds. */
   return 0; /* return Z */
 }
 
