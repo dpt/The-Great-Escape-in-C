@@ -70,8 +70,3 @@ Fixed
 	* Fixed XXaug17: Original game derefs `NULL`, walks into ROM.
 * Sat down NPC prisoners vanish at end of breakfast.
 	* Fixed 9aug17: `character_sit_sleep_common()` was assigning `route_WANDER` to `route->index`, not zero.
-
-To Do
------
-* Multiple instantiation.
-
