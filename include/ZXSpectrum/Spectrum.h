@@ -48,7 +48,7 @@ enum
 {
   port_KEMPSTON_JOYSTICK        = 0x001F, /* 000FUDLR / active bits high */
 
-  port_BORDER                   = 0x00FE, /* Border, Ear, Mic */
+  port_BORDER_EAR_MIC           = 0x00FE, /* Border, Ear, Mic */
 
   port_KEYBOARD_SHIFTZXCV       = 0xFEFE, /* 11111110 */
   port_KEYBOARD_ASDFG           = 0xFDFE, /* 11111101 */
@@ -58,6 +58,16 @@ enum
   port_KEYBOARD_POIUY           = 0xDFFE, /* 11011111 */
   port_KEYBOARD_ENTERLKJH       = 0xBFFE, /* 10111111 */
   port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE, /* 01111111 */
+};
+
+/**
+ * Masks for port $FE.
+ */
+enum
+{
+  port_MASK_BORDER  = 7 << 0,
+  port_MASK_MIC     = 1 << 3,
+  port_MASK_EAR     = 1 << 4,
 };
 
 /* Memory map */

@@ -523,8 +523,10 @@ void menu_screen(tgestate_t *state)
         C = BC & 0xFF;
         if (--B == 0 && --C == 0)
         {
-          channel0_index ^= 16;
-          state->speccy->out(state->speccy, port_BORDER, channel0_index & 0xFF);
+          channel0_index ^= port_MASK_EAR;
+          state->speccy->out(state->speccy,
+                             port_BORDER_EAR_MIC,
+                             channel0_index & 0xFF);
           BC = DE;
         }
         // FIXME else B & C need writing back
@@ -533,8 +535,10 @@ void menu_screen(tgestate_t *state)
         Cdash = BCdash & 0xFF;
         if (--Bdash == 0 && --Cdash == 0)
         {
-          channel1_index ^= 16;
-          state->speccy->out(state->speccy, port_BORDER, channel1_index & 0xFF);
+          channel1_index ^= port_MASK_EAR;
+          state->speccy->out(state->speccy,
+                             port_BORDER_EAR_MIC,
+                             channel1_index & 0xFF);
           BCdash = DEdash;
         }
         // FIXME else B' & C' need writing back

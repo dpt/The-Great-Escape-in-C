@@ -2507,15 +2507,15 @@ void play_speaker(tgestate_t *state, sound_t sound)
   iters = sound >> 8;
   delay = sound & 0xFF;
 
-  speakerbit = 16; /* Initial speaker bit. */
+  speakerbit = port_MASK_EAR; /* Initial speaker bit. */
   do
   {
-    state->speccy->out(state->speccy, port_BORDER, speakerbit); /* Play. */
+    state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit); /* Play. */
 
     /* Conv: Removed self-modified counter. */
     state->speccy->sleep(state->speccy, sleeptype_SOUND, delay);
 
-    speakerbit ^= 16; /* Toggle speaker bit. */
+    speakerbit ^= port_MASK_EAR; /* Toggle speaker bit. */
   }
   while (--iters);
 }
@@ -12616,7 +12616,7 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
          SCREEN_ATTRIBUTES_LENGTH);
 
   /* Set the screen border to black. */
-  state->speccy->out(state->speccy, port_BORDER, 0);
+  state->speccy->out(state->speccy, port_BORDER_EAR_MIC, 0);
 
   /* Redraw the whole screen. */
   state->speccy->draw(state->speccy, NULL); // Conv: Added
