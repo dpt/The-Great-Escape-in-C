@@ -461,8 +461,8 @@ void menu_screen(tgestate_t *state)
   uint8_t  iters;           /* was H */
   uint16_t channel0_index;  /* was HL */
   uint16_t channel1_index;  /* was HL' */
-  uint8_t  L;               /* was L */
-  uint8_t  Ldash;           /* was L' */
+  uint8_t  speaker0;        /* was L */
+  uint8_t  speaker1;        /* was L' */
   uint8_t  B;               /* was B */
   uint8_t  C;               /* was C */
   uint8_t  Bdash;           /* was B' */
@@ -489,8 +489,7 @@ void menu_screen(tgestate_t *state)
         break;
       channel0_index = 0;
     }
-    DE = BC = get_tuning(datum);
-    channel0_index &= 0xFF00; // was L = 0;
+    DE = BC = get_tuning(datum, &speaker0);
 
     channel1_index = state->music_channel1_index + 1;
     /* Loop until the end marker is encountered. */
@@ -502,14 +501,10 @@ void menu_screen(tgestate_t *state)
         break;
       channel1_index = 0;
     }
-    DEdash = BCdash = get_tuning(datum);
-    channel1_index &= 0xFF00; // was Ldash = 0;
+    DEdash = BCdash = get_tuning(datum, &speaker1);
 
     if ((BCdash >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
-    {
-      BCdash = BC;
-      DEdash = BCdash;
-    }
+      DEdash = BCdash = BC;
 
     overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
     do
@@ -523,25 +518,27 @@ void menu_screen(tgestate_t *state)
         C = BC & 0xFF;
         if (--B == 0 && --C == 0)
         {
-          channel0_index ^= port_MASK_EAR;
-          state->speccy->out(state->speccy,
-                             port_BORDER_EAR_MIC,
-                             channel0_index & 0xFF);
+          speaker0 ^= port_MASK_EAR;
+          state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker0);
           BC = DE;
         }
-        // FIXME else B & C need writing back
+        else
+        {
+          BC = (B << 8) | C;
+        }
 
         Bdash = BCdash >> 8;
         Cdash = BCdash & 0xFF;
         if (--Bdash == 0 && --Cdash == 0)
         {
-          channel1_index ^= port_MASK_EAR;
-          state->speccy->out(state->speccy,
-                             port_BORDER_EAR_MIC,
-                             channel1_index & 0xFF);
+          speaker1 ^= port_MASK_EAR;
+          state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker1);
           BCdash = DEdash;
         }
-        // FIXME else B' & C' need writing back
+        else
+        {
+          BCdash = (Bdash << 8) | Cdash;
+        }
       }
       while (--iters);
     }

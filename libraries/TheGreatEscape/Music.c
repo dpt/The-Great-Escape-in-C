@@ -265,10 +265,11 @@ static const uint16_t music_tuning_table[76] =
  * $F52C: Get tuning.
  *
  * \param[in] A Index (never larger than 42?).
+ * \param[in] L Speaker bit, to be reset.
  *
  * \returns (was DE)
  */
-uint16_t get_tuning(uint8_t A)
+uint16_t get_tuning(uint8_t A, uint8_t *L)
 {
   uint16_t BC;
 
@@ -284,7 +285,8 @@ do { x = (x & 0x00FF) | (((x & 0xFF00) + 0x0100) & 0xFF00); } while (0)
   if ((BC & 0xFF00) == 0)
     INC_LO(BC);
 
-  // L = 0; unsure what this is doing
+  /* Reset the speaker bit. */
+  *L = 0;
 
 #undef INC_HI
 #undef INC_LO
