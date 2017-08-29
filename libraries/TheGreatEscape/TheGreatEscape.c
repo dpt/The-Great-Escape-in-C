@@ -5667,19 +5667,20 @@ int collision(tgestate_t *state)
 //      if (state->saved_pos.x > vischar->mi.pos.x + 4 ||
 //          state->saved_pos.x < vischar->mi.pos.x - 4)
 //        goto pop_next;
-    x = vischar->mi.pos.x + 4;
+    x = vischar->mi.pos.x; // Conv: Moved +4 forward.
     saved_x = state->saved_pos.pos.x;
-    if (saved_x != x)
-      if (saved_x > x || state->saved_pos.pos.x < x - 8) // redundant reload of var
-        goto pop_next;
+    if (saved_x != x + 4)
+      if (saved_x > x + 4 || saved_x < x - 4) // Conv: Removed redundant reload.
+        goto pop_next; // no x collision
 
-    y = vischar->mi.pos.y + 4;
+    y = vischar->mi.pos.y; // Conv: Moved +4 forward.
     saved_y = state->saved_pos.pos.y;
-    if (saved_y != y)
-      if (saved_y > y || state->saved_pos.pos.y < y - 8) // redundant reload of var
-        goto pop_next;
+    if (saved_y != y + 4)
+      if (saved_y > y + 4 || saved_y < y - 4) // Conv: Removed redundant reload.
+        goto pop_next; // no y collision
 
-    // Check the heights are within 24 of each other
+    /* Check the heights are within 24 of each other. */
+    // Does this ever happen for real in the game?
     delta = state->saved_pos.pos.height - vischar->mi.pos.height; // Note: Signed result.
     if (delta < 0)
       delta = -delta; // absolute value
