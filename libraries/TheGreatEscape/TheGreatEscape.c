@@ -27,6 +27,8 @@
  * - Replace uint8_t counters, and other types which are smaller than int,
  *   with int where possible.
  * - Merge loop elements into the body of the code.
+ *
+ * Other items are marked "FUTURE:".
  */
 
 /* GLOSSARY
@@ -2973,7 +2975,7 @@ void end_of_breakfast(tgestate_t *state)
   if (state->room_index >= room_1_HUT1RIGHT &&
       state->room_index <= room_28_HUT1LEFT)
   {
-    // FUTURE: replace with call to setup_room_and_plot
+    // FUTURE: Replace this with a call to setup_room_and_plot.
     setup_room(state);
     plot_interior_tiles(state);
   }
@@ -3104,7 +3106,7 @@ void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
     set_character_route(state, *pchars, route);
 
     /* When this is 6, the character being processed is
-     * character_22_PRISONER_3 and the next is character_14_GUARD_14, the
+     * character_22_PRISONER_3 and the next is character_14_GUARD_14: the
      * start of the second half of the list. */
     if (iters == 6)
       route.index++;
@@ -3491,7 +3493,7 @@ void character_sit_sleep_common(tgestate_t *state,
 
     /* Retrieve the parent structure pointer. */
     vc = structof(route, vischar_t, route);
-    vc->room = room_NONE;
+    vc->room = room_NONE; // hides but doesn't disable the character?
 
     setup_room_and_plot(state);
   }
@@ -4565,6 +4567,7 @@ void shunt_map_down(tgestate_t *state)
   get_supertiles(state);
 
   memmove(&state->tile_buf[24], &state->tile_buf[0], tile_buf_length - 24);
+  // Conv: Original code uses LDDR
   memmove(&state->window_buf[24 * 8], &state->window_buf[0], window_buf_length - 24 * 8);
 
   plot_topmost_tiles(state);
@@ -5601,7 +5604,8 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 
   if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
     if (collision(state))
-      return 1; // NZ
+      // there was a collision
+      return 1;
 
   /* At this point we handle non-colliding characters and items only. */
 
@@ -5616,11 +5620,11 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AFDF: Handle collisions.
+ * $AFDF: Handle collisions including items being pushed around.
  *
  * \param[in] state         Pointer to game state.
  *
- * \return 0/1 => ?
+ * \return 0 if no collisions, 1 if collision.
  */
 int collision(tgestate_t *state)
 {
@@ -5689,10 +5693,10 @@ int collision(tgestate_t *state)
       /* and CURRENT vischar is the hero... */
       if (vischar == &state->vischars[0])
       {
-        /* A bribed character pursues the hero. When caught the bribe
-         * will be accepted. */
         if (state->IY->character == state->bribed_character)
         {
+          /* IY is a bribed character pursuing the hero.
+           * When the pursuer catches the hero the bribe will be accepted. */
           accept_bribe(state);
         }
         else
@@ -5708,6 +5712,10 @@ int collision(tgestate_t *state)
         }
       }
     }
+
+    /*
+     * Check for collisions with items.
+     */
 
     // POP HL // $8021 etc.
 
@@ -5755,7 +5763,7 @@ int collision(tgestate_t *state)
             (*coord)++;
           break;
 
-        case direction_BOTTOM_RIGHT: // likely never happens in game
+        case direction_BOTTOM_RIGHT: // likely never happens in game, but code is present
           *coord = C - B;
           break;
 
@@ -5767,16 +5775,20 @@ int collision(tgestate_t *state)
         default:
           assert("Should not happen" == NULL);
           break;
-       }
+      }
 
       // POP HL
       // POP BC
     }
 
+    /*
+     * Reorient the character? Not well understood.
+     */
+
     input = vischar->input & ~input_KICK; // sampled HL = $806D, $804D, $802D, $808D, $800D
     if (input)
     {
-      assert(input < 9);
+      assert(input < 9); // 9 needs a symbol
 
       direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
       if (direction != state->IY->direction)
@@ -5880,7 +5892,7 @@ void accept_bribe(tgestate_t *state)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  *
- * \return 1 => within wall bounds, 0 => outwith
+ * \return 1 => pos hits bounds, 0 => pos doesn't hit bounds
  */
 int bounds_check(tgestate_t *state, vischar_t *vischar)
 {
@@ -5914,14 +5926,14 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
         state->saved_pos.pos.height <  maxheight + 2)
     {
       vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
-      return 1; // NZ
+      return 1; // NZ => outwith wall bounds
     }
 
     wall++;
   }
   while (--iters);
 
-  return 0; // Z
+  return 0; // Z => within wall bounds
 }
 
 /* ----------------------------------------------------------------------- */
@@ -6099,10 +6111,12 @@ uint16_t multiply_by_4(uint8_t A)
  *
  * Leaf.
  *
+ * Position to be checked is passed in in state->saved_pos.
+ *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  *
- * \return 1 if a boundary was hit, 0 otherwise.
+ * \return 1 => pos hits bounds, 0 => pos doesn't hit bounds
  */
 int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 {
@@ -6156,7 +6170,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     pos = &state->saved_pos.pos;
 
     /* Conv: Two-iteration loop unrolled. */
-    x = pos->x;  // note: narrowing // saved_pos must be 8-bit
+    x = pos->x; // note: narrowing // saved_pos must be 8-bit
     if (x < object_bounds->x0 || x >= object_bounds->x1)
       goto next;
     y = pos->y; // note: narrowing
@@ -7250,8 +7264,6 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   item_and_flag = item_NONE; // 'nothing found' marker 255
   DEdash        = 0; // is this even used?
 
-  // Iterate over vischars for ?
-
   iters   = vischars_LENGTH; /* iterations */
   vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
   do
@@ -8023,7 +8035,7 @@ void purge_invisible_characters(tgestate_t *state)
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
     // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
     //
-    // t = (vischar->floogle.y + 4) / 8 / 256;
+    // t = (vischar->floogle.y + 4) / 8 / 256; // round
     // if (t <= miny || t > maxy)
     //   goto reset;
     // t = (vischar->floogle.x) / 8 / 256;
@@ -8533,7 +8545,7 @@ uint8_t get_target(tgestate_t       *state,
       /* Conv: Original code was relying on being able to fetch the preceding
        * route's final byte (255) in all cases. That's not going to work with
        * the way routes are defined in the portable version of the game so
-       * instead just set routebyte to 255. */
+       * instead just set routebyte to 255 here. */
       routebyte = routebyte_END;
     }
     else
@@ -9005,7 +9017,7 @@ void charevnt_hero_release(tgestate_t *state, route_t *route)
   // hero he repeatedly re-enters the room instead of turning around and
   // leaving.
 
-  *route = (route_t) { 36 | route_REVERSED, 3 };
+  *route = (route_t) { 36 | route_REVERSED, 3 }; // reverse the commandant's route
 
   state->automatic_player_counter = 0; /* Force automatic control */
 
@@ -9287,7 +9299,7 @@ pursue_hero:
     {
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
-        /* Food is nearby: Dog moves to food. */
+        /* Set dog target to poisoned food. */
         vischar2->target.x = state->item_structs[item_FOOD].pos.x;
         vischar2->target.y = state->item_structs[item_FOOD].pos.y;
         goto move;
@@ -10970,14 +10982,15 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   uint8_t       offset;         /* was C' */
 //  uint16_t      DEdash; /* was DE' */
   const size_t *enables;        /* was HL' */
-  int16_t       x, y;           // was HL, DE // signed needed for X calc
+  int16_t       x, y;           /* was HL, DE */ /* signed needed for X calc */
   uint8_t      *maskbuf;        /* was HL */
   uint16_t      skip;           /* was DE */
 
   assert(state   != NULL);
   ASSERT_ITEMSTRUCT_VALID(itemstr);
 
-  /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). Potential bug: The use of A later on does not re-clamp it to 0x1F. */
+  /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). */
+  /* Potential bug: The use of A later on does not re-clamp it to 0x1F. */
   item &= 0x3F; // mask off item_FOUND
   ASSERT_ITEM_VALID(item);
 
@@ -11270,8 +11283,8 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
     assert(iters <= MASK_BUFFER_HEIGHT * 8);
     do
     {
-      uint8_t bm0, bm1, bm2, bm3;         // was B, C, E, D
-      uint8_t mask0, mask1, mask2, mask3; // was B', C', E', D'
+      uint8_t bm0, bm1, bm2, bm3;         /* was B, C, E, D */
+      uint8_t mask0, mask1, mask2, mask3; /* was B', C', E', D' */
       int     carry = 0;
       uint8_t p;                          /* was A */
 
@@ -11681,8 +11694,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_E340)
       *screenptr = p;
-
     screenptr += state->columns - 2; // was 22
+
     if (iters > 1)
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
     state->window_buf_pointer = screenptr;
@@ -11986,7 +11999,6 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   if (state->room_index > room_0_OUTDOORS)
   {
     /* Indoors. */
-
     tinypos->x      = pos->x; // note: narrowing
     tinypos->y      = pos->y; // note: narrowing
     tinypos->height = pos->height; // note: narrowing
@@ -11994,7 +12006,6 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   else
   {
     /* Outdoors. */
-
     /* Conv: Unrolled, removed divide-by-8 calls. */
     tinypos->x      = (pos->x + 4 ) >> 3; /* with rounding */
     tinypos->y      = (pos->y     ) >> 3; /* without rounding */
