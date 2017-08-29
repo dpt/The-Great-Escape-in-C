@@ -389,7 +389,7 @@ void set_menu_item_attributes(tgestate_t *state,
   /* Draw */
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(pattr);
   memset(pattr, attrs, 10);
-  
+
   /* Conv: Invalidation added over the original game. */
   invalidate_attrs(state, pattr, 10 * 8, 8);
 }

@@ -40,7 +40,7 @@ static uint8_t zx_in(zxspectrum_t *state, uint16_t address)
   case port_KEYBOARD_SPACESYMSHFTMNB:
   case port_KEMPSTON_JOYSTICK:
     return prv->config.key(address, prv->config.opaque);
-  
+
   default:
     assert("zx_in not implemented for that port" == NULL);
     return 0x00;

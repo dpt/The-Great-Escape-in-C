@@ -200,7 +200,7 @@ void zxscreen_convert(const void    *vscr,
 
   poutput += box.y0 * 256 /* 256 pixels/row (256 words) for output */
            + box.x0 * 32; /* 32 pixels/chunk (32 words) */
-  
+
   width = box.x1 - box.x0; /* hoisted out of loop */
 
   for (linear_y = box.y0; linear_y < box.y1; linear_y++)

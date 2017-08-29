@@ -41,7 +41,7 @@
 {
   zxspectrum_t *zx;
   tgestate_t   *game;
-  
+
   unsigned int *pixels;
   pthread_t     thread;
   zxkeyset_t    keys;
@@ -100,7 +100,7 @@ static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
 static int key_handler(uint16_t port, void *opaque)
 {
   TheGreatEscapeView *view = (__bridge id) opaque;
-  
+
   if (port == 0x001F)
     return view->kempston;
   else
@@ -142,11 +142,11 @@ static void *tge_thread(void *arg)
 
   for (;;) // while (!quit)
     tge_main(game);
-  
+
   //tge_destroy(game);
-  
+
   //ZXSpectrum_destroy(zx);
-  
+
   return NULL;
 }
 
@@ -202,16 +202,16 @@ static void *tge_thread(void *arg)
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
     goto failure;
-  
+
   game = tge_create(zx, &tgeconfig);
   if (game == NULL)
     goto failure;
-  
+
   pthread_create(&thread, NULL /* pthread_attr_t */, tge_thread, (__bridge void *)(self));
-  
+
   return;
-  
-  
+
+
 failure:
   tge_destroy(game);
   zxspectrum_destroy(zx);
@@ -236,7 +236,7 @@ failure:
 
   // The GL context must be active for these functions to have an effect
   [[self openGLContext] makeCurrentContext];
-  
+
   // Configure the view
   glShadeModel(GL_FLAT); // Selects flat shading
   glDisable(GL_DEPTH_TEST); // Don't update the depth buffer.
@@ -323,7 +323,7 @@ failure:
     glPixelZoom(zsx, zsy);
     glDrawPixels(WIDTH, HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   }
-  
+
   // Flush to screen
   glFinish();
 }
@@ -356,7 +356,7 @@ failure:
 
   scale = 1.0f * tag;
 
-  size.width  = WIDTH * scale; // FIXME: Pull these dimensions from somewhere central.
+  size.width  = WIDTH  * scale; // FIXME: Pull these dimensions from somewhere central.
   size.height = HEIGHT * scale;
 
   [[self window] setContentSize:size];
