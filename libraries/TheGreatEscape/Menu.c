@@ -489,7 +489,7 @@ void menu_screen(tgestate_t *state)
         break;
       channel0_index = 0;
     }
-    DE = BC = get_tuning(datum, &speaker0);
+    DE = BC = frequency_for_semitone(datum, &speaker0);
 
     channel1_index = state->music_channel1_index + 1;
     /* Loop until the end marker is encountered. */
@@ -501,7 +501,7 @@ void menu_screen(tgestate_t *state)
         break;
       channel1_index = 0;
     }
-    DEdash = BCdash = get_tuning(datum, &speaker1);
+    DEdash = BCdash = frequency_for_semitone(datum, &speaker1);
 
     if ((BCdash >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
       DEdash = BCdash = BC;

@@ -6,6 +6,6 @@
 extern const uint8_t music_channel0_data[80 * 8 + 1];
 extern const uint8_t music_channel1_data[80 * 8 + 1];
 
-uint16_t get_tuning(uint8_t A, uint8_t *L);
+uint16_t frequency_for_semitone(uint8_t semitone, uint8_t *beep);
 
 #endif /* MUSIC_H */
