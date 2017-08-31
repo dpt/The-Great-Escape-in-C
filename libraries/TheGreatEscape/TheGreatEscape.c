@@ -11225,12 +11225,12 @@ const spritedef_t item_definitions[item__LIMIT] =
  */
 const size_t masked_sprite_plotter_16_enables[2 * 3] =
 {
-  offsetof(tgestate_t, enable_E319),
-  offsetof(tgestate_t, enable_E3C5),
-  offsetof(tgestate_t, enable_E32A),
-  offsetof(tgestate_t, enable_E3D6),
-  offsetof(tgestate_t, enable_E340),
-  offsetof(tgestate_t, enable_E3EC),
+  offsetof(tgestate_t, enable_16_left_1),
+  offsetof(tgestate_t, enable_16_right_1),
+  offsetof(tgestate_t, enable_16_left_2),
+  offsetof(tgestate_t, enable_16_right_2),
+  offsetof(tgestate_t, enable_16_left_3),
+  offsetof(tgestate_t, enable_16_right_3),
 };
 
 /* ----------------------------------------------------------------------- */
@@ -11353,19 +11353,19 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       p = MASK(bm0, mask0);
       foremaskptr++;
-      if (state->enable_E188)
+      if (state->enable_24_right_1)
         *screenptr = p;
       screenptr++;
 
       p = MASK(bm1, mask1);
       foremaskptr++;
-      if (state->enable_E199)
+      if (state->enable_24_right_2)
         *screenptr = p;
       screenptr++;
 
       p = MASK(bm2, mask2);
       foremaskptr++;
-      if (state->enable_E1AA)
+      if (state->enable_24_right_3)
         *screenptr = p;
       screenptr++;
 
@@ -11373,7 +11373,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       foremaskptr++;
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
       state->foreground_mask_pointer = foremaskptr;
-      if (state->enable_E1BF)
+      if (state->enable_24_right_4)
         *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
@@ -11495,26 +11495,26 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       p = MASK(bm3, mask3);
       foremaskptr++;
-      if (state->enable_E259)
+      if (state->enable_24_left_1)
         *screenptr = p;
       screenptr++;
 
       p = MASK(bm2, mask2);
       foremaskptr++;
-      if (state->enable_E26A)
+      if (state->enable_24_left_2)
         *screenptr = p;
       screenptr++;
 
       p = MASK(bm1, mask1);
       foremaskptr++;
-      if (state->enable_E27B)
+      if (state->enable_24_left_3)
         *screenptr = p;
       screenptr++;
 
       p = MASK(bm0, mask0);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
-      if (state->enable_E290)
+      if (state->enable_24_left_4)
         *screenptr = p;
 
       screenptr += state->columns - 3; // was 21
@@ -11668,20 +11668,20 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     p = MASK(bm0, mask0);
     foremaskptr++;
-    if (state->enable_E319)
+    if (state->enable_16_left_1)
       *screenptr = p;
     screenptr++;
 
     p = MASK(bm1, mask1);
     foremaskptr++;
-    if (state->enable_E32A)
+    if (state->enable_16_left_2)
       *screenptr = p;
     screenptr++;
 
     p = MASK(bm2, mask2);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
-    if (state->enable_E340)
+    if (state->enable_16_left_3)
       *screenptr = p;
     screenptr += state->columns - 2; // was 22
 
@@ -11813,20 +11813,20 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     p = MASK(bm2, mask2); // 'x' should probably be another variable here
     foremaskptr++;
-    if (state->enable_E3C5)
+    if (state->enable_16_right_1)
       *screenptr = p;
     screenptr++;
 
     p = MASK(bm1, mask1);
     foremaskptr++;
-    if (state->enable_E3D6)
+    if (state->enable_16_right_2)
       *screenptr = p;
     screenptr++;
 
     p = MASK(bm0, mask0);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
-    if (state->enable_E3EC)
+    if (state->enable_16_right_3)
       *screenptr = p;
 
     screenptr += state->columns - 2; // was 22
@@ -11945,14 +11945,14 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
    */
   static const size_t masked_sprite_plotter_24_enables[4 * 2] =
   {
-    offsetof(tgestate_t, enable_E188),
-    offsetof(tgestate_t, enable_E259),
-    offsetof(tgestate_t, enable_E199),
-    offsetof(tgestate_t, enable_E26A),
-    offsetof(tgestate_t, enable_E1AA),
-    offsetof(tgestate_t, enable_E27B),
-    offsetof(tgestate_t, enable_E1BF),
-    offsetof(tgestate_t, enable_E290),
+    offsetof(tgestate_t, enable_24_right_1),
+    offsetof(tgestate_t, enable_24_left_1),
+    offsetof(tgestate_t, enable_24_right_2),
+    offsetof(tgestate_t, enable_24_left_2),
+    offsetof(tgestate_t, enable_24_right_3),
+    offsetof(tgestate_t, enable_24_left_3),
+    offsetof(tgestate_t, enable_24_right_4),
+    offsetof(tgestate_t, enable_24_left_4),
 
     /* These two addresses are present here in the original game but are
      * unreferenced. */
