@@ -3196,11 +3196,13 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
+#ifdef DEBUG_ROUTES
   if (vischar == &state->vischars[0])
     printf("(hero) get_target(route=%d%s step=%d)\n",
            vischar->route.index & ~route_REVERSED,
            (vischar->route.index & route_REVERSED) ? " reversed" : "",
            vischar->route.step);
+#endif
 
   get_target_result = get_target(state,
                                  &vischar->route,
@@ -3211,26 +3213,32 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   target = &vischar->target;
   if (get_target_result == get_target_LOCATION)
   {
+#ifdef DEBUG_ROUTES
     if (vischar == &state->vischars[0])
       printf("(hero) get_target returned location (%d,%d)\n",
              location->x, location->y);
+#endif
 
     target->x = location->x;
     target->y = location->y;
   }
   else if (get_target_result == get_target_DOOR)
   {
+#ifdef DEBUG_ROUTES
     if (vischar == &state->vischars[0])
       printf("(hero) get_target returned door (%d,%d)\n",
              doorpos->x, doorpos->y);
+#endif
 
     target->x = doorpos->x;
     target->y = doorpos->y;
   }
   else
   {
+#ifdef DEBUG_ROUTES
     if (vischar == &state->vischars[0])
       printf("(hero) get_target returned route ends\n");
+#endif
   }
 
   if (get_target_result == get_target_ROUTE_ENDS)
@@ -8556,7 +8564,9 @@ uint8_t get_target(tgestate_t       *state,
   *doorpos  = NULL; /* Conv: Added. */
   *location = NULL; /* Conv: Added. */
 
+#ifdef DEBUG_ROUTES
   printf("get_target(route.index=%d, route.step=%d)\n", route->index, route->step);
+#endif
 
   routeindex = route->index;
   if (routeindex == route_WANDER)
@@ -9630,8 +9640,10 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
+#ifdef DEBUG_ROUTES
   if (vischar == &state->vischars[0])
     printf("(hero) target_reached\n");
+#endif
 
   // In the original code HL is IY + 4 on entry.
   // In this version we replace HL references with IY ones.
@@ -9800,8 +9812,10 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
+#ifdef DEBUG_ROUTES
   if (vischar == &state->vischars[0])
     printf("(hero) route_ended\n");
+#endif
 
   /* If not the hero's vischar ... */
   if (route != &state->vischars[0].route) /* Conv: was (L != 2) */
