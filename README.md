@@ -63,6 +63,11 @@ Non-core:
 - Windows build - works - needs Visual Studio 2015.
 - Makefile build - builds a stub main which doesn't run the game in any useful way.
 
+### Build Status
+| Branch     | Windows |
+|------------|---------|
+| **master** | [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/2uxw47bwpmdpw0a8/branch/master?svg=true)](https://ci.appveyor.com/project/dpt/the-great-escape-in-c/) |
+
 ### Xcode Build
 Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
 
