@@ -64,9 +64,9 @@ Non-core:
 - Makefile build - builds a stub main which doesn't run the game in any useful way.
 
 ### Build Status
-| Branch     | Windows |
-|------------|---------|
-| **master** | [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/2uxw47bwpmdpw0a8/branch/master?svg=true)](https://ci.appveyor.com/project/dpt/the-great-escape-in-c/) |
+| Branch     | Windows | macOS |
+|------------|---------|-------|
+| **master** | [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/2uxw47bwpmdpw0a8/branch/master?svg=true)](https://ci.appveyor.com/project/dpt/the-great-escape-in-c/) | [![Travis CI build status](https://travis-ci.org/dpt/The-Great-Escape-in-C.svg?branch=master)](https://travis-ci.org/dpt/The-Great-Escape-in-C) |
 
 ### Xcode Build
 Open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R.
