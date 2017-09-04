@@ -3,3 +3,17 @@ os: osx
 osx_image: xcode7
 xcode_project: platform/osx/TheGreatEscape.xcodeproj
 xcode_scheme: Debug
+before_script:
+    - KEYCHAIN=macos-build.keychain
+    - security create-keychain -p travis $KEYCHAIN
+    - security default-keychain -s $KEYCHAIN
+    - security unlock-keychain -p travis $KEYCHAIN
+    - security set-keychain-settings -t 3600 -u $KEYCHAIN
+    - security import ./scripts/certs/apple.cer -k $KEYCHAIN -T /usr/bin/codesign
+    - security import ./scripts/certs/dist.cer -k $KEYCHAIN -T /usr/bin/codesign
+    - security import ./scripts/certs/dist.p12 -k $KEYCHAIN -P $KEY_PASSWORD -T /usr/bin/codesign
+after_script:
+    - security delete-keychain $KEYCHAIN
+env:
+    global:
+        secure: IvyqopNnuD9pr6+HIkCqoTJGdwygDt3jg8apnsP3h+NEOzz5I7jnpLuZtoJNpF0nWL6L7dH8SR4OF7dvZZNrXIEOtuIweOSBRMzlwaHgmFHK5OvY4SK9jZ2Z9Ovx7QCiRXyJmTGbZ2IGrfF3kE/Vb8WNWmE3s89CA3Z27qsLYwXs4zFU84mslgodB8LnFzZ/D0iwSba9w0CbSZjQa3SaBnkKRjRuawtvmcIx1Jnyeugr4AiwEJOjLWzIDbsyJ9rhevZT94C5lt1bdX9xE20HNNQaKTIHAn0gSllvmztIQ/dbxBGvu4efeuCy+bG/zXwpDH0Pt56+OA3HKpfcxVb825OipvoIR9uT68I0JhAMY15T7lIAHTsbwywr5ush54H31yPq/Yl+ooy6PYqEb32EqEtfS15UaQLOrVSpvPibXXY4edMvQAPPP7hV5OM9YZ9Ri3fYnD7wEjpJWXidSZmXez6HBJoMadbJBfkB/ifAs42HM3PyEzFNrgpLlO0Uq2e+WD3qa5OPPhutYHU2ql5jdeBYVP9Cm8VY0cB6CqHmbSHQGow9EGnf0KYKVyfuyeePHE8Dk2/FC/XxHbuZIiGEymqsTPIBt3TrvtQsnYjrgfXiuJ7x/iLdyVa3McT4psHzPaXxTW0wM+iuW5YUSrmzwuQos2d42fCSFdyR45RHqm0=
