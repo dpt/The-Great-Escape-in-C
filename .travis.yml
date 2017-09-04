@@ -11,7 +11,7 @@ before_script:
     - security set-keychain-settings -t 3600 -u $KEYCHAIN
     - security import ./scripts/certs/apple.cer -k $KEYCHAIN -T /usr/bin/codesign
     - security import ./scripts/certs/dist.cer -k $KEYCHAIN -T /usr/bin/codesign
-    - security import ./scripts/certs/dist.p12 -k $KEYCHAIN -P $KEY_PASSWORD -T /usr/bin/codesign
+    - security import ./scripts/certs/dist.p12 -k $KEYCHAIN -P "$KEY_PASSWORD" -T /usr/bin/codesign
 after_script:
     - security delete-keychain $KEYCHAIN
 env:
