@@ -1,8 +1,6 @@
 language: objective-c
 os: osx
-osx_image: xcode7.3
-xcode_project: platform/osx/TheGreatEscape.xcodeproj
-xcode_scheme: Debug
+osx_image: xcode8.3
 before_script:
     - KEYCHAIN=macos-build.keychain
     - security create-keychain -p travis $KEYCHAIN
@@ -17,3 +15,5 @@ after_script:
 env:
     global:
         - secure: aZI6gvJ58OE3PL1U2REOQJQg0ZT6r5RCtFTD51kshNhb1Xh3Je/IGwucWKzeFluiCNOBgtGhqK6E7+Fwz2gYVD+wuX3m9mJICArg30ScKXWiH2l/rSxIcFo2SDpLquVUUlqIfoPkTmYXkxytBfJwYbgGG/f/sR6kiJPq32To9GVFmocp8D1k5CdTHXezOXfX8k9cyLhfO3jVEBSUDi7utMxvLHydB35jWFrxHv6MutV2ZoKMYmnKBQIj5FosJQAHx/7rHL3tBor/sPk10vq5F7CkV+TGBOdspeSQnoW7ORZiJfobbWs5pgS+IKE4tjRNfTcrcLiJVrgZsOZCBtAXPdBlzV+inT5xJip56jGGTao3oDBI4amyPCOjvWT29x140AlGxPTIQ7qUKpMCaqEnXRfwVvzQbkAy7ZZNdaTMCRJOCbfc8rxcYVN7hg5hyF4iWUTQLO/5wwUvol/Y6+rK7IXs0zrscjiZNBjv6IMB8gDLS1VZ5GsLFBzgU2i4iUdL+O7S01xeeX9Oot4UzNAk+dz57jPWxr/1MZ1C4Dn8HQzsE6hGH/98wWmz06GrWx5GLG4+OkoionxZk4SvJ2gKao7TbsxmwfSbOofd2V7AlyBMJKdQA6ie7YYn0dBwrCWP07XkPmH3wvl8uQWDIe+bMoCtx9gOK9e2y/joLW+zTNE=
+script:
+    - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -sdk macosx10.12 build analyze
