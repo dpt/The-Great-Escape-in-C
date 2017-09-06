@@ -347,7 +347,7 @@
 				ORGANIZATIONNAME = "David Thomas";
 				TargetAttributes = {
 					554808D117E117CF00387328 = {
-						DevelopmentTeam = WANP7ZV2P8;
+						ProvisioningStyle = Manual;
 					};
 					556FD19A1A05C06D00822335 = {
 						CreatedOnToolsVersion = 6.0.1;
@@ -596,16 +596,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WANP7ZV2P8;
 				GCC_PREFIX_HEADER = "$(PRODUCT_NAME)-Prefix.pch";
 				INFOPLIST_FILE = "$(PRODUCT_NAME)-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.davespace.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -614,16 +610,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = WANP7ZV2P8;
 				GCC_PREFIX_HEADER = "$(PRODUCT_NAME)-Prefix.pch";
 				INFOPLIST_FILE = "$(PRODUCT_NAME)-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.davespace.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
