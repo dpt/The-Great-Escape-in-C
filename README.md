@@ -4,6 +4,10 @@
 
 26th July 2017
 
+<p align="center">
+  <img src="demo.gif" alt="Demo" />
+</p>
+
 ## Overview
 This is a _work in progress_ reimplementation of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”: the classic isometric 3D game for the 48K Sinclair ZX Spectrum in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
 
