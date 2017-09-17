@@ -7612,7 +7612,13 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BAF7: Clipping vischars to the game window.
+ * $BAF7: Clips the given vischar's dimensions against the game window.
+ *
+ * Returns 255 if the vischar is outside the game window, or zero if visible.
+ *
+ * If the vischar spans a boundary a packed field is returned in the
+ * respective clipped width/height. The low byte holds the width/height to
+ * draw and the high byte holds the number of columns/rows to skip.
  *
  * Counterpart to \ref item_visible.
  *
@@ -7628,79 +7634,129 @@ int vischar_visible(tgestate_t      *state,
                     uint16_t        *clipped_width,
                     uint16_t        *clipped_height)
 {
-  int8_t   amount_visible_right;  /* was A */
-  uint16_t new_width;             /* was BC */
-  uint16_t Y1;                    /* was HL */
-  uint16_t new_height;            /* was DE */
-  uint16_t Y2;                    /* was HL */
+  uint8_t  window_right_edge;   /* was A  */
+  int8_t   available_right;     /* was A  */
+  uint16_t new_width;           /* was BC */
+  int8_t   vischar_right_edge;  /* was A  */
+  int8_t   available_left;      /* was A  */
+  uint16_t window_bottom_edge;  /* was HL */
+  uint16_t available_bottom;    /* was HL */
+  uint16_t new_height;          /* was DE */
+  uint16_t vischar_bottom_edge; /* was HL */
+  uint16_t available_top;       /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
+  /* Conv: Added to guarantee initialisation of return values. */
   *clipped_width  = 65535;
   *clipped_height = 65535;
 
-  /* Conv: Jump to exit for invisible case turned into immediate returns. */ // doesn't seem true, or i've reversed the sense of the comment when writing it
+  /* To determine visibility and sort out clipping there are five cases to
+   * consider per axis:
+   * (A) vischar is completely off left/top of screen
+   * (B) vischar is clipped/truncated on its left/top
+   * (C) vischar is entirely visible
+   * (D) vischar is clipped/truncated on its right/bottom
+   * (E) vischar is completely off right/bottom of screen
+   */
 
-  /* Width part. */
+  /*
+   * Handle horizontal intersections.
+   */
 
-  /* Bail out if the vischar is off the right hand side of the screen. */
-  /* Conv: Re-read of map_position removed. */
-  // similar to "if (state->screenpos.x > state->map_position.x + state->columns)" but we save the computed value and reuse it below
-  amount_visible_right = state->map_position.x + state->columns - state->screenpos.x; // columns was 24
-  if (amount_visible_right <= 0)
+  /* Calculate the right edge of the window in map space. */
+  /* Conv: Columns was constant 24; replaced with state var. */
+  window_right_edge = state->map_position.x + state->columns;
+
+  /* Subtracting vischar's x yields the space available between vischar's
+   * left edge and the right edge of the window (in bytes).
+   * Note that available_right is signed to enable the subsequent test. */
+  // state->screenpos.x is floogle.x / 8.
+  available_right = window_right_edge - state->screenpos.x;
+  if (available_right <= 0)
+    /* Case (E): Vischar is beyond the window's right edge. */
     goto invisible;
 
-  // Check for vischars partly on-screen.
-  if (amount_visible_right < vischar->width_bytes)
+  /* Check for vischar partway off-screen. */
+  if (available_right < vischar->width_bytes)
   {
-    /* Lefthand ok, but righthand clipped. */
-    /* A1 must be the clipped width at this point. */
-    new_width = amount_visible_right;
+    /* Case (D): Vischar's right edge is off-screen, so truncate width. */
+    new_width = available_right;
   }
   else
   {
-    int8_t amount_visible_left; /* was A */
+    /* Calculate the right edge of the vischar. */
+    vischar_right_edge = state->screenpos.x + vischar->width_bytes;
 
-    /* Bail out if the vischar is off the left hand side of the screen. */
-    // A2 is signed for this part.
-    amount_visible_left = state->screenpos.x + vischar->width_bytes - state->map_position.x;
-    if (amount_visible_left <= 0)
+    /* Subtracting the map position's x yields the space available between
+     * vischar's right edge and the left edge of the window (in bytes).
+     * Note that available_left is signed to allow the subsequent test. */
+    available_left = vischar_right_edge - state->map_position.x;
+    if (available_left <= 0)
+      /* Case (A): Vischar's right edge is beyond the window's left edge. */
       goto invisible;
 
-    /* Check for vischars partly on-screen. */
-    if (amount_visible_left < vischar->width_bytes)
-      /* Lefthand clipped, righthand ok. */
-      new_width = ((vischar->width_bytes - amount_visible_left) << 8) | amount_visible_left; // pack left clip offset + width
+    /* Check for vischar partway off-screen. */
+    if (available_left < vischar->width_bytes)
+      /* Case (B): Left edge is off-screen and right edge is on-screen.
+       * Pack the lefthand skip into the low byte and the clipped width into
+       * the high byte. */
+      new_width = ((vischar->width_bytes - available_left) << 8) | available_left;
     else
-      /* No clipping. */
+      /* Case (C): No clipping. */
       new_width = vischar->width_bytes;
   }
 
-  /* Height part. */
+  /*
+   * Handle vertical intersections.
+   */
 
-  // top?
-  Y1 = (state->map_position.y + state->rows) * 8 - vischar->floogle.y;
-  if (Y1 <= 0 || Y1 >= 256)
+  /* Note: this uses vischar->floogle not state->screenpos as above.
+   * state->screenpos.x/y is vischar->floogle.x/y >> 3. */
+
+  /* Calculate the bottom edge of the window in map space. */
+  /* Conv: Rows was constant 17; replaced with state var. */
+  window_bottom_edge = state->map_position.y + state->rows;
+
+  /* Subtracting the vischar's y yields the space available between window's
+   * bottom edge and the vischar's top. */
+  available_bottom = window_bottom_edge * 8 - vischar->floogle.y;
+  // FUTURE: The second test here can be gotten rid of if available_bottom is
+  //         made signed.
+  if (available_bottom <= 0 || available_bottom >= 256)
+    /* Case (E): Vischar is beyond the window's bottom edge. */
     goto invisible;
 
-  if (Y1 < vischar->height)
+  /* Check for vischar partway off-screen. */
+  if (available_bottom < vischar->height)
   {
-    new_height = Y1;
+    /* Case (D): Vischar's bottom edge is off-screen, so truncate height. */
+    new_height = available_bottom;
   }
   else
   {
-    // bottom?
-    Y2 = vischar->floogle.y + vischar->height - state->map_position.y * 8; // height == height in rows // signedness
-    if (Y2 <= 0 || Y2 >= 256)
+    /* Calculate the bottom edge of the vischar. */
+    vischar_bottom_edge = vischar->floogle.y + vischar->height;
+
+    /* Subtracting the map position's y (scaled) yields the space available
+     * between vischar's bottom edge and the top edge of the window (in
+     * rows). */
+    available_top = vischar_bottom_edge - state->map_position.y * 8;
+    if (available_top <= 0 || available_top >= 256)
+      /* Case (A): Vischar's bottom edge is beyond the window's top edge. */
       goto invisible;
 
-    if (Y2 < vischar->height)
-      new_height = ((vischar->height - Y2) << 8) | Y2; // pack offset + height
+    /* Check for vischar partway off-screen. */
+    if (available_top < vischar->height)
+      /* Case (B): Top edge is off-screen and bottom edge is on-screen.
+       * Pack the top skip into the low byte and the clipped height into the
+       * high byte. */
+      new_height = ((vischar->height - available_top) << 8) | available_top;
     else
-      /* No clipping. */
+      /* Case (C): No clipping. */
       new_height = vischar->height;
   }
 
@@ -11101,91 +11157,164 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $DD02: Clipping items to the game window.
+ * $DD02: Clips the given item's dimensions against the game window.
+ *
+ * Returns 1 if the item is outside the game window, or zero if visible.
+ *
+ * If the item spans a boundary a packed field is returned in the
+ * respective clipped width/height. The low byte holds the width/height to
+ * draw and the high byte holds the number of columns/rows to skip.
  *
  * Counterpart to \ref vischar_visible.
  *
  * Called by setup_item_plotting only.
  *
- * \param[in] state Pointer to game state.
+ * \param[in]  state          Pointer to game state.
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (clipped width, lefthand skip)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (clipped height, top skip)
  *
- * \return 0 => visible, 1 => invisible (was A)
+ * \return 0 => visible, 1 => invisible. (was A)
  */
 uint8_t item_visible(tgestate_t *state,
                      uint16_t   *clipped_width,
                      uint16_t   *clipped_height)
 {
-  const uint8_t *px;            /* was HL */
-  xy_t           map_position;  /* was DE */
-  int8_t         amount_visible_right; /* was A */
-  int8_t         Y1;            /* was A */
-  uint16_t       width;         /* was BC */
-  uint16_t       height;        /* was DE */
+#define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
+#define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
+
+  const xy_t *pscreenpos;         /* was HL */
+  xy_t        map_position;       /* was DE */
+  uint8_t     window_right_edge;  /* was A  */
+  int8_t      available_right;    /* was A  */
+  uint16_t    new_width;          /* was BC */
+  uint8_t     item_right_edge;    /* was A  */
+  int8_t      available_left;     /* was A  */
+  uint8_t     window_bottom_edge; /* was A  */
+  int8_t      available_bottom;   /* was A  */
+  uint16_t    new_height;         /* was DE */
+  uint8_t     item_bottom_edge;   /* was A  */
+  uint8_t     available_top;      /* was A  */
 
   assert(state          != NULL);
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
-  /* Width part */
+  /* Conv: Added to guarantee initialisation of return values. */
+  *clipped_width  = 65535;
+  *clipped_height = 65535;
 
-  // Seems to be doing (map_position_x + state->columns <= px[0])
-  px = &state->screenpos.x;
+  /* To determine visibility and sort out clipping there are five cases to
+   * consider per axis:
+   * (A) item is completely off left/top of screen
+   * (B) item is clipped/truncated on its left/top
+   * (C) item is entirely visible
+   * (D) item is clipped/truncated on its right/bottom
+   * (E) item is completely off right/bottom of screen
+   */
+
+  /*
+   * Handle horizontal intersections.
+   */
+
+  pscreenpos = &state->screenpos;
   map_position = state->map_position;
 
-  amount_visible_right = map_position.x + state->columns - px[0]; // columns was 24
-  if (amount_visible_right <= 0)
+  /* Conv: Columns was constant 24; replaced with state var. */
+  window_right_edge = map_position.x + state->columns;
+
+  /* Subtracting item's x yields the space available between item's left edge
+   * and the right edge of the window (in bytes).
+   * Note that available_right is signed to enable the subsequent test. */
+  available_right = window_right_edge - pscreenpos->x;
+  if (available_right <= 0)
+    /* Case (E): Item is beyond the window's right edge. */
     goto invisible;
 
-#define WIDTH_BYTES 3
-  if (amount_visible_right < WIDTH_BYTES)
+  /* Check for item partway off-screen. */
+  if (available_right < WIDTH_BYTES)
   {
-    width = amount_visible_right;
+    /* Case (D): Item's right edge is off-screen, so truncate width. */
+    new_width = available_right;
   }
   else
   {
-    int8_t amount_visible_left; /* was A */
+    /* Calculate the right edge of the item. */
+    item_right_edge = pscreenpos->x + WIDTH_BYTES;
 
-    amount_visible_left = px[0] + WIDTH_BYTES - map_position.x;
-    if (amount_visible_left <= 0)
-      goto invisible; // off the left hand side?
-
-    if (amount_visible_left < WIDTH_BYTES)
-      width = ((WIDTH_BYTES - amount_visible_left) << 8) | amount_visible_left;
-    else
-      width = WIDTH_BYTES;
-  }
-
-  /* Height part */
-
-  Y1 = map_position.y + state->rows - px[1]; // px[1] == map_position_related.y
-  if (Y1 <= 0 || Y1 >= 256)
-    goto invisible;
-
-#define HEIGHT 2 // in UDGs
-  if (Y1 < HEIGHT)
-  {
-    height = 8;
-  }
-  else
-  {
-    Y1 = px[1] + HEIGHT - map_position.y;
-    if (Y1 <= 0)
+    /* Subtracting the map position's x yields the space available between
+     * item's right edge and the left edge of the window (in bytes).
+     * Note that available_left is signed to allow the subsequent test. */
+    available_left = item_right_edge - map_position.x;
+    if (available_left <= 0)
+      /* Case (A): Item's right edge is beyond the window's left edge. */
       goto invisible;
 
-    if (Y1 < HEIGHT)
-      height = (8 << 8) | (state->item_height - 8); // looks odd
+    /* Check for item partway off-screen. */
+    if (available_left < WIDTH_BYTES)
+      /* Case (B): Left edge is off-screen and right edge is on-screen.
+       * Pack the lefthand skip into the low byte and the clipped width into
+       * the high byte. */
+      new_width = ((WIDTH_BYTES - available_left) << 8) | available_left;
     else
-      height = state->item_height;
+      /* Case (C): No clipping. */
+      new_width = WIDTH_BYTES;
   }
 
-  *clipped_width  = width;
-  *clipped_height = height;
+  /*
+   * Handle vertical intersections.
+   */
 
-  return 0; /* item is visible */
+  /* Note: The companion code in vischar_visible uses 16-bit quantities
+   * in its equivalent of the following. */
+
+  /* Calculate the bottom edge of the window in map space. */
+  /* Conv: Rows was constant 17; replaced with state var. */
+  window_bottom_edge = map_position.y + state->rows;
+
+  /* Subtracting the item's y yields the space available between window's
+   * bottom edge and the item's top. */
+  available_bottom = window_bottom_edge - pscreenpos->y;
+  if (available_bottom <= 0)
+    /* Case (E): Item is beyond the window's bottom edge. */
+    goto invisible;
+
+  /* Check for item partway off-screen. */
+  if (available_bottom < HEIGHT)
+  {
+    /* Case (D): Item's bottom edge is off-screen, so truncate height. */
+    new_height = 8;
+  }
+  else
+  {
+    /* Calculate the bottom edge of the item. */
+    item_bottom_edge = pscreenpos->y + HEIGHT;
+
+    /* Subtracting the map position's y (scaled) yields the space available
+     * between item's bottom edge and the top edge of the window (in UDGs).
+     */
+    available_top = item_bottom_edge - map_position.y;
+    if (available_top <= 0)
+      goto invisible;
+
+    /* Check for item partway off-screen. */
+    if (available_top < HEIGHT)
+      /* Case (B): Top edge is off-screen and bottom edge is on-screen.
+       * Pack the top skip into the low byte and the clipped height into the
+       * high byte. */
+      new_height = (8 << 8) | (state->item_height - 8);
+    else
+      /* Case (C): No clipping. */
+      new_height = state->item_height;
+  }
+
+  *clipped_width  = new_width;
+  *clipped_height = new_height;
+
+  return 0; /* Visible */
 
 
 invisible:
-  return 1; /* item is not visible */
+  return 1;
 }
 
 /* ----------------------------------------------------------------------- */

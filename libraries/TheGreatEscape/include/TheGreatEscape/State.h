@@ -138,10 +138,12 @@ struct tgestate
 
   /** $81B5: The current visible character's (or item's) screen position.
    *
+   * Same coordinate space as map_position.
+   *
    * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer.
    */
-  xy_t            screenpos;
+  xy_t            screenpos; // FIXME: Not a screen position. Rename.
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
@@ -156,8 +158,12 @@ struct tgestate
   /** $81B8: Hero's map position. */
   tinypos_t       hero_map_position;
 
-  /** $81BB: Map position (on screen).
-   * Used when drawing tiles. */
+  /** $81BB: Offset into map used when drawing tiles.
+   *
+   * When the offset is (0,0) the highest, leftmost point of the map appears
+   * top-left in the game window. Increasing offsets scroll the map leftwards
+   * and upwards relative to the game window.
+   */
   // assigned in reset_outdoors from hero's vischar (scaled down)
   // suspect that this is a centering value
   // positive x - map shown further right
