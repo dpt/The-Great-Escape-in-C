@@ -12093,7 +12093,6 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   assert(x >= -32768);
   assert(x < 32678);
-  assert(y >= -32768);
   assert(y < 32678);
 
   uint8_t *winbufend = &state->window_buf[state->window_buf_size];
