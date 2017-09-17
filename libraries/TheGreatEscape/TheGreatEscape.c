@@ -3500,7 +3500,7 @@ void character_sit_sleep_common(tgestate_t *state,
 }
 
 /**
- * $A479: Select room and plot.
+ * $A479: Setup room and plot.
  *
  * \param[in] state Pointer to game state.
  */
@@ -3677,8 +3677,8 @@ void charevnt_breakfast_vischar(tgestate_t *state, route_t *route)
  * \param[in] route     Pointer to route.      (was HL)
  */
 void charevnt_breakfast_common(tgestate_t *state,
-                                 character_t character,
-                                 route_t    *route)
+                               character_t character,
+                               route_t    *route)
 {
   uint8_t routeindex; /* was A */
 
