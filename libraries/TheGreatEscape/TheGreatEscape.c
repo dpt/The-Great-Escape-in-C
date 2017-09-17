@@ -1925,8 +1925,8 @@ void in_permitted_area(tgestate_t *state)
     pos_to_tinypos(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].floogle.x >= 0x06C8 ||
-        state->vischars[0].floogle.y >= 0x0448)
+    if (state->vischars[0].floogle.x >= MAP_WIDTH  * 8 ||
+        state->vischars[0].floogle.y >= MAP_HEIGHT * 8)
     {
       escaped(state);
       return;
