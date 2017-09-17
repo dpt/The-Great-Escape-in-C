@@ -2991,8 +2991,6 @@ void end_of_breakfast(tgestate_t *state)
  */
 void set_hero_route(tgestate_t *state, const route_t *route)
 {
-  vischar_t *vischar; /* was HL */
-
   assert(state != NULL);
   ASSERT_ROUTE_VALID(*route);
 
