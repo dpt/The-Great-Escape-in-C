@@ -5691,13 +5691,9 @@ int collision(tgestate_t *state)
         }
         else
         {
-          /* A hostile catches the hero! */
-
-          // POP HL
-          // POP BC
-          vischar = state->IY + 1; // 1 byte == 2 bytes into struct => vischar->route
-          // but .. that's not needed
-          solitary(state); // is this supposed to take a route?
+          /* IY is a hostile who's caught the hero! */
+          // Conv: Removed "HL = IY + 1" code which has no effect.
+          solitary(state);
           NEVER_RETURNS 0;
         }
       }
