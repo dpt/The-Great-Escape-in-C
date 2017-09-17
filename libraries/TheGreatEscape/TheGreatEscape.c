@@ -4021,7 +4021,7 @@ void plot_bottommost_tiles(tgestate_t *state)
   assert(state != NULL);
 
   vistiles = &state->tile_buf[24 * 16];       // $F278 = visible tiles array + 24 * 16
-  maptiles = &state->map_buf[28];             // $FF74
+  maptiles = &state->map_buf[7 * 4];          // $FF74
   y        = state->map_position.y;           // map_position y
   window   = &state->window_buf[24 * 16 * 8]; // $FE90
 
