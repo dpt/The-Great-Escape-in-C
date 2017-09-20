@@ -811,7 +811,7 @@ void plot_interior_tiles(tgestate_t *state)
       stride = columns;
       do
       {
-        ASSERT_WINDOW_BUF_PTR_VALID(window_buf2);
+        ASSERT_WINDOW_BUF_PTR_VALID(window_buf2, 0);
         ASSERT_INTERIOR_TILES_VALID(tile_data);
 
         *window_buf2 = *tile_data++;
@@ -4086,7 +4086,7 @@ void plot_horizontal_tiles_common(tgestate_t             *state,
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
   // assert(y);
-  ASSERT_WINDOW_BUF_PTR_VALID(window);
+  ASSERT_WINDOW_BUF_PTR_VALID(window, 0);
 
   y_offset = (y & 3) * 4;
   ASSERT_MAP_POSITION_VALID(state->map_position);
@@ -4292,7 +4292,7 @@ void plot_vertical_tiles_common(tgestate_t             *state,
   ASSERT_TILE_BUF_PTR_VALID(vistiles);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
   // assert(x);
-  ASSERT_WINDOW_BUF_PTR_VALID(window);
+  ASSERT_WINDOW_BUF_PTR_VALID(window, 0);
 
   x_offset = x & 3; // self modify (local)
 
@@ -4319,7 +4319,7 @@ void plot_vertical_tiles_common(tgestate_t             *state,
     ASSERT_TILE_BUF_PTR_VALID(vistiles);
     ASSERT_SUPERTILE_PTR_VALID(tiles);
     ASSERT_MAP_BUF_PTR_VALID(maptiles);
-    ASSERT_WINDOW_BUF_PTR_VALID(window);
+    ASSERT_WINDOW_BUF_PTR_VALID(window, 0);
 
     t = *vistiles = *tiles; // A = tile index
     window = plot_tile_then_advance(state, t, maptiles, window);
@@ -4347,7 +4347,7 @@ void plot_vertical_tiles_common(tgestate_t             *state,
       ASSERT_TILE_BUF_PTR_VALID(vistiles);
       ASSERT_SUPERTILE_PTR_VALID(tiles);
       ASSERT_MAP_BUF_PTR_VALID(maptiles);
-      ASSERT_WINDOW_BUF_PTR_VALID(window);
+      ASSERT_WINDOW_BUF_PTR_VALID(window, 0);
 
       t = *vistiles = *tiles; // A = tile index
       window = plot_tile_then_advance(state, t, maptiles, window);
@@ -4373,7 +4373,7 @@ void plot_vertical_tiles_common(tgestate_t             *state,
     ASSERT_TILE_BUF_PTR_VALID(vistiles);
     ASSERT_SUPERTILE_PTR_VALID(tiles);
     ASSERT_MAP_BUF_PTR_VALID(maptiles);
-    ASSERT_WINDOW_BUF_PTR_VALID(window);
+    ASSERT_WINDOW_BUF_PTR_VALID(window, 0);
 
     t = *vistiles = *tiles; // A = tile index
     window = plot_tile_then_advance(state, t, maptiles, window);
@@ -4434,7 +4434,7 @@ uint8_t *plot_tile(tgestate_t             *state,
 
   assert(state != NULL);
   ASSERT_MAP_BUF_PTR_VALID(maptiles);
-  ASSERT_WINDOW_BUF_PTR_VALID(scr);
+  ASSERT_WINDOW_BUF_PTR_VALID(scr, 0);
 
   supertileindex = *maptiles; /* get supertile index */
   assert(supertileindex < supertileindex__LIMIT);
@@ -4464,7 +4464,7 @@ uint8_t *plot_tile(tgestate_t             *state,
   iters = 8;
   do
   {
-    ASSERT_WINDOW_BUF_PTR_VALID(dst);
+    ASSERT_WINDOW_BUF_PTR_VALID(dst, 0);
     *dst = *src++;
     dst += state->columns; /* stride */ // FUTURE: Hoist.
   }
@@ -4962,7 +4962,7 @@ void zoombox_fill(tgestate_t *state)
   /* Conv: Simplified calculation to use a single multiply. */
   offset = state->zoombox.y * state->window_buf_stride + state->zoombox.x;
   src = &state->window_buf[offset + 1];
-  ASSERT_WINDOW_BUF_PTR_VALID(src);
+  ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
   dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
   ASSERT_SCREEN_PTR_VALID(dst);
 
@@ -7878,7 +7878,7 @@ clamp_height: // was $BBF8
       y = 0; // was interleaved
 
     windowbuf = &state->window_buf[y * state->window_buf_stride + x];
-    ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
+    ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
 
     tilebuf = &state->tile_buf[x + y * state->columns];
     ASSERT_TILE_BUF_PTR_VALID(tilebuf);
@@ -7896,8 +7896,8 @@ clamp_height: // was $BBF8
 
         tileset = select_tile_set(state, x, y);
 
-        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2);
-        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2 + 7 * state->columns);
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2, 0);
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf2 + 7 * state->columns, 0);
 
         /* Copy the tile into the window buffer. */
         tilerow = &tileset[tile].row[0];
@@ -7916,7 +7916,7 @@ clamp_height: // was $BBF8
           ASSERT_TILE_BUF_PTR_VALID(tilebuf);
         windowbuf++;
         if (width_counter > 1)
-          ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
+          ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
       }
       while (--width_counter);
 
@@ -7928,7 +7928,7 @@ clamp_height: // was $BBF8
         ASSERT_TILE_BUF_PTR_VALID(tilebuf);
       windowbuf += windowbuf_stride;
       if (height_counter > 1)
-        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf);
+        ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
     }
     while (--height_counter);
 
@@ -11106,19 +11106,24 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   }
   while (--iters);
 
+  /* Calculate Y plotting offset.
+   * The full calculation can be avoided if there are rows to skip since
+   * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0)
-    y = (state->screenpos.y - state->map_position.y) * state->window_buf_stride; // temp: HL // move by buffer rows
+  if ((clipped_height >> 8) == 0) /* no rows to skip */
+    y = (state->screenpos.y - state->map_position.y) * state->window_buf_stride;
 
   // state->screenpos.y - state->map_position.y never seems to exceed $10 in the original game, but does for me
   // state->screenpos.y seems to match, but state->map_position.y is 2 bigger
 
+  /* Calculate X plotting offset. */
+  
   // Conv: Assigns to signed var.
-  x = state->screenpos.x - state->map_position.x; // X axis
+  x = state->screenpos.x - state->map_position.x;
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 3);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, 3);
 
   maskbuf = &state->mask_buffer[0];
 
@@ -11437,7 +11442,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       screenptr   = state->window_buf_pointer; // moved compared to the other routines
 
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
 
       /* Shift bitmap. */
 
@@ -11521,7 +11526,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       screenptr += state->columns - 3; // was 21
       if (iters > 1)
-        ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+        ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11565,7 +11570,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       screenptr   = state->window_buf_pointer;
 
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
 
       /* Shift bitmap. */
 
@@ -11662,7 +11667,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
 
       screenptr += state->columns - 3; // was 21
       if (iters > 1)
-        ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+        ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
       state->window_buf_pointer = screenptr;
     }
     while (--iters);
@@ -11716,7 +11721,6 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(state != NULL);
   // assert(x);
 
-  //ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   x = (~x & 3); // jump table offset (on input, A is 0..3 => 3..0)
@@ -11729,7 +11733,9 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
   iters = state->self_E2C2; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
   assert(iters <= MASK_BUFFER_HEIGHT * 8);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + iters * state->columns - 1);
+
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 2);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (iters - 1) * state->columns + 2 - 1, 2);
   do
   {
     uint8_t bm0, bm1, bm2;       // was D, E, C
@@ -11805,8 +11811,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->window_buf_pointer; // moved relative to the 24 version
-    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+    screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
     p = MASK(bm0, mask0);
@@ -11829,7 +11835,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     screenptr += state->columns - 2; // was 22
 
     if (iters > 1)
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);
@@ -11855,7 +11861,6 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   assert(state != NULL);
   // assert(x);
 
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   x = (x - 4); // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
@@ -11868,7 +11873,9 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
   iters = state->self_E363; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
   assert(iters <= MASK_BUFFER_HEIGHT * 8);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + iters * state->columns - 1);
+
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 2);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (iters - 1) * state->columns + 2 - 1, 2);
   do
   {
     /* Note the different variable order to the 'left' case above. */
@@ -11952,7 +11959,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     /* Plot, using foreground mask. */
 
     screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
-    ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+    ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
+    ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
     p = MASK(bm2, mask2); // 'x' should probably be another variable here
     foremaskptr++;
@@ -11974,7 +11982,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     screenptr += state->columns - 2; // was 22
     if (iters > 1)
-      ASSERT_WINDOW_BUF_PTR_VALID(screenptr);
+      ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     state->window_buf_pointer = screenptr;
   }
   while (--iters);
@@ -12228,32 +12236,34 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // EXX
 
+  assert(vischar->floogle.y / 8 - state->map_position.y < state->rows);
+  assert(vischar->floogle.y / 8 - state->map_position.y + (clipped_height & 0xFF) / 8 <= state->rows);
+
+  /* Calculate Y plotting offset.
+   * The full calculation can be avoided if there are rows to skip since
+   * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0) // top skippage
+  if ((clipped_height >> 8) == 0) /* no rows to skip */
     y = (vischar->floogle.y - state->map_position.y * 8) * state->columns;
 
+  assert(y / 8 / state->columns < state->rows);
+
+  /* Calculate X plotting offset. */
   x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
-  assert(x >= -32768);
-  assert(x < 32678);
-  assert(y < 32678);
+  assert(x >= -3 && x <= state->columns - 1); // found empirically
 
-  uint8_t *winbufend = &state->window_buf[state->window_buf_size];
-  state->window_buf_pointer = &state->window_buf[x + y]; // screen buffer start address
-  uint8_t *winbufptr = state->window_buf_pointer + clipped_height * state->columns - 1; // clipped_height right?
-  if (winbufptr >= winbufend)
-  {
-    printf("%p - %p = %ld\n", winbufptr, winbufend, winbufptr - winbufend);
-    printf("height=%d offset=%d\n", clipped_height & 0xff, (clipped_height & 0xff00) >> 8);
-    //state->window_buf_pointer = &state->window_buf[0];
-  }
+  state->window_buf_pointer = &state->window_buf[x + y];
 
-  // So is it valid for window_buf_pointer to point outside of window_buf[]?
+  /* Note that it _is_ valid for window_buf_pointer to point outside of
+   * window_buf. It can point beyond the end by up to the width of the sprite
+   * (vischar->width_bytes - 1) [char->width_bytes is (vischar width in
+   * bytes + 1)] and that's fine since the clipping enable flags ensure that
+   * those locations are never written to.
+   */
 
-  // Work out what these asserts should permit.
-
-//  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer);
-//  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + clipped_height * state->columns - 1);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, vischar->width_bytes - 1);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, vischar->width_bytes - 1);
 
   maskbuf = &state->mask_buffer[0];
 
@@ -12398,7 +12408,7 @@ void plot_game_window(tgestate_t *state)
   if (y == 0)
   {
     src = &state->window_buf[1] + state->game_window_offset.x;
-    ASSERT_WINDOW_BUF_PTR_VALID(src);
+    ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
     offsets = &state->game_window_start_offsets[0];
     y_iters_A = 128; /* iterations */
     do
@@ -12436,7 +12446,7 @@ void plot_game_window(tgestate_t *state)
   else
   {
     src = &state->window_buf[0] + state->game_window_offset.x;
-    ASSERT_WINDOW_BUF_PTR_VALID(src);
+    ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
     prev = *src++;
     offsets = &state->game_window_start_offsets[0];
     y_iters_B = 128; /* iterations */

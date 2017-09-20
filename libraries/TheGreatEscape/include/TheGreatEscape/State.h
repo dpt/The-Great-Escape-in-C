@@ -29,7 +29,7 @@ struct tgestate
   jmp_buf         jmpbuf_main;
 
   size_t          tile_buf_size; /* byte length of tile_buf */
-  size_t          window_buf_stride; /* byte length of window_buf 's stride*/
+  size_t          window_buf_stride; /* byte length of window_buf's stride */
   size_t          window_buf_size; /* byte length of window_buf */
   size_t          map_buf_size; /* byte length of map_buf */
 

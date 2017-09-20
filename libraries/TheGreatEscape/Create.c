@@ -435,7 +435,9 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
   game_window_start_offsets_size = ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets);
   tile_buf_size                  = state->columns * state->rows;
   window_buf_stride              = state->columns * 8;
-  window_buf_size                = (window_buf_stride * state->rows) + 8;
+  /* 8 bytes of padding are appended to the end of the window buffer - as in
+   * the original game - to allow for plotting routine overruns. */
+  window_buf_size                = window_buf_stride * state->rows + 8;
   map_buf_size                   = state->st_columns * state->st_rows;
 
   state->tile_buf_size     = tile_buf_size;

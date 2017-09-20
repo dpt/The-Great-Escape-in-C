@@ -40,10 +40,10 @@ do {                                                  \
   assert((p) < state->tile_buf + state->tile_buf_size); \
 } while (0)
 
-#define ASSERT_WINDOW_BUF_PTR_VALID(p)                \
-do {                                                  \
-  assert((p) >= state->window_buf);                   \
-  assert((p) < state->window_buf + state->window_buf_size); \
+#define ASSERT_WINDOW_BUF_PTR_VALID(p, overshoot)                       \
+do {                                                                    \
+  assert((p) >= state->window_buf - overshoot);                         \
+  assert((p) < state->window_buf + state->window_buf_size + overshoot); \
 } while (0)
 
 #define ASSERT_MAP_BUF_PTR_VALID(p)                   \
