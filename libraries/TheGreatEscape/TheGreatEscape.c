@@ -11964,7 +11964,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    p = MASK(bm2, mask2); // 'x' should probably be another variable here
+    p = MASK(bm2, mask2);
     foremaskptr++;
     if (state->enable_16_right_1)
       *screenptr = p;
