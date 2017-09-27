@@ -11422,7 +11422,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
     {
       uint8_t bm0, bm1, bm2, bm3;         /* was B, C, E, D */
       uint8_t mask0, mask1, mask2, mask3; /* was B', C', E', D' */
-      int     carry = 0;
+      int     carry = 0;                  /* was flags */
       uint8_t p;                          /* was A */
 
       /* Load bitmap bytes into B,C,E. */
@@ -11524,7 +11524,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       if (state->enable_24_right_4)
         *screenptr = p;
 
-      screenptr += state->columns - 3; // was 21
+      screenptr += state->columns - 3; /* was 21 */
       if (iters > 1)
         ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
       state->window_buf_pointer = screenptr;
@@ -11548,8 +11548,8 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
     do
     {
       /* Note the different variable order to the case above. */
-      uint8_t bm0, bm1, bm2, bm3;         // was E, C, B, D
-      uint8_t mask0, mask1, mask2, mask3; // was E', C', B', D'
+      uint8_t bm0, bm1, bm2, bm3;         /* was E, C, B, D */
+      uint8_t mask0, mask1, mask2, mask3; /* was E', C', B', D' */
       int     carry = 0;
       uint8_t p;                          /* was A */
 
@@ -11665,7 +11665,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar
       if (state->enable_24_left_4)
         *screenptr = p;
 
-      screenptr += state->columns - 3; // was 21
+      screenptr += state->columns - 3; /* was 21 */
       if (iters > 1)
         ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
       state->window_buf_pointer = screenptr;
@@ -11692,7 +11692,7 @@ void masked_sprite_plotter_16_wide_item(tgestate_t *state)
  */
 void masked_sprite_plotter_16_wide_vischar(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t x;
+  uint8_t x; /* was A */
 
   ASSERT_VISCHAR_VALID(vischar);
 
@@ -11738,8 +11738,8 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (iters - 1) * state->columns + 2 - 1, 2);
   do
   {
-    uint8_t bm0, bm1, bm2;       // was D, E, C
-    uint8_t mask0, mask1, mask2; // was D', E', C'
+    uint8_t bm0, bm1, bm2;       /* was D, E, C */
+    uint8_t mask0, mask1, mask2; /* was D', E', C' */
     int     carry = 0;
 
     /* Load bitmap bytes into D,E. */
@@ -11832,7 +11832,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     state->foreground_mask_pointer = foremaskptr;
     if (state->enable_16_left_3)
       *screenptr = p;
-    screenptr += state->columns - 2; // was 22
+    screenptr += state->columns - 2; /* was 22 */
 
     if (iters > 1)
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
@@ -11879,8 +11879,8 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   do
   {
     /* Note the different variable order to the 'left' case above. */
-    uint8_t bm0, bm1, bm2;       // was E, D, C
-    uint8_t mask0, mask1, mask2; // was E', D', C'
+    uint8_t bm0, bm1, bm2;       /* was E, D, C */
+    uint8_t mask0, mask1, mask2; /* was E', D', C' */
     int     carry = 0;
 
     /* Load bitmap bytes into D,E. */
@@ -11980,7 +11980,7 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     if (state->enable_16_right_3)
       *screenptr = p;
 
-    screenptr += state->columns - 2; // was 22
+    screenptr += state->columns - 2; /* was 22 */
     if (iters > 1)
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     state->window_buf_pointer = screenptr;
