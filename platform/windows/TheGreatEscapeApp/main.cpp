@@ -84,6 +84,11 @@ static int key_handler(uint16_t port, void *opaque)
   return zxkeyset_for_port(port, gamewin->keys);
 }
 
+static void border_handler(int colour, void *opaque)
+{
+  // does nothing presently
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static DWORD WINAPI gamewin_thread(LPVOID lpParam)
@@ -119,6 +124,7 @@ static int CreateGame(gamewin_t *gamewin)
   zxconfig.draw   = draw_handler;
   zxconfig.sleep  = sleep_handler;
   zxconfig.key    = key_handler;
+  zxconfig.border = border_handler;
 
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
