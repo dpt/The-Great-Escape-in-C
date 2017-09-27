@@ -11392,7 +11392,8 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_24_wide_vischar(tgestate_t *state, vischar_t *vischar)
+void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
+                                           vischar_t  *vischar)
 {
   uint8_t        x;           /* was A */
   uint8_t        iters;       /* was B */
@@ -11690,7 +11691,8 @@ void masked_sprite_plotter_16_wide_item(tgestate_t *state)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_16_wide_vischar(tgestate_t *state, vischar_t *vischar)
+void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
+                                           vischar_t  *vischar)
 {
   uint8_t x; /* was A */
 
