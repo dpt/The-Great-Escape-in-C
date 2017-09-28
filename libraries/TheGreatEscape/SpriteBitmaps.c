@@ -8,6 +8,7 @@
 
 #include "TheGreatEscape/SpriteBitmaps.h"
 
+// 16x29
 const uint8_t bitmap_commandant_facing_top_left_4[] =
 {
   ________,________,
@@ -41,6 +42,7 @@ const uint8_t bitmap_commandant_facing_top_left_4[] =
   ________,__X_____,
 };
 
+// 16x29
 const uint8_t bitmap_commandant_facing_top_left_3[] =
 {
   ________,________,
@@ -74,6 +76,7 @@ const uint8_t bitmap_commandant_facing_top_left_3[] =
   ________,XX______,
 };
 
+// 16x30
 const uint8_t bitmap_commandant_facing_top_left_2[] =
 {
   ________,________,
@@ -108,6 +111,7 @@ const uint8_t bitmap_commandant_facing_top_left_2[] =
   _______X,X_______,
 };
 
+// 16x28
 const uint8_t bitmap_commandant_facing_top_left_1[] =
 {
   ________,________,
@@ -140,6 +144,7 @@ const uint8_t bitmap_commandant_facing_top_left_1[] =
   _____XXX,__XX____,
 };
 
+// 16x27
 const uint8_t bitmap_commandant_facing_bottom_right_1[] =
 {
   ________,________,
@@ -171,6 +176,7 @@ const uint8_t bitmap_commandant_facing_bottom_right_1[] =
   ______XX,XX______,
 };
 
+// 16x28
 const uint8_t bitmap_commandant_facing_bottom_right_2[] =
 {
   ________,________,
@@ -203,6 +209,7 @@ const uint8_t bitmap_commandant_facing_bottom_right_2[] =
   ______XX,________,
 };
 
+// 16x27
 const uint8_t bitmap_commandant_facing_bottom_right_3[] =
 {
   ________,________,
@@ -234,6 +241,7 @@ const uint8_t bitmap_commandant_facing_bottom_right_3[] =
   ____X___,_XXX____,
 };
 
+// 16x28
 const uint8_t bitmap_commandant_facing_bottom_right_4[] =
 {
   ________,________,
@@ -266,6 +274,7 @@ const uint8_t bitmap_commandant_facing_bottom_right_4[] =
   ________,_XX_____,
 };
 
+// 16x27
 const uint8_t bitmap_prisoner_facing_top_left_4[] =
 {
   ________,________,
@@ -297,6 +306,7 @@ const uint8_t bitmap_prisoner_facing_top_left_4[] =
   ________,_XX_____,
 };
 
+// 16x27
 const uint8_t bitmap_prisoner_facing_top_left_3[] =
 {
   ________,________,
@@ -328,6 +338,7 @@ const uint8_t bitmap_prisoner_facing_top_left_3[] =
   ______XX,XX______,
 };
 
+// 16x27
 const uint8_t bitmap_prisoner_facing_top_left_2[] =
 {
   ________,________,
@@ -359,6 +370,7 @@ const uint8_t bitmap_prisoner_facing_top_left_2[] =
   ______XX,________,
 };
 
+// 16x26
 const uint8_t bitmap_prisoner_facing_top_left_1[] =
 {
   ________,________,
@@ -389,6 +401,7 @@ const uint8_t bitmap_prisoner_facing_top_left_1[] =
   ___XX___,XXX_____,
 };
 
+// 16x26
 const uint8_t bitmap_prisoner_facing_bottom_right_1[] =
 {
   ________,________,
@@ -419,6 +432,7 @@ const uint8_t bitmap_prisoner_facing_bottom_right_1[] =
   ______XX,X_______,
 };
 
+// 16x28
 const uint8_t bitmap_prisoner_facing_bottom_right_2[] =
 {
   ________,________,
@@ -451,6 +465,7 @@ const uint8_t bitmap_prisoner_facing_bottom_right_2[] =
   ____XXX_,________,
 };
 
+// 16x27
 const uint8_t bitmap_prisoner_facing_bottom_right_3[] =
 {
   ________,________,
@@ -482,6 +497,7 @@ const uint8_t bitmap_prisoner_facing_bottom_right_3[] =
   __XX____,________,
 };
 
+// 16x27
 const uint8_t bitmap_prisoner_facing_bottom_right_4[] =
 {
   ________,________,
@@ -513,6 +529,7 @@ const uint8_t bitmap_prisoner_facing_bottom_right_4[] =
   ____XXX_,XX______,
 };
 
+// 24x15
 const uint8_t bitmap_crawl_facing_bottom_left_2[] =
 {
   ________,________,________,
@@ -532,6 +549,7 @@ const uint8_t bitmap_crawl_facing_bottom_left_2[] =
   ________,_XX_____,________,
 };
 
+// 24x16
 const uint8_t bitmap_crawl_facing_bottom_left_1[] =
 {
   ________,________,________,
@@ -552,6 +570,7 @@ const uint8_t bitmap_crawl_facing_bottom_left_1[] =
   _____XX_,________,________,
 };
 
+// 24x16
 const uint8_t bitmap_crawl_facing_top_left_1[] =
 {
   ______XX,X_______,________,
@@ -572,6 +591,7 @@ const uint8_t bitmap_crawl_facing_top_left_1[] =
   ________,_______X,_____X__,
 };
 
+// 24x16
 const uint8_t bitmap_crawl_facing_top_left_2[] =
 {
   ______XX,X_______,________,
@@ -592,6 +612,7 @@ const uint8_t bitmap_crawl_facing_top_left_2[] =
   ________,_______X,__XX____,
 };
 
+// 24x16
 const uint8_t mask_crawl_facing_top_left[] =
 {
   XXXXX___,___XXXXX,XXXXXXXX,
@@ -612,6 +633,7 @@ const uint8_t mask_crawl_facing_top_left[] =
   XXXXXXXX,XXXXX___,_______X,
 };
 
+// 16x32
 const uint8_t mask_various_facing_top_left_4[] =
 {
   XXXXXXX_,____XXXX,
@@ -648,6 +670,7 @@ const uint8_t mask_various_facing_top_left_4[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x32
 const uint8_t mask_various_facing_top_left_3[] =
 {
   XXXXXXX_,____XXXX,
@@ -684,6 +707,7 @@ const uint8_t mask_various_facing_top_left_3[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x32
 const uint8_t mask_various_facing_top_left_2[] =
 {
   XXXXXXX_,____XXXX,
@@ -720,6 +744,7 @@ const uint8_t mask_various_facing_top_left_2[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x32
 const uint8_t mask_various_facing_top_left_1[] =
 {
   XXXXXXX_,____XXXX,
@@ -756,6 +781,7 @@ const uint8_t mask_various_facing_top_left_1[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x32
 const uint8_t mask_various_facing_bottom_right_1[] =
 {
   XXXXX___,___XXXXX,
@@ -792,6 +818,7 @@ const uint8_t mask_various_facing_bottom_right_1[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x32
 const uint8_t mask_various_facing_bottom_right_2[] =
 {
   XXXXX___,___XXXXX,
@@ -828,6 +855,7 @@ const uint8_t mask_various_facing_bottom_right_2[] =
   XXXXXXXX,XXXXXXXX,
 };
 
+// 16x28
 const uint8_t mask_various_facing_bottom_right_3[] =
 {
   XXXXX___,___XXXXX,
@@ -860,6 +888,7 @@ const uint8_t mask_various_facing_bottom_right_3[] =
   XX___XXX,XX___XXX,
 };
 
+// 16x29
 const uint8_t mask_various_facing_bottom_right_4[] =
 {
   XXXXX___,___XXXXX,
@@ -893,6 +922,7 @@ const uint8_t mask_various_facing_bottom_right_4[] =
   XXXXX___,XXXXXXXX,
 };
 
+// 24x16
 const uint8_t mask_crawl_facing_bottom_left[] =
 {
   XXXXXXXX,XXXX_X_X,XXXXXXXX,
@@ -913,6 +943,7 @@ const uint8_t mask_crawl_facing_bottom_left[] =
   XXXX____,___XXXXX,XXXXXXXX,
 };
 
+// 16x27
 const uint8_t bitmap_guard_facing_top_left_4[] =
 {
   ________,________,
@@ -944,6 +975,7 @@ const uint8_t bitmap_guard_facing_top_left_4[] =
   ________,XXX_____,
 };
 
+// 16x27
 const uint8_t bitmap_guard_facing_top_left_3[] =
 {
   ________,________,
@@ -975,6 +1007,7 @@ const uint8_t bitmap_guard_facing_top_left_3[] =
   _____XX_,________,
 };
 
+// 16x29
 const uint8_t bitmap_guard_facing_top_left_2[] =
 {
   ________,________,
@@ -1008,6 +1041,7 @@ const uint8_t bitmap_guard_facing_top_left_2[] =
   _____XX_,________,
 };
 
+// 16x27
 const uint8_t bitmap_guard_facing_top_left_1[] =
 {
   ________,________,
@@ -1039,6 +1073,7 @@ const uint8_t bitmap_guard_facing_top_left_1[] =
   ___XX___,________,
 };
 
+// 16x29
 const uint8_t bitmap_guard_facing_bottom_right_1[] =
 {
   ________,________,
@@ -1072,6 +1107,7 @@ const uint8_t bitmap_guard_facing_bottom_right_1[] =
   ________,X_______,
 };
 
+// 16x29
 const uint8_t bitmap_guard_facing_bottom_right_2[] =
 {
   ________,________,
@@ -1105,6 +1141,7 @@ const uint8_t bitmap_guard_facing_bottom_right_2[] =
   ______XX,X_______,
 };
 
+// 16x28
 const uint8_t bitmap_guard_facing_bottom_right_3[] =
 {
   ________,________,
@@ -1137,6 +1174,7 @@ const uint8_t bitmap_guard_facing_bottom_right_3[] =
   __XXX___,__XXX___,
 };
 
+// 16x28
 const uint8_t bitmap_guard_facing_bottom_right_4[] =
 {
   ________,________,
@@ -1169,6 +1207,7 @@ const uint8_t bitmap_guard_facing_bottom_right_4[] =
   ____XXXX,_XX_____,
 };
 
+// 24x16
 const uint8_t bitmap_dog_facing_top_left_1[] =
 {
   ___XX_X_,XX______,________,
@@ -1189,6 +1228,7 @@ const uint8_t bitmap_dog_facing_top_left_1[] =
   ________,______XX,___X____,
 };
 
+// 24x16
 const uint8_t bitmap_dog_facing_top_left_2[] =
 {
   ___XX_X_,X_______,________,
@@ -1209,6 +1249,7 @@ const uint8_t bitmap_dog_facing_top_left_2[] =
   ________,________,XX______,
 };
 
+// 24x15
 const uint8_t bitmap_dog_facing_top_left_3[] =
 {
   ___XX_X_,X_______,________,
@@ -1228,6 +1269,7 @@ const uint8_t bitmap_dog_facing_top_left_3[] =
   ________,______XX,________,
 };
 
+// 24x15
 const uint8_t bitmap_dog_facing_top_left_4[] =
 {
   ___XX_X_,XX______,________,
@@ -1247,6 +1289,7 @@ const uint8_t bitmap_dog_facing_top_left_4[] =
   ________,_______X,X_______,
 };
 
+// 24x16
 const uint8_t mask_dog_facing_top_left[] =
 {
   XX______,___XXXXX,XXXXXXXX,
@@ -1267,6 +1310,7 @@ const uint8_t mask_dog_facing_top_left[] =
   XXXXXXXX,XXXXX___,_____XXX,
 };
 
+// 24x14
 const uint8_t bitmap_dog_facing_bottom_right_1[] =
 {
   ________,________,________,
@@ -1285,6 +1329,7 @@ const uint8_t bitmap_dog_facing_bottom_right_1[] =
   ________,_______X,X_______,
 };
 
+// 24x15
 const uint8_t bitmap_dog_facing_bottom_right_2[] =
 {
   ________,________,________,
@@ -1304,6 +1349,7 @@ const uint8_t bitmap_dog_facing_bottom_right_2[] =
   ________,____X___,________,
 };
 
+// 24x13
 const uint8_t bitmap_dog_facing_bottom_right_3[] =
 {
   ________,________,________,
@@ -1321,6 +1367,7 @@ const uint8_t bitmap_dog_facing_bottom_right_3[] =
   ________,___XX_X_,________,
 };
 
+// 24x14
 const uint8_t bitmap_dog_facing_bottom_right_4[] =
 {
   ________,________,________,
@@ -1339,6 +1386,7 @@ const uint8_t bitmap_dog_facing_bottom_right_4[] =
   ________,___XX___,________,
 };
 
+// 24x16
 const uint8_t mask_dog_facing_bottom_right[] =
 {
   XXXX___X,XXXXXXXX,XXXXXXXX,
@@ -1364,6 +1412,7 @@ const uint8_t mask_dog_facing_bottom_right[] =
  * give flag_up an extra three rows of empty pixels.
  */
 
+// 24x25
 const uint8_t flag_up[3 * 25] =
 {
   ________,________,________,
@@ -1393,6 +1442,7 @@ const uint8_t flag_up[3 * 25] =
   ________,________,________, /* Conv: added */
 };
 
+// 24x25
 const uint8_t flag_down[3 * 25] =
 {
   ________,________,________,
@@ -1422,6 +1472,7 @@ const uint8_t flag_down[3 * 25] =
   ________,________,________,
 };
 
+// 24x24
 const uint8_t bitmap_crate[] =
 {
   ________,__XX____,________,
@@ -1450,6 +1501,7 @@ const uint8_t bitmap_crate[] =
   ________,_______X,________,
 };
 
+// 24x24
 const uint8_t mask_crate[] =
 {
   XXXXXXXX,______XX,XXXXXXXX,
@@ -1478,6 +1530,7 @@ const uint8_t mask_crate[] =
   XXXXXXXX,XXXX____,__XXXXXX,
 };
 
+// 16x22
 const uint8_t bitmap_stove[] =
 {
   ___XXX__,________,
@@ -1504,6 +1557,7 @@ const uint8_t bitmap_stove[] =
   _XX_____,_____XX_,
 };
 
+// 16x22
 const uint8_t mask_stove[] =
 {
   XX______,__XXXXXX,
