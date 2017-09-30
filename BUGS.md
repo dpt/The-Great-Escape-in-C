@@ -18,13 +18,6 @@ Unfixed
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
 * Thread Sanitiser reports multiple problems. Needs locking in various places.
 
-Might be fixed
---------------
-* There's an assert in the rendering code when an item is encountered outside.
-	* Fixes are in to use 8 bytes of buffering at the end of `window_buf` as in the original - waiting to see.
-* There's an assert in `masked_sprite_plotter_24_wide_vischar` when character rendering.
-	* This was possibly some over-eager asserts.
-
 Fixed
 -----
 * Masking code producing garbled output.
@@ -70,3 +63,7 @@ Fixed
 	* Fixed XXaug17: Original game derefs `NULL`, walks into ROM.
 * Sat down NPC prisoners vanish at end of breakfast.
 	* Fixed 9aug17: `character_sit_sleep_common()` was assigning `route_WANDER` to `route->index`, not zero.
+* There's an assert in the rendering code when an item is encountered outside.
+	* Fixed 27sep17: Use 8 bytes of buffering at the end of `window_buf` as in the original.
+* There's an assert in `masked_sprite_plotter_24_wide_vischar` (and others) when character rendering.
+	* Fixed 27sep17: Fixed incorrect asserts.
