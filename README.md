@@ -58,8 +58,7 @@ Non-core:
 
 ### What doesn't?
 
-- There's no sound at all
-- Occasionally asserts fire due to attempted out-of-bounds accesses in graphics routines
+- There's no sound at all (in progress)
 - Various other divergences from the original to be fixed
 
 ## Current Builds
