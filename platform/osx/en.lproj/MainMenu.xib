@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
-        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
             <connections>
-                <outlet property="delegate" destination="494" id="495"/>
+                <outlet property="delegate" destination="gx9-ry-PZj" id="nZQ-Iz-eN3"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customObject id="gx9-ry-PZj" userLabel="Delegate" customClass="AppDelegate"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
                 <menuItem title="The Great Escape" id="56">
@@ -64,28 +64,58 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Game" id="2KU-r5-uLg">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Game" id="WfA-JN-hHu">
+                        <items>
+                            <menuItem title="New..." keyEquivalent="n" id="16Y-WM-myU">
+                                <connections>
+                                    <action selector="newGame:" target="gx9-ry-PZj" id="InU-aq-y6M"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Duplicate..." keyEquivalent="N" id="QRl-nU-mcF">
+                                <connections>
+                                    <action selector="closeGame:" target="-1" id="0iy-wf-fio"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="55x-bN-NZr"/>
+                            <menuItem title="Close" keyEquivalent="w" id="GDn-TE-mAy">
+                                <connections>
+                                    <action selector="performClose:" target="-1" id="rgx-sR-69F"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="View" id="aDI-j4-0MZ">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="View" systemMenu="window" id="YtR-rd-vL7">
                         <items>
-                            <menuItem title="Zoom 1x" tag="1" keyEquivalent="1" id="yMO-Hw-sjq">
+                            <menuItem title="Enter Full Screen" tag="-1" keyEquivalent="f" id="YkS-aq-HCh">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
-                                    <action selector="zoom:" target="537" id="tTN-Mf-O5v"/>
+                                    <action selector="toggleFullScreen:" target="-1" id="vvh-SM-FWm"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Zoom 2x" tag="2" keyEquivalent="2" id="iki-we-UHt">
+                            <menuItem title="Actual Size" keyEquivalent="0" id="mF1-0u-dOv">
                                 <connections>
-                                    <action selector="zoom:" target="537" id="KxT-5g-x3e"/>
+                                    <action selector="setZoomLevel:" target="-1" id="U7N-kS-F36"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Zoom 3x" tag="3" keyEquivalent="3" id="yXb-Ct-fc1">
+                            <menuItem title="Zoom In" tag="1" keyEquivalent="+" id="yMO-Hw-sjq">
                                 <connections>
-                                    <action selector="zoom:" target="537" id="bCI-zS-iea"/>
+                                    <action selector="setZoomLevel:" target="-1" id="f9M-Oc-gLC"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Zoom 4x" tag="4" keyEquivalent="4" id="nez-fC-XSa">
+                            <menuItem title="Zoom Out" tag="2" keyEquivalent="-" id="iki-we-UHt">
                                 <connections>
-                                    <action selector="zoom:" target="537" id="C5R-Rd-F3g"/>
+                                    <action selector="setZoomLevel:" target="-1" id="NiK-MP-D4u"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="W0S-uf-Qes"/>
+                            <menuItem title="Snap to Whole Pixels" state="on" tag="-1" keyEquivalent="s" id="QC2-v8-HZj">
+                                <connections>
+                                    <action selector="toggleSnap:" target="-1" id="xpJ-pP-VHj"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -97,29 +127,29 @@
                         <items>
                             <menuItem title="Pause" keyEquivalent="p" id="qOr-pu-Obp">
                                 <connections>
-                                    <action selector="setSpeed:" target="537" id="xP1-Ks-1is"/>
+                                    <action selector="setSpeed:" target="-1" id="Mq3-0J-dQZ"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="mat-6x-6rh"/>
-                            <menuItem title="100%" tag="100" keyEquivalent="-" id="hvk-Sm-oMC">
+                            <menuItem title="100%" tag="100" keyEquivalent="" id="hvk-Sm-oMC">
                                 <connections>
-                                    <action selector="setSpeed:" target="537" id="OxB-XH-JJo"/>
+                                    <action selector="setSpeed:" target="-1" id="Cdc-pM-rlc"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Maximum" tag="-1" keyEquivalent="=" id="RbD-x3-pLf">
+                            <menuItem title="Maximum" tag="-1" keyEquivalent="" id="RbD-x3-pLf">
                                 <connections>
-                                    <action selector="setSpeed:" target="537" id="UXD-kz-pp3"/>
+                                    <action selector="setSpeed:" target="-1" id="EBB-PE-Qpe"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="tmV-v2-PIo"/>
-                            <menuItem title="Faster" tag="1" keyEquivalent="]" id="aIM-kk-uf7">
+                            <menuItem title="Faster" tag="1" keyEquivalent="" id="aIM-kk-uf7">
                                 <connections>
-                                    <action selector="setSpeed:" target="537" id="ypK-Wq-frL"/>
+                                    <action selector="setSpeed:" target="-1" id="XjA-Qb-Zhb"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Slower" tag="2" keyEquivalent="[" id="wlM-Rt-uEM">
+                            <menuItem title="Slower" tag="2" keyEquivalent="" id="wlM-Rt-uEM">
                                 <connections>
-                                    <action selector="setSpeed:" target="537" id="WcH-RX-fAD"/>
+                                    <action selector="setSpeed:" target="-1" id="JPB-ck-ZDa"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -131,6 +161,12 @@
                             <menuItem title="Minimize" keyEquivalent="m" id="23">
                                 <connections>
                                     <action selector="performMiniaturize:" target="-1" id="37"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Zoom" id="trl-nx-dCJ">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="performZoom:" target="-1" id="e58-Dv-awO"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="92">
@@ -159,27 +195,5 @@
             </items>
             <point key="canvasLocation" x="139" y="-376"/>
         </menu>
-        <window title="The Great Escape" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" tabbingMode="disallowed" id="371">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="512" height="384"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
-            <view key="contentView" misplaced="YES" id="372">
-                <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
-                <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <openGLView horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" misplaced="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" id="537" customClass="TheGreatEscapeView">
-                        <rect key="frame" x="128" y="96" width="256" height="192"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                    </openGLView>
-                </subviews>
-            </view>
-            <point key="canvasLocation" x="224" y="-88"/>
-        </window>
-        <customObject id="494" customClass="AppDelegate">
-            <connections>
-                <outlet property="window" destination="371" id="532"/>
-            </connections>
-        </customObject>
     </objects>
 </document>

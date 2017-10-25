@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ZXGameWindowController">
+            <connections>
+                <outlet property="gameView" destination="4Vq-40-YeS" id="rjz-db-qeT"/>
+                <outlet property="window" destination="371" id="40L-Kv-ndJ"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="The Great Escape" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" id="371" customClass="ZXGameWindow">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <rect key="contentRect" x="998" y="63" width="512" height="384"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <value key="minSize" type="size" width="128" height="96"/>
+            <view key="contentView" misplaced="YES" id="372">
+                <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <openGLView misplaced="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" id="4Vq-40-YeS" customClass="ZXGameView">
+                        <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    </openGLView>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="-2" id="2le-2f-5jr"/>
+                <outlet property="initialFirstResponder" destination="4Vq-40-YeS" id="Hyg-Eq-Okc"/>
+            </connections>
+            <point key="canvasLocation" x="194" y="-85"/>
+        </window>
+    </objects>
+</document>

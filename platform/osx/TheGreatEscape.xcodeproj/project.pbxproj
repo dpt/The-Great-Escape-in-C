@@ -49,12 +49,15 @@
 		558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A71A0EE15B00A4F50F /* SuperTiles.c */; };
 		558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */; };
 		559B69731F1C30B2006FC753 /* Kempston.c in Sources */ = {isa = PBXBuildFile; fileRef = 559B69721F1C30B2006FC753 /* Kempston.c */; };
+		55A827851F8D63F6006FC753 /* ZXGameWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 55A827841F8D63F6006FC753 /* ZXGameWindow.m */; };
 		55AF25C51D363695002F5E0B /* Keyboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C21D363695002F5E0B /* Keyboard.c */; };
 		55AF25C61D363695002F5E0B /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C31D363695002F5E0B /* Screen.c */; };
 		55AF25C71D363695002F5E0B /* Spectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C41D363695002F5E0B /* Spectrum.c */; };
-		55F0CA5D19E9E23C0033FC17 /* TheGreatEscapeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */; };
+		55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */ = {isa = PBXBuildFile; fileRef = 55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */; };
 		55F0CA6119E9E3640033FC17 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA5F19E9E3640033FC17 /* GLUT.framework */; };
 		55F0CA6219E9E3640033FC17 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA6019E9E3640033FC17 /* OpenGL.framework */; };
+		AE59E3EE1F8790C000368C33 /* ZXGameWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = AE59E3EC1F8790C000368C33 /* ZXGameWindow.xib */; };
+		AEF1A6991F33470900A33C89 /* ZXGameWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = AEF1A6981F33470900A33C89 /* ZXGameWindowController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -122,6 +125,8 @@
 		558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = TheGreatEscape.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		559B69711F1C2FE6006FC753 /* Kempston.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Kempston.h; sourceTree = "<group>"; };
 		559B69721F1C30B2006FC753 /* Kempston.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Kempston.c; path = ../../libraries/ZXSpectrum/Kempston.c; sourceTree = "<group>"; };
+		55A827831F8D63F6006FC753 /* ZXGameWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameWindow.h; sourceTree = "<group>"; };
+		55A827841F8D63F6006FC753 /* ZXGameWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindow.m; sourceTree = "<group>"; };
 		55AF25BF1D363686002F5E0B /* Keyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Keyboard.h; sourceTree = "<group>"; };
 		55AF25C01D363686002F5E0B /* Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Screen.h; sourceTree = "<group>"; };
 		55AF25C11D363686002F5E0B /* Spectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spectrum.h; sourceTree = "<group>"; };
@@ -129,10 +134,13 @@
 		55AF25C31D363695002F5E0B /* Screen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Screen.c; path = ../../libraries/ZXSpectrum/Screen.c; sourceTree = "<group>"; };
 		55AF25C41D363695002F5E0B /* Spectrum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Spectrum.c; path = ../../libraries/ZXSpectrum/Spectrum.c; sourceTree = "<group>"; };
 		55C068B01AEAFD3700C2AA88 /* Doors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Doors.h; path = TheGreatEscape/Doors.h; sourceTree = "<group>"; };
-		55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TheGreatEscapeView.m; sourceTree = "<group>"; };
-		55F0CA5E19E9E24D0033FC17 /* TheGreatEscapeView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TheGreatEscapeView.h; sourceTree = "<group>"; };
+		55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZXGameView.m; sourceTree = "<group>"; };
+		55F0CA5E19E9E24D0033FC17 /* ZXGameView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameView.h; sourceTree = "<group>"; };
 		55F0CA5F19E9E3640033FC17 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		55F0CA6019E9E3640033FC17 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		AE59E3ED1F8790C000368C33 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ZXGameWindow.xib; sourceTree = "<group>"; };
+		AEF1A6971F33470900A33C89 /* ZXGameWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZXGameWindowController.h; sourceTree = "<group>"; };
+		AEF1A6981F33470900A33C89 /* ZXGameWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindowController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,10 +196,14 @@
 			children = (
 				554808E717E117CF00387328 /* AppDelegate.h */,
 				554808E817E117CF00387328 /* AppDelegate.m */,
-				55F0CA5E19E9E24D0033FC17 /* TheGreatEscapeView.h */,
-				55F0CA5C19E9E23C0033FC17 /* TheGreatEscapeView.m */,
-				554808EA17E117CF00387328 /* MainMenu.xib */,
+				AEF1A6971F33470900A33C89 /* ZXGameWindowController.h */,
+				AEF1A6981F33470900A33C89 /* ZXGameWindowController.m */,
+				55A827831F8D63F6006FC753 /* ZXGameWindow.h */,
+				55A827841F8D63F6006FC753 /* ZXGameWindow.m */,
+				55F0CA5E19E9E24D0033FC17 /* ZXGameView.h */,
+				55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */,
 				554808DC17E117CF00387328 /* Supporting Files */,
+				AE59E3EF1F8790CE00368C33 /* UI */,
 			);
 			name = App;
 			sourceTree = "<group>";
@@ -317,6 +329,15 @@
 			path = include;
 			sourceTree = "<group>";
 		};
+		AE59E3EF1F8790CE00368C33 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				554808EA17E117CF00387328 /* MainMenu.xib */,
+				AE59E3EC1F8790C000368C33 /* ZXGameWindow.xib */,
+			);
+			name = UI;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -343,7 +364,7 @@
 		554808CA17E117CF00387328 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0820;
+				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = "David Thomas";
 				TargetAttributes = {
 					554808D117E117CF00387328 = {
@@ -379,6 +400,7 @@
 			files = (
 				554808E017E117CF00387328 /* InfoPlist.strings in Resources */,
 				551D73791D7775A0002F5E0B /* Images.xcassets in Resources */,
+				AE59E3EE1F8790C000368C33 /* ZXGameWindow.xib in Resources */,
 				554808E617E117CF00387328 /* Credits.rtf in Resources */,
 				554808EC17E117CF00387328 /* MainMenu.xib in Resources */,
 			);
@@ -418,9 +440,11 @@
 				558FC65E1A0ECC7F00A4F50F /* main.m in Sources */,
 				558FC6B61A0EE15B00A4F50F /* StaticTiles.c in Sources */,
 				558FC6A91A0EE15B00A4F50F /* Create.c in Sources */,
+				55A827851F8D63F6006FC753 /* ZXGameWindow.m in Sources */,
 				558FC6AF1A0EE15B00A4F50F /* ItemBitmaps.c in Sources */,
 				556D1A251B137A4C0036AED0 /* Messages.c in Sources */,
-				55F0CA5D19E9E23C0033FC17 /* TheGreatEscapeView.m in Sources */,
+				55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */,
+				AEF1A6991F33470900A33C89 /* ZXGameWindowController.m in Sources */,
 				55AF25C51D363695002F5E0B /* Keyboard.c in Sources */,
 				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,
 				558FC6AB1A0EE15B00A4F50F /* Font.c in Sources */,
@@ -464,6 +488,14 @@
 			name = MainMenu.xib;
 			sourceTree = "<group>";
 		};
+		AE59E3EC1F8790C000368C33 /* ZXGameWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AE59E3ED1F8790C000368C33 /* en */,
+			);
+			name = ZXGameWindow.xib;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -476,7 +508,9 @@
 				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				CLANG_WARN_ASSIGN_ENUM = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -484,6 +518,10 @@
 				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
@@ -542,7 +580,9 @@
 				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				CLANG_WARN_ASSIGN_ENUM = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -550,6 +590,10 @@
 				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;

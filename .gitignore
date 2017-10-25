@@ -41,3 +41,6 @@ Release/
 # Others
 scitools_understand
 build.ninja
+*.sync-conflict*
+*.orig
+
