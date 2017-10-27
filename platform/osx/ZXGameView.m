@@ -186,7 +186,7 @@ failure:
     menuItem = (NSMenuItem *) anItem;
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
-      [menuItem setState:snap ? NSControlStateValueOn : NSControlStateValueOff];
+      [menuItem setState:snap ? NSOnState : NSOffState];
   }
 
   return YES;
