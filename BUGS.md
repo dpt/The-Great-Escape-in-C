@@ -16,7 +16,10 @@ Unfixed
 * Have seen guards and prisoners getting bunched up in doorway.
 * Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps.
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
+* Address Sanitiser reports Global buffer overflow in render_mask_buffer.
+    e.g. 0 bytes to the right of global variable 'interior_mask_21'
 * Thread Sanitiser reports multiple problems. Needs locking in various places.
+* Guards & commandant don't always catch the hero on contact.
 
 Fixed
 -----
