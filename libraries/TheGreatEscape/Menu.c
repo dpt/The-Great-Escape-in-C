@@ -184,7 +184,7 @@ static void choose_keys(tgestate_t *state)
   uint8_t *const screen = &state->speccy->screen[0]; /* Conv: Added */
 
   /* Loop while the user does not confirm. */
-  for (;;)
+  for (;;) // FIXME: Loop which doesn't check the quit flag.
   {
     uint8_t                  prompt_iters; /* was B */
     const screenlocstring_t *prompt;       /* was HL */
@@ -449,8 +449,10 @@ static uint8_t menu_keyscan(tgestate_t *state)
  * the title tune.
  *
  * \param[in] state Pointer to game state.
+ *
+ * \return Non-zero when the game should begin, zero otherwise.
  */
-void menu_screen(tgestate_t *state)
+int menu_screen(tgestate_t *state)
 {
   uint16_t BC;              /* was BC */
   uint16_t BCdash;          /* was BC' */
@@ -470,82 +472,82 @@ void menu_screen(tgestate_t *state)
 
   assert(state != NULL);
 
+  /* Conv: Menu driving loop was removed and the routine changed to return
+   * non-zero when the game should begin. */
+  if (check_menu_keys(state) < 0)
+    return 1; /* Start the game */
+
+  wave_morale_flag(state);
+
+  /* Play music */
+  channel0_index = state->music_channel0_index + 1;
+  /* Loop until the end marker is encountered. */
   for (;;)
   {
-    /* Conv: Routine changed to return values. */
-    if (check_menu_keys(state) < 0)
-      return; /* Start the game */
+    state->music_channel0_index = channel0_index;
+    datum = music_channel0_data[channel0_index];
+    if (datum != 0xFF) /* end marker */
+      break;
+    channel0_index = 0;
+  }
+  DE = BC = frequency_for_semitone(datum, &speaker0);
 
-    wave_morale_flag(state);
+  channel1_index = state->music_channel1_index + 1;
+  /* Loop until the end marker is encountered. */
+  for (;;)
+  {
+    state->music_channel1_index = channel1_index;
+    datum = music_channel1_data[channel1_index];
+    if (datum != 0xFF) /* end marker */
+      break;
+    channel1_index = 0;
+  }
+  DEdash = BCdash = frequency_for_semitone(datum, &speaker1);
 
-    /* Play music */
-    channel0_index = state->music_channel0_index + 1;
-    /* Loop until the end marker is encountered. */
-    for (;;)
-    {
-      state->music_channel0_index = channel0_index;
-      datum = music_channel0_data[channel0_index];
-      if (datum != 0xFF) /* end marker */
-        break;
-      channel0_index = 0;
-    }
-    DE = BC = frequency_for_semitone(datum, &speaker0);
+  if ((BCdash >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
+    DEdash = BCdash = BC;
 
-    channel1_index = state->music_channel1_index + 1;
-    /* Loop until the end marker is encountered. */
-    for (;;)
-    {
-      state->music_channel1_index = channel1_index;
-      datum = music_channel1_data[channel1_index];
-      if (datum != 0xFF) /* end marker */
-        break;
-      channel1_index = 0;
-    }
-    DEdash = BCdash = frequency_for_semitone(datum, &speaker1);
-
-    if ((BCdash >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
-      DEdash = BCdash = BC;
-
-    overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
+  overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
+  do
+  {
+    iters = 255;
     do
     {
-      iters = 255;
-      do
+      // B,C are a pair of counters?
+
+      B = BC >> 8;
+      C = BC & 0xFF;
+      if (--B == 0 && --C == 0)
       {
-        // B,C are a pair of counters?
-
-        B = BC >> 8;
-        C = BC & 0xFF;
-        if (--B == 0 && --C == 0)
-        {
-          speaker0 ^= port_MASK_EAR;
-          state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker0);
-          BC = DE;
-        }
-        else
-        {
-          BC = (B << 8) | C;
-        }
-
-        Bdash = BCdash >> 8;
-        Cdash = BCdash & 0xFF;
-        if (--Bdash == 0 && --Cdash == 0)
-        {
-          speaker1 ^= port_MASK_EAR;
-          state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker1);
-          BCdash = DEdash;
-        }
-        else
-        {
-          BCdash = (Bdash << 8) | Cdash;
-        }
+        speaker0 ^= port_MASK_EAR;
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker0);
+        BC = DE;
       }
-      while (--iters);
-    }
-    while (--overall_delay);
+      else
+      {
+        BC = (B << 8) | C;
+      }
 
-    state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
+      Bdash = BCdash >> 8;
+      Cdash = BCdash & 0xFF;
+      if (--Bdash == 0 && --Cdash == 0)
+      {
+        speaker1 ^= port_MASK_EAR;
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker1);
+        BCdash = DEdash;
+      }
+      else
+      {
+        BCdash = (Bdash << 8) | Cdash;
+      }
+    }
+    while (--iters);
   }
+  while (--overall_delay);
+
+  state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
+
+  return 0;
 }
 
 // vim: ts=8 sts=2 sw=2 et

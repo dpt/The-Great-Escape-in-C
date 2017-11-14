@@ -438,10 +438,18 @@ static void *tge_thread(void *arg)
 
   tge_setup(game);
 
+  // While in menu state
   while (!view->quit)
-    tge_main(game);
+    if (tge_menu(game) > 0)
+      break; // game begins
 
-  tge_destroy(game);
+  // While in game state
+  if (!view->quit)
+  {
+    tge_setup2(game);
+    while (!view->quit)
+      tge_main(game);
+  }
 
   return NULL;
 }

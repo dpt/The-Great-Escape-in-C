@@ -12607,7 +12607,7 @@ int user_confirm(tgestate_t *state)
   screenlocstring_plot(state, &screenlocstring_confirm_y_or_n);
 
   /* Keyscan. */
-  for (;;)
+  for (;;) // FIXME: Loop which doesn't check the quit flag.
   {
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_POIUY);
     if ((keymask & (1 << 4)) == 0)
@@ -12625,11 +12625,41 @@ int user_confirm(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F163: Setup the game.
+ * $F163: Setup the game screen.
  *
  * \param[in] state Pointer to game state.
  */
 TGE_API void tge_setup(tgestate_t *state)
+{
+  assert(state != NULL);
+
+  wipe_full_screen_and_attributes(state);
+  set_morale_flag_screen_attributes(state, attribute_BRIGHT_GREEN_OVER_BLACK);
+  /* The original code seems to pass in 68, not zero, as it uses a register
+   * left over from a previous call to set_morale_flag_screen_attributes(). */
+  set_menu_item_attributes(state, 0, attribute_BRIGHT_YELLOW_OVER_BLACK);
+  plot_statics_and_menu_text(state);
+
+  plot_score(state);
+}
+
+/**
+ * $F17A: Run the main menu until the game is ready to run.
+ *
+ * \param[in] state Pointer to game state.
+ */
+TGE_API int tge_menu(tgestate_t *state)
+{
+  // Note: that game will sit in this function while the menu screen runs.
+  return menu_screen(state);
+}
+
+/**
+ * $F17D: Setup the game proper.
+ *
+ * \param[in] state Pointer to game state.
+ */
+TGE_API void tge_setup2(tgestate_t *state)
 {
   /**
    * $F1C9: Initial state of a visible character.
@@ -12668,18 +12698,6 @@ TGE_API void tge_setup(tgestate_t *state)
   vischar_t *vischar;  /* was HL */
 
   assert(state != NULL);
-
-  wipe_full_screen_and_attributes(state);
-  set_morale_flag_screen_attributes(state, attribute_BRIGHT_GREEN_OVER_BLACK);
-  /* The original code seems to pass in 68, not zero, as it uses a register
-   * left over from a previous call to set_morale_flag_screen_attributes(). */
-  set_menu_item_attributes(state, 0, attribute_BRIGHT_YELLOW_OVER_BLACK);
-  plot_statics_and_menu_text(state);
-
-  plot_score(state);
-
-  menu_screen(state);
-
 
   /* Construct a table of 256 bit-reversed bytes in state->reversed[]. */
   reversed = &state->reversed[0];
@@ -12737,12 +12755,16 @@ TGE_API void tge_setup(tgestate_t *state)
 
     reset_game(state);
 
+    // reset_game, which in turn calls enter_room which exits via longjmp to after this if statement block
+
     // i reckon this never gets this far, as reset_game jumps to enter_room itself
     //enter_room(state); // returns by goto main_loop
     NEVER_RETURNS;
   }
+  // we arrive here once the game is initialised and the initial bedroom scene is drawn and zoomboxed onto the screen
 }
 
+// missing prologue here - is this new code?
 TGE_API void tge_main(tgestate_t *state)
 {
   // Conv: Need to get main loop to setjmp so we call it from here.

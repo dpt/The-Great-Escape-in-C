@@ -93,14 +93,23 @@ static void border_handler(int colour, void *opaque)
 
 static DWORD WINAPI gamewin_thread(LPVOID lpParam)
 {
-  gamewin_t *game = (gamewin_t *) lpParam;
+  gamewin_t  *win  = (gamewin_t *) lpParam;
+  tgestate_t *game = gamewin->game;
 
-  tge_setup(game->tge);
+  tge_setup(game);
 
-  // we arrive here once the menu screen has run its course
+  // While in menu state
+  while (!win->quit)
+    if (tge_menu(game) > 0)
+      break; // game begins
 
-  while (!game->quit)
-    tge_main(game->tge);
+  // While in game state
+  if (!win->quit)
+  {
+    tge_setup2(game);
+    while (!win->quit)
+      tge_main(game);
+  }
 
   return NULL;
 }

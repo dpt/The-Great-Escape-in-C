@@ -61,12 +61,28 @@ TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
 TGE_API void tge_destroy(tgestate_t *state);
 
 /**
- * Prepare the game for running.
+ * Prepare the game screen.
  */
 TGE_API void tge_setup(tgestate_t *state);
 
 /**
+ * Run the game menu.
+ *
+ * Call this repeatedly until it returns > 0.
+ *
+ * \return > 0 when it's time to continue on to tge_setup2.
+ */
+TGE_API int tge_menu(tgestate_t *state);
+
+/**
+ * Prepare the game proper.
+ */
+TGE_API void tge_setup2(tgestate_t *state);
+
+/**
  * Invoke the game instance.
+ *
+ * Call this repeatedly.
  */
 TGE_API void tge_main(tgestate_t *state);
 
