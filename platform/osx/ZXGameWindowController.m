@@ -26,6 +26,11 @@ static int ngames;
   self = [super initWithWindowNibName:@"ZXGameWindow" owner:self];
   ngames++;
 
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(windowWillCloseNotification:)
+                                               name:NSWindowWillCloseNotification
+                                             object:[self window]];
+
   return self;
 }
 
@@ -46,6 +51,15 @@ static int ngames;
   [gameView getGameWidth:&gameWidth height:&gameHeight border:&gameBorder];
 
   [self resizeAndCentreGameWindow];
+}
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Notification handlers
+
+- (void)windowWillCloseNotification:(NSNotification *)notification
+{
+  [gameView stop];
 }
 
 // -----------------------------------------------------------------------------

@@ -16,6 +16,8 @@
 /// Current game scale factor
 @property (nonatomic, readonly) CGFloat scale;
 
+- (void)stop;
+
 - (void)keyUp:(NSEvent *)event;
 - (void)keyDown:(NSEvent *)event;
 - (void)flagsChanged:(NSEvent *)event;

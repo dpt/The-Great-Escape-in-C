@@ -165,6 +165,21 @@ failure:
 
 // -----------------------------------------------------------------------------
 
+- (void)stop
+{
+  // Signal to the game thread to quit
+  quit = YES;
+
+  // Wait for it to yield
+  // Is this is a bad idea to wait like this on the UI thread?
+  pthread_join(thread, NULL);
+
+  tge_destroy(game);
+  zxspectrum_destroy(zx);
+}
+
+// -----------------------------------------------------------------------------
+
 #pragma mark - UI
 
 - (BOOL)acceptsFirstResponder
