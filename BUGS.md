@@ -3,13 +3,19 @@ BUGS
 
 Unfixed
 -------
+
+Up next:
+
+* Nondeterminism! The game does not run the same way twice. The game's as random as the original. Needs explaining.
+
+Queue:
+
 * The naughty flag activates unexpectedly when the hero is wandering. Leave the game running long/quickly enough and you'll see it.
 	* I've fixed some stuff, but it's still not right.
 * The guard who marches above main gate seems to spawn too late compared with the original game.
 * Dogs and guards seem to be able to catch the hero though the fence. Doesn't happen in the original.
 	* `collision: -> solitary` says the debug log
 	* _Possibly_ fixed in 6jul17 fix... nope, still happens.
-* Nondeterminism! The game does not run the same way twice. The game's as random as the original. Needs explaining.
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
 * I've seen the hero glide off on his knees through a fence when wire snipping is complete.
 * Have seen NPCs get stuck at night in hero's bedroom.

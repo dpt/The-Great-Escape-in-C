@@ -1,5 +1,29 @@
 TODOs
 =====
 
-* Multiple instantiation: run multiple versions of the game from a single app. This will need front-end changes and the room meddling overwrites in the game code sorting out.
+Core
+----
+* Fix core game bugs (see BUGS.md).
+* Fix analyser issues (vars assigned to but never read).
+
+macOS
+-----
+* Stop the core overwriting shared writable room defs to make things appear.
+* macOS UI - retina resolutions ought to be recognised/supported.
+* Clicky beeper audio ought to be checked out. Could just need filtering.
+* Audio performance ought to be checked out. Avoid bitfifo or just optimise is storage?
+* Ensure that the game sleeps properly. Look into macOS timing stuff.
+* Perhaps replace the OpenGL front end with SpriteKit.
+* TV simulator shader (greyscale, scanlines, blurring, etc.)
+* Add a help page or user guide. Keymap. Include solutions.
+
+Windows
+-------
+* Windows UI - bring to parity with macOS UI.
+
+
+General
+-------
+* Huge tidy-up.
+* Fix all the 'FUTURE' issues.
 
