@@ -89,20 +89,6 @@ enum
 typedef struct zxspectrum zxspectrum_t;
 
 /**
- * Indicates what type of operation is in progress when doing sleep
- * (e.g. waiting for a menu, playing a sound).
- */
-typedef enum
-{
-  sleeptype_MENU,     // main menu loop
-  sleeptype_SOUND,    // inbetween sound pulses
-  sleeptype_KEYSCAN,  // waiting for a keypress
-  sleeptype_DELAY,    // too vague
-  sleeptype_LOOP      // main game loop
-}
-sleeptype_t;
-
-/**
  * Bounding box.
  */
 typedef struct zxbox
@@ -132,9 +118,16 @@ struct zxspectrum
   void (*draw)(zxspectrum_t *state, const zxbox_t *dirty);
 
   /**
-   * Call the implementer when we need to sleep.
+   * Call the implementer when we need to save a timestamp.
    */
-  void (*sleep)(zxspectrum_t *state, sleeptype_t type, int duration); // duration units are what?
+  void (*stamp)(zxspectrum_t *state);
+
+  /**
+   * Call the implementer when we need to sleep.
+   *
+   * \param[in] duration T-states
+   */
+  void (*sleep)(zxspectrum_t *state, int duration);
 
 
   uint8_t     screen[SCREEN_BITMAP_LENGTH];
@@ -153,8 +146,11 @@ typedef struct zxconfig
   /** Called when there's a new frame to draw. */
   void (*draw)(unsigned int *pixels, const zxbox_t *dirty, void *opaque);
 
+  /** Called to reset the sleep clock. */
+  void (*stamp)(void *opaque);
+
   /** Called when there's nothing to do. */
-  void (*sleep)(int duration, sleeptype_t sleeptype, void *opaque);
+  void (*sleep)(int duration, void *opaque);
 
   /** Called when a key is tested. */
   int (*key)(uint16_t port, void *opaque);

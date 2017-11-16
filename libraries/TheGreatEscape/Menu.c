@@ -250,7 +250,6 @@ static void choose_keys(tgestate_t *state)
 for_loop:
           for (;;)
           {
-            state->speccy->sleep(state->speccy, sleeptype_MENU, 10000); // 10000 is arbitrary for the moment
 
             SWAP(uint8_t, A, Adash);
 
@@ -299,6 +298,11 @@ key_loop:
                 goto assign_keydef;
             }
             while (A != port || keydef->mask != mask);
+
+            /* Conv: Timing: The original game keyscans as fast as it can. We
+             * can't have that so instead we introduce a short delay. */
+            state->speccy->stamp(state->speccy);
+            state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
           } // for_loop
         }
 
@@ -352,8 +356,9 @@ assign_keydef:
       while (--prompt_iters);
     }
 
-    /* (was) Delay loop. */
-    state->speccy->sleep(state->speccy, sleeptype_MENU, 0xFFFF);
+    /* Conv: Timing: This was a delay loop counting to 0xFFFF. */
+    state->speccy->stamp(state->speccy);
+    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
 
     /* Wait for user's input */
     if (user_confirm(state) == 0) /* Confirmed - return */
@@ -472,6 +477,8 @@ int menu_screen(tgestate_t *state)
 
   assert(state != NULL);
 
+  state->speccy->stamp(state->speccy);
+
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
   if (check_menu_keys(state) < 0)
@@ -545,7 +552,8 @@ int menu_screen(tgestate_t *state)
   }
   while (--overall_delay);
 
-  state->speccy->sleep(state->speccy, sleeptype_MENU, 87500);
+  /* Conv: Timing: Calibrated to original game. */
+  state->speccy->sleep(state->speccy, 300365);
 
   return 0;
 }

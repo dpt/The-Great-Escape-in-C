@@ -1601,6 +1601,8 @@ void main_loop(tgestate_t *state)
 {
   assert(state != NULL);
 
+  state->speccy->stamp(state->speccy);
+
   check_morale(state);
   keyscan_break(state);
   message_display(state);
@@ -1622,15 +1624,20 @@ void main_loop(tgestate_t *state)
   ring_bell(state); /* third */
   if (state->day_or_night != 0)
     nighttime(state);
-  if (state->room_index > room_0_OUTDOORS)
-    interior_delay_loop(state);
-  else
-    // Conv: Added this overall slowdown factor.
-    // Perhaps I should run main_loop on a timer instead of pratting around with sleep calls.
-    state->speccy->sleep(state->speccy, sleeptype_DELAY, (1 << 16)); // 1<<16 .. 1<<17
+  /* Conv: Removed interior_delay_loop call here. */
   wave_morale_flag(state);
   if ((state->game_counter & 63) == 0)
     dispatch_timed_event(state);
+
+  /* Conv: Timing: To calculate the magic timing interval value here the
+   * original game was run in FUSE and its main_loop breakpointed. For both
+   * indoor and outdoor scenes the T-states and current frame number were
+   * captured, then the average T-state figure for the game was calculated.
+   *
+   * The original game is not dependent on accurate timing: it is much slower
+   * in outdoor scenes and especially when multiple characters are on the
+   * screen simultaneously. */
+  state->speccy->sleep(state->speccy, 367731);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2246,23 +2253,6 @@ uint8_t *get_prev_scanline(tgestate_t *state, uint8_t *addr)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $A095: Delay loop called only when the hero is indoors.
- */
-void interior_delay_loop(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->speccy->sleep(state->speccy, sleeptype_DELAY, 4096 * 16);
-
-// Conv: Was:
-//  volatile int BC = 0xFFF;
-//  while (--BC)
-//    ;
-}
-
-/* ----------------------------------------------------------------------- */
-
 /* Offset. */
 #define screenoffset_BELL_RINGER 0x118E
 
@@ -2514,8 +2504,16 @@ void play_speaker(tgestate_t *state, sound_t sound)
   {
     state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit); /* Play. */
 
-    /* Conv: Removed self-modified counter. */
-    state->speccy->sleep(state->speccy, sleeptype_SOUND, delay);
+    /* Conv: Timing: The original game uses an empty delay loop here to
+     * maintain the currently output speaker bit. Instead of that, since our
+     * sound code has no knowledge of time, we just output the speaker bit
+     * for the delay period. */
+    {
+      int i;
+
+      for (i = 0; i < delay; i++)
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);;
+    }
 
     speakerbit ^= port_MASK_EAR; /* Toggle speaker bit. */
   }
@@ -4894,6 +4892,8 @@ void zoombox(tgestate_t *state)
 
   do
   {
+    state->speccy->stamp(state->speccy);
+
     pvar = &state->zoombox.x;
     var = *pvar;
     if (var != 1)
@@ -4931,7 +4931,12 @@ void zoombox(tgestate_t *state)
                       (state->zoombox.width + 2) * 8,
                       (state->zoombox.height + 2) * 8);
 
-    state->speccy->sleep(state->speccy, sleeptype_DELAY, 10000 /* 1/10th sec */);
+    {
+      /* Conv: Timing: The original game slows in proportion to the size of
+       * the area being zoomboxed. We simulate that here. */
+      int delay = (state->zoombox.height + state->zoombox.width) * 110951 / 35;
+      state->speccy->sleep(state->speccy, delay);
+    }
   }
   while (state->zoombox.height + state->zoombox.width < 35);
 }
@@ -12609,6 +12614,8 @@ int user_confirm(tgestate_t *state)
   /* Keyscan. */
   for (;;) // FIXME: Loop which doesn't check the quit flag.
   {
+    state->speccy->stamp(state->speccy);
+
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_POIUY);
     if ((keymask & (1 << 4)) == 0)
       return 0; /* is 'Y' pressed? return Z */
@@ -12618,7 +12625,9 @@ int user_confirm(tgestate_t *state)
     if ((keymask & (1 << 3)) != 0)
       return 1; /* is 'N' pressed? return NZ */
 
-    state->speccy->sleep(state->speccy, sleeptype_KEYSCAN, 0xFFFF);
+    /* Conv: Timing: The original game keyscans as fast as it can. We can't
+     * have that so instead we introduce a short delay. */
+    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
   }
 }
 

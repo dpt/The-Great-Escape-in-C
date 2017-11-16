@@ -7,8 +7,9 @@
 //
 
 #import <ctype.h>
+#import <sys/time.h>
 
-#import <pthread.h>
+#import <pthread/pthread.h>
 
 #import <Foundation/Foundation.h>
 
@@ -38,33 +39,38 @@
 #define DEFAULTHEIGHT     192
 #define DEFAULTBORDERSIZE  32
 
+#define MAXSTAMPS           4 /* depth of nested timestamp stack */
+
 // -----------------------------------------------------------------------------
 
 #pragma mark - UIView
 
 @interface ZXGameView()
 {
-  tgeconfig_t   config;
+  tgeconfig_t     config;
 
-  zxspectrum_t *zx;
-  tgestate_t   *game;
+  zxspectrum_t   *zx;
+  tgestate_t     *game;
 
-  unsigned int *pixels;
-  GLclampf      backgroundRed, backgroundGreen, backgroundBlue;
-  NSRect        glViewContentRect;
+  unsigned int   *pixels;
+  GLclampf        backgroundRed, backgroundGreen, backgroundBlue;
+  NSRect          glViewContentRect;
 
-  pthread_t     thread;
-  zxkeyset_t    keys;
-  zxkempston_t  kempston;
+  pthread_t       thread;
+  zxkeyset_t      keys;
+  zxkempston_t    kempston;
 
-  BOOL          doSetupDrawing;
-  int           borderSize;
-  BOOL          snap;
+  BOOL            doSetupDrawing;
+  int             borderSize;
+  BOOL            snap;
 
-  int           speed;
-  BOOL          paused;
+  int             speed;
+  BOOL            paused;
 
-  BOOL          quit;
+  BOOL            quit;
+
+  struct timeval  stamps[MAXSTAMPS];
+  int             nstamps;
 }
 
 @property (nonatomic, readwrite) CGFloat scale;
@@ -104,9 +110,10 @@
   {
     (__bridge void *)(self),
     &draw_handler,
+    &stamp_handler,
     &sleep_handler,
     &key_handler,
-    &border_handler
+    &border_handler,
   };
 
   config.width  = DEFAULTWIDTH  / 8;
@@ -131,6 +138,9 @@
   paused          = NO;
 
   quit            = NO;
+
+  memset(stamps, 0, sizeof(stamps));
+  nstamps = 0;
 
 
   _scale          = 1.0;
@@ -463,7 +473,10 @@ static void *tge_thread(void *arg)
   {
     tge_setup2(game);
     while (!view->quit)
+    {
       tge_main(game);
+      view->nstamps = 0; // reset all timing info
+    }
   }
 
   return NULL;
@@ -489,20 +502,70 @@ static void draw_handler(unsigned int  *pixels,
   });
 }
 
-static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
+static void stamp_handler(void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
+
+  // Stack timestamps as they arrive
+  assert(view->nstamps < MAXSTAMPS);
+  if (view->nstamps >= MAXSTAMPS)
+    return;
+  gettimeofday(&view->stamps[view->nstamps++], NULL);
+}
+
+static void sleep_handler(int durationTStates, void *opaque)
+{
+  ZXGameView *view = (__bridge id) opaque;
+
+  // Unstack timestamps (even if we're paused)
+  assert(view->nstamps > 0);
+  if (view->nstamps <= 0)
+    return;
+  --view->nstamps;
 
   if (view->paused)
   {
     // Check twice per second for unpausing
     // FIXME: Slow spinwait without any synchronisation
     while (view->paused)
-      usleep(500000);
+      usleep(500000); /* 0.5s */
   }
   else
   {
-    usleep(duration * 100 / view->speed);
+    // A Spectrum 48K has 69,888 T-states per frame and its Z80 runs at
+    // 3.5MHz (~50Hz) for a total of 3,500,000 T-states per second.
+    const double          tstatesPerSec = 3.5e6;
+
+    struct timeval        now;
+    double                duration; /* seconds */
+    const struct timeval *then;
+    struct timeval        delta;
+    double                consumed; /* seconds */
+
+    gettimeofday(&now, NULL); // get time now before anything else
+
+    // 'duration' tells us how long the operation should take since the previous mark call.
+    // Turn T-state duration into seconds
+    duration = durationTStates / tstatesPerSec;
+    // Adjust the game speed
+    duration = duration * 100 / view->speed;
+
+    then = &view->stamps[view->nstamps];
+
+    delta.tv_sec  = now.tv_sec  - then->tv_sec;
+    delta.tv_usec = now.tv_usec - then->tv_usec;
+
+    consumed = delta.tv_sec + delta.tv_usec / 1e6;
+    if (consumed < duration)
+    {
+      double     delay; /* seconds */
+      useconds_t udelay;
+
+      // We didn't take enough time - sleep for the remainder of our duration
+      delay = duration - consumed;
+      udelay = delay * 1e6;
+      usleep(udelay);
+    }
   }
 }
 

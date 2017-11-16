@@ -81,13 +81,19 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
   prv->config.draw(prv->screen, dirty, prv->config.opaque);
 }
 
+static void zx_stamp(zxspectrum_t *state)
+{
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
+
+  prv->config.stamp(prv->config.opaque);
+}
+
 static void zx_sleep(zxspectrum_t *state,
-                     sleeptype_t   sleeptype,
                      int           duration)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  prv->config.sleep(duration, sleeptype, prv->config.opaque);
+  prv->config.sleep(duration, prv->config.opaque);
 }
 
 zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
@@ -101,6 +107,7 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
   prv->pub.in    = zx_in;
   prv->pub.out   = zx_out;
   prv->pub.draw  = zx_draw;
+  prv->pub.stamp = zx_stamp;
   prv->pub.sleep = zx_sleep;
 
   prv->config = *config;
