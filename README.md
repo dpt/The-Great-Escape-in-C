@@ -47,6 +47,7 @@ Yes!
 - Masking
 - AI
 - Movable items (stoves, crates)
+- Sound effects and menu music (macOS only at the moment)
 
 Non-core:
 
@@ -56,7 +57,6 @@ Non-core:
 
 ### What doesn't?
 
-- There's no sound at all (in progress)
 - Various other divergences from the original to be fixed
 
 ## Current Builds
