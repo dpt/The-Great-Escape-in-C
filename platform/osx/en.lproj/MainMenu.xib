@@ -121,6 +121,18 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Sound" id="AbV-Vo-7s9" userLabel="Speed">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Sound" id="tkF-wC-aOq">
+                        <items>
+                            <menuItem title="Enabled" keyEquivalent="o" id="Von-cc-Hw0">
+                                <connections>
+                                    <action selector="toggleSound:" target="-1" id="LNE-1Y-uCr"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="Speed" id="HeK-po-uS9" userLabel="Speed">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Speed" id="3hW-Ob-ROY">

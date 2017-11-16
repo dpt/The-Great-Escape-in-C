@@ -24,6 +24,7 @@
 
 - (IBAction)setSpeed:(id)sender;
 - (IBAction)toggleSnap:(id)sender;
+- (IBAction)toggleSound:(id)sender;
 
 - (void)getGameWidth:(int *)width height:(int *)height border:(int *)border;
 

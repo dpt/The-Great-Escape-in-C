@@ -157,6 +157,9 @@ typedef struct zxconfig
 
   /** Called when the border colour is changed. */
   void (*border)(int colour, void *opaque);
+
+  /** Called when the speaker is sounded. */
+  void (*speaker)(int on_off, void *opaque);
 }
 zxconfig_t;
 

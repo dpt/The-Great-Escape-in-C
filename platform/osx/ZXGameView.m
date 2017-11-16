@@ -13,6 +13,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <AudioUnit/AudioUnit.h>
+
 #import <Cocoa/Cocoa.h>
 
 #import <OpenGL/gl.h>
@@ -28,6 +30,8 @@
 #import "TheGreatEscape/TheGreatEscape.h"
 
 #import "ZXGameWindowController.h"
+
+#import "bitfifo.h"
 
 #import "ZXGameView.h"
 
@@ -71,6 +75,17 @@
 
   struct timeval  stamps[MAXSTAMPS];
   int             nstamps;
+
+  struct
+  {
+    BOOL                    enabled;
+    int                     index; // index into samples
+    pthread_mutex_t         mutex;
+    bitfifo_t              *fifo;
+    int                     lastvol;
+    AudioComponentInstance  instance;
+  }
+  audio;
 }
 
 @property (nonatomic, readwrite) CGFloat scale;
@@ -114,6 +129,7 @@
     &sleep_handler,
     &key_handler,
     &border_handler,
+    &speaker_handler
   };
 
   config.width  = DEFAULTWIDTH  / 8;
@@ -146,6 +162,9 @@
   _scale          = 1.0;
 
 
+  audio.enabled   = YES;
+
+
 
   // TODO: allocate two window buffers
 
@@ -157,6 +176,8 @@
   game = tge_create(zx, &config);
   if (game == NULL)
     goto failure;
+
+  [self setupAudio];
 
   pthread_create(&thread, NULL /* pthread_attr_t */, tge_thread, (__bridge void *)(self));
 
@@ -186,6 +207,8 @@ failure:
 
   tge_destroy(game);
   zxspectrum_destroy(zx);
+
+  [self teardownAudio];
 }
 
 // -----------------------------------------------------------------------------
@@ -357,6 +380,11 @@ failure:
   doSetupDrawing = YES;
 
   [self displayIfNeeded];
+}
+
+- (IBAction)toggleSound:(id)sender
+{
+  [self toggleAudio];
 }
 
 // -----------------------------------------------------------------------------
@@ -604,6 +632,23 @@ static void border_handler(int colour, void *opaque)
   });
 }
 
+static void speaker_handler(int on_off, void *opaque)
+{
+  ZXGameView *view = (__bridge id) opaque;
+  unsigned int bit = on_off;
+  result_t err;
+
+  pthread_mutex_lock(&view->audio.mutex);
+
+  err = bitfifo_enqueue(view->audio.fifo, &bit, 0, 1);
+  if (err == result_BITFIFO_FULL)
+    ;
+  //  if (err)
+  //    goto failure;
+
+  pthread_mutex_unlock(&view->audio.mutex);
+}
+
 // -----------------------------------------------------------------------------
 
 #pragma mark - Queries
@@ -613,6 +658,251 @@ static void border_handler(int colour, void *opaque)
   *width  = config.width  * 8;
   *height = config.height * 8;
   *border = borderSize;
+}
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Sound
+
+// Use output bus zero
+#define kOutputBus      (0)
+
+// To make things easy we assume that the emulated ZX Spectrum is pumping out
+// 220,500 samples per second into the fifo. We then sample this down by
+// averaging five value to produce a 44.1KHz signal. This certainly sounds
+// right but I'm not currently sure how accurate it really is.
+// To produce a 22.05KHz signal instead: average ten values, and so on.
+#define SAMPLE_RATE     (44100)
+#define BITFIFO_LENGTH  (220500 / 4) // one seconds' worth of input bits (fifo will be ~27KiB)
+#define AVG             (5) // average this many input bits to make an output sample
+
+// Z80 @ 3.5MHz
+// Each OUT takes 11 cycles
+// >>> 3.5e6 / 11
+// 318181.81 recurring OUTs/s theoretical max
+
+
+// This is a AURenderCallback except that type is a pointer.
+static OSStatus playbackCallback(void                       *inRefCon,
+                                 AudioUnitRenderActionFlags *ioActionFlags,
+                                 const AudioTimeStamp       *inTimeStamp,
+                                 UInt32                      inBusNumber,
+                                 UInt32                      inNumberFrames,
+                                 AudioBufferList            *ioData);
+
+- (void)setupAudio
+{
+  AudioComponentDescription   desc;
+  AudioComponent              component;
+  AudioComponentInstance      instance;
+  OSStatus                    status;
+  UInt32                      flag;
+  AudioStreamBasicDescription audioFormat;
+  AURenderCallbackStruct      input;
+
+  // Describe audio component
+  desc.componentType          = kAudioUnitType_Output;
+  desc.componentSubType       = kAudioUnitSubType_DefaultOutput;
+  desc.componentManufacturer  = kAudioUnitManufacturer_Apple;
+  desc.componentFlags         = 0;
+  desc.componentFlagsMask     = 0;
+
+  // Find a matching audio component
+  component = AudioComponentFindNext(NULL, &desc);
+  if (component == NULL)
+    return; // no matching audio component was found
+
+  // Create a new instance of the audio component
+  status = AudioComponentInstanceNew(component, &instance);
+  if (status)
+    goto failure;
+
+  // Enable IO for playback
+  flag = 1;
+  status = AudioUnitSetProperty(instance,
+                                kAudioOutputUnitProperty_EnableIO,
+                                kAudioUnitScope_Output,
+                                kOutputBus,
+                                &flag,
+                                sizeof(flag));
+  if (status && status != kAudioUnitErr_InvalidProperty)
+    goto failure;
+
+  // Describe the format
+  audioFormat.mSampleRate       = SAMPLE_RATE;
+  audioFormat.mFormatID         = kAudioFormatLinearPCM;
+  audioFormat.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger |
+                                  kLinearPCMFormatFlagIsPacked;
+  audioFormat.mBytesPerPacket   = 2;
+  audioFormat.mFramesPerPacket  = 1;
+  audioFormat.mBytesPerFrame    = 2;
+  audioFormat.mChannelsPerFrame = 1;
+  audioFormat.mBitsPerChannel   = 16 * 1;
+  audioFormat.mReserved         = 0;
+
+  // Apply the format
+  status = AudioUnitSetProperty(instance,
+                                kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Input,
+                                kOutputBus,
+                                &audioFormat,
+                                sizeof(audioFormat));
+  if (status)
+    goto failure;
+
+  // Set the output callback
+  input.inputProc       = playbackCallback;
+  input.inputProcRefCon = (__bridge void *)(self);
+  status = AudioUnitSetProperty(instance,
+                                kAudioUnitProperty_SetRenderCallback,
+                                kAudioUnitScope_Input,
+                                kOutputBus,
+                                &input,
+                                sizeof(input));
+  if (status)
+    goto failure;
+
+  // Initialise
+  status = AudioUnitInitialize(instance);
+  if (status)
+    goto failure;
+
+  // Setup audio
+  audio.enabled  = YES;
+  audio.index    = 0;
+  pthread_mutex_init(&audio.mutex, NULL);
+  audio.fifo     = NULL;
+  audio.lastvol  = 0;
+  audio.instance = instance;
+
+  // Create a bit fifo
+  audio.fifo = bitfifo_create(BITFIFO_LENGTH);
+  if (audio.fifo == NULL)
+    goto failure; // OOM
+
+  // Start playing
+  status = AudioOutputUnitStart(instance);
+  if (status)
+    goto failure;
+
+  return;
+
+
+failure:
+  //  cout << "failure" << status << endl;
+
+  return;
+}
+
+- (void)toggleAudio
+{
+  OSStatus status;
+
+  audio.enabled = !audio.enabled;
+
+  audio.index = 0; // flush the buffer
+
+  if (audio.enabled)
+    status = AudioOutputUnitStart(audio.instance);
+  else
+    status = AudioOutputUnitStop(audio.instance);
+
+  // if (status)
+  //   there was a problem;
+}
+
+- (void)teardownAudio
+{
+  AudioOutputUnitStop(audio.instance);
+  AudioUnitUninitialize(audio.instance);
+  AudioComponentInstanceDispose(audio.instance);
+}
+
+static
+OSStatus playbackCallback(void                       *inRefCon,
+                          AudioUnitRenderActionFlags *ioActionFlags,
+                          const AudioTimeStamp       *inTimeStamp,
+                          UInt32                      inBusNumber,
+                          UInt32                      inNumberFrames,
+                          AudioBufferList            *ioData)
+{
+  const int   bytesPerSample = 2;
+
+  ZXGameView *view = (__bridge id) inRefCon;
+  result_t    err;
+  OSStatus    rc;
+  UInt32      i;
+
+  pthread_mutex_lock(&view->audio.mutex);
+
+  // CHECK: Is this going to screw up with mNumberBuffers > 1 since i'm
+  //        fetching from the fifo?
+
+  for (i = 0; i < ioData->mNumberBuffers; i++)
+  {
+    assert(inNumberFrames == ioData->mBuffers[i].mDataByteSize / bytesPerSample);
+
+    UInt32 outputCapacity;
+    UInt32 outputUsed;
+
+    outputCapacity = inNumberFrames;
+    outputUsed     = 0;
+
+    while (outputUsed < outputCapacity)
+    {
+      UInt32 outputCapacityRemaining;
+      size_t bitsInFifo;
+      size_t toCopy;
+
+      outputCapacityRemaining = outputCapacity - outputUsed;
+      bitsInFifo              = bitfifo_used(view->audio.fifo);
+      toCopy                  = MIN(bitsInFifo, outputCapacityRemaining);
+
+      if (bitsInFifo == 0)
+        goto no_data;
+
+      const signed short maxVolume = 32500; // tweak this down to quieten
+
+      signed short      *p;
+      signed short       vol;
+      UInt32             j;
+
+      p = (signed short *) ioData->mBuffers[i].mData + outputUsed;
+      for (j = 0; j < toCopy; j++)
+      {
+        unsigned int bits;
+
+        bits = 0;
+        err = bitfifo_dequeue(view->audio.fifo, &bits, AVG);
+        if (err == result_BITFIFO_INSUFFICIENT ||
+            err == result_BITFIFO_EMPTY)
+          // When the fifo empties maintain the most recent volume
+          vol = view->audio.lastvol;
+        else
+          vol = (int) __builtin_popcount(bits) * maxVolume / AVG;
+        *p++ = vol;
+
+        view->audio.lastvol = vol;
+      }
+
+      outputUsed += toCopy;
+    }
+    ioData->mBuffers[i].mDataByteSize = outputUsed * bytesPerSample;
+
+    assert(outputUsed == outputCapacity);
+  }
+
+  rc = noErr;
+  goto exit;
+
+
+no_data:
+  ioData->mBuffers[0].mDataByteSize = 0;
+  rc = -1;
+
+exit:
+  pthread_mutex_unlock(&view->audio.mutex);
+  return rc;
 }
 
 @end

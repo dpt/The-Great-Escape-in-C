@@ -56,13 +56,19 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
   case port_BORDER_EAR_MIC:
     {
       unsigned int border;
+      unsigned int ear;
 
       border = byte & port_MASK_BORDER;
+      ear    = byte & port_MASK_EAR;
+
       if (border != prv->prev_border)
       {
         prv->config.border(border, prv->config.opaque);
         prv->prev_border = border;
       }
+
+      if (prv->config.speaker)
+        prv->config.speaker(ear != 0, prv->config.opaque);
     }
     break;
 

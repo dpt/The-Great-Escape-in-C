@@ -89,6 +89,11 @@ static void border_handler(int colour, void *opaque)
   // does nothing presently
 }
 
+static void speaker_handler(int on_off, void *opaque)
+{
+  // does nothing presently
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static DWORD WINAPI gamewin_thread(LPVOID lpParam)
@@ -134,6 +139,7 @@ static int CreateGame(gamewin_t *gamewin)
   zxconfig.sleep  = sleep_handler;
   zxconfig.key    = key_handler;
   zxconfig.border = border_handler;
+  zxconfig.speaker = speaker_handler;
 
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)

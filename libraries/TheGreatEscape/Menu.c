@@ -459,10 +459,10 @@ static uint8_t menu_keyscan(tgestate_t *state)
  */
 int menu_screen(tgestate_t *state)
 {
-  uint16_t BC;              /* was BC */
-  uint16_t BCdash;          /* was BC' */
-  uint16_t DE;              /* was DE */
-  uint16_t DEdash;          /* was DE' */
+  uint16_t counter_0;       /* was BC */
+  uint16_t counter_1;       /* was BC' */
+  uint16_t frequency_0;     /* was DE */
+  uint16_t frequency_1;     /* was DE' */
   uint8_t  datum;           /* was A */
   uint8_t  overall_delay;   /* was A */
   uint8_t  iters;           /* was H */
@@ -474,6 +474,7 @@ int menu_screen(tgestate_t *state)
   uint8_t  C;               /* was C */
   uint8_t  Bdash;           /* was B' */
   uint8_t  Cdash;           /* was C' */
+  uint8_t  bit = 0; // most recently emitted bit
 
   assert(state != NULL);
 
@@ -497,7 +498,7 @@ int menu_screen(tgestate_t *state)
       break;
     channel0_index = 0;
   }
-  DE = BC = frequency_for_semitone(datum, &speaker0);
+  frequency_0 = counter_0 = frequency_for_semitone(datum, &speaker0);
 
   channel1_index = state->music_channel1_index + 1;
   /* Loop until the end marker is encountered. */
@@ -509,10 +510,10 @@ int menu_screen(tgestate_t *state)
       break;
     channel1_index = 0;
   }
-  DEdash = BCdash = frequency_for_semitone(datum, &speaker1);
+  frequency_1 = counter_1 = frequency_for_semitone(datum, &speaker1);
 
-  if ((BCdash >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
-    DEdash = BCdash = BC;
+  if ((counter_1 >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
+    frequency_1 = counter_1 = counter_0;
 
   overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
   do
@@ -520,33 +521,47 @@ int menu_screen(tgestate_t *state)
     iters = 255;
     do
     {
-      // B,C are a pair of counters?
+      int to_emit = 3; // Conv: Whatever we do always emit this many bits
 
-      B = BC >> 8;
-      C = BC & 0xFF;
+      // B,C are a pair of counters? half pulse length?
+      // B = lo, C = hi  (in this routine)
+
+      B = counter_0 >> 8;
+      C = counter_0 & 0xFF;
       if (--B == 0 && --C == 0)
       {
         speaker0 ^= port_MASK_EAR;
+        bit = speaker0 & port_MASK_EAR;
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker0);
-        BC = DE;
+        to_emit--;
+        counter_0 = frequency_0;
       }
       else
       {
-        BC = (B << 8) | C;
+        counter_0 = (B << 8) | C;
       }
 
-      Bdash = BCdash >> 8;
-      Cdash = BCdash & 0xFF;
+      Bdash = counter_1 >> 8;
+      Cdash = counter_1 & 0xFF;
       if (--Bdash == 0 && --Cdash == 0)
       {
         speaker1 ^= port_MASK_EAR;
+        bit = speaker1 & port_MASK_EAR;
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker1);
-        BCdash = DEdash;
+        to_emit--;
+        counter_1 = frequency_1;
       }
       else
       {
-        BCdash = (Bdash << 8) | Cdash;
+        counter_1 = (Bdash << 8) | Cdash;
       }
+
+      /* Conv: We simulate the EAR port holding its level by adding extra
+       * OUTs here. */
+      // FIXME: The timing needs working out here: 3 OUTs per loop works,
+      // but why?
+      while (to_emit-- > 0)
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, bit);
     }
     while (--iters);
   }
