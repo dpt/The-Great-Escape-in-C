@@ -452,7 +452,7 @@ void setup_doors(tgestate_t *state)
   do
   {
     /* Save any door index which matches the current room. */
-    // Rooms are always square so should have no more than four doors but that is unchecked by this code.
+    // Rooms are always rectangular so should have no more than four doors but that is unchecked by this code.
     if ((door->room_and_flags & ~door_FLAGS_MASK_DIRECTION) == room)
       /* Current room. */
       *pdoorindex++ = door_index ^ door_REVERSE; // Store the index and the reverse flag.
@@ -1451,7 +1451,7 @@ itemstruct_t *find_nearby_item(tgestate_t *state)
       uint8_t *herocoord;   /* was DE */
       uint8_t  coorditers;  /* was B */
 
-      // FIXME: Candidate for loop unrolling.
+      // FUTURE: Candidate for loop unrolling.
       structcoord = &itemstr->pos.x;
       herocoord   = &state->hero_map_position.x;
       coorditers = 2;
