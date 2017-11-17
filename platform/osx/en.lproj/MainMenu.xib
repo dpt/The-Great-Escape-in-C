@@ -112,6 +112,12 @@
                                     <action selector="setZoomLevel:" target="-1" id="NiK-MP-D4u"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="Qn4-9a-5uv"/>
+                            <menuItem title="Monochromatic" tag="2" keyEquivalent="m" id="9Bg-ec-qWH">
+                                <connections>
+                                    <action selector="toggleMonochromatic:" target="-1" id="fax-ef-n29"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="W0S-uf-Qes"/>
                             <menuItem title="Snap to Whole Pixels" state="on" tag="-1" keyEquivalent="s" id="QC2-v8-HZj">
                                 <connections>

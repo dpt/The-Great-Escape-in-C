@@ -17,6 +17,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import <CoreImage/CoreImage.h>
+
 #import <OpenGL/gl.h>
 #import <OpenGL/glext.h>
 #import <OpenGL/glu.h>
@@ -61,6 +63,7 @@
   BOOL            doSetupDrawing;
   int             borderSize;
   BOOL            snap;
+  BOOL            monochromatic;
 
   // -- Start of variables accessed from game thread must be @synchronized
 
@@ -145,6 +148,7 @@
   doSetupDrawing  = YES;
   borderSize      = DEFAULTBORDERSIZE;
   snap            = YES;
+  monochromatic   = NO;
 
   quit            = NO;
   paused          = NO;
@@ -211,6 +215,29 @@ failure:
 
 // -----------------------------------------------------------------------------
 
+// Simulate a black and white TV
+- (IBAction)toggleMonochromatic:(id)sender
+{
+  if (monochromatic)
+  {
+    self.contentFilters = @[];
+  }
+  else
+  {
+    CIFilter       *filter;
+    NSMutableArray *filters;
+
+    filter = [CIFilter filterWithName:@"CIPhotoEffectMono"];
+    [filter setDefaults];
+    filters = [NSMutableArray arrayWithObject:filter];
+    self.contentFilters = filters;
+  }
+
+  monochromatic = !monochromatic;
+}
+
+// -----------------------------------------------------------------------------
+
 #pragma mark - UI
 
 - (BOOL)acceptsFirstResponder
@@ -233,6 +260,13 @@ failure:
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
       [menuItem setState:snap ? NSOnState : NSOffState];
+  }
+  else if ([anItem action] == @selector(toggleMonochromatic:))
+  {
+    menuItem = (NSMenuItem *) anItem;
+    // Ensure that it's a menu item
+    if ([menuItem respondsToSelector:@selector(setState:)])
+      [menuItem setState:monochromatic ? NSOnState : NSOffState];
   }
 
   return YES;

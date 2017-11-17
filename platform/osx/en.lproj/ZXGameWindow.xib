@@ -19,7 +19,7 @@
             <rect key="contentRect" x="998" y="63" width="512" height="384"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <value key="minSize" type="size" width="128" height="96"/>
-            <view key="contentView" misplaced="YES" id="372">
+            <view key="contentView" wantsLayer="YES" misplaced="YES" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>

@@ -59,6 +59,7 @@
 		55F0CA6119E9E3640033FC17 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA5F19E9E3640033FC17 /* GLUT.framework */; };
 		55F0CA6219E9E3640033FC17 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55F0CA6019E9E3640033FC17 /* OpenGL.framework */; };
 		AE59E3EE1F8790C000368C33 /* ZXGameWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = AE59E3EC1F8790C000368C33 /* ZXGameWindow.xib */; };
+		AE7F13EB1FBF5D4A004D102D /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE7F13EA1FBF5D39004D102D /* CoreImage.framework */; };
 		AEF1A6991F33470900A33C89 /* ZXGameWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = AEF1A6981F33470900A33C89 /* ZXGameWindowController.m */; };
 /* End PBXBuildFile section */
 
@@ -145,6 +146,9 @@
 		55F0CA6019E9E3640033FC17 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		AE59E3ED1F8790C000368C33 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ZXGameWindow.xib; sourceTree = "<group>"; };
 		AE9957512023701E00897D44 /* Routes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Routes.h; path = TheGreatEscape/Routes.h; sourceTree = "<group>"; };
+		AE7F13E81FBF5D19004D102D /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreImage.framework; sourceTree = DEVELOPER_DIR; };
+		AE7F13E91FBF5D1F004D102D /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreImage.framework; sourceTree = DEVELOPER_DIR; };
+		AE7F13EA1FBF5D39004D102D /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		AEF1A6971F33470900A33C89 /* ZXGameWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZXGameWindowController.h; sourceTree = "<group>"; };
 		AEF1A6981F33470900A33C89 /* ZXGameWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindowController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -154,6 +158,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE7F13EB1FBF5D4A004D102D /* CoreImage.framework in Frameworks */,
 				55DD2D221FA68DB3006FC753 /* AudioUnit.framework in Frameworks */,
 				55F0CA6119E9E3640033FC17 /* GLUT.framework in Frameworks */,
 				55F0CA6219E9E3640033FC17 /* OpenGL.framework in Frameworks */,
@@ -190,11 +195,13 @@
 		554808D417E117CF00387328 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				AE7F13EA1FBF5D39004D102D /* CoreImage.framework */,
 				55DD2D211FA68DB3006FC753 /* AudioUnit.framework */,
-				554808DA17E117CF00387328 /* Foundation.framework */,
 				554808D517E117CF00387328 /* Cocoa.framework */,
-				55F0CA6019E9E3640033FC17 /* OpenGL.framework */,
+				AE7F13E91FBF5D1F004D102D /* CoreImage.framework */,
+				554808DA17E117CF00387328 /* Foundation.framework */,
 				55F0CA5F19E9E3640033FC17 /* GLUT.framework */,
+				55F0CA6019E9E3640033FC17 /* OpenGL.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -240,6 +247,7 @@
 		558FC6771A0EE11F00A4F50F /* ZXSpectrum */ = {
 			isa = PBXGroup;
 			children = (
+				AE7F13E81FBF5D19004D102D /* CoreImage.framework */,
 				558FC67E1A0EE13600A4F50F /* include (public) */,
 				559B69721F1C30B2006FC753 /* Kempston.c */,
 				55AF25C21D363695002F5E0B /* Keyboard.c */,
