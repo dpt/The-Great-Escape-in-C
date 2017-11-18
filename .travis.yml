@@ -19,10 +19,10 @@ script:
     - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -sdk macosx10.12 -derivedDataPath DerivedData clean build analyze
     - pushd DerivedData/Build/Products/Debug
     - zip -9r TheGreatEscape-debug.zip TheGreatEscape.app
-    - curl -H "Max-Downloads: 5" -H "Max-Days: 5" --upload-file TheGreatEscape-debug.zip https://transfer.sh/TheGreatEscape-debug.zip
+    - "curl -H \"Max-Downloads: 5\" -H \"Max-Days: 5\" --upload-file TheGreatEscape-debug.zip https://transfer.sh/TheGreatEscape-debug.zip"
     - popd
     - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Release -sdk macosx10.12 -derivedDataPath DerivedData clean build analyze
     - pushd DerivedData/Build/Products/Release
     - zip -9r TheGreatEscape-release.zip TheGreatEscape.app
-    - curl -H "Max-Downloads: 5" -H "Max-Days: 5" --upload-file TheGreatEscape-release.zip https://transfer.sh/TheGreatEscape-release.zip
+    - "curl -H \"Max-Downloads: 5\" -H \"Max-Days: 5\" --upload-file TheGreatEscape-release.zip https://transfer.sh/TheGreatEscape-release.zip"
     - popd
