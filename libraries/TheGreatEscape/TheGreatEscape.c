@@ -7494,15 +7494,16 @@ skip_went_negative:
 skip_went_zero:
     {
       uint8_t *maskbufptr;  /* was HL */
-      uint8_t  iters2;      /* was C */
-      uint8_t  iters3;      /* was B */
+      uint8_t  y_count;     /* was C */
+      uint8_t  x_count;     /* was B */
+      uint8_t  right_skip;  /* was B */
 
       maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
-      iters2 = clip_height; // self modified
+      y_count = clip_height; // self modified
       do
       {
-        iters3 = clip_width; // self modified
+        x_count = clip_width; // self modified
         do
         {
           // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
@@ -7531,17 +7532,17 @@ skip_went_zero:
           if (A == 0 || --A == 0) /* Conv: written inverted over the original version */
             mask_pointer++;
         }
-        while (--iters3);
+        while (--x_count);
 
         // Conv: Avoid running the trailing code when we're on the final line
         // since that results in out-of-bounds memory reads.
-        if (iters2 == 1)
+        if (y_count == 1)
           goto pop_next;
 
-        // trailing
+        // trailing skip
 
-        iters3 = self_BA90; // self modified // == mask width - clipped width
-        if (iters3)
+        right_skip = self_BA90; // self modified // == mask width - clipped width (amount to skip on the right hand side)
+        if (right_skip)
         {
           if (A)
             goto baa3; // must be continuing with a nonzero counter
@@ -7551,29 +7552,31 @@ ba9b:
             A = *mask_pointer++; // read count byte OR tile index
             if (A & MASK_RUN_FLAG)
             {
+              // it's a run
+
               A &= ~MASK_RUN_FLAG;
 baa3:
-              iters3 = A = iters3 - A;
-              if ((int8_t) iters3 < 0)
+              right_skip = A = right_skip - A; // CHECK THIS OVER
+              if ((int8_t) right_skip < 0) // skip went negative
                 goto bab6;
-              mask_pointer++;
-              if (iters3 > 0)
+              mask_pointer++; // don't care about the mask index since we're skipping
+              if (right_skip > 0)
                 goto ba9b;
-              else // iters3 must be zero
-                goto bab9;
+              else // right_skip must be zero
+                goto next_line;
             }
           }
-          while (--iters3);
+          while (--right_skip);
 
           A = 0;
-          goto bab9;
+          goto next_line;
 bab6:
-          A = -A;
+          A = -A; // does this make sense?
         }
-bab9:
+next_line:
         maskbufptr += skip; // self modified
       }
-      while (--iters2);
+      while (--y_count);
     }
 
 pop_next:
@@ -11438,7 +11441,6 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
       uint8_t bm0, bm1, bm2, bm3;         /* was B, C, E, D */
       uint8_t mask0, mask1, mask2, mask3; /* was B', C', E', D' */
       int     carry = 0;                  /* was flags */
-      uint8_t p;                          /* was A */
 
       /* Load bitmap bytes into B,C,E. */
       bm0 = *bitmapptr++;
@@ -11564,7 +11566,6 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
       uint8_t bm0, bm1, bm2, bm3;         /* was E, C, B, D */
       uint8_t mask0, mask1, mask2, mask3; /* was E', C', B', D' */
       int     carry = 0;
-      uint8_t p;                          /* was A */
 
       /* Load bitmap bytes into B,C,E. */
       bm2 = *bitmapptr++;
@@ -11729,7 +11730,6 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   const uint8_t *bitmapptr;   /* was ? */
   const uint8_t *foremaskptr; /* was ? */
   uint8_t       *screenptr;   /* was ? */
-  uint8_t        p;           /* was A */
 
   assert(state != NULL);
   // assert(x);
@@ -11869,7 +11869,6 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   const uint8_t *bitmapptr;   /* was ? */
   const uint8_t *foremaskptr; /* was ? */
   uint8_t       *screenptr;   /* was ? */
-  uint8_t        p;           /* was A */
 
   assert(state != NULL);
   // assert(x);
