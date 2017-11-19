@@ -2,10 +2,11 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2017. <dave@davespace.co.uk>
 //
 
-#include <stdio.h>
+#include <cassert>
+#include <cstdio>
 
 #include <windows.h>
 
@@ -22,6 +23,8 @@
 #define WIDTH  256
 #define HEIGHT 192
 
+#define MAXSTAMPS           4 /* depth of nested timestamp stack */
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static const WCHAR szGameWindowClassName[] = L"TheGreatEscapeWindowsApp";
@@ -35,20 +38,26 @@ static LONG g_window_adjust_x, g_window_adjust_y;
 
 typedef struct gamewin
 {
-  HINSTANCE     instance;
-  HWND          window;
-  BITMAPINFO    bitmapinfo;
+  HINSTANCE       instance;
+  HWND            window;
+  BITMAPINFO      bitmapinfo;
 
-  zxspectrum_t *zx;
-  tgestate_t   *tge;
+  zxspectrum_t   *zx;
+  tgestate_t     *tge;
 
-  HANDLE        thread;
-  DWORD         threadId;
+  HANDLE          thread;
+  DWORD           threadId;
 
-  zxkeyset_t    keys;
-  unsigned int *pixels;
+  zxkeyset_t      keys;
+  unsigned int   *pixels;
 
-  bool          quit;
+  int             speed;
+  BOOL            paused;
+
+  bool            quit;
+
+  ULONGLONG       stamps[MAXSTAMPS];
+  int             nstamps;
 }
 gamewin_t;
 
@@ -72,9 +81,70 @@ static void draw_handler(unsigned int  *pixels,
   InvalidateRect(gamewin->window, &rect, FALSE);
 }
 
-static void sleep_handler(int duration, sleeptype_t sleeptype, void *opaque)
+static void stamp_handler(void *opaque)
 {
-  Sleep(duration / 1000); // duration is taken literally for now
+  gamewin_t *gamewin = (gamewin_t *) opaque;
+
+  // Stack timestamps as they arrive
+  assert(gamewin->nstamps < MAXSTAMPS);
+  if (gamewin->nstamps >= MAXSTAMPS)
+    return;
+  gamewin->stamps[gamewin->nstamps++] = GetTickCount64();
+}
+
+static void sleep_handler(int durationTStates, void *opaque)
+{
+  gamewin_t *gamewin = (gamewin_t *) opaque;
+
+  // Unstack timestamps (even if we're paused)
+  assert(gamewin->nstamps > 0);
+  if (gamewin->nstamps <= 0)
+    return;
+  --gamewin->nstamps;
+
+  if (gamewin->paused)
+  {
+    // Check twice per second for unpausing
+    // FIXME: Slow spinwait without any synchronisation
+    while (gamewin->paused)
+      Sleep(500); /* 0.5s */
+  }
+  else
+  {
+    // A Spectrum 48K has 69,888 T-states per frame and its Z80 runs at
+    // 3.5MHz (~50Hz) for a total of 3,500,000 T-states per second.
+    const double tstatesPerSec = 3.5e6;
+
+    ULONGLONG now;
+    double    duration; /* seconds */
+    ULONGLONG then;
+    ULONGLONG delta;
+    double    consumed; /* seconds */
+
+    now = GetTickCount64(); // get time now before anything else
+
+    // 'duration' tells us how long the operation should take since the previous mark call.
+    // Turn T-state duration into seconds
+    duration = durationTStates / tstatesPerSec;
+    // Adjust the game speed
+    duration = duration * 100 / gamewin->speed;
+
+    then = gamewin->stamps[gamewin->nstamps];
+
+    delta = now - then;
+
+    consumed = delta / 1e6;
+    if (consumed < duration)
+    {
+      double delay; /* seconds */
+      DWORD  udelay; /* milliseconds */
+
+      // We didn't take enough time - sleep for the remainder of our duration
+      delay = duration - consumed;
+      udelay = (DWORD)(delay * 1e3);
+      Sleep(udelay);
+    }
+  }
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -99,7 +169,7 @@ static void speaker_handler(int on_off, void *opaque)
 static DWORD WINAPI gamewin_thread(LPVOID lpParam)
 {
   gamewin_t  *win  = (gamewin_t *) lpParam;
-  tgestate_t *game = gamewin->game;
+  tgestate_t *game = win->tge;
 
   tge_setup(game);
 
@@ -113,7 +183,10 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
   {
     tge_setup2(game);
     while (!win->quit)
+    {
       tge_main(game);
+      win->nstamps = 0; // reset all timing info
+    }
   }
 
   return NULL;
@@ -136,6 +209,7 @@ static int CreateGame(gamewin_t *gamewin)
 
   zxconfig.opaque = gamewin;
   zxconfig.draw   = draw_handler;
+  zxconfig.stamp  = stamp_handler;
   zxconfig.sleep  = sleep_handler;
   zxconfig.key    = key_handler;
   zxconfig.border = border_handler;
@@ -180,7 +254,12 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->keys     = 0;
   gamewin->pixels   = NULL;
 
+  gamewin->speed    = 100;
+  gamewin->paused   = false;
+
   gamewin->quit     = false;
+
+  gamewin->nstamps  = 0;
 
   return 0;
 
@@ -191,8 +270,6 @@ failure:
 
 static void DestroyGame(gamewin_t *doomed)
 {
-  // TODO: quit nicely if we're on the main menu...
-
   doomed->quit = true;
 
   WaitForSingleObject(doomed->thread, INFINITE);
