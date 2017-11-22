@@ -243,7 +243,7 @@ void enter_room(tgestate_t *state)
   state->map_position.x = 116;
   state->map_position.y = 234;
   set_hero_sprite_for_room(state);
-  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
+  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
   setup_movable_items(state);
   zoombox(state);
   increase_score(state, 1);
@@ -387,7 +387,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
   vischar1->room              = state->room_index;
-  calc_vischar_screenpos_from_mi_pos(state, vischar1);
+  calc_vischar_iso_pos_from_vischar(state, vischar1);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1202,8 +1202,8 @@ void pick_up_item(tgestate_t *state)
   }
 
   itemstr->room_and_flags = 0;
-  itemstr->screenpos.x    = 0;
-  itemstr->screenpos.y    = 0;
+  itemstr->iso_pos.x      = 0;
+  itemstr->iso_pos.y      = 0;
 
   draw_all_items(state);
   play_speaker(state, sound_PICK_UP_ITEM);
@@ -1280,7 +1280,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     pos_to_tinypos(inpos, outpos);
     outpos->height = 0;
 
-    calc_exterior_item_screenpos(itemstr);
+    calc_exterior_item_iso_pos(itemstr);
   }
   else
   {
@@ -1293,43 +1293,43 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos->y      = inpos->y; // note: narrowing
     outpos->height = 5;
 
-    calc_interior_item_screenpos(itemstr);
+    calc_interior_item_iso_pos(itemstr);
   }
 }
 
 /**
- * $7BD0: Calculate screen position for exterior item.
+ * $7BD0: Calculate isometric screen position for exterior item.
  *
  * Called by drop_item_tail and item_discovered.
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_exterior_item_screenpos(itemstruct_t *itemstr)
+void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy_t *screenpos;
+  xy_t *iso_pos;
 
   assert(itemstr != NULL);
 
-  screenpos = &itemstr->screenpos;
+  iso_pos = &itemstr->iso_pos;
 
-  screenpos->x = (0x40 - itemstr->pos.x + itemstr->pos.y) * 2;
-  screenpos->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
+  iso_pos->x = (0x40 - itemstr->pos.x + itemstr->pos.y) * 2;
+  iso_pos->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
- * $7BF2: Calculate screen position for interior item.
+ * $7BF2: Calculate isometric screen position for interior item.
  *
  * Called by drop_item_tail and item_discovered.
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_interior_item_screenpos(itemstruct_t *itemstr)
+void calc_interior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy_t *screenpos;
+  xy_t *iso_pos;
 
   assert(itemstr != NULL);
 
-  screenpos = &itemstr->screenpos;
+  iso_pos = &itemstr->iso_pos;
 
   // This was a call to divide_by_8_with_rounding, but that expects
   // separate hi and lo arguments, which is not worth the effort of
@@ -1338,8 +1338,8 @@ void calc_interior_item_screenpos(itemstruct_t *itemstr)
   // This needs to go somewhere more general.
 #define divround(x) (((x) + 4) >> 3)
 
-  screenpos->x = divround((0x200 - itemstr->pos.x + itemstr->pos.y) * 2);
-  screenpos->y = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
+  iso_pos->x = divround((0x200 - itemstr->pos.x + itemstr->pos.y) * 2);
+  iso_pos->y = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
 
 #undef divround
 }
@@ -1932,8 +1932,8 @@ void in_permitted_area(tgestate_t *state)
     pos_to_tinypos(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].floogle.x >= MAP_WIDTH  * 8 ||
-        state->vischars[0].floogle.y >= MAP_HEIGHT * 8)
+    if (state->vischars[0].iso_pos.x >= MAP_WIDTH  * 8 ||
+        state->vischars[0].iso_pos.y >= MAP_HEIGHT * 8)
     {
       escaped(state);
       return;
@@ -3565,7 +3565,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   state->vischars[0].mi.pos.x = 0;
   state->vischars[0].mi.pos.y = 0;
 
-  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
+  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
 
   setup_room_and_plot(state);
 }
@@ -6206,12 +6206,12 @@ void reset_outdoors(tgestate_t *state)
   assert(state != NULL);
 
   /* Reset hero. */
-  calc_vischar_screenpos_from_mi_pos(state, &state->vischars[0]);
+  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
 
   /* Centre the map position on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position.x = (state->vischars[0].floogle.x >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[0].floogle.y >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.x = (state->vischars[0].iso_pos.x >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[0].iso_pos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
   state->room_index = room_0_OUTDOORS;
@@ -6860,7 +6860,7 @@ increment:
       vischar->animindex++;
     }
 
-    calc_vischar_screenpos(state, vischar);
+    calc_vischar_iso_pos_from_state(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -6924,7 +6924,7 @@ end_bit:
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6932,11 +6932,11 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
   /* Save a copy of the vischar's position + offset. */
   state->saved_pos.pos = vischar->mi.pos;
 
-  calc_vischar_screenpos(state, vischar);
+  calc_vischar_iso_pos_from_state(state, vischar);
 }
 
 /**
- * $B729: Calculate screen position for the specified vischar from saved_pos.
+ * $B729: Calculate screen position for the specified vischar from state->saved_pos.
  *
  * Result has three bits of fixed point accuracy.
  *
@@ -6945,21 +6945,21 @@ void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->floogle.x = (0x200 - state->saved_pos.pos.x + state->saved_pos.pos.y) * 2;
-  vischar->floogle.y = 0x800 - state->saved_pos.pos.x - state->saved_pos.pos.y - state->saved_pos.pos.height;
+  vischar->iso_pos.x = (0x200 - state->saved_pos.pos.x + state->saved_pos.pos.y) * 2;
+  vischar->iso_pos.y = 0x800 - state->saved_pos.pos.x - state->saved_pos.pos.y - state->saved_pos.pos.height;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
-  assert((int16_t) vischar->floogle.x >= -3000);
-  assert((int16_t) vischar->floogle.x <   7000);
-  assert((int16_t) vischar->floogle.y >= -3000);
-  assert((int16_t) vischar->floogle.y <   4000);
+  assert((int16_t) vischar->iso_pos.x >= -3000);
+  assert((int16_t) vischar->iso_pos.x <   7000);
+  assert((int16_t) vischar->iso_pos.y >= -3000);
+  assert((int16_t) vischar->iso_pos.y <   4000);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7385,8 +7385,8 @@ void render_mask_buffer(tgestate_t *state)
     // pmask->pos is a map position (map space)
     // so we can cull masks if not on-screen and we can cull masks if behind player
 
-    scrx = state->screenpos.x;
-    scry = state->screenpos.y; // reordered
+    scrx = state->iso_pos.x;
+    scry = state->iso_pos.y; // reordered
     if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0 ||
         scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0)  // $EC03,$EC02 $EC05,$EC04
       goto pop_next;
@@ -7441,9 +7441,9 @@ void render_mask_buffer(tgestate_t *state)
       x = y = 0;
       // Conv: flipped order of these
       if (clip_x == 0)
-        x = pmask->bounds.x0 - state->screenpos.x;
+        x = pmask->bounds.x0 - state->iso_pos.x;
       if (clip_y == 0)
-        y = pmask->bounds.y0 - state->screenpos.y;
+        y = pmask->bounds.y0 - state->iso_pos.y;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
@@ -7689,8 +7689,8 @@ int vischar_visible(tgestate_t      *state,
   /* Subtracting vischar's x yields the space available between vischar's
    * left edge and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  // state->screenpos.x is floogle.x / 8.
-  available_right = window_right_edge - state->screenpos.x;
+  // state->iso_pos is iso_pos / 8.
+  available_right = window_right_edge - state->iso_pos.x;
   if (available_right <= 0)
     /* Case (E): Vischar is beyond the window's right edge. */
     goto invisible;
@@ -7704,7 +7704,7 @@ int vischar_visible(tgestate_t      *state,
   else
   {
     /* Calculate the right edge of the vischar. */
-    vischar_right_edge = state->screenpos.x + vischar->width_bytes;
+    vischar_right_edge = state->iso_pos.x + vischar->width_bytes;
 
     /* Subtracting the map position's x yields the space available between
      * vischar's right edge and the left edge of the window (in bytes).
@@ -7729,8 +7729,8 @@ int vischar_visible(tgestate_t      *state,
    * Handle vertical intersections.
    */
 
-  /* Note: this uses vischar->floogle not state->screenpos as above.
-   * state->screenpos.x/y is vischar->floogle.x/y >> 3. */
+  /* Note: this uses vischar->iso_pos not state->iso_pos as above.
+   * state->iso_pos.x/y is vischar->iso_pos.x/y >> 3. */
 
   /* Calculate the bottom edge of the window in map space. */
   /* Conv: Rows was constant 17; replaced with state var. */
@@ -7738,7 +7738,7 @@ int vischar_visible(tgestate_t      *state,
 
   /* Subtracting the vischar's y yields the space available between window's
    * bottom edge and the vischar's top. */
-  available_bottom = window_bottom_edge * 8 - vischar->floogle.y;
+  available_bottom = window_bottom_edge * 8 - vischar->iso_pos.y;
   // FUTURE: The second test here can be gotten rid of if available_bottom is
   //         made signed.
   if (available_bottom <= 0 || available_bottom >= 256)
@@ -7754,7 +7754,7 @@ int vischar_visible(tgestate_t      *state,
   else
   {
     /* Calculate the bottom edge of the vischar. */
-    vischar_bottom_edge = vischar->floogle.y + vischar->height;
+    vischar_bottom_edge = vischar->iso_pos.y + vischar->height;
 
     /* Subtracting the map position's y (scaled) yields the space available
      * between vischar's bottom edge and the top edge of the window (in
@@ -7826,8 +7826,8 @@ void restore_tiles(tgestate_t *state)
       goto next;
 
     /* Get the visible character's position in screen space. */
-    state->screenpos.y = vischar->floogle.y >> 3; // divide by 8 (16-to-8)
-    state->screenpos.x = vischar->floogle.x >> 3; // divide by 8 (16-to-8)
+    state->iso_pos.y = vischar->iso_pos.y >> 3; // divide by 8 (16-to-8)
+    state->iso_pos.x = vischar->iso_pos.x >> 3; // divide by 8 (16-to-8)
 
     if (vischar_visible(state, vischar, &clipped_width, &clipped_height))
       goto next; /* invisible */
@@ -7835,7 +7835,7 @@ void restore_tiles(tgestate_t *state)
     // $BBD3
     height = ((clipped_height >> 3) & 0x1F) + 2; // the masking will only be required if the top byte of clipped_height contains something
 
-    heightsigned = height + state->screenpos.y - state->map_position.y;
+    heightsigned = height + state->iso_pos.y - state->map_position.y;
     if (heightsigned >= 0)
     {
       heightsigned -= 17; // likely window_buf height
@@ -7875,12 +7875,12 @@ clamp_height: // was $BBF8
     /* Work out x,y offsets into the tile buffer. */
 
     if ((clipped_width >> 8) == 0)
-      x = state->screenpos.x - map_position->x;
+      x = state->iso_pos.x - map_position->x;
     else
       x = 0; // was interleaved
 
     if ((clipped_height >> 8) == 0)
-      y = state->screenpos.y - map_position->y;
+      y = state->iso_pos.y - map_position->y;
     else
       y = 0; // was interleaved
 
@@ -8104,14 +8104,14 @@ void purge_invisible_characters(tgestate_t *state)
 
     // Conv: Replaced constants with state->columns/rows.
 
-    hi = vischar->floogle.y >> 8;
-    lo = vischar->floogle.y & 0xFF;
+    hi = vischar->iso_pos.y >> 8;
+    lo = vischar->iso_pos.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
     if (lo <= miny || lo > MIN(miny + GRACE + (state->rows + 1) + GRACE, 255)) // Conv: C -> A
       goto reset;
 
-    hi = vischar->floogle.x >> 8;
-    lo = vischar->floogle.x & 0xFF;
+    hi = vischar->iso_pos.x >> 8;
+    lo = vischar->iso_pos.x & 0xFF;
     divide_by_8(&lo, &hi);
     if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255)) // Conv: C -> A
       goto reset;
@@ -8323,7 +8323,7 @@ again:
   // DE -= 7;
   // EX DE,HL
   // PUSH HL
-  calc_vischar_screenpos_from_mi_pos(state, vischar);
+  calc_vischar_iso_pos_from_vischar(state, vischar);
   // POP HL
   character_behaviour(state, vischar);
   return 1; // exit via
@@ -10752,12 +10752,12 @@ void item_discovered(tgestate_t *state, item_t item)
   {
     /* Conv: The original code assigned 'room' here since it's already zero. */
     itemstruct->pos.height = 0;
-    calc_exterior_item_screenpos(itemstruct);
+    calc_exterior_item_iso_pos(itemstruct);
   }
   else
   {
     itemstruct->pos.height = 5;
-    calc_interior_item_screenpos(itemstruct);
+    calc_interior_item_iso_pos(itemstruct);
   }
 }
 
@@ -10936,12 +10936,12 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    const xy_t screenpos = itemstruct->screenpos; /* new */
+    const xy_t iso_pos = itemstruct->iso_pos; /* new */
 
     /* Conv: Ranges adjusted. */ // but it still looks asymmetric...
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (screenpos.x >= map_xy.x - 1 && screenpos.x <= map_xy.x + (state->columns + 1) - 1) &&
-        (screenpos.y >= map_xy.y     && screenpos.y <= map_xy.y + state->rows))
+        (iso_pos.x >= map_xy.x - 1 && iso_pos.x <= map_xy.x + (state->columns + 1) - 1) &&
+        (iso_pos.y >= map_xy.y     && iso_pos.y <= map_xy.y + state->rows))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
@@ -11066,7 +11066,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   /* $8213 = A; */
 
   state->tinypos_stash = itemstr->pos;
-  state->screenpos     = itemstr->screenpos;
+  state->iso_pos       = itemstr->iso_pos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->tinypos_stash + 5;
@@ -11118,15 +11118,15 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0) /* no rows to skip */
-    y = (state->screenpos.y - state->map_position.y) * state->window_buf_stride;
+    y = (state->iso_pos.y - state->map_position.y) * state->window_buf_stride;
 
-  // state->screenpos.y - state->map_position.y never seems to exceed $10 in the original game, but does for me
-  // state->screenpos.y seems to match, but state->map_position.y is 2 bigger
+  // (state->iso_pos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
+  // state->iso_pos.y seems to match, but state->map_position.y is 2 bigger
 
   /* Calculate X plotting offset. */
   
   // Conv: Assigns to signed var.
-  x = state->screenpos.x - state->map_position.x;
+  x = state->iso_pos.x - state->map_position.x;
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 3);
@@ -11208,7 +11208,7 @@ uint8_t item_visible(tgestate_t *state,
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
 
-  const xy_t *pscreenpos;         /* was HL */
+  const xy_t *piso_pos;           /* was HL */
   xy_t        map_position;       /* was DE */
   uint8_t     window_right_edge;  /* was A  */
   int8_t      available_right;    /* was A  */
@@ -11242,7 +11242,7 @@ uint8_t item_visible(tgestate_t *state,
    * Handle horizontal intersections.
    */
 
-  pscreenpos = &state->screenpos;
+  piso_pos = &state->iso_pos;
   map_position = state->map_position;
 
   /* Conv: Columns was constant 24; replaced with state var. */
@@ -11251,7 +11251,7 @@ uint8_t item_visible(tgestate_t *state,
   /* Subtracting item's x yields the space available between item's left edge
    * and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  available_right = window_right_edge - pscreenpos->x;
+  available_right = window_right_edge - piso_pos->x;
   if (available_right <= 0)
     /* Case (E): Item is beyond the window's right edge. */
     goto invisible;
@@ -11265,7 +11265,7 @@ uint8_t item_visible(tgestate_t *state,
   else
   {
     /* Calculate the right edge of the item. */
-    item_right_edge = pscreenpos->x + WIDTH_BYTES;
+    item_right_edge = piso_pos->x + WIDTH_BYTES;
 
     /* Subtracting the map position's x yields the space available between
      * item's right edge and the left edge of the window (in bytes).
@@ -11299,7 +11299,7 @@ uint8_t item_visible(tgestate_t *state,
 
   /* Subtracting the item's y yields the space available between window's
    * bottom edge and the item's top. */
-  available_bottom = window_bottom_edge - pscreenpos->y;
+  available_bottom = window_bottom_edge - piso_pos->y;
   if (available_bottom <= 0)
     /* Case (E): Item is beyond the window's bottom edge. */
     goto invisible;
@@ -11313,7 +11313,7 @@ uint8_t item_visible(tgestate_t *state,
   else
   {
     /* Calculate the bottom edge of the item. */
-    item_bottom_edge = pscreenpos->y + HEIGHT;
+    item_bottom_edge = piso_pos->y + HEIGHT;
 
     /* Subtracting the map position's y (scaled) yields the space available
      * between item's bottom edge and the top edge of the window (in UDGs).
@@ -11412,7 +11412,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->floogle.x & 7)) < 4)
+  if ((x = (vischar->iso_pos.x & 7)) < 4)
   {
     /* Shift right? */
 
@@ -11705,7 +11705,7 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  x = vischar->floogle.x & 7;
+  x = vischar->iso_pos.x & 7;
   if (x < 4)
     masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
   else
@@ -12170,9 +12170,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // DE now points to state->map_position_related.x
 
   // unrolled versus original
-  state->screenpos.x = vischar->floogle.x >> 3;
-  state->screenpos.y = vischar->floogle.y >> 3;
-  // 'screenpos' here is now a scaled-down projected map coordinate
+  state->iso_pos.x = vischar->iso_pos.x >> 3;
+  state->iso_pos.y = vischar->iso_pos.y >> 3;
+  // 'iso_pos' here is now a scaled-down projected map coordinate
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
@@ -12245,20 +12245,20 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // EXX
 
-  assert(vischar->floogle.y / 8 - state->map_position.y < state->rows);
-  assert(vischar->floogle.y / 8 - state->map_position.y + (clipped_height & 0xFF) / 8 <= state->rows);
+  assert(vischar->iso_pos.y / 8 - state->map_position.y < state->rows);
+  assert(vischar->iso_pos.y / 8 - state->map_position.y + (clipped_height & 0xFF) / 8 <= state->rows);
 
   /* Calculate Y plotting offset.
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
   if ((clipped_height >> 8) == 0) /* no rows to skip */
-    y = (vischar->floogle.y - state->map_position.y * 8) * state->columns;
+    y = (vischar->iso_pos.y - state->map_position.y * 8) * state->columns;
 
   assert(y / 8 / state->columns < state->rows);
 
   /* Calculate X plotting offset. */
-  x = state->screenpos.x - state->map_position.x; // signed subtract + extend to 16-bit
+  x = state->iso_pos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
   assert(x >= -3 && x <= state->columns - 1); // found empirically
 
@@ -12279,9 +12279,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE_clipped_height
   // PUSH DE
 
-  assert(((clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4) < 255);
+  assert(((clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4) < 255);
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->floogle.y & 7) * 4;
+  maskbuf += (clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4;
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 

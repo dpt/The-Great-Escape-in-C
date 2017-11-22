@@ -205,8 +205,8 @@ void use_item_common(tgestate_t *state, item_t item);
 void pick_up_item(tgestate_t *state);
 void drop_item(tgestate_t *state);
 void drop_item_tail(tgestate_t *state, item_t item);
-void calc_exterior_item_screenpos(itemstruct_t *itemstr);
-void calc_interior_item_screenpos(itemstruct_t *itemstr);
+void calc_exterior_item_iso_pos(itemstruct_t *itemstr);
+void calc_interior_item_iso_pos(itemstruct_t *itemstr);
 
 INLINE itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item);
 
@@ -465,8 +465,8 @@ extern const wall_t walls[24];
 
 void called_from_main_loop_9(tgestate_t *state);
 
-void calc_vischar_screenpos_from_mi_pos(tgestate_t *state, vischar_t *vischar);
-void calc_vischar_screenpos(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar);
 
 void reset_game(tgestate_t *state);
 void reset_map_and_characters(tgestate_t *state);

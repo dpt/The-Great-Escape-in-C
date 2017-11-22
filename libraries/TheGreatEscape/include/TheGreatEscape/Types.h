@@ -470,7 +470,7 @@ typedef struct vischar
   // with 3 bits of fixed point, not a screen coord as previously suspected.
   // setup_vischar_plotting divides it by 8
   // Same coordinate space as map_position but multiplied by 8.
-  bigxy_t         floogle; // scaled 13.3 format
+  bigxy_t         iso_pos; // scaled 13.3 format
 
   /** $801C current room index */
   room_t          room;
@@ -570,7 +570,7 @@ typedef struct itemstruct
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
   tinypos_t pos;
-  xy_t      screenpos;
+  xy_t      iso_pos;
 }
 itemstruct_t;
 
@@ -651,7 +651,7 @@ default_item_location_t;
 typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
-  bounds_t  bounds; /**< Where on the map the mask is positioned. */
+  bounds_t  bounds; /**< Where on the map the mask is positioned (iso). */
   tinypos_t pos;
 }
 mask_t;
