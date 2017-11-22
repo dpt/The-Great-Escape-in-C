@@ -82,7 +82,7 @@ typedef unsigned long long zxkeyset_t;
  */
 void zxkeyset_assign(zxkeyset_t *keystate,
                      zxkey_t     index,
-                     bool        on_off);
+                     int         on_off);
 
 /**
  * Extract the current key state for the specified port and return it.

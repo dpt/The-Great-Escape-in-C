@@ -18,7 +18,7 @@
 
 void zxkeyset_assign(zxkeyset_t *keystate,
                      zxkey_t     index,
-                     bool        on_off)
+                     int         on_off)
 {
   assert(index < zxkey__LIMIT);
 
