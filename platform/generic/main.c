@@ -161,6 +161,9 @@ int main(void)
                 (double) iters / ((end - start) / 1000.0));
     }
 
+    tge_destroy(game);
+    zxspectrum_destroy(zx);
+
     printf("(quit)\n");
 
     exit(EXIT_SUCCESS);
