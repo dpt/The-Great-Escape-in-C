@@ -108,6 +108,7 @@ ifeq ($(MODE),release)
   CFLAGS+=-Os -DNDEBUG
 else
   CFLAGS+=-g
+  LDFLAGS+=-g
 endif
 
 SRC=$(shell find $(LIBRARIES) $(PLATFORM_DIR) -type f \( -name '*.c' ! -name '$(DONTCOMPILE)' \) -print)
