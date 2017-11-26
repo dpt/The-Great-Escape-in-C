@@ -54,10 +54,11 @@ ifeq ($(TARGET),ios-arm-clang)
 else ifeq ($(TARGET),osx-any-clang)
 	#CLANG=~/bin/clang+llvm-3.4/bin/clang
 	CLANG=clang
-	CLANGFLAGS=-ferror-limit=2
+	CLANGFLAGS=-ferror-limit=2 -Os
 	#SANITIZE=-fsanitize=integer -fsanitize=address -fsanitize=undefined
+	LDFLAGS=
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
-	LD=$(CLANG) $(SANITIZE)
+	LD=$(CLANG) $(LDFLAGS) $(SANITIZE)
 else ifeq ($(TARGET),linux-arm-clang)
 	CLANG=clang
 	CROSSFLAGS=-target arm-none-eabi -march=arm7tdmi -mthumb -mfloat-abi=soft
@@ -76,6 +77,10 @@ else ifeq ($(TARGET),linux-arm-gcc)
 	CROSSFLAGS=-mcpu=arm7tdmi -mthumb -mfloat-abi=soft
 	CC=$(GCC)
 	LD=$(GCC)
+else ifeq ($(TARGET),emscripten)
+	CC=emcc -Os
+	LD=emcc -Os
+	EXE=$(PROJECT).html
 else
 	CC=gcc
 	LD=gcc
