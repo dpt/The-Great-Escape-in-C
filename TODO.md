@@ -9,7 +9,7 @@ Core
 macOS
 -----
 * Stop the core overwriting shared writable room defs to make things appear.
-* macOS UI - retina resolutions ought to be recognised/supported.
+* macOS UI - retina resolutions ought to be recognised/supported. [low]
 * Clicky beeper audio ought to be checked out. Could just need filtering.
 * Audio performance ought to be checked out. Avoid bitfifo or just optimise is storage?
 * Ensure that the game sleeps properly. Look into macOS timing stuff.
@@ -25,5 +25,8 @@ Windows
 General
 -------
 * Huge tidy-up.
+    * astyle / clang-format the source.
 * Fix all the 'FUTURE' issues.
+* Acknowledge everyone's copyright everywhere:
+  The Great Escape (C) Ocean etc. etc.
 
