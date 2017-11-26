@@ -62,7 +62,7 @@ Non-core:
 ## Current Builds
 - Xcode build - works. This is my default build so is most likely to be up-to-date.
 - Windows build - works - needs Visual Studio 2015.
-- Makefile build - builds a stub main which doesn't run the game in any useful way.
+- Makefile build - works, but runs the game for 100,000 iterations in headless mode.
 
 ### Build Status
 | Branch     | Windows | macOS |
