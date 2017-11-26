@@ -145,8 +145,15 @@ int main(void)
             iters++;
             if (iters >= MAXITERS)
                 break;
+
+            if ((iters % 1000) == 0)
+            {
+                printf("+");
+                fflush(stdout);
+            }
         }
         end = get_ms();
+        printf("\n");
 
         printf("%d iterations in %dms = %.2fiters/sec\n",
                 iters,
