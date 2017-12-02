@@ -1,4 +1,4 @@
-# Generic Makefile for The Great Escape
+# Generic Makefile for The Great Escape (SDL)
 #
 # by dpt
 
@@ -20,7 +20,7 @@
 #
 PROJECT=TheGreatEscape
 LIBS=
-DONTCOMPILE=sdlmain.c
+DONTCOMPILE=main.c
 
 # Paths
 #
@@ -57,6 +57,7 @@ else ifeq ($(TARGET),osx-any-clang)
 	CLANGFLAGS=-ferror-limit=2 -Os
 	#SANITIZE=-fsanitize=integer -fsanitize=address -fsanitize=undefined
 	LDFLAGS=
+	LIBS=-lSDL2
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
 	LD=$(CLANG) $(LDFLAGS) $(SANITIZE)
 else ifeq ($(TARGET),linux-arm-clang)
@@ -104,8 +105,8 @@ WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
 # Tools (generic)
 #
-CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) $(CROSSFLAGS)
-LDFLAGS=$(CROSSFLAGS) $(LIBS)
+CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) $(CROSSFLAGS) -DTGE_SDL
+LDFLAGS=$(CROSSFLAGS)
 LDLIBS=$(LIBS)
 
 ifeq ($(MODE),release)

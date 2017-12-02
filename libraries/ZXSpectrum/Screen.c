@@ -12,7 +12,12 @@
 /* Define to highlight dirty rectangles when they're drawn. */
 // #define SHOW_DIRTY_RECTS
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(TGE_SDL) // ick
+#define RGB
+#endif
+
+#ifdef RGB
+/* 0x00RRGGBB */
 #define BK_ 0x00000000
 #define RD_ 0x00010000
 #define GR_ 0x00000100
@@ -22,6 +27,7 @@
 #define CY_ 0x00000101
 #define WH_ 0x00010101
 #else
+/* 0x00BBGGRR */
 #define BK_ 0x00000000
 #define RD_ 0x00000001
 #define GR_ 0x00000100
