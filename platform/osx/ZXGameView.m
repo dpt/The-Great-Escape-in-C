@@ -601,7 +601,7 @@ static int key_handler(uint16_t port, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
 
-  if (port == 0x001F)
+  if (port == port_KEMPSTON_JOYSTICK)
     return view->kempston;
   else
     return zxkeyset_for_port(port, view->keys);
