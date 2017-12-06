@@ -220,7 +220,7 @@ static void choose_keys(tgestate_t *state)
     /* Wipe keydefs. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
 
-    uint8_t Adash = 0; /* was A; */ // initialised to zero
+    uint8_t Adash = 0; /* was A' */ // initialised to zero
     {
       const uint16_t *poffset; /* was HL */
 
