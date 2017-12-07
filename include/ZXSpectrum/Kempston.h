@@ -29,7 +29,7 @@ typedef unsigned int zxkempston_t;
 
 void zxkempston_assign(zxkempston_t *kempston,
                        zxjoystick_t  index,
-                       bool          on_off);
+                       int           on_off);
 
 #ifdef __cplusplus
 }

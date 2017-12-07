@@ -2,12 +2,11 @@
  *
  * ZX Spectrum keyboard handling.
  *
- * Copyright (c) David Thomas, 2016. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2016-2017. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef _WIN32

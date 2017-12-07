@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef _WIN32
@@ -18,9 +17,11 @@
 
 void zxkempston_assign(zxkempston_t *kempston,
                        zxjoystick_t  index,
-                       bool          on_off)
+                       int           on_off)
 {
   int i;
+
+  on_off = !!on_off; /* ensure boolity */
 
   switch (index)
   {
