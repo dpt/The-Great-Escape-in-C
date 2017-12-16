@@ -26,6 +26,7 @@ Queue:
     e.g. 0 bytes to the right of global variable 'interior_mask_21'
 * Thread Sanitiser reports multiple problems. Needs locking in various places.
 * Guards & commandant don't always catch the hero on contact.
+* Enter 'N' to cancel key defs repeatedly and stamp_handler will assert.
 
 Fixed
 -----
