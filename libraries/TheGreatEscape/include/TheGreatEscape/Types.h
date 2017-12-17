@@ -651,8 +651,8 @@ default_item_location_t;
 typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
-  bounds_t  bounds; /**< Where on the map the mask is positioned (iso). */
-  tinypos_t pos;
+  bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
+  tinypos_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
