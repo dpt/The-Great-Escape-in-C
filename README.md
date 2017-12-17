@@ -25,6 +25,10 @@ I extracted the graphics and [reverse engineered](https://github.com/dpt/The-Gre
 * Provide a basis for porting the game to contemporary systems of the ZX Spectrum.
 	* Although old ports of the game exist for the [PC](http://www.abandonia.com/en/games/534/Great+Escape,+The.html), [C64](http://www.lemon64.com/?game_id=1090) and [CPC](http://www.amstradabandonware.com/en/gameitems/the-great-escape/1179), retro fans would like to see the game on other contemporary systems too.
 
+Chat
+----
+[![Join the chat at https://gitter.im/The-Great-Escape/Lobby](https://badges.gitter.im/The-Great-Escape/Lobby.svg)](https://gitter.im/The-Great-Escape/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Current State of the Code
 ### Does it build and run?
 Yes!
