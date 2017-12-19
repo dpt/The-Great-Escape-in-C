@@ -1970,8 +1970,10 @@ void in_permitted_area(tgestate_t *state)
 
   route = state->vischars[0].route;
   ASSERT_ROUTE_VALID(route);
-  if (route.index & route_REVERSED)
-    route.step++;
+  /* The following lines were found to be redundant in the original game so
+   * have been disabled. */
+//  if (route.index & route_REVERSED)
+//    C = route.step + 1;
 
   if (route.index == route_WANDER)
   {
