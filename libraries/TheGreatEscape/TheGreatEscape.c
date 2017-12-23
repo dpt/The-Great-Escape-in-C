@@ -7533,6 +7533,11 @@ skip_went_zero:
         }
         while (--iters3);
 
+        // Conv: Avoid running the trailing code when we're on the final line
+        // since that results in out-of-bounds memory reads.
+        if (iters2 == 1)
+          goto pop_next;
+
         // trailing
 
         iters3 = self_BA90; // self modified // == mask width - clipped width
