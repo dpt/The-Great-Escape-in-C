@@ -19,8 +19,6 @@ Queue:
 * Have seen guards and prisoners getting bunched up in doorway.
 * Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps.
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
-* Address Sanitiser reports Global buffer overflow in render_mask_buffer.
-    e.g. 0 bytes to the right of global variable 'interior_mask_21'
 * Thread Sanitiser reports multiple problems. Needs locking in various places.
 * Guards & commandant don't always catch the hero on contact.
 * Enter 'N' to cancel key defs repeatedly and stamp_handler will assert.
@@ -83,3 +81,7 @@ Fixed
      $9F7C INC C         ; C never gets used again
     ```
 
+28. The Clang Address Sanitiser reports problems with out-of-bounds memory accesses in the sprite plotters.
+    * Fixed 23-Dec-19 in 7ac5b98a: The individual byte plotting commands formed their masked pixels irrespective of whether they were going to appear on-screen or not. This is not a problem in the original game but in the conversion it results in out-of-bounds memory accesses. We fix this by wrapping the mask-forming code in the same condition that protects the screenptr write.
+29. The Clang Address Sanitiser reports Global buffer overflow in `render_mask_buffer`. e.g. 0 bytes to the right of global variable `interior_mask_21`
+    * Fixed 23-Dec-19 in bd67a963: At the end of a mask being rendered in render_mask_buffer the code would execute the trailing case that readies the mask buffer pointer for the next row. In the original code this accessed out-of-bounds bytes with no ill effect, however that cannot work in the conversion. We fix this by testing for the final row and skipping the trailing code.
