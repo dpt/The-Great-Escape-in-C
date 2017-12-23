@@ -11509,30 +11509,28 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
 
       /* Plot, using foreground mask. */
 
-      p = MASK(bm0, mask0);
-      foremaskptr++;
+      // Conv: We form 'mask' inside of the enable_* condition. The original
+      // game got away with accessing out-of-bounds memory but we can't.
+
       if (state->enable_24_right_1)
-        *screenptr = p;
+        *screenptr = MASK(bm0, mask0);
+      foremaskptr++;
       screenptr++;
 
-      p = MASK(bm1, mask1);
-      foremaskptr++;
       if (state->enable_24_right_2)
-        *screenptr = p;
+        *screenptr = MASK(bm1, mask1);
+      foremaskptr++;
       screenptr++;
 
-      p = MASK(bm2, mask2);
-      foremaskptr++;
       if (state->enable_24_right_3)
-        *screenptr = p;
+        *screenptr = MASK(bm2, mask2);
+      foremaskptr++;
       screenptr++;
 
-      p = MASK(bm3, mask3);
-      foremaskptr++;
-      ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
-      state->foreground_mask_pointer = foremaskptr;
       if (state->enable_24_right_4)
-        *screenptr = p;
+        *screenptr = MASK(bm3, mask3);
+      foremaskptr++;
+      state->foreground_mask_pointer = foremaskptr;
 
       screenptr += state->columns - 3; /* was 21 */
       if (iters > 1)
@@ -11651,29 +11649,28 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
 
       /* Plot, using foreground mask. */
 
-      p = MASK(bm3, mask3);
-      foremaskptr++;
+      // Conv: We form 'mask' inside of the enable_* condition. The original
+      // game got away with accessing out-of-bounds memory but we can't.
+
       if (state->enable_24_left_1)
-        *screenptr = p;
+        *screenptr = MASK(bm3, mask3);
+      foremaskptr++;
       screenptr++;
 
-      p = MASK(bm2, mask2);
-      foremaskptr++;
       if (state->enable_24_left_2)
-        *screenptr = p;
-      screenptr++;
-
-      p = MASK(bm1, mask1);
+        *screenptr = MASK(bm2, mask2);
       foremaskptr++;
-      if (state->enable_24_left_3)
-        *screenptr = p;
       screenptr++;
 
-      p = MASK(bm0, mask0);
+      if (state->enable_24_left_3)
+        *screenptr = MASK(bm1, mask1);
+      foremaskptr++;
+      screenptr++;
+
+      if (state->enable_24_left_4)
+        *screenptr = MASK(bm0, mask0);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
-      if (state->enable_24_left_4)
-        *screenptr = p;
 
       screenptr += state->columns - 3; /* was 21 */
       if (iters > 1)
@@ -11826,25 +11823,25 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    p = MASK(bm0, mask0);
-    foremaskptr++;
+    // Conv: We form 'mask' inside of the enable_* condition. The original
+    // game got away with accessing out-of-bounds memory but we can't.
+
     if (state->enable_16_left_1)
-      *screenptr = p;
-    screenptr++;
-
-    p = MASK(bm1, mask1);
+      *screenptr = MASK(bm0, mask0);
     foremaskptr++;
-    if (state->enable_16_left_2)
-      *screenptr = p;
     screenptr++;
 
-    p = MASK(bm2, mask2);
+    if (state->enable_16_left_2)
+      *screenptr = MASK(bm1, mask1);
+    foremaskptr++;
+    screenptr++;
+
+    if (state->enable_16_left_3)
+      *screenptr = MASK(bm2, mask2);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
-    if (state->enable_16_left_3)
-      *screenptr = p;
-    screenptr += state->columns - 2; /* was 22 */
 
+    screenptr += state->columns - 2; /* was 22 */
     if (iters > 1)
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     state->window_buf_pointer = screenptr;
@@ -11973,23 +11970,23 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    p = MASK(bm2, mask2);
-    foremaskptr++;
+    // Conv: We form 'mask' inside of the enable_* condition. The original
+    // game got away with accessing out-of-bounds memory but we can't.
+
     if (state->enable_16_right_1)
-      *screenptr = p;
-    screenptr++;
-
-    p = MASK(bm1, mask1);
+      *screenptr = MASK(bm2, mask2);
     foremaskptr++;
-    if (state->enable_16_right_2)
-      *screenptr = p;
     screenptr++;
 
-    p = MASK(bm0, mask0);
+    if (state->enable_16_right_2)
+      *screenptr = MASK(bm1, mask1);
+    foremaskptr++;
+    screenptr++;
+
+    if (state->enable_16_right_3)
+      *screenptr = MASK(bm0, mask0);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
-    if (state->enable_16_right_3)
-      *screenptr = p;
 
     screenptr += state->columns - 2; /* was 22 */
     if (iters > 1)
