@@ -8465,7 +8465,7 @@ uint8_t get_target(tgestate_t       *state,
                    const xy_t      **location)
 {
   /**
-   * $783A: Default map locations.
+   * $783A: Table of map locations used in routes.
    */
   static const xy_t locations[78] =
   {
