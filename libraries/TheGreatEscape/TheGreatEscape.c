@@ -8484,14 +8484,14 @@ uint8_t get_target(tgestate_t       *state,
     { 104, 112 }, // 8
     {  96, 112 }, // 9 used by route_guard_12_roll_call
     { 106, 102 }, // 10
-    {  93, 104 }, // 11 used by route_commandant, route_exit_hut2, data_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
-    { 124, 101 }, // 12 used by route_exit_hut2, data_77E7, data_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
+    {  93, 104 }, // 11 used by route_commandant, route_exit_hut2, route_77E1, route_guard_13_roll_call, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
+    { 124, 101 }, // 12 used by route_exit_hut2, route_77E7, route_77EC, route_guard_13_bed, route_guard_14_bed, route_guard_15_bed
     { 124, 112 }, // 13
     { 116, 104 }, // 14 used by route_exit_hut3, route_go_to_solitary, route_hero_leave_solitary
     { 112, 100 }, // 15
 
     // charevnt_wander_left uses 16..23
-    { 120,  96 }, // 16 used by data_77EC
+    { 120,  96 }, // 16 used by route_77EC
     { 128,  88 }, // 17 used by route_guard_14_roll_call
     { 112,  96 }, // 18
     { 116,  84 }, // 19
@@ -8510,21 +8510,21 @@ uint8_t get_target(tgestate_t       *state,
     {  74,  68 }, // 30
     {  74,  64 }, // 31
 
-    { 102,  68 }, // 32 used by data_7795
-    {  68,  68 }, // 33 used by data_7795
-    {  68, 104 }, // 34 used by data_7795
+    { 102,  68 }, // 32 used by route_7795
+    {  68,  68 }, // 33 used by route_7795
+    {  68, 104 }, // 34 used by route_7795
 
-    { 107,  69 }, // 35 used by data_7799
-    { 107,  45 }, // 36 used by data_7799
-    {  77,  45 }, // 37 used by data_7799
-    {  77,  61 }, // 38 used by data_7799
-    {  61,  61 }, // 39 used by data_7799
-    {  61, 103 }, // 40 used by data_7799
+    { 107,  69 }, // 35 used by route_7799
+    { 107,  45 }, // 36 used by route_7799
+    {  77,  45 }, // 37 used by route_7799
+    {  77,  61 }, // 38 used by route_7799
+    {  61,  61 }, // 39 used by route_7799
+    {  61, 103 }, // 40 used by route_7799
 
     { 116,  76 }, // 41
     {  44,  42 }, // 42 used by route_commandant, route_go_to_solitary
-    { 106,  72 }, // 43 used by data_77CD
-    { 110,  72 }, // 44 used by data_77CD
+    { 106,  72 }, // 43 used by route_77CD
+    { 110,  72 }, // 44 used by route_77CD
     {  81, 104 }, // 45 used by route_commandant, route_exit_hut3, route_guard_14_bed, route_guard_15_bed
 
     {  52,  60 }, // 46 used by route_commandant, route_prisoner_sleeps_1
@@ -8533,13 +8533,13 @@ uint8_t get_target(tgestate_t       *state,
     { 119, 107 }, // 49 used by route_guard_15_roll_call
     { 122, 110 }, // 50 used by route_hero_roll_call
     {  52,  28 }, // 51
-    {  40,  60 }, // 52 used by data_77DE, route_guard_14_bed
-    {  36,  34 }, // 53 used by data_77DE, route_guard_13_bed, route_guard_15_bed
+    {  40,  60 }, // 52 used by route_77DE, route_guard_14_bed
+    {  36,  34 }, // 53 used by route_77DE, route_guard_13_bed, route_guard_15_bed
     {  80,  76 }, // 54
-    {  89,  76 }, // 55 used by route_commandant, data_77E1
+    {  89,  76 }, // 55 used by route_commandant, route_77E1
 
     // charevnt_wander_yard uses 56..63
-    {  89,  60 }, // 56 used by data_77E1
+    {  89,  60 }, // 56 used by route_77E1
     { 100,  61 }, // 57
     {  92,  54 }, // 58
     {  84,  50 }, // 59
@@ -8551,7 +8551,7 @@ uint8_t get_target(tgestate_t       *state,
     {  52,  54 }, // 64 character walks into breakfast room, used by route_prisoner_sits_1
     {  52,  46 }, // 65 used by route_prisoner_sits_2
     {  52,  36 }, // 66 used by route_prisoner_sits_3
-    {  52,  62 }, // 67 used by data_7833
+    {  52,  62 }, // 67 used by route_7833
     {  32,  56 }, // 68 used by route_guardA_breakfast
     {  52,  24 }, // 69 used by route_guardB_breakfast
     {  42,  46 }, // 70 used by route_hut2_right_to_left
