@@ -8102,10 +8102,10 @@ void purge_invisible_characters(tgestate_t *state)
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
     // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
     //
-    // t = (vischar->floogle.y + 4) / 8 / 256; // round
+    // t = (vischar->iso_pos.y + 4) / 8 / 256; // round
     // if (t <= miny || t > maxy)
     //   goto reset;
-    // t = (vischar->floogle.x) / 8 / 256;
+    // t = (vischar->iso_pos.x) / 8 / 256;
     // if (t <= minx || t > maxx)
     //   goto reset;
 
