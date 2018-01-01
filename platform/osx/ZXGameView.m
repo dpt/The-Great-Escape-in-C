@@ -402,7 +402,7 @@ failure:
   gameSize.height = config.height * 8;
 
   // Convert up to window space, which is in pixel units
-  baseRect = [self convertRectToBacking:[self bounds]];
+  baseRect = [self bounds];
   viewSize = baseRect.size;
 
   // How many game windows fit comfortably into the view?
