@@ -173,6 +173,8 @@ static input_t inputroutine_kempston(tgestate_t *state)
   return fire + left_right + up_down; /* Combine axis */
 }
 
+#if 0
+
 /**
  * $FEA3: Fuller joystick input routine.
  *
@@ -224,6 +226,8 @@ static input_t inputroutine_fuller(tgestate_t *state)
 
   return fire + left_right + up_down; /* Combine axis */
 }
+
+#endif
 
 /**
  * $FECD: Sinclair joystick input routine.
