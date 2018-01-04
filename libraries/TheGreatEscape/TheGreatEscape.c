@@ -2049,9 +2049,14 @@ set_flag_green:
   attr = attribute_BRIGHT_GREEN_OVER_BLACK;
 
 flag_select:
+  /* Conv: Original game tests the attributes directly here, instead we test
+   * the red_flag. */
+  if (state->red_flag == red_flag)
+    return; /* flag is already the requested state */
+
   state->red_flag = red_flag;
-  if (attr == state->speccy->screen.attributes[morale_flag_attributes_offset])
-    return; /* flag is already the correct colour */
+  // was: if (attr == state->speccy->screen.attributes[morale_flag_attributes_offset])
+  // was:   return; /* flag is already the correct colour */
 
   if (attr == attribute_BRIGHT_GREEN_OVER_BLACK)
     state->bell = bell_STOP;
@@ -2062,8 +2067,13 @@ flag_select:
   /* Red flag code path. */
 set_flag_red:
   attr = attribute_BRIGHT_RED_OVER_BLACK;
-  if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attr)
+  /* Conv: Original game tests the attributes directly here, instead we test
+   * the red_flag. */
+  // was: if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attr)
+  if (state->red_flag == 255)
     return; /* flag is already red */
+
+  attr = attribute_BRIGHT_RED_OVER_BLACK;
 
   state->vischars[0].input = 0;
   red_flag = 255;
