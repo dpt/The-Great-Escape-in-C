@@ -300,7 +300,7 @@ static void tge_initialise(tgestate_t *state)
 
   /* Initialise in structure order. */
 
-  // Future: Table drive this initialisation copying:
+  // FUTURE: Table drive this initialisation copying:
   //
   //  static const struct
   //  {
@@ -362,7 +362,7 @@ static void tge_initialise(tgestate_t *state)
          sizeof(item_attributes));
 
   /* $EDD3 */
-  // Future: recalculate these
+  // FUTURE: Recalculate these for the selected screen layout.
   memcpy(state->game_window_start_offsets,
          game_window_start_offsets,
          sizeof(game_window_start_offsets));

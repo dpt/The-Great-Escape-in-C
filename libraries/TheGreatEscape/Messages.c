@@ -190,7 +190,7 @@ void next_message(tgestate_t *state)
   state->messages.current_character = message;
 
   /* Discard the first element. */
-  memmove(&state->messages.queue[0], &state->messages.queue[2], 16); // Future: Use message_queue_LENGTH.
+  memmove(&state->messages.queue[0], &state->messages.queue[2], 16); // FUTURE: Use message_queue_LENGTH.
   state->messages.queue_pointer -= 2;
   state->messages.display_index = 0;
 }

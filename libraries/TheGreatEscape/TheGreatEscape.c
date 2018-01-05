@@ -1856,7 +1856,7 @@ void cutting_wire(tgestate_t *state)
   else
   {
     /* Countdown reached: Snip the wire. */
-    /* Bug: 'delta' is always zero here, so 'hero->direction' is always set
+    /* BUG: 'delta' is always zero here, so 'hero->direction' is always set
      * to zero. */
     hero->direction = delta & vischar_DIRECTION_MASK;
     hero->input = input_KICK;
@@ -2771,7 +2771,7 @@ void event_new_red_cross_parcel(tgestate_t *state)
 
     itemstruct = item_to_itemstruct(state, *item);
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == itemstruct_ROOM_NONE)
-      goto found; /* Future: Remove goto. */
+      goto found; /* FUTURE: Remove goto. */
 
     item++;
   }
@@ -2903,7 +2903,7 @@ void wake_up(tgestate_t *state)
   /* Update all the bed objects to be empty. */
   // FIXME: Writing to shared state.
   bedpp = &beds[0];
-  iters = beds_LENGTH; /* Bug: Conv: Original code uses 7 which is wrong. */
+  iters = beds_LENGTH; /* BUG: Conv: Original code uses 7 which is wrong. */
   do
     **bedpp++ = interiorobject_EMPTY_BED_FACING_SE;
   while (--iters);
@@ -5202,7 +5202,7 @@ void searchlight_movement(searchlight_movement_t *slstate)
       slstate->index--; /* overshot? count down counter byte */
       slstate->index |= REVERSE; /* go negative */
       ptr -= 2;
-      // A = *ptr; /* Bug: This is a flaw in original code: A is fetched but never used again. */
+      // A = *ptr; /* BUG: This is a flaw in original code: A is fetched but never used again. */
     }
     /* Copy counter + direction_t. */
     slstate->counter   = ptr[0];
@@ -5468,7 +5468,7 @@ void searchlight_plot(tgestate_t  *state,
     max_y_attrs = &attrs_base[18 * state->width]; // was HL = 0x5A40; // screen attribute address (column 0 + bottom of game screen)
     if (clip_left)
     {
-      // Bug: This chunk seems to do nothing useful but allow the bottom
+      // BUG: This chunk seems to do nothing useful but allow the bottom
       // border to be overwritten. FUTURE: Remove.
       // Conv: was: if ((E & 31) >= 22) L = 32;
       if (x >= 22) // 22 => 8 attrs away from the edge maybe?
@@ -5486,7 +5486,7 @@ void searchlight_plot(tgestate_t  *state,
     min_y_attrs = &attrs_base[2 * state->width]; // screen attribute address (row 2, column 0)
     if (clip_left)
     {
-      // Bug: Again, this chunk seems to do nothing useful but allow the
+      // BUG: Again, this chunk seems to do nothing useful but allow the
       // bottom border to be overwritten. FUTURE: Remove.
       // Conv: was: if (E & 31) >= 7) L = 32;
       if (x >= 7)
@@ -6659,7 +6659,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
 
     /* Locked doors 2..8 include interior doors. */
     locked_doors = &state->locked_doors[2];
-    iters = 8; // Bug: iters should be 7
+    iters = 8; // BUG: iters should be 7
     do
     {
       locked_door_index = *locked_doors & ~door_LOCKED;
@@ -7018,10 +7018,10 @@ void reset_game(tgestate_t *state)
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
 
-  // Bug: item_structs ought to have each element's flags restored so that
+  // BUG: item_structs ought to have each element's flags restored so that
   // itemstruct_ITEM_FLAG_HELD is reset.
 
-  // Bug: fails to reset position of stoves and crate. (IIRC DOS version
+  // BUG: fails to reset position of stoves and crate. (IIRC DOS version
   // resets them whenever they're spawned).
 }
 
@@ -7112,7 +7112,7 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos         = (tinypos_t) { reset->x, reset->y, 18 }; /* Bug/Odd: This is reset to 18 but the initial data is 24. */
+    charstr->pos         = (tinypos_t) { reset->x, reset->y, 18 }; /* BUG: This is reset to 18 but the initial data is 24. */
     charstr->route.index = 0; /* Stand still */
     charstr++;
     reset++;
@@ -7147,7 +7147,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   /* Start testing at approximately the middle of the character. */
   buf = &state->mask_buffer[32 + 16 + 1]; /* x=1, y=12 */
   iters = 8;
-  /* Bug: Original code does a fused load of BC, but doesn't use C after.
+  /* BUG: Original code does a fused load of BC, but doesn't use C after.
    * Probably a leftover stride constant for MASK_BUFFER_WIDTHBYTES. */
   // C = 4;
   do
@@ -8316,7 +8316,6 @@ again:
     }
     // POP DE // -> vischar->pos
     // sampled HL is $7913 (a doors tinypos)
-    // it seems that get_target might return tinypos_t's or xy_t's... we'll go ahead and copy a tinypos_t irrespective.
     if (get_target_result == get_target_DOOR)
     {
       vischar->target = *doorpos;
@@ -8325,9 +8324,8 @@ again:
     {
       vischar->target.x = location->x;
       vischar->target.y = location->y;
+      // Note we're not setting .z here.
     }
-    //memcpy(&vischar->pos, route, sizeof(tinypos_t));
-    // pointers incremented in original?
   }
   vischar->counter_and_flags = 0;
   // DE -= 7;
@@ -9400,7 +9398,7 @@ pursue_hero:
         found = &state->vischars[1];
         do
         {
-          if (found->character == bribed_character) /* Bug? This doesn't mask found->character with vischar_CHARACTER_MASK. */
+          if (found->character == bribed_character) /* BUG: Doesn't mask found->character with vischar_CHARACTER_MASK. */
             goto bribed_visible;
           found++;
         }
@@ -10697,7 +10695,7 @@ int is_item_discoverable_interior(tgestate_t *state,
     /* Is the item in the specified room? */
     if ((itemstr->room_and_flags & itemstruct_ROOM_MASK) == room &&
         /* Has the item been moved to a different room? */
-        /* Bug? Note that room_and_flags doesn't get its flag bits masked off.
+        /* BUG: room_and_flags doesn't get its flag bits masked off.
          * Does it need & 0x3F ? */ // FUTURE: add an assert to check this
         // wiresnips' room_and_flags is 255 so will never match 'room' (0..room_limit)
         // so the effect is ... wiresnips are always discoverable?
@@ -11066,11 +11064,11 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   ASSERT_ITEMSTRUCT_VALID(itemstr);
 
   /* 0x3F looks like it ought to be 0x1F (item__LIMIT - 1). */
-  /* Potential bug: The use of A later on does not re-clamp it to 0x1F. */
+  /* Potential BUG: The use of A later on does not re-clamp it to 0x1F. */
   item &= 0x3F; // mask off item_FOUND
   ASSERT_ITEM_VALID(item);
 
-  /* Bug: The original game writes to this location but it's never
+  /* BUG: The original game writes to this location but it's never
    * subsequently read from.
    */
   /* $8213 = A; */
@@ -11109,7 +11107,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
     offset_tmp = 3 - (clipped_width & 0xFF);
   }
 
-  offset = offset_tmp; /* Future: Could assign directly to offset instead. */
+  offset = offset_tmp; /* FUTURE: Could assign directly to offset instead. */
 
   /* Set the addresses in the jump table to NOP or LD (HL),A */
   enables = &masked_sprite_plotter_16_enables[0];
@@ -12736,7 +12734,7 @@ TGE_API void tge_setup2(tgestate_t *state)
   while (reversed != &state->reversed[256]); // was ((HL & 0xFF) != 0);
 
   /* Initialise all visible characters. */
-  // Future: Fold this to:
+  // FUTURE: Fold this to:
   // for (vischar = &state->vischars[0]; vischar < &state->vischars[vischars_LENGTH]; vischar++)
   //   *vischar = vischar_initial;
   vischar = &state->vischars[0];
