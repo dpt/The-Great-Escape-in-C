@@ -22,6 +22,8 @@ Queue:
 * Thread Sanitiser reports multiple problems. Needs locking in various places.
 * Guards & commandant don't always catch the hero on contact.
 * Enter 'N' to cancel key defs repeatedly and stamp_handler will assert.
+* Hero getting wedged into a corner by a guard after breakfast, dancing left-right.
+* Undefined behaviour in searchlight_plot when producing the attribute address.
 
 Fixed
 -----
