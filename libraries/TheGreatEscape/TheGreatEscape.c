@@ -12609,6 +12609,7 @@ int user_confirm(tgestate_t *state)
   };
 
   uint8_t keymask; /* was A */
+  int     flags;   /* Conv: added */
 
   assert(state != NULL);
 
@@ -12621,17 +12622,28 @@ int user_confirm(tgestate_t *state)
 
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_POIUY);
     if ((keymask & (1 << 4)) == 0)
-      return 0; /* is 'Y' pressed? return Z */
+    {
+      flags = 0; /* is 'Y' pressed? return Z */
+      goto exit;
+    }
 
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_SPACESYMSHFTMNB);
     keymask = ~keymask;
     if ((keymask & (1 << 3)) != 0)
-      return 1; /* is 'N' pressed? return NZ */
+    {
+      flags = 1; /* is 'N' pressed? return NZ */
+      goto exit;
+    }
 
     /* Conv: Timing: The original game keyscans as fast as it can. We can't
      * have that so instead we introduce a short delay. */
     state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
   }
+
+exit:
+   /* Undo the stamp at the start of the loop. */
+  state->speccy->sleep(state->speccy, 0);
+  return flags;
 }
 
 /* ----------------------------------------------------------------------- */
