@@ -252,10 +252,17 @@ failure:
   unichar               u;
   zxjoystick_t          j;
 
+  // Ignore key repeat events. We're only interested in state changes so we can
+  // set/clear bits in the zxkeyset bitfield. Also, if we don't ignore repeats
+  // it will result in the self->mutex being taken too often which will starve
+  // the main game thread.
+  if (event.isARepeat)
+    return;
+
   modifierFlags = [event modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
   modifiersToReject = NSEventModifierFlagControl |
-  NSEventModifierFlagOption  |
-  NSEventModifierFlagCommand;
+                      NSEventModifierFlagOption  |
+                      NSEventModifierFlagCommand;
   if (modifierFlags & modifiersToReject)
     return;
 
