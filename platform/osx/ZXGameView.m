@@ -58,7 +58,6 @@
 
   unsigned int   *pixels;
   GLclampf        backgroundRed, backgroundGreen, backgroundBlue;
-  NSRect          glViewContentRect;
 
   pthread_t       thread;
   zxkeyset_t      keys;
@@ -140,7 +139,6 @@
 
   pixels          = NULL;
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
-  glViewContentRect = NSMakeRect(0, 0, 0, 0);
 
   thread          = NULL;
   keys            = 0ULL;
@@ -526,14 +524,10 @@ static void draw_handler(unsigned int  *pixels,
                          void          *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
-  NSRect      rect;
-
-  view->pixels = pixels;
-  rect = view->glViewContentRect;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     // Odd: This refreshes the whole window no matter what size of rect is specified
-    [view setNeedsDisplayInRect:rect];
+    [view setNeedsDisplayInRect:NSMakeRect(0, 0, 0, 0)];
   });
 }
 
