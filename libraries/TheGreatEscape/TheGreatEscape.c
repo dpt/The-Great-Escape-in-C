@@ -835,7 +835,7 @@ void plot_interior_tiles(tgestate_t *state)
  *
  * Used by wake_up, character_sleeps and reset_map_and_characters.
  */
-uint8_t *const beds[beds_LENGTH] =
+static uint8_t *const beds[beds_LENGTH] =
 {
   &roomdef_3_hut2_right[29],
   &roomdef_3_hut2_right[32],

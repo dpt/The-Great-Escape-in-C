@@ -191,8 +191,6 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output);
 
 void plot_interior_tiles(tgestate_t *state);
 
-extern uint8_t *const beds[beds_LENGTH];
-
 /* $7000 onwards */
 
 extern const door_t doors[door_MAX * 2];
