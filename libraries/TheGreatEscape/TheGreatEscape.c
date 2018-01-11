@@ -573,7 +573,12 @@ void setup_room(tgestate_t *state)
     { 15, { 136, 140, 245, 248 }, { 10, 10, 32 } },
   };
 
-  const roomdef_t *proomdef; /* was HL */
+  /* Conv: Direct access to the room definition data has been removed and
+   * replaced with calls to get_room_byte. */
+
+  //const roomdef_t *proomdef; /* was HL */
+  int              room_index;  /* Conv: Replaces direct access */
+  int              offset;      /* Conv: Replaces direct access */
   bounds_t        *pbounds;  /* was DE */
   mask_t          *pmask;    /* was DE */
   uint8_t          count;    /* was A */
@@ -585,46 +590,60 @@ void setup_room(tgestate_t *state)
 
   assert(state->room_index >= 0);
   assert(state->room_index < room__LIMIT);
-  proomdef = rooms_and_tunnels[state->room_index - 1]; /* array starts with room 1 */
+  room_index = state->room_index; /* local cached copy */
+  offset     = 0;
 
   setup_doors(state);
 
-  state->roomdef_bounds_index = *proomdef++;
+  state->roomdef_bounds_index = get_roomdef(state, room_index, offset++);
 
   /* Copy boundaries into state. */
-  state->roomdef_object_bounds_count = count = *proomdef; /* count of boundaries */
+  state->roomdef_object_bounds_count = count = get_roomdef(state, room_index, offset); /* count of boundaries */
   assert(count <= 4);
   pbounds = &state->roomdef_object_bounds[0]; /* Conv: Moved */
   if (count == 0) /* no boundaries */
   {
-    proomdef++; /* skip to interior mask */
+    offset++; /* skip to interior mask */
   }
   else
   {
-    proomdef++; /* Conv: Don't re-copy already copied count byte. */
-    memcpy(pbounds, proomdef, count * sizeof(bounds_t));
-    proomdef += count * sizeof(bounds_t); /* skip to interior mask */
+    uint8_t     *p; /* so we can access bounds as bytes */
+    unsigned int c; /* */
+
+    offset++; /* Conv: Don't re-copy already copied count byte. */
+    p = &pbounds->x0;
+    for (c = 0; c < count * sizeof(bounds_t); c++)
+      *p++ = get_roomdef(state, room_index, offset++);
+    /* arrive at interior mask */
   }
 
   /* Copy interior mask into state->interior_mask_data. */
-  state->interior_mask_data_count = iters = *proomdef++; /* count of interior masks */
+  state->interior_mask_data_count = iters = get_roomdef(state, room_index, offset++); /* count of interior masks */
   assert(iters <= MAX_INTERIOR_MASK_REFS);
   pmask = &state->interior_mask_data[0]; /* Conv: Moved */
   while (iters--)
   {
+    uint8_t index;
+
+    index = get_roomdef(state, room_index, offset++);
     /* Conv: Structures were changed from 7 to 8 bytes wide. */
-    memcpy(pmask, &interior_mask_data_source[*proomdef++], sizeof(*pmask));
+    memcpy(pmask, &interior_mask_data_source[index], sizeof(*pmask));
     pmask++;
   }
 
   /* Plot all objects (as tiles). */
-  iters = *proomdef++; /* Count of objects */
+  iters = get_roomdef(state, room_index, offset++); /* Count of objects */
   while (iters--)
   {
-    expand_object(state,
-                  proomdef[0], /* object index */
-                  &state->tile_buf[proomdef[2] * state->columns + proomdef[1]]); /* HL[2] = row, HL[1] = column */
-    proomdef += 3;
+    uint8_t object_index;
+    uint8_t row;
+    uint8_t column;
+
+    object_index = get_roomdef(state, room_index, offset++);
+    row          = get_roomdef(state, room_index, offset++);
+    column       = get_roomdef(state, room_index, offset++);
+
+    expand_object(state, object_index, &state->tile_buf[column * state->columns + row]);  // row/column look mixed up
   }
 }
 
@@ -830,19 +849,26 @@ void plot_interior_tiles(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
+typedef struct
+{
+  room_t  room_index;
+  uint8_t offset;
+}
+roomdef_address_t;
+
 /**
  * $6B79: Locations of beds.
  *
  * Used by wake_up, character_sleeps and reset_map_and_characters.
  */
-static uint8_t *const beds[beds_LENGTH] =
+static const roomdef_address_t beds[beds_LENGTH] =
 {
-  &roomdef_3_hut2_right[29],
-  &roomdef_3_hut2_right[32],
-  &roomdef_3_hut2_right[35],
-  &roomdef_5_hut3_right[29],
-  &roomdef_5_hut3_right[32],
-  &roomdef_5_hut3_right[35],
+  { room_3_HUT2RIGHT, roomdef_3_BED_A },
+  { room_3_HUT2RIGHT, roomdef_3_BED_B },
+  { room_3_HUT2RIGHT, roomdef_3_BED_C },
+  { room_5_HUT3RIGHT, roomdef_5_BED_D },
+  { room_5_HUT3RIGHT, roomdef_5_BED_E },
+  { room_5_HUT3RIGHT, roomdef_5_BED_F },
 };
 
 /* ----------------------------------------------------------------------- */
@@ -1770,7 +1796,10 @@ void process_player_input(tgestate_t *state)
         state->vischars[0].route    = (route_t) { 43, 0 };
         state->vischars[0].mi.pos.x = 52;
         state->vischars[0].mi.pos.y = 62;
-        roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
+        set_roomdef(state,
+                    room_25_BREAKFAST,
+                    roomdef_25_BENCH_G,
+                    interiorobject_EMPTY_BENCH);
         state->hero_in_breakfast = 0;
       }
       else
@@ -1780,7 +1809,10 @@ void process_player_input(tgestate_t *state)
         state->vischars[0].target.x = 46;
         state->vischars[0].target.y = 46;
         state->vischars[0].mi.pos   = (pos_t) { 46, 46, 24 };
-        roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
+        set_roomdef(state,
+                    room_2_HUT2LEFT,
+                    roomdef_2_BED,
+                    interiorobject_EMPTY_BED_FACING_SE);
         state->hero_in_bed = 0;
       }
 
@@ -2872,9 +2904,9 @@ static const character_t prisoners_and_guards[10] =
  */
 void wake_up(tgestate_t *state)
 {
-  characterstruct_t *charstr;  /* was HL */
-  uint8_t            iters;    /* was B */
-  uint8_t *const    *bedpp;    /* was HL */
+  characterstruct_t       *charstr; /* was HL */
+  uint8_t                  iters;   /* was B */
+  const roomdef_address_t *rda;     /* Conv: new */
 
   assert(state != NULL);
 
@@ -2911,15 +2943,23 @@ void wake_up(tgestate_t *state)
   set_prisoners_and_guards_route_B(state, &t5);
 
   /* Update all the bed objects to be empty. */
-  // FIXME: Writing to shared state.
-  bedpp = &beds[0];
+  rda = &beds[0];
   iters = beds_LENGTH; /* BUG: Conv: Original code uses 7 which is wrong. */
   do
-    **bedpp++ = interiorobject_EMPTY_BED_FACING_SE;
+  {
+    set_roomdef(state,
+                rda->room_index,
+                rda->offset,
+                interiorobject_EMPTY_BED_FACING_SE);
+    rda++;
+  }
   while (--iters);
 
   /* Update the hero's bed object to be empty and redraw if required. */
-  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_EMPTY_BED_FACING_SE;
+  set_roomdef(state,
+              room_2_HUT2LEFT,
+              roomdef_2_BED,
+              interiorobject_EMPTY_BED_FACING_SE);
   if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
   {
     // FUTURE: replace with call to setup_room_and_plot
@@ -2972,14 +3012,13 @@ void end_of_breakfast(tgestate_t *state)
   set_prisoners_and_guards_route_B(state, &t2);
 
   /* Update all the benches to be empty. */
-  // FIXME: Writing to shared state.
-  roomdef_23_breakfast[roomdef_23_BENCH_A] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[roomdef_23_BENCH_B] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[roomdef_23_BENCH_C] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_D] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_E] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_F] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
 
   /* Redraw current room if the game is showing an affected scene. */
   if (state->room_index >= room_1_HUT1RIGHT &&
@@ -3397,9 +3436,10 @@ void character_sits(tgestate_t *state,
                     uint8_t     routeindex,
                     route_t    *route)
 {
-  uint8_t  index; /* was A */
-  uint8_t *bench; /* was HL */
-  room_t   room;  /* was C */
+  uint8_t  index;      /* was A */
+  int      room_index; /* Conv: new */
+  int      offset;     /* Conv: new */
+  room_t   room;       /* was C */
 
   assert(state  != NULL);
   assert(routeindex >= 18 && routeindex <= 22);
@@ -3408,16 +3448,19 @@ void character_sits(tgestate_t *state,
 
   index = routeindex - 18;
   /* First three characters. */
-  bench = &roomdef_25_breakfast[roomdef_25_BENCH_D];
+  room_index = room_25_BREAKFAST;
+  offset     = roomdef_25_BENCH_D;
   if (index >= 3)
   {
     /* Last two characters. */
-    bench = &roomdef_23_breakfast[roomdef_23_BENCH_A];
+    room_index = room_23_BREAKFAST;
+    offset     = roomdef_23_BENCH_A;
     index -= 3;
   }
-
-  /* Poke object. */
-  bench[index * 3] = interiorobject_PRISONER_SAT_MID_TABLE;
+  set_roomdef(state,
+              room_index,
+              offset + index * 3,
+              interiorobject_PRISONER_SAT_MID_TABLE);
 
   if (routeindex < 21)
     room = room_25_BREAKFAST;
@@ -3450,7 +3493,10 @@ void character_sleeps(tgestate_t *state,
   ASSERT_ROUTE_VALID(*route);
 
   /* Poke object. */
-  *beds[routeindex - 7] = interiorobject_OCCUPIED_BED;
+  set_roomdef(state,
+              beds[routeindex - 7].room_index,
+              beds[routeindex - 7].offset,
+              interiorobject_OCCUPIED_BED);
 
   if (routeindex < 10)
     room = room_3_HUT2RIGHT;
@@ -3539,7 +3585,10 @@ void hero_sits(tgestate_t *state)
 {
   assert(state != NULL);
 
-  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_PRISONER_SAT_END_TABLE;
+  set_roomdef(state,
+              room_25_BREAKFAST,
+              roomdef_25_BENCH_G,
+              interiorobject_PRISONER_SAT_END_TABLE);
   hero_sit_sleep_common(state, &state->hero_in_breakfast);
 }
 
@@ -3552,7 +3601,10 @@ void hero_sleeps(tgestate_t *state)
 {
   assert(state != NULL);
 
-  roomdef_2_hut2_left[roomdef_2_BED] = interiorobject_OCCUPIED_BED;
+  set_roomdef(state,
+              room_2_HUT2LEFT,
+              roomdef_2_BED,
+              interiorobject_OCCUPIED_BED);
   hero_sit_sleep_common(state, &state->hero_in_bed);
 }
 
@@ -6426,13 +6478,19 @@ void action_shovel(tgestate_t *state)
   if (state->room_index != room_50_BLOCKED_TUNNEL)
     return; /* Shovel only works in the blocked tunnel room. */
 
-  if (roomdef_50_blocked_tunnel[2] == 255)
+  if (get_roomdef(state, room_50_BLOCKED_TUNNEL, roomdef_50_BOUNDARY) == 255)
     return; /* Blockage is already cleared. */
 
   /* Release boundary. */
-  roomdef_50_blocked_tunnel[2] = 255;
+  set_roomdef(state,
+              room_50_BLOCKED_TUNNEL,
+              roomdef_50_BOUNDARY,
+              255);
   /* Remove blockage graphic. */
-  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_STRAIGHT_TUNNEL_SW_NE;
+  set_roomdef(state,
+              room_50_BLOCKED_TUNNEL,
+              roomdef_50_BLOCKAGE,
+              interiorobject_STRAIGHT_TUNNEL_SW_NE);
 
   // FUTURE: setup_room_and_plot could replace the setup_room and plot_interior_tiles calls
   setup_room(state);
@@ -7073,7 +7131,7 @@ void reset_map_and_characters(tgestate_t *state)
   uint8_t                          iters;   /* was B */
   vischar_t                       *vischar; /* was HL */
   uint8_t                         *gate;    /* was HL */
-  uint8_t *const                  *bed;     /* was HL */
+  const roomdef_address_t         *bed;     /* was HL */
   characterstruct_t               *charstr; /* was DE */
   uint8_t                          iters2;  /* was C */
   const character_reset_partial_t *reset;   /* was HL */
@@ -7089,8 +7147,14 @@ void reset_map_and_characters(tgestate_t *state)
   state->clock = 7;
   state->day_or_night = 0;
   state->vischars[0].flags = 0;
-  roomdef_50_blocked_tunnel[roomdef_50_BLOCKAGE] = interiorobject_COLLAPSED_TUNNEL_SW_NE;
-  roomdef_50_blocked_tunnel[2] = 52; /* Reset boundary. */
+  set_roomdef(state,
+              room_50_BLOCKED_TUNNEL,
+              roomdef_50_BLOCKAGE,
+              interiorobject_COLLAPSED_TUNNEL_SW_NE);
+  set_roomdef(state,
+              room_50_BLOCKED_TUNNEL,
+              roomdef_50_BOUNDARY,
+              52); /* Reset boundary. */
 
   /* Lock the gates and doors. */
   gate = &state->locked_doors[0];
@@ -7103,17 +7167,23 @@ void reset_map_and_characters(tgestate_t *state)
   iters = beds_LENGTH;
   bed = &beds[0];
   do
-    **bed++ = interiorobject_OCCUPIED_BED;
+  {
+    set_roomdef(state,
+                bed->room_index,
+                bed->offset,
+                interiorobject_OCCUPIED_BED);
+    bed++;
+  }
   while (--iters);
 
   /* Clear the mess halls. */
-  roomdef_23_breakfast[roomdef_23_BENCH_A] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[roomdef_23_BENCH_B] = interiorobject_EMPTY_BENCH;
-  roomdef_23_breakfast[roomdef_23_BENCH_C] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_D] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_E] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_F] = interiorobject_EMPTY_BENCH;
-  roomdef_25_breakfast[roomdef_25_BENCH_G] = interiorobject_EMPTY_BENCH;
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
 
   /* Reset characters 12..15 (guards) and 20..25 (prisoners). */
   charstr = &state->character_structs[character_12_GUARD_12];

@@ -6,6 +6,7 @@
 #include "TheGreatEscape/State.h"
 
 #include "TheGreatEscape/Messages.h"
+#include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/TheGreatEscape.h"
 
 /**
@@ -298,6 +299,33 @@ static void tge_initialise(tgestate_t *state)
     0, // unused afaict
   };
 
+  /* Conv: Default values of mutable roomdef bytes. */
+  static const uint8_t default_roomdef_shadow_bytes[] =
+  {
+    interiorobject_OCCUPIED_BED,
+
+    interiorobject_OCCUPIED_BED,
+    interiorobject_OCCUPIED_BED,
+    interiorobject_OCCUPIED_BED,
+
+    interiorobject_OCCUPIED_BED,
+    interiorobject_OCCUPIED_BED,
+    interiorobject_OCCUPIED_BED,
+
+    interiorobject_EMPTY_BENCH,
+    interiorobject_EMPTY_BENCH,
+    interiorobject_EMPTY_BENCH,
+
+    interiorobject_EMPTY_BENCH,
+    interiorobject_EMPTY_BENCH,
+    interiorobject_EMPTY_BENCH,
+    interiorobject_EMPTY_BENCH,
+
+    52,
+    interiorobject_COLLAPSED_TUNNEL_SW_NE
+  };
+
+
   /* Initialise in structure order. */
 
   // FUTURE: Table drive this initialisation copying:
@@ -377,6 +405,10 @@ static void tge_initialise(tgestate_t *state)
   memset(state->window_buf, 0x55, state->window_buf_size);
   memset(state->map_buf,    0x55, state->map_buf_size);
 #endif
+
+  memcpy(state->roomdef_shadow_bytes,
+         default_roomdef_shadow_bytes,
+         sizeof(state->roomdef_shadow_bytes));
 }
 
 /**

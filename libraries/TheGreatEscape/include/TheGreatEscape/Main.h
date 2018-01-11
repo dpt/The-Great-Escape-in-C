@@ -161,8 +161,6 @@ void invalidate_attrs(tgestate_t *state,
 //
 // (in original file order)
 
-#define INLINE __inline
-
 /* $6000 onwards */
 
 void transition(tgestate_t      *state,

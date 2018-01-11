@@ -38,6 +38,10 @@ struct tgestate
   vischar_t      *IY;
 
 
+  /* NEW VARIABLES */
+  uint8_t         roomdef_shadow_bytes[16];
+
+
   /* ORIGINAL VARIABLES (ordered by original game memory location) */
 
   /** $68A0: Index of the current room, or 0 when outside. */
