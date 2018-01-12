@@ -386,7 +386,8 @@ static void tge_initialise(tgestate_t *state)
  * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
-TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
+TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
+                               const tgeconfig_t *config)
 {
   tgestate_t       *state                     = NULL;
   size_t            game_window_start_offsets_size;
@@ -419,24 +420,27 @@ TGE_API tgestate_t *tge_create(zxspectrum_t *speccy, const tgeconfig_t *config)
   assert(state->width  == 32);
   assert(state->height == 24);
 
-  /* Set the size of the window buffer. The game screen is assumed to be one smaller in both
-   * dimensions. That is a 24x17 buffer is displayed through a 23x16 window on-screen. This allows
+  /* Set the dimensions of the window buffer. When painted onto the game
+   * screen the window is one unit smaller in both dimensions. That is a
+   * 24x17 buffer is displayed through a 23x16 window on-screen. This allows
    * for rolling/scrolling. */
   state->columns    = 24;
   state->rows       = 17;
 
-  /* This is held separately, rather than computed from columns and rows, as
-   * it's wider than I expected it to be. */
-  state->st_columns = 7;
-  state->st_rows    = 5;
+  /* Set the dimensions of the supertile buffer. This is held separately,
+   * rather than computed from columns and rows, as it's wider than I
+   * expected it to be. */
+  state->st_columns = 7; // try  = (state->columns + 1) / 4; /* +1 is a fudge */
+  state->st_rows    = 5; // try  = (state->rows       ) / 4;
 
   /* Size and allocate buffers. */
 
   game_window_start_offsets_size = ((state->rows - 1) * 8) * sizeof(*game_window_start_offsets);
   tile_buf_size                  = state->columns * state->rows;
   window_buf_stride              = state->columns * 8;
-  /* 8 bytes of padding are appended to the end of the window buffer - as in
-   * the original game - to allow for plotting routine overruns. */
+  /* 8 bytes of padding are appended to the end of the window buffer - the
+   * same as in the original game - to allow for plotting routine overruns.
+   */
   window_buf_size                = window_buf_stride * state->rows + 8;
   map_buf_size                   = state->st_columns * state->st_rows;
 

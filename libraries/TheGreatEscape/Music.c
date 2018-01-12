@@ -6,7 +6,9 @@
  * - It's a Long Way to Tipperary [1912]
  */
 
-/* All semitones which the music routine can produce. */
+/* Define symbols for all semitones which the music routine can produce. */
+
+/* Octave 2 */
 #define C2    5
 #define CS2   6
 #define D2    7
@@ -19,7 +21,8 @@
 #define A2   14
 #define AS2  15
 #define B2   16
-//
+
+/* Octave 3 */
 #define C3   17
 #define CS3  18
 #define D3   19
@@ -32,7 +35,8 @@
 #define A3   26
 #define AS3  27
 #define B3   28
-//
+
+/* Octave 4 */
 #define C4   29 /* middle C */
 #define CS4  30
 #define D4   31
@@ -45,7 +49,8 @@
 #define A4   38
 #define AS4  39
 #define B4   40
-//
+
+/* Octave 5 */
 #define C5   41
 #define CS5  42
 #define D5   43
@@ -55,7 +60,10 @@
 #define FS5  47
 #define G5   48
 #define GS5  49
-//
+
+/* Octave 6 and above can be produced but the music data doesn't use them,
+ * so we don't define symbols for them here. */
+
 #define END 255
 
 /**
@@ -299,10 +307,10 @@ static const uint16_t semitone_to_frequency[] =
   /* Octave 7 */
   0x0011, /* C7  - C7 */
 
-  /* Conv: It's unclear from the original game where the table is supposed to
-   *       end. It's not important in practice since the highest note used by
-   *       the game is C5#, but for reference I've deleted all of the
-   *       trailing zero entries. */
+  /* Conv: It's unclear from the original game data where the table is
+   *       supposed to end. It's not important in practice since the highest
+   *       note used by the game is C5#, but for reference I've deleted all
+   *       of the trailing zero entries. */
 };
 
 /**
@@ -311,8 +319,8 @@ static const uint16_t semitone_to_frequency[] =
  * The frequency value returned is the number of iterations that the music
  * routine should count for before flipping its output bit.
  *
- * \param[in]  semitone Semitone index (never larger than 42, but the table
- *                      is larger). (was A)
+ * \param[in]  semitone Semitone index (never larger than 42 in practice,
+ *                      but the table is larger). (was A)
  * \param[out] beep     Beeper bit (always reset to zero). (was L)
  *
  * \returns Frequency. (was DE)

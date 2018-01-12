@@ -9704,10 +9704,10 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   {
     /* Results in character entering. */
 
-    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // likely route
+    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // route.step
     //orig:A = *--HL; // 80a2 etc
 
-    step  = vischar->route.step; // check order
+    step  = vischar->route.step;
     route = vischar->route.index;
 
     doorindex = get_route(route)[step]; // follow this through
