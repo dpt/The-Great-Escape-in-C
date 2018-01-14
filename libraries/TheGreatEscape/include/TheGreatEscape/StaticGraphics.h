@@ -27,8 +27,6 @@ typedef struct statictileline
 }
 statictileline_t;
 
-extern const statictileline_t static_graphic_defs[18];
-
 /* ----------------------------------------------------------------------- */
 
 void plot_statics_and_menu_text(tgestate_t *state);

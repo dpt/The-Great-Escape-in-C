@@ -95,7 +95,7 @@ static const uint8_t statictileline_corner_br[] =
 
 /* As with screenlocstrings, I can't end a struct member with a
  * variably-sized array. I therefore have to indirect them. */
-const statictileline_t static_graphic_defs[18] =
+static const statictileline_t static_graphic_defs[18] =
 {
   ENTRY(statictileline_flagpole,                  0x0021, VERTICAL),
   ENTRY(statictileline_game_window_left_border,   0x0006, VERTICAL),
