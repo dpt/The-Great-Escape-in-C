@@ -2,7 +2,7 @@
  *
  * ZX Spectrum keyboard handling.
  *
- * Copyright (c) David Thomas, 2016-2017. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
  */
 
 #include <assert.h>

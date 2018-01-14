@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/09/2013.
-//  Copyright (c) 2013-2017 David Thomas. All rights reserved.
+//  Copyright (c) 2013-2018 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>

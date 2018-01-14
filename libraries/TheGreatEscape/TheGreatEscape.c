@@ -5,7 +5,7 @@
  *
  * "The Great Escape" created by Denton Designs, published by Ocean Software.
  *
- * This reimplementation copyright (c) David Thomas, 2012-2017.
+ * This reimplementation copyright (c) David Thomas, 2012-2018.
  * <dave@davespace.co.uk>.
  */
 

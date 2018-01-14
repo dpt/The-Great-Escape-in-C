@@ -2,7 +2,7 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013-2017. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2018. <dave@davespace.co.uk>
  */
 
 #include <assert.h>

@@ -1,6 +1,6 @@
 # “The Great Escape” Reimplemented
 
-© David Thomas, 2013-2017
+© David Thomas, 2013-2018
 
 ## The Conversion Process
 My previous work building the SkoolKit control file, [TheGreatEscape.skool](https://github.com/dpt/The-Great-Escape/blob/master/TheGreatEscape.skool), is used as the source for the conversion. It contains my interpretation of the game logic in C-style pseudocode with occasional Z80 instructions embedded. The pseudocode was copied out to `TheGreatEscape.c` where it was marshalled into syntactically correct C (or as close as is practically possible prior to rewriting).
