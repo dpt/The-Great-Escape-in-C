@@ -5407,7 +5407,8 @@ middle_bit:
 
     row = slstate->xy.y - map_y;
 
-    // note that row & column _can_ be out of bounds...
+    // FUTURE: To avoid undefined behaviour (row & column _can_ be out of
+    // bounds) pass the row and column into searchlight_plot.
 
     attrs = &state->speccy->screen.attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
 
