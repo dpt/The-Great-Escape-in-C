@@ -525,6 +525,8 @@ static void draw_handler(unsigned int  *pixels,
 {
   ZXGameView *view = (__bridge id) opaque;
 
+  view->pixels = pixels;
+
   dispatch_async(dispatch_get_main_queue(), ^{
     // Odd: This refreshes the whole window no matter what size of rect is specified
     [view setNeedsDisplayInRect:NSMakeRect(0, 0, 0, 0)];
