@@ -85,7 +85,7 @@ static void wipe_game_window(tgestate_t *state)
   assert(state != NULL);
   assert(state->speccy != NULL);
 
-  uint8_t *const  screen = &state->speccy->screen[0];
+  uint8_t *const  screen = &state->speccy->screen.pixels[0];
   const uint16_t *poffsets; /* was SP */
   uint8_t         iters;    /* was A */
 
@@ -181,7 +181,7 @@ static void choose_keys(tgestate_t *state)
   assert(state != NULL);
   assert(state->speccy != NULL);
 
-  uint8_t *const screen = &state->speccy->screen[0]; /* Conv: Added */
+  uint8_t *const screen = &state->speccy->screen.pixels[0]; /* Conv: Added */
 
   /* Loop while the user does not confirm. */
   for (;;) // FIXME: Loop which doesn't check the quit flag.
@@ -202,7 +202,7 @@ static void choose_keys(tgestate_t *state)
       uint8_t     iters;     /* was B */
       const char *string;    /* was HL */
 
-      screenptr = &state->speccy->screen[prompt->screenloc];
+      screenptr = &state->speccy->screen.pixels[prompt->screenloc];
       iters  = prompt->length;
       string = prompt->string;
       do
@@ -386,7 +386,7 @@ void set_menu_item_attributes(tgestate_t *state,
   assert(attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
   assert(state->speccy != NULL);
 
-  pattr = &state->speccy->attributes[(0x590D - SCREEN_ATTRIBUTES_START_ADDRESS)];
+  pattr = &state->speccy->screen.attributes[(0x590D - SCREEN_ATTRIBUTES_START_ADDRESS)];
 
   /* Skip to the item's row */
   pattr += index * 2 * state->width; /* two rows */

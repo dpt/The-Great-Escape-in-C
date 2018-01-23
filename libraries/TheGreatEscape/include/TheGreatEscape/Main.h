@@ -18,14 +18,14 @@
 
 #define ASSERT_SCREEN_PTR_VALID(p)                    \
 do {                                                  \
-  assert((p) >= &state->speccy->screen[0]);           \
-  assert((p) < &state->speccy->screen[SCREEN_BITMAP_LENGTH]); \
+  assert((p) >= &state->speccy->screen.pixels[0]);    \
+  assert((p) < &state->speccy->screen.pixels[SCREEN_BITMAP_LENGTH]); \
 } while (0)
 
 #define ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(p)         \
 do {                                                  \
-  assert((p) >= &state->speccy->attributes[0]);       \
-  assert((p) < &state->speccy->attributes[SCREEN_ATTRIBUTES_LENGTH]); \
+  assert((p) >= &state->speccy->screen.attributes[0]); \
+  assert((p) < &state->speccy->screen.attributes[SCREEN_ATTRIBUTES_LENGTH]); \
 } while (0)
 
 #define ASSERT_MASK_BUF_PTR_VALID(p)                  \

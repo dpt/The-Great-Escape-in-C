@@ -173,7 +173,7 @@ void plot_statics_and_menu_text(tgestate_t *state)
   iters  = NELEMS(static_graphic_defs);
   do
   {
-    screenptr = &state->speccy->screen[stline->screenloc]; /* Fetch screen address offset. */
+    screenptr = &state->speccy->screen.pixels[stline->screenloc]; /* Fetch screen address offset. */
     ASSERT_SCREEN_PTR_VALID(screenptr);
 
     if (stline->flags_and_length & statictileline_VERTICAL)
@@ -272,11 +272,11 @@ static void plot_static_tiles(tgestate_t             *state,
 
     /* Calculate screen attribute address of tile. */
     // ((out - screen_base) / 0x800) * 0x100 + attr_base
-    soffset = out - &state->speccy->screen[0];
+    soffset = out - &state->speccy->screen.pixels[0];
     aoffset = soffset & 0xFF;
     if (soffset >= 0x0800) aoffset += 256;
     if (soffset >= 0x1000) aoffset += 256;
-    state->speccy->attributes[aoffset] = static_tile->attr; /* Copy attribute byte. */
+    state->speccy->screen.attributes[aoffset] = static_tile->attr; /* Copy attribute byte. */
 
     if (orientation == 0) /* Horizontal */
       out = out - 7 * 256 + 1;

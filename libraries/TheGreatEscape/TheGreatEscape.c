@@ -98,7 +98,7 @@ void invalidate_bitmap(tgestate_t *state,
                        int         width,
                        int         height)
 {
-  uint8_t   *base = &state->speccy->screen[0];
+  uint8_t   *base = &state->speccy->screen.pixels[0];
   ptrdiff_t  offset;
   int        x,y;
   zxbox_t    dirty;
@@ -123,7 +123,7 @@ void invalidate_attrs(tgestate_t *state,
                       int         width,
                       int         height)
 {
-  uint8_t   *base = &state->speccy->screen[SCREEN_BITMAP_LENGTH];
+  uint8_t   *base = &state->speccy->screen.pixels[SCREEN_BITMAP_LENGTH];
   ptrdiff_t  offset;
   int        x,y;
   zxbox_t    dirty;
@@ -1388,7 +1388,7 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff)
 {
   assert(state != NULL);
 
-  uint8_t *const screen = &state->speccy->screen[0];
+  uint8_t *const screen = &state->speccy->screen.pixels[0];
 
   attribute_t       *attrs;  /* was HL */
   attribute_t        attr;   /* was A */
@@ -1403,7 +1403,7 @@ void draw_item(tgestate_t *state, item_t item, size_t dstoff)
   ASSERT_ITEM_VALID(item);
 
   /* Set screen attributes. */
-  attrs = (dstoff & 0xFF) + &state->speccy->attributes[0x5A00 - SCREEN_ATTRIBUTES_START_ADDRESS];
+  attrs = (dstoff & 0xFF) + &state->speccy->screen.attributes[0x5A00 - SCREEN_ATTRIBUTES_START_ADDRESS];
   attr = state->item_attributes[item];
   attrs[0] = attr;
   attrs[1] = attr;
@@ -1570,7 +1570,7 @@ uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp)
   assert(state != NULL);
   assert(slp   != NULL);
 
-  uint8_t *const screen = &state->speccy->screen[0]; /* added */
+  uint8_t *const screen = &state->speccy->screen.pixels[0]; /* added */
   uint16_t       offset; /* was HL */
   uint16_t       delta;  /* was DE */
 
@@ -2050,7 +2050,7 @@ set_flag_green:
 
 flag_select:
   state->red_flag = red_flag;
-  if (attr == state->speccy->attributes[morale_flag_attributes_offset])
+  if (attr == state->speccy->screen.attributes[morale_flag_attributes_offset])
     return; /* flag is already the correct colour */
 
   if (attr == attribute_BRIGHT_GREEN_OVER_BLACK)
@@ -2062,7 +2062,7 @@ flag_select:
   /* Red flag code path. */
 set_flag_red:
   attr = attribute_BRIGHT_RED_OVER_BLACK;
-  if (state->speccy->attributes[morale_flag_attributes_offset] == attr)
+  if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attr)
     return; /* flag is already red */
 
   state->vischars[0].input = 0;
@@ -2199,7 +2199,7 @@ void set_morale_flag_screen_attributes(tgestate_t *state, attribute_t attrs)
   assert(state != NULL);
   assert(attrs >= attribute_BLUE_OVER_BLACK && attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
 
-  pattrs = &state->speccy->attributes[morale_flag_attributes_offset];
+  pattrs = &state->speccy->screen.attributes[morale_flag_attributes_offset];
   iters = 19; /* Height of flag. */
   do
   {
@@ -2212,7 +2212,7 @@ void set_morale_flag_screen_attributes(tgestate_t *state, attribute_t attrs)
 
   /* Conv: Invalidation added over the original game. */
   invalidate_attrs(state,
-                   &state->speccy->attributes[morale_flag_attributes_offset],
+                   &state->speccy->screen.attributes[morale_flag_attributes_offset],
                    3 * 8, 19 * 8);
 }
 
@@ -2232,7 +2232,7 @@ uint8_t *get_prev_scanline(tgestate_t *state, uint8_t *addr)
   assert(state != NULL);
   assert(addr  != NULL);
 
-  uint8_t *const screen = &state->speccy->screen[0];
+  uint8_t *const screen = &state->speccy->screen.pixels[0];
   ptrdiff_t      raddr = addr - screen;
 
   if ((raddr & 0x0700) != 0)
@@ -2300,7 +2300,7 @@ void ring_bell(tgestate_t *state)
   }
 
   /* Fetch visible state of bell. */
-  bell = state->speccy->screen[screenoffset_BELL_RINGER];
+  bell = state->speccy->screen.pixels[screenoffset_BELL_RINGER];
   if (bell != 0x3F) /* Pixel value is 0x3F if on */
   {
     /* Plot ringer "on". */
@@ -2327,7 +2327,7 @@ void plot_ringer(tgestate_t *state, const uint8_t *src)
 
   plot_bitmap(state,
               src,
-              &state->speccy->screen[screenoffset_BELL_RINGER],
+              &state->speccy->screen.pixels[screenoffset_BELL_RINGER],
               1, 12 /* dimensions: 8 x 12 */);
 }
 
@@ -2467,7 +2467,7 @@ void plot_score(tgestate_t *state)
   assert(state != NULL);
 
   digits = &state->score_digits[0];
-  screen = &state->speccy->screen[score_address];
+  screen = &state->speccy->screen.pixels[score_address];
   iters = NELEMS(state->score_digits);
   do
   {
@@ -2539,7 +2539,7 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
   assert(state != NULL);
   assert(attrs >= attribute_BLUE_OVER_BLACK && attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
 
-  attributes = &state->speccy->attributes[0x0047];
+  attributes = &state->speccy->screen.attributes[0x0047];
   rows   = state->rows - 1;
   stride = state->width - (state->columns - 1); /* e.g. 32 - 23 = 9 */
   do
@@ -2556,7 +2556,7 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
 
   /* Conv: Invalidation added over the original game. */
   invalidate_attrs(state,
-                   &state->speccy->attributes[0x0047],
+                   &state->speccy->screen.attributes[0x0047],
                    state->columns * 8,
                    (state->rows - 1) * 8);
 }
@@ -3949,7 +3949,7 @@ const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
   assert(state    != NULL);
   assert(slstring != NULL);
 
-  screen = &state->speccy->screen[slstring->screenloc];
+  screen = &state->speccy->screen.pixels[slstring->screenloc];
   length = slstring->length;
   string = slstring->string;
   do
@@ -4884,10 +4884,10 @@ void zoombox(tgestate_t *state)
 
   attrs = choose_game_window_attributes(state);
 
-  state->speccy->attributes[ 9 * state->width + 18] = attrs;
-  state->speccy->attributes[ 9 * state->width + 19] = attrs;
-  state->speccy->attributes[10 * state->width + 18] = attrs;
-  state->speccy->attributes[10 * state->width + 19] = attrs;
+  state->speccy->screen.attributes[ 9 * state->width + 18] = attrs;
+  state->speccy->screen.attributes[ 9 * state->width + 19] = attrs;
+  state->speccy->screen.attributes[10 * state->width + 18] = attrs;
+  state->speccy->screen.attributes[10 * state->width + 19] = attrs;
 
   state->zoombox.width  = 0;
   state->zoombox.height = 0;
@@ -4929,7 +4929,7 @@ void zoombox(tgestate_t *state)
 
     /* Conv: Invalidation added over the original game. */
     invalidate_bitmap(state,
-                      &state->speccy->screen[0] + state->game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
+                      &state->speccy->screen.pixels[0] + state->game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
                       (state->zoombox.width + 2) * 8,
                       (state->zoombox.height + 2) * 8);
 
@@ -4952,7 +4952,7 @@ void zoombox_fill(tgestate_t *state)
 {
   assert(state != NULL);
 
-  uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added
+  uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added
 
   uint8_t   iters;      /* was B */
   uint8_t   hz_count;   /* was A */
@@ -5019,7 +5019,7 @@ void zoombox_draw_border(tgestate_t *state)
 {
   assert(state != NULL);
 
-  uint8_t *const screen_base = &state->speccy->screen[0]; // Conv: Added var.
+  uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added var.
 
   uint8_t *addr;  /* was HL */
   uint8_t  iters; /* was B */
@@ -5134,9 +5134,9 @@ void zoombox_draw_tile(tgestate_t     *state,
    * addresses, but I can't... */
 
   addr -= 256; /* Compensate for overshoot */
-  off = addr - &state->speccy->screen[0];
+  off = addr - &state->speccy->screen.pixels[0];
 
-  attrs = &state->speccy->attributes[off & 0xFF]; // to within a third
+  attrs = &state->speccy->screen.attributes[off & 0xFF]; // to within a third
 
   // can i do ((off >> 11) << 8) ?
   if (off >= 0x0800)
@@ -5347,7 +5347,7 @@ middle_bit:
 
     // note that row & column _can_ be out of bounds...
 
-    attrs = &state->speccy->attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
+    attrs = &state->speccy->screen.attributes[0x46 + row * state->width + column]; // 0x46 = address of top-left game window attribute
 
     // Conv: clip_left turned from state variable into function parameter.
     searchlight_plot(state, attrs, clip_left); // DE turned into HL from EX above
@@ -5438,7 +5438,7 @@ void searchlight_plot(tgestate_t  *state,
   /* We can't ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs) here as expected as
    * the attrs pointer can be out of bounds... */
 
-  attribute_t *const attrs_base = &state->speccy->attributes[0];
+  attribute_t *const attrs_base = &state->speccy->screen.attributes[0];
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs_base);
 
   const uint8_t *shape;       /* was DE' */
@@ -7592,7 +7592,7 @@ pop_next:
     uint8_t *slp;
     int      yy;
 
-    slp = &state->speccy->screen[(128 + 1) * state->width];
+    slp = &state->speccy->screen.pixels[(128 + 1) * state->width];
     for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
     {
       memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
@@ -12396,7 +12396,7 @@ void plot_game_window(tgestate_t *state)
 {
   assert(state != NULL);
 
-  uint8_t *const  screen = &state->speccy->screen[0];
+  uint8_t *const  screen = &state->speccy->screen.pixels[0];
 
   uint8_t         y;         /* was A */
   const uint8_t  *src;       /* was HL */
@@ -12811,7 +12811,7 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
   assert(state->speccy != NULL);
 
   memset(&state->speccy->screen, 0, SCREEN_BITMAP_LENGTH);
-  memset(&state->speccy->attributes,
+  memset(&state->speccy->screen.attributes,
          attribute_WHITE_OVER_BLACK,
          SCREEN_ATTRIBUTES_LENGTH);
 

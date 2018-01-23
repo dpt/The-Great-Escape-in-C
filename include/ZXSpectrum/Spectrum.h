@@ -15,6 +15,11 @@ extern "C"
 
 #include <stdint.h>
 
+/* Constants */
+
+#define SCREEN_WIDTH                    (256)
+#define SCREEN_HEIGHT                   (192)
+
 /**
  * Identifiers of screen attributes.
  */
@@ -73,8 +78,9 @@ enum
 /* Memory map */
 
 #define ROM_LENGTH                      0x4000
-#define SCREEN_BITMAP_LENGTH            (256 / 8 * 192)
-#define SCREEN_ATTRIBUTES_LENGTH        (256 / 8 * 192 / 8)
+#define SCREEN_BITMAP_LENGTH            (SCREEN_WIDTH / 8 * SCREEN_HEIGHT)
+#define SCREEN_ATTRIBUTES_LENGTH        (SCREEN_WIDTH / 8 * SCREEN_HEIGHT / 8)
+#define SCREEN_LENGTH                   (SCREEN_BITMAP_LENGTH + SCREEN_ATTRIBUTES_LENGTH)
 
 #define ROM_START_ADDRESS               ((uint16_t) 0x0000)
 #define ROM_END_ADDRESS                 ((uint16_t) 0x3FFF)
@@ -96,6 +102,16 @@ typedef struct zxbox
   int x0, y0, x1, y1;
 }
 zxbox_t;
+
+/**
+ * Screen pixels and attributes.
+ */
+typedef struct zxscreen
+{
+  uint8_t     pixels[SCREEN_BITMAP_LENGTH];
+  attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
+}
+zxscreen_t;
 
 /**
  * The current state of the machine.
@@ -129,10 +145,7 @@ struct zxspectrum
    */
   void (*sleep)(zxspectrum_t *state, int duration);
 
-
-  uint8_t     screen[SCREEN_BITMAP_LENGTH];
-  // if a gap appears here then ZXScreen will break!
-  attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
+  zxscreen_t screen;
 };
 
 /**
