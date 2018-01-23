@@ -130,6 +130,8 @@ struct zxspectrum
 
   /**
    * Call the implementer when screen or attributes have changed.
+   *
+   * \param[in] dirty Dirty region.
    */
   void (*draw)(zxspectrum_t *state, const zxbox_t *dirty);
 
@@ -141,7 +143,7 @@ struct zxspectrum
   /**
    * Call the implementer when we need to sleep.
    *
-   * \param[in] duration T-states
+   * \param[in] duration Sleep duration in T-states.
    */
   void (*sleep)(zxspectrum_t *state, int duration);
 
@@ -157,7 +159,7 @@ typedef struct zxconfig
   void *opaque;
 
   /** Called when there's a new frame to draw. */
-  void (*draw)(unsigned int *pixels, const zxbox_t *dirty, void *opaque);
+  void (*draw)(const zxbox_t *dirty, void *opaque);
 
   /** Called to reset the sleep clock. */
   void (*stamp)(void *opaque);
@@ -189,6 +191,24 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config);
  * \param[in] doomed Doomed ZXSpectrum.
  */
 void zxspectrum_destroy(zxspectrum_t *doomed);
+
+/**
+ * Lock the screen then return a converted screen buffer.
+ *
+ * Call this at the last moment when you're ready to use the screen pixels.
+ *
+ * \param[in] state ZXSpectrum state.
+ *
+ * \return Pixels.
+ */
+uint32_t *zxspectrum_claim_screen(zxspectrum_t *state);
+
+/**
+ * Unlock the screen.
+ *
+ * \param[in] state ZXSpectrum state.
+ */
+void zxspectrum_release_screen(zxspectrum_t *state);
 
 #ifdef __cplusplus
 }

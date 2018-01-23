@@ -56,7 +56,6 @@
   zxspectrum_t   *zx;
   tgestate_t     *game;
 
-  unsigned int   *pixels;
   GLclampf        backgroundRed, backgroundGreen, backgroundBlue;
 
   pthread_t       thread;
@@ -137,7 +136,6 @@
   zx              = NULL;
   game            = NULL;
 
-  pixels          = NULL;
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
 
   thread          = NULL;
@@ -161,10 +159,6 @@
 
 
   audio.enabled   = YES;
-
-
-
-  // TODO: allocate two window buffers
 
 
   zx = zxspectrum_create(&zxconfig);
@@ -452,6 +446,8 @@ failure:
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+  uint32_t *pixels;
+
   // Note: NSOpenGLViews would appear to never receive a graphics context, so
   // we must draw exclusively in terms of GL ops.
 
@@ -469,20 +465,21 @@ failure:
 
   (void) dirtyRect;
 
+  pixels = zxspectrum_claim_screen(zx);
+
   // Clear the background
   // Do this every frame or you'll see junk in the border.
   glClearColor(backgroundRed, backgroundGreen, backgroundBlue, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  if (pixels)
-  {
-    // Draw the image
-    glPixelZoom(zsx, zsy);
-    glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-  }
+  // Draw the image
+  glPixelZoom(zsx, zsy);
+  glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   // Flush to screen
   glFinish();
+
+  zxspectrum_release_screen(zx);
 }
 
 // -----------------------------------------------------------------------------
@@ -519,13 +516,10 @@ static void *tge_thread(void *arg)
 
 #pragma mark - Game thread callbacks
 
-static void draw_handler(unsigned int  *pixels,
-                         const zxbox_t *dirty,
+static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
-
-  view->pixels = pixels;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     // Odd: This refreshes the whole window no matter what size of rect is specified

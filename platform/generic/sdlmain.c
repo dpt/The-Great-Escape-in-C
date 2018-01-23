@@ -56,13 +56,15 @@ state_t;
 
 // -----------------------------------------------------------------------------
 
-static void draw_handler(unsigned int  *pixels,
-                         const zxbox_t *dirty,
+static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
-  state_t *state = opaque;
+  state_t  *state = opaque;
+  uint32_t *pixels;
 
+  pixels = zxspectrum_claim_screen(state->zx);
   SDL_UpdateTexture(state->texture, NULL, pixels, GAMEWIDTH * 4);
+  zxspectrum_release_screen(state->zx);
 }
 
 static void stamp_handler(void *opaque)
