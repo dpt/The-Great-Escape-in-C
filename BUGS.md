@@ -74,7 +74,7 @@ Fixed
 26. There's an assert in `masked_sprite_plotter_24_wide_vischar` (and others) when character rendering.
     * Fixed 27-Sep-17: Fixed incorrect asserts.
 27. The red flag activates unexpectedly when the hero is wandering. Leave the game running long or quickly enough and you'll see it.
-    * Fixed 19-Dec-19: There was stray code in `in_permitted_area` in the original game which, while it remained side effect-free in the original, when converted it ended up meddling with route.step. In the most obvious instance this pushed route.step over from 15 to 16 when the hero was wandering which made later code decide that he should have been in the exercise yard. The flag would turn red, the hero would halt his automatic perambulations and promptly get thrown into solitary.
+    * Fixed 19-Dec-17: There was stray code in `in_permitted_area` in the original game which, while it remained side effect-free in the original, when converted it ended up meddling with route.step. In the most obvious instance this pushed route.step over from 15 to 16 when the hero was wandering which made later code decide that he should have been in the exercise yard. The flag would turn red, the hero would halt his automatic perambulations and promptly get thrown into solitary.
     ```
      $9F77 LD C,(HL)     ; load route.step
      $9F78 BIT 7,A       ; if (route.index & route_REVERSED) C++;
@@ -83,9 +83,9 @@ Fixed
     ```
 
 28. The Clang Address Sanitiser reports problems with out-of-bounds memory accesses in the sprite plotters.
-    * Fixed 23-Dec-19 in 7ac5b98a: The individual byte plotting commands formed their masked pixels irrespective of whether they were going to appear on-screen or not. This is not a problem in the original game but in the conversion it results in out-of-bounds memory accesses. We fix this by wrapping the mask-forming code in the same condition that protects the screenptr write.
+    * Fixed 23-Dec-17 in 7ac5b98a: The individual byte plotting commands formed their masked pixels irrespective of whether they were going to appear on-screen or not. This is not a problem in the original game but in the conversion it results in out-of-bounds memory accesses. We fix this by wrapping the mask-forming code in the same condition that protects the screenptr write.
 29. The Clang Address Sanitiser reports Global buffer overflow in `render_mask_buffer`. e.g. 0 bytes to the right of global variable `interior_mask_21`
-    * Fixed 23-Dec-19 in bd67a963: At the end of a mask being rendered in `render_mask_buffer` the code would execute the trailing case that readies the mask buffer pointer for the next row. In the original code this accessed out-of-bounds bytes with no ill effect, however that cannot work in the conversion. We fix this by testing for the final row and skipping the trailing code.
+    * Fixed 23-Dec-17 in bd67a963: At the end of a mask being rendered in `render_mask_buffer` the code would execute the trailing case that readies the mask buffer pointer for the next row. In the original code this accessed out-of-bounds bytes with no ill effect, however that cannot work in the conversion. We fix this by testing for the final row and skipping the trailing code.
 30. Enter 'N' to cancel key defs repeatedly and `stamp_handler` will assert.
     * Fixed 6-Jan-18 in 37a5900: Code which calls `stamp()` needs to cancel it with `sleep(0)`.
 
