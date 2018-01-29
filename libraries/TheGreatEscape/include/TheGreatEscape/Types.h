@@ -180,39 +180,51 @@ enum input_flags
 /**
  * Identifiers of visible character structure flags.
  */
-enum vischar_flags
+enum vischar_character_values // $8000 etc.
 {
   vischar_CHARACTER_EMPTY_SLOT         = 0xFF,
-  vischar_CHARACTER_MASK               = 0x1F, /* Character index mask. */
+  vischar_CHARACTER_MASK               = 0x1F /* Character index mask. */
+};
 
+enum vischar_flags_values // $8001 etc.
+{
   vischar_FLAGS_EMPTY_SLOT             = 0xFF,
   vischar_FLAGS_MASK                   = 0x3F,
-  vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only */
-  vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only */
 
-  /* Pursuit modes (NPCs only). */
+  /* Bits 0..1 are flags for the hero only. */
+  vischar_FLAGS_PICKING_LOCK           = 1 << 0,
+  vischar_FLAGS_CUTTING_WIRE           = 1 << 1,
+
+  /* Bits 0..3 is the current pursuit mode for NPCs only. */
   vischar_FLAGS_PURSUE                 = 1 << 0, // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_pursue
   vischar_FLAGS_HASSLE                 = 2 << 0, // this flag is set in guards_follow_suspicious_character when the hero is under player control. it causes hostiles to follow the hero and get in his way but not arrest him.
   vischar_FLAGS_DOG_FOOD               = 3 << 0, // set when food is in the vicinity of a dog
   vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
   vischar_FLAGS_PURSUIT_MASK           = 0x0F,   // mask to cover the above four pursuit states
 
+  // (bits 4 and 5 unused)
   vischar_FLAGS_TARGET_IS_DOOR         = 1 << 6, // affects scaling. reset by set_hero_route. set by set_route
-  vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar
+  vischar_FLAGS_NO_COLLIDE             = 1 << 7  // don't do collision() for this vischar
 
   // vischar_FLAGS_TARGET_IS_DOOR:
   // set by set_route (get_target A == 128 case), spawn_character (get_target A == 128 case), handle_route (get_target A == 128 case)
   // cleared by set_hero_route, set_character_route (store_to_vischar case), target_reached (character entering door chunk)
   // tested by character_behaviour (selects a multiply by 4), target_reached (character entering door chunk)
+};
 
+enum vischar_byte7_values // $8007 etc.
+{
   vischar_BYTE7_COUNTER_MASK           = 0x0F,
+  // (bit 4 unused)
   vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
-  vischar_ANIMINDEX_BIT7               = 1 << 7, // up/down flag
+  vischar_ANIMINDEX_BIT7               = 1 << 7  // up/down flag
+};
 
-  // byte 14
+enum vischar_direction_values // $800E etc.
+{
   vischar_DIRECTION_MASK               = 0x03,
   vischar_DIRECTION_CRAWL              = 1 << 2
 };
