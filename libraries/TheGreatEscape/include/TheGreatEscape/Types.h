@@ -190,11 +190,12 @@ enum vischar_flags
   vischar_FLAGS_PICKING_LOCK           = 1 << 0, /* Hero only */
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1, /* Hero only */
 
-  /* Four pursuit modes. */
-  vischar_FLAGS_PURSUE                 = 1 << 0, /* NPCs only */ // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_pursue
-  vischar_FLAGS_HASSLE                 = 2 << 0, /* NPCs only */ // this flag is set in guards_follow_suspicious_character when the hero is under player control. it causes hostiles to follow the hero and get in his way but not arrest him.
-  vischar_FLAGS_DOG_FOOD               = 3 << 0, /* NPCs only */ // set when food is in the vicinity of a dog
-  vischar_FLAGS_SAW_BRIBE              = 4 << 0, /* NPCs only */ // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
+  /* Pursuit modes (NPCs only). */
+  vischar_FLAGS_PURSUE                 = 1 << 0, // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_pursue
+  vischar_FLAGS_HASSLE                 = 2 << 0, // this flag is set in guards_follow_suspicious_character when the hero is under player control. it causes hostiles to follow the hero and get in his way but not arrest him.
+  vischar_FLAGS_DOG_FOOD               = 3 << 0, // set when food is in the vicinity of a dog
+  vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
+  vischar_FLAGS_PURSUIT_MASK           = 0x0F,   // mask to cover the above four pursuit states
 
   vischar_FLAGS_TARGET_IS_DOOR         = 1 << 6, // affects scaling. reset by set_hero_route. set by set_route
   vischar_FLAGS_NO_COLLIDE             = 1 << 7, // don't do collision() for this vischar

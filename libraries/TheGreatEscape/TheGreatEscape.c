@@ -5755,8 +5755,7 @@ int collision(tgestate_t *state)
       goto pop_next;
 
     /* If IY vischar is pursuing... */
-    // Odd: 0x0F is *not* vischar_FLAGS_MASK, which is 0x3F
-    if ((state->IY->flags & 0x0F) == vischar_FLAGS_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
+    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_FLAGS_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
     {
       /* and CURRENT vischar is the hero... */
       if (vischar == &state->vischars[0])
