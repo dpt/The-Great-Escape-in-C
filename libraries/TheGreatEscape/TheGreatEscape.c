@@ -5722,7 +5722,7 @@ int collision(tgestate_t *state)
       goto next;
 
     /*
-     * Check for contact between current vischar and saved_pos.
+     * Check for contact between current vischar and saved_pos.
      * +/-4 for x/y
      */
 
