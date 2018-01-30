@@ -6515,7 +6515,7 @@ void action_wiresnips(tgestate_t *state)
 
   assert(state != NULL);
 
-  wall = &walls[12]; /* == .d; - start of fences */
+  wall = &walls[12]; /* start of (vertical) fences */
   pos = &state->hero_map_position;
   iters = 4;
   do
@@ -6537,7 +6537,7 @@ void action_wiresnips(tgestate_t *state)
   }
   while (--iters);
 
-  wall = &walls[12 + 4]; // .a
+  wall = &walls[12 + 4]; /* start of (horizontal) fences */
   pos = &state->hero_map_position;
   iters = 3;
   do
@@ -6579,7 +6579,7 @@ action_wiresnips_tail:
   state->vischars[0].direction      = flag; // walk/crawl flag
   state->vischars[0].input          = input_KICK;
   state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
-  state->vischars[0].mi.pos.height  = 12;
+  state->vischars[0].mi.pos.height  = 12; // crawling height
   state->vischars[0].mi.sprite      = &sprites[sprite_PRISONER_FACING_AWAY_1];
   state->player_locked_out_until = state->game_counter + 96;
   queue_message(state, message_CUTTING_THE_WIRE);
@@ -6790,11 +6790,15 @@ const wall_t walls[24] =
   { 110, 130,  70,  71, 0, 10 }, // front wall
   { 109, 111,  69,  73, 0, 18 }, // gate post (left)
   { 103, 105,  69,  73, 0, 18 }, // gate post (right)
-  {  70,  70,  70, 106, 0,  8 }, // fence - right of main camp
+
+  /* vertical fences */
+  {  70,  70,  70, 106, 0,  8 }, // 12: fence - right of main camp
   {  62,  62,  62, 106, 0,  8 }, // fence - rightmost fence
   {  78,  78,  46,  62, 0,  8 }, // fence - rightmost of yard
   { 104, 104,  46,  69, 0,  8 }, // fence - leftmost of yard
-  {  62, 104,  62,  62, 0,  8 }, // fence - top of yard
+
+  /* horizontal fences */
+  {  62, 104,  62,  62, 0,  8 }, // 16: fence - top of yard
   {  78, 104,  46,  46, 0,  8 }, // fence - bottom of yard
   {  70, 103,  70,  70, 0,  8 }, // fence - bottom of main camp
   { 104, 106,  56,  58, 0,  8 }, // fence - watchtower (left of yard)
