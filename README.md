@@ -9,9 +9,9 @@
 </p>
 
 ## Overview
-This is a work in progress version of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”: the classic isometric 3D game for the 48K Sinclair ZX Spectrum in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
+This is a work in progress C port of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”: the classic isometric 3D game for the 48K Sinclair ZX Spectrum in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
 
-I [reverse engineered](https://github.com/dpt/The-Great-Escape/) the original game from a binary snapshot of the Spectrum game, decoding the graphics, data tables and all of the logic. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I have translated it into portable C where now builds and runs without an [emulator](http://fuse-emulator.sourceforge.net/) on macOS and Windows. Eventually it could run on mobile platforms and in a web browser.
+I [reverse engineered](https://github.com/dpt/The-Great-Escape/) the original game from a binary snapshot of the Spectrum version, decoding the graphics, data tables and all of the logic. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I have translated it into portable C where now builds and runs without an [emulator](http://fuse-emulator.sourceforge.net/) on macOS and Windows. Eventually it could run on mobile platforms and in a web browser.
 
 ## Goals of the Project
 * Reimplement The Great Escape in portable C code.
