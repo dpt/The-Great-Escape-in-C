@@ -3,9 +3,6 @@ BUGS
 
 Unfixed
 -------
-Up next:
-
-* Nondeterminism! The game does not run the same way twice. The game's as random as the original. Needs explaining.
 
 Queue:
 
@@ -88,4 +85,9 @@ Fixed
     * Fixed 23-Dec-17 in bd67a963: At the end of a mask being rendered in `render_mask_buffer` the code would execute the trailing case that readies the mask buffer pointer for the next row. In the original code this accessed out-of-bounds bytes with no ill effect, however that cannot work in the conversion. We fix this by testing for the final row and skipping the trailing code.
 30. Enter 'N' to cancel key defs repeatedly and `stamp_handler` will assert.
     * Fixed 6-Jan-18 in 37a5900: Code which calls `stamp()` needs to cancel it with `sleep(0)`.
+31. Nondeterminism! The game does not run the same way twice.
+    * (Not a bug) 30-Jan-18: The `game_counter` state variable is incremented by the menu when animating the waving morale flag. This counter is also used to drive the main game clock. Any time spent on the menu increments the game counter which results in events taking place at different points when the game runs. The resulting cascade causes characters to appear and move around at different times. For two games to run in sync they must be started at exactly the same moment. This applies to the original game too.
+
+
+
 
