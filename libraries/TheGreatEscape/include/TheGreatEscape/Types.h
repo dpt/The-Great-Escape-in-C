@@ -8,6 +8,7 @@
 #include "TheGreatEscape/Items.h"
 #include "TheGreatEscape/Map.h"
 #include "TheGreatEscape/Rooms.h"
+#include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/Tiles.h"
 #include "TheGreatEscape/Utils.h"
@@ -379,11 +380,8 @@ typedef uint8_t eventtime_t;
  */
 typedef struct route
 {
-#define route_HALT 0x00
-#define route_WANDER 0xFF
-#define route_REVERSED (1 << 7)
-  uint8_t index; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
-  uint8_t step;  /** Step within the route. */
+  routeindex_t index; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
+  uint8_t      step;  /** Step within the route. */
 }
 route_t;
 

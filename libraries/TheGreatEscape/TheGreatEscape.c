@@ -69,6 +69,7 @@
 #include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/RoomDefs.h"
 #include "TheGreatEscape/Rooms.h"
+#include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/SpriteBitmaps.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/State.h"
@@ -377,7 +378,7 @@ void setup_movable_item(tgestate_t          *state,
   /* Conv: Reset data inlined. */
 
   vischar1->flags             = 0;
-  vischar1->route             = (route_t) { 0, 0 };
+  vischar1->route             = (route_t) { routeindex_0_HALT, 0 };
   vischar1->target            = (tinypos_t) { 0, 0, 0 };
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
@@ -1793,7 +1794,7 @@ void process_player_input(tgestate_t *state)
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
-        state->vischars[0].route    = (route_t) { 43, 0 };
+        state->vischars[0].route    = (route_t) { routeindex_43_7833, 0 };
         state->vischars[0].mi.pos.x = 52;
         state->vischars[0].mi.pos.y = 62;
         set_roomdef(state,
@@ -1805,7 +1806,7 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].route    = (route_t) { 44, 1 };
+        state->vischars[0].route    = (route_t) { routeindex_44_HUT2_RIGHT_TO_LEFT, 1 };
         state->vischars[0].target.x = 46;
         state->vischars[0].target.y = 46;
         state->vischars[0].mi.pos   = (pos_t) { 46, 46, 24 };
@@ -1936,13 +1937,13 @@ void in_permitted_area(tgestate_t *state)
    */
   static const route_to_permitted_t route_to_permitted[7] =
   {
-    { 42, &permitted_route42[0] },
-    {  5, &permitted_route5[0]  },
-    { 14, &permitted_route14[0] },
-    { 16, &permitted_route16[0] },
-    { 44, &permitted_route44[0] },
-    { 43, &permitted_route43[0] },
-    { 45, &permitted_route45[0] },
+    { routeindex_42_HUT2_LEFT_TO_RIGHT, &permitted_route42[0] },
+    { routeindex_5_EXIT_HUT2,           &permitted_route5[0]  },
+    { routeindex_14_GO_TO_YARD,         &permitted_route14[0] },
+    { routeindex_16_BREAKFAST_25,       &permitted_route16[0] },
+    { routeindex_44_HUT2_RIGHT_TO_LEFT, &permitted_route44[0] },
+    { routeindex_43_7833,               &permitted_route43[0] },
+    { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
   pos_t       *vcpos;      /* was HL */
@@ -2004,10 +2005,10 @@ void in_permitted_area(tgestate_t *state)
   ASSERT_ROUTE_VALID(route);
   /* The following lines were found to be redundant in the original game so
    * have been disabled. */
-//  if (route.index & route_REVERSED)
+//  if (route.index & routeindexflag_REVERSED)
 //    C = route.step + 1;
 
-  if (route.index == route_WANDER)
+  if (route.index == routeindex_255_WANDER)
   {
     uint8_t area; /* was A */
 
@@ -2026,7 +2027,7 @@ void in_permitted_area(tgestate_t *state)
     const uint8_t              *permitted; /* was HL */
 
     // A is a route index
-    routeindex = route.index & ~route_REVERSED; // added to coax A back from route
+    routeindex = route.index & ~routeindexflag_REVERSED; // added to coax A back from route
     tab = &route_to_permitted[0]; // table mapping bytes to offsets
     iters = NELEMS(route_to_permitted);
     do
@@ -2048,7 +2049,7 @@ found:
     permitted += route.step; // original code used B=0
     if (!in_permitted_area_end_bit(state, *permitted))
     {
-      if (state->vischars[0].route.index & route_REVERSED) // FUTURE: route index is already in 'route'
+      if (state->vischars[0].route.index & routeindexflag_REVERSED) // FUTURE: route index is already in 'route'
         permitted++;
 
       i = 0;
@@ -2671,7 +2672,7 @@ void event_night_time(tgestate_t *state)
 
   if (state->hero_in_bed == 0)
   {
-    static const route_t t = { 44, 1 }; /* was BC */
+    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 1 }; /* was BC */
     set_hero_route(state, &t);
   }
   set_day_or_night(state, 255);
@@ -2835,7 +2836,7 @@ void event_time_for_bed(tgestate_t *state)
 
   // Reverse route of below.
 
-  static const route_t t = { 38 | route_REVERSED, 3 }; /* was C,A */
+  static const route_t t = { routeindex_38_GUARD_12_BED | routeindexflag_REVERSED, 3 }; /* was C,A */
   set_guards_route(state, t);
 }
 
@@ -2843,7 +2844,7 @@ void event_search_light(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t = { 38, 0 }; /* was C,A */
+  static const route_t t = { routeindex_38_GUARD_12_BED, 0 }; /* was C,A */
   set_guards_route(state, t);
 }
 
@@ -2919,7 +2920,7 @@ void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
-  static const route_t t42 = { 42, 0 }; /* was BC */
+  static const route_t t42 = { routeindex_42_HUT2_LEFT_TO_RIGHT, 0 }; /* was BC */
   set_hero_route(state, &t42);
 
   /* Position all six prisoners. */
@@ -2939,7 +2940,7 @@ void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  route_t t5 = { 5, 0 }; /* was A',C */
+  route_t t5 = { routeindex_5_EXIT_HUT2, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5);
 
   /* Update all the bed objects to be empty. */
@@ -2989,7 +2990,7 @@ void end_of_breakfast(tgestate_t *state)
     state->hero_in_breakfast = 0; /* Conv: Moved into if block. */
   }
 
-  static const route_t t = { 16 | route_REVERSED, 3 }; /* was BC */
+  static const route_t t = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was BC */
   set_hero_route(state, &t);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -3008,7 +3009,7 @@ void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  route_t t2 = { 16 | route_REVERSED, 3 }; /* was A',C */
+  route_t t2 = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t2);
 
   /* Update all the benches to be empty. */
@@ -3080,10 +3081,10 @@ void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t5 = { 5 | route_REVERSED, 2 }; /* was BC */
+  static const route_t t5 = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was BC */
   set_hero_route(state, &t5);
 
-  route_t t5_also = { 5 | route_REVERSED, 2 }; /* was A',C */
+  route_t t5_also = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5_also);
 }
 
@@ -3248,8 +3249,8 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 #ifdef DEBUG_ROUTES
   if (vischar == &state->vischars[0])
     printf("(hero) get_target(route=%d%s step=%d)\n",
-           vischar->route.index & ~route_REVERSED,
-           (vischar->route.index & route_REVERSED) ? " reversed" : "",
+           vischar->route.index & ~routeindexflag_REVERSED,
+           (vischar->route.index & routeindexflag_REVERSED) ? " reversed" : "",
            vischar->route.step);
 #endif
 
@@ -3364,7 +3365,7 @@ void character_bed_vischar(tgestate_t *state, route_t *route)
   {
     // Hero moves to bed in reaction to the commandant...
 
-    static const route_t t = { 44, 0 }; /* was BC */ // route_hut2_right_to_left
+    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 0 }; /* was BC */ // route_hut2_right_to_left
     set_hero_route(state, &t);
   }
   else
@@ -3412,7 +3413,7 @@ void character_bed_common(tgestate_t *state,
     {
       /* reverse route */
       route->step = 1;
-      routeindex |= route_REVERSED;
+      routeindex |= routeindexflag_REVERSED;
     }
   }
 
@@ -3442,11 +3443,12 @@ void character_sits(tgestate_t *state,
   room_t   room;       /* was C */
 
   assert(state  != NULL);
-  assert(routeindex >= 18 && routeindex <= 22);
+  assert(routeindex >= routeindex_18_PRISONER_SITS_1 &&
+         routeindex <= routeindex_22_PRISONER_SITS_2);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  index = routeindex - 18;
+  index = routeindex - routeindex_18_PRISONER_SITS_1;
   /* First three characters. */
   room_index = room_25_BREAKFAST;
   offset     = roomdef_25_BENCH_D;
@@ -3462,7 +3464,7 @@ void character_sits(tgestate_t *state,
               offset + index * 3,
               interiorobject_PRISONER_SAT_MID_TABLE);
 
-  if (routeindex < 21)
+  if (routeindex < routeindex_21_PRISONER_SITS_1)
     room = room_25_BREAKFAST;
   else
     room = room_23_BREAKFAST;
@@ -3488,7 +3490,8 @@ void character_sleeps(tgestate_t *state,
   room_t room; /* was C */
 
   assert(state  != NULL);
-  assert(routeindex >= 7 && routeindex <= 12);
+  assert(routeindex >= routeindex_7_PRISONER_SLEEPS_1 &&
+         routeindex <= routeindex_12_PRISONER_SLEEPS_3);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
@@ -3498,7 +3501,7 @@ void character_sleeps(tgestate_t *state,
               beds[routeindex - 7].offset,
               interiorobject_OCCUPIED_BED);
 
-  if (routeindex < 10)
+  if (routeindex < routeindex_10_PRISONER_SLEEPS_1)
     room = room_3_HUT2RIGHT;
   else
     room = room_5_HUT3RIGHT;
@@ -3533,7 +3536,7 @@ void character_sit_sleep_common(tgestate_t *state,
   // $8022 -> vischar[1]->route
   // others -> character_structs->route
 
-  route->index = route_HALT; /* Stand still. */
+  route->index = routeindex_0_HALT; /* Stand still. */
 
   if (state->room_index != room)
   {
@@ -3623,7 +3626,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   *pflag = 255;
 
   /* Reset only the route index. */
-  state->vischars[0].route.index = route_HALT; /* Stand still. */
+  state->vischars[0].route.index = routeindex_0_HALT; /* Stand still. */
 
   /* Set hero position (x,y) to zero. */
   state->vischars[0].mi.pos.x = 0;
@@ -3645,10 +3648,10 @@ void set_route_go_to_yard(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t14 = { 14, 0 };
+  static const route_t t14 = { routeindex_14_GO_TO_YARD, 0 };
   set_hero_route(state, &t14);
 
-  route_t t14_also = { 14, 0 }; /* was A',C */
+  route_t t14_also = { routeindex_14_GO_TO_YARD, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t14_also);
 }
 
@@ -3663,10 +3666,10 @@ void set_route_go_to_yard_reversed(tgestate_t *state)
 
   // route $E is 5 long, so offset 4 could be the final byte and the '128' flag is a reverse
 
-  static const route_t t14 = { 14 | route_REVERSED, 4 };
+  static const route_t t14 = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 };
   set_hero_route(state, &t14);
 
-  route_t t14_also = { 14 | route_REVERSED, 4 }; /* was A',C */
+  route_t t14_also = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t14_also);
 }
 
@@ -3679,10 +3682,10 @@ void set_route_go_to_breakfast(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t16 = { 16, 0 };
+  static const route_t t16 = { routeindex_16_BREAKFAST_25, 0 };
   set_hero_route(state, &t16);
 
-  route_t t16_also = { 16, 0 }; /* was A',C */
+  route_t t16_also = { routeindex_16_BREAKFAST_25, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t16_also);
 }
 
@@ -3726,7 +3729,7 @@ void charevnt_breakfast_vischar(tgestate_t *state, route_t *route)
   character = vischar->character;
   if (character == character_0_COMMANDANT)
   {
-    static const route_t t = { 43, 0 }; /* was BC */
+    static const route_t t = { routeindex_43_7833, 0 }; /* was BC */
     set_hero_route(state, &t);
   }
   else
@@ -3784,10 +3787,10 @@ void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
-  route_t t26 = { 26, 0 }; /* was C,A' */
+  route_t t26 = { routeindex_26_GUARD_12_ROLL_CALL, 0 }; /* was C,A' */
   set_prisoners_and_guards_route(state, &t26);
 
-  static const route_t t45 = { 45, 0 };
+  static const route_t t45 = { routeindex_45_HERO_ROLL_CALL, 0 };
   set_hero_route(state, &t45);
 }
 
@@ -5213,7 +5216,7 @@ void zoombox_draw_tile(tgestate_t     *state,
 
 /* ----------------------------------------------------------------------- */
 
-#define REVERSE (1 << 7)
+#define REVERSE routeindexflag_REVERSED
 
 /**
  * $AD59: Decides searchlight movement.
@@ -8368,7 +8371,7 @@ found_empty_slot:
   DEtarget = &vischar->target;
   HLroute  = &charstr->route;
 again:
-  if (HLroute->index != route_HALT) /* if not stood still */
+  if (HLroute->index != routeindex_0_HALT) /* if not stood still */
   {
     state->entered_move_characters = 0;
     // PUSH DE // -> vischar->pos
@@ -8511,11 +8514,11 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
         character <= character_19_GUARD_DOG_4)
     {
       /* Choose random locations in the fenced off area (right side). */
-      vischar->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
+      vischar->route = (route_t) { routeindex_255_WANDER, 0 }; /* 0..7 */
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
       {
         /* Choose random locations in the fenced off area (bottom side). */
-        vischar->route = (route_t) { route_WANDER, 24 }; /* 24..31 */
+        vischar->route = (route_t) { routeindex_255_WANDER, 24 }; /* 24..31 */
       }
     }
 
@@ -8668,7 +8671,7 @@ uint8_t get_target(tgestate_t       *state,
 #endif
 
   routeindex = route->index;
-  if (routeindex == route_WANDER)
+  if (routeindex == routeindex_255_WANDER)
   {
     /* Wander around randomly. */
     /* Uses .step + rand(0..7) to index locations[]. */
@@ -8720,7 +8723,7 @@ uint8_t get_target(tgestate_t       *state,
     {
       /* Route byte < 40: A door */
       routebyte = routebytes[step];
-      if (route->index & route_REVERSED)
+      if (route->index & routeindexflag_REVERSED)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
       *doorpos = &door->pos;
@@ -8798,7 +8801,7 @@ void move_characters(tgestate_t *state)
   // HL += 3; // point at charstr->route
 
   /* If standing still, return. */
-  if (charstr->route.index == route_HALT) /* temp was A */
+  if (charstr->route.index == routeindex_0_HALT) /* temp was A */
     // POP HL_pos
     return;
 
@@ -8822,10 +8825,10 @@ void move_characters(tgestate_t *state)
 
       /* Characters 1..11. */
 reverse_route:
-      HLroute->index = routeindex = HLroute->index ^ route_REVERSED;
+      HLroute->index = routeindex = HLroute->index ^ routeindexflag_REVERSED;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
-      if (routeindex & route_REVERSED)
+      if (routeindex & routeindexflag_REVERSED)
         HLroute->step--;
       else
         HLroute->step++;
@@ -8838,7 +8841,7 @@ reverse_route:
       /* Commandant only. */
 
       // sampled HL = $7617 (characterstruct + 5)
-      routeindex = HLroute->index & ~route_REVERSED;
+      routeindex = HLroute->index & ~routeindexflag_REVERSED;
       if (routeindex != 36)
         goto reverse_route;
 
@@ -8957,9 +8960,9 @@ trigger_event:
     // EX DE, HL
     // HL -> DEcharstr->route
     routeindex = DEcharstr->route.index; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // route field
-    if (routeindex == route_WANDER)
+    if (routeindex == routeindex_255_WANDER)
       return;
-    if ((routeindex & route_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
+    if ((routeindex & routeindexflag_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
       DEcharstr->route.step++;
     else
       DEcharstr->route.step--;
@@ -9049,37 +9052,39 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  */
 void character_event(tgestate_t *state, route_t *route)
 {
+#define REVERSE routeindexflag_REVERSED
+
   /* $C7F9 */
   static const route2event_t eventmap[24] =
   {
-    { 38 | route_REVERSED,  0 }, /* wander between locations 8..15 */
-    { 39 | route_REVERSED,  0 }, /* wander between locations 8..15 */
-    { 40 | route_REVERSED,  1 }, /* wander between locations 16..23 */
-    { 41 | route_REVERSED,  1 }, /* wander between locations 16..23 */
+    { routeindex_38_GUARD_12_BED | REVERSE,         0 }, /* wander between locations 8..15 */
+    { routeindex_39_GUARD_13_BED | REVERSE,         0 }, /* wander between locations 8..15 */
+    { routeindex_40_GUARD_14_BED | REVERSE,         1 }, /* wander between locations 16..23 */
+    { routeindex_41_GUARD_15_BED | REVERSE,         1 }, /* wander between locations 16..23 */
 
-    {  5,                   0 }, /* wander between locations 8..15 */
-    {  6,                   1 }, /* wander between locations 16..23 */
-    {  5 | route_REVERSED,  3 },
-    {  6 | route_REVERSED,  3 },
+    { routeindex_5_EXIT_HUT2,                       0 }, /* wander between locations 8..15 */
+    { routeindex_6_EXIT_HUT3,                       1 }, /* wander between locations 16..23 */
+    { routeindex_5_EXIT_HUT2 | REVERSE,             3 },
+    { routeindex_6_EXIT_HUT3 | REVERSE,             3 },
 
-    { 14,                   2 }, /* wander between locations 56..63 */
-    { 15,                   2 }, /* wander between locations 56..63 */
-    { 14 | route_REVERSED,  0 }, /* wander between locations 8..15 */
-    { 15 | route_REVERSED,  1 }, /* wander between locations 16..23 */
+    { routeindex_14_GO_TO_YARD,                     2 }, /* wander between locations 56..63 */
+    { routeindex_15_GO_TO_YARD,                     2 }, /* wander between locations 56..63 */
+    { routeindex_14_GO_TO_YARD | REVERSE,           0 }, /* wander between locations 8..15 */
+    { routeindex_15_GO_TO_YARD | REVERSE,           1 }, /* wander between locations 16..23 */
 
-    { 16,                   5 },
-    { 17,                   5 },
-    { 16 | route_REVERSED,  0 }, /* wander between locations 8..15 */
-    { 17 | route_REVERSED,  1 }, /* wander between locations 16..23 */
+    { routeindex_16_BREAKFAST_25,                   5 },
+    { routeindex_17_BREAKFAST_23,                   5 },
+    { routeindex_16_BREAKFAST_25 | REVERSE,         0 }, /* wander between locations 8..15 */
+    { routeindex_17_BREAKFAST_23 | REVERSE,         1 }, /* wander between locations 16..23 */
 
-    { 32 | route_REVERSED,  0 }, /* wander between locations 8..15 */
-    { 33 | route_REVERSED,  1 }, /* wander between locations 16..23 */
-    { 42,                   7 },
-    { 44,                   8 }, /* hero sleeps */
-    { 43,                   9 }, /* hero sits */
-    { 36 | route_REVERSED,  6 },
-    { 36,                  10 }, /* hero released from solitary */
-    { 37,                   4 }  /* solitary ends */
+    { routeindex_32_GUARD_15_ROLL_CALL | REVERSE,   0 }, /* wander between locations 8..15 */
+    { routeindex_33_PRISONER_4_ROLL_CALL | REVERSE, 1 }, /* wander between locations 16..23 */
+    { routeindex_42_HUT2_LEFT_TO_RIGHT,             7 },
+    { routeindex_44_HUT2_RIGHT_TO_LEFT,             8 }, /* hero sleeps */
+    { routeindex_43_7833,                           9 }, /* hero sits */
+    { routeindex_36_GO_TO_SOLITARY | REVERSE,       6 },
+    { routeindex_36_GO_TO_SOLITARY,                10 }, /* hero released from solitary */
+    { routeindex_37_HERO_LEAVE_SOLITARY,            4 }  /* solitary ends */
   };
 
   /* $C829 */
@@ -9111,12 +9116,14 @@ void character_event(tgestate_t *state, route_t *route)
   // character constants (now called character_t's).
 
   routeindex = route->index;
-  if (routeindex >= 7 && routeindex <= 12) // 6 indices
+  if (routeindex >= routeindex_7_PRISONER_SLEEPS_1 &&
+      routeindex <= routeindex_12_PRISONER_SLEEPS_3) // 6 indices
   {
     character_sleeps(state, routeindex, route);
     return;
   }
-  if (routeindex >= 18 && routeindex <= 22) // only 5 indices - is this why one character doesn't sit for breakfast? there's an entry in routes[] which looks like it ought to match
+  if (routeindex >= routeindex_18_PRISONER_SITS_1 &&
+      routeindex <= routeindex_22_PRISONER_SITS_2) // only 5 indices - is this why one character doesn't sit for breakfast? there's an entry in routes[] which looks like it ought to match
   {
     character_sits(state, routeindex, route);
     return;
@@ -9140,7 +9147,7 @@ void character_event(tgestate_t *state, route_t *route)
 
   // POP route (HL)
 
-  route->index = route_HALT; /* Stand still. */
+  route->index = routeindex_0_HALT; /* Stand still. */
 }
 
 /**
@@ -9159,7 +9166,7 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 {
   // this is something like: commandant walks to yard
 
-  *route = (route_t) { 3, 21 }; // route_commandant
+  *route = (route_t) { routeindex_3_COMMANDANT, 21 }; // route_commandant
 }
 
 /**
@@ -9167,15 +9174,12 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
  */
 void charevnt_hero_release(tgestate_t *state, route_t *route)
 {
-  // If I remove the 128 here then when the commandant arrives to pick up the
-  // hero he repeatedly re-enters the room instead of turning around and
-  // leaving.
-
-  *route = (route_t) { 36 | route_REVERSED, 3 }; // reverse the commandant's route
+  /* Reverse the commandant's route. */
+  *route = (route_t) { routeindex_36_GO_TO_SOLITARY | routeindexflag_REVERSED, 3 };
 
   state->automatic_player_counter = 0; /* Force automatic control */
 
-  static const route_t route_37 = { 37, 0 }; /* was BC */
+  static const route_t route_37 = { routeindex_37_HERO_LEAVE_SOLITARY, 0 }; /* was BC */
   set_hero_route_force(state, &route_37);
 }
 
@@ -9205,7 +9209,7 @@ void charevnt_wander_left(tgestate_t *state, route_t *route)
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { route_WANDER, 16 }; /* 16..23 */
+  *route = (route_t) { routeindex_255_WANDER, 16 }; /* 16..23 */
 }
 
 /**
@@ -9231,7 +9235,7 @@ void charevnt_wander_yard(tgestate_t *state, route_t *route)
   //              :************X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { route_WANDER, 56 }; /* 56..63 */
+  *route = (route_t) { routeindex_255_WANDER, 56 }; /* 56..63 */
 }
 
 /**
@@ -9257,7 +9261,7 @@ void charevnt_wander_top(tgestate_t *state, route_t *route)
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { route_WANDER, 8 }; /* 8..15 */
+  *route = (route_t) { routeindex_255_WANDER, 8 }; /* 8..15 */
 }
 
 // Conv: Inlined set_route_ffxx() in the above functions.
@@ -9289,7 +9293,7 @@ void charevnt_breakfast(tgestate_t *state, route_t *route)
  */
 void charevnt_exit_hut2(tgestate_t *state, route_t *route)
 {
-  *route = (route_t) { 5, 0 }; // route_exit_hut2
+  *route = (route_t) { routeindex_5_EXIT_HUT2, 0 };
 }
 
 /**
@@ -9463,7 +9467,7 @@ pursue_hero:
         /* Food is no longer nearby: Choose random locations in the fenced-
          * off area (right side). */
         vischar2->flags = 0; /* clear vischar_FLAGS_DOG_FOOD */
-        vischar2->route = (route_t) { route_WANDER, 0 }; /* 0..7 */
+        vischar2->route = (route_t) { routeindex_255_WANDER, 0 }; /* 0..7 */
         (void) get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
@@ -9519,7 +9523,7 @@ bribed_visible:
     }
   }
 
-  if (vischar2->route.index == route_HALT) /* Stand still */
+  if (vischar2->route.index == routeindex_0_HALT) /* Stand still */
   {
     character_behaviour_set_input(state, vischar, 0 /* new_input */);
     return; // exit via
@@ -9776,7 +9780,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
         food_discovered_counter = 255; /* food is poisoned */
       state->food_discovered_counter = food_discovered_counter;
 
-      vischar->route.index = route_HALT; /* Stand still (ie. the dog is poisoned) */
+      vischar->route.index = routeindex_0_HALT; /* Stand still (ie. the dog is poisoned) */
 
       character_behaviour_set_input(state, vischar, 0 /* new_input */);
       return;
@@ -9795,11 +9799,11 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     route = vischar->route.index;
 
     doorindex = get_route(route)[step]; // follow this through
-    if (route & route_REVERSED) /* Conv: avoid needless reload */
+    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
       doorindex ^= door_REVERSE;
 
     // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (route & route_REVERSED) /* Conv: avoid needless reload */
+    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
       vischar->route.step--;
     else
       vischar->route.step++;
@@ -9833,9 +9837,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 
   /* When on a route (.x != 255) advance the counter (.y) in the required direction. */
   route = vischar->route.index;
-  if (route != route_WANDER)
+  if (route != routeindex_255_WANDER)
   {
-    if (route & route_REVERSED)
+    if (route & routeindexflag_REVERSED)
       vischar->route.step--;
     else
       vischar->route.step++;
@@ -9925,7 +9929,7 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 
     /* Call character_event at the end of commandant route 36. */
     if (character == character_0_COMMANDANT)
-      if ((route->index & ~route_REVERSED) == 36)
+      if ((route->index & ~routeindexflag_REVERSED) == routeindex_36_GO_TO_SOLITARY)
         goto do_character_event;
 
     /* Reverse the route for guards 1..11. */
@@ -9942,7 +9946,7 @@ do_character_event:
    */
 
   character_event(state, route);
-  if (route->index == route_HALT) /* standing still */
+  if (route->index == routeindex_0_HALT) /* standing still */
     return 0;
   else
     return get_target_assign_pos(state, vischar, route); // re-enter
@@ -9954,9 +9958,9 @@ reverse_route:
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
-  route->index ^= route_REVERSED; /* toggle route direction */
+  route->index ^= routeindexflag_REVERSED; /* toggle route direction */
   // Conv: Removed [-2]+1 pattern.
-  if (route->index & route_REVERSED)
+  if (route->index & routeindexflag_REVERSED)
     route->step--;
   else
     route->step++;
@@ -10000,7 +10004,7 @@ reverse_route:
 // Highest door used here: 35, lowest: 0.
 // Highest not-door used here: 77, lowest: 9.
 
-const uint8_t *get_route(uint8_t index)
+const uint8_t *get_route(routeindex_t index)
 {
   /** Specifies a door within a route. */
 #define DOOR(d) (d)
@@ -10294,7 +10298,7 @@ const uint8_t *get_route(uint8_t index)
   /**
    * $7738: Table of pointers to routes.
    */
-  static const uint8_t *routes[46] =
+  static const uint8_t *routes[routeindex__LIMIT] =
   {
     NULL, /* was zero */            //  0: route 0 => stand still (as opposed to route 255 => wander around randomly)  hero in solitary
 
@@ -10362,8 +10366,9 @@ const uint8_t *get_route(uint8_t index)
     // original game has an FF byte here
   };
 
-  /* Conv: index may have flag bit 7 set so mask it off. */
-  index &= ~route_REVERSED;
+  /* Conv: The index may have its reverse flag set so mask it off. The
+   * original game gets this for free when scaling the index. */
+  index &= ~routeindexflag_REVERSED;
 
   assert(index < NELEMS(routes));
 
@@ -10566,7 +10571,7 @@ next:
   vischar = &state->vischars[0];
   state->IY = &state->vischars[0];
   vischar->direction = direction_BOTTOM_LEFT;
-  state->vischars[0].route.index = route_HALT; /* Stand still. */ // stores a byte, not a word
+  state->vischars[0].route.index = routeindex_0_HALT; /* Stand still. */ // stores a byte, not a word
   transition(state, &solitary_pos);
 
   NEVER_RETURNS;

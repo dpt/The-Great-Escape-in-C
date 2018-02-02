@@ -7,6 +7,7 @@
 
 #include "TheGreatEscape/Doors.h"
 #include "TheGreatEscape/InteriorObjects.h"
+#include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/StaticGraphics.h"
 #include "TheGreatEscape/Types.h"
 
@@ -118,8 +119,8 @@ do {                                                          \
 #define ASSERT_ROUTE_VALID(r)                                 \
 do                                                            \
 {                                                             \
-  assert((r).index == 0xFF ||                                 \
-        ((r).index & ~route_REVERSED) < routes__LIMIT);       \
+  assert((r).index == routeindex_0_HALT ||                    \
+        ((r).index & ~routeindexflag_REVERSED) < routeindex__LIMIT); \
 }                                                             \
 while (0)
 
@@ -565,11 +566,9 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);
 
-/** Highest route number. */
-#define routes__LIMIT 46
 /** Byte which terminates a route. */
 #define routebyte_END 255
-INLINE const uint8_t *get_route(uint8_t A);
+INLINE const uint8_t *get_route(routeindex_t A);
 
 uint8_t random_nibble(tgestate_t *state);
 
