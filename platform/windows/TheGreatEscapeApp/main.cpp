@@ -49,7 +49,6 @@ typedef struct gamewin
   DWORD           threadId;
 
   zxkeyset_t      keys;
-  unsigned int   *pixels;
 
   int             speed;
   BOOL            paused;
@@ -63,14 +62,11 @@ gamewin_t;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void draw_handler(unsigned int  *pixels,
-                         const zxbox_t *dirty,
+static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
   RECT       rect;
-
-  gamewin->pixels = pixels;
 
   rect.left   = 0;
   rect.top    = 0;
@@ -252,7 +248,6 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->threadId = threadId;
 
   gamewin->keys     = 0;
-  gamewin->pixels   = NULL;
 
   gamewin->speed    = 100;
   gamewin->paused   = false;
@@ -316,9 +311,12 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
 
     case WM_PAINT:
       {
-        PAINTSTRUCT ps;
-        HDC         hdc;
-        RECT        clientrect;
+        unsigned int *pixels;
+        PAINTSTRUCT   ps;
+        HDC           hdc;
+        RECT          clientrect;
+
+        pixels = zxspectrum_claim_screen(gamewin->zx);
 
         hdc = BeginPaint(hwnd, &ps);
 
@@ -333,12 +331,14 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                       0,
                       WIDTH,
                       HEIGHT,
-                      gamewin->pixels,
+                      pixels,
                       &gamewin->bitmapinfo,
                       DIB_RGB_COLORS,
                       SRCCOPY);
 
         EndPaint(hwnd, &ps);
+
+        zxspectrum_release_screen(gamewin->zx);
       }
       break;
 

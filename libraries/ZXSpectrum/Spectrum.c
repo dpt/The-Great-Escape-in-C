@@ -12,11 +12,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <pthread.h>
-
 #include "ZXSpectrum/Screen.h"
 
 #include "ZXSpectrum/Spectrum.h"
+
+/* ----------------------------------------------------------------------- */
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+#define mutex_t          CRITICAL_SECTION
+#define mutex_init(M)    InitializeCriticalSection(&M)
+#define mutex_destroy(M) DeleteCriticalSection(&M)
+#define mutex_lock(M)    EnterCriticalSection(&M)
+#define mutex_unlock(M)  LeaveCriticalSection(&M)
+
+#else
+
+#include <pthread.h>
+
+#define mutex_t          pthread_mutex_t
+#define mutex_init(M)    pthread_mutex_init(&M, NULL)
+#define mutex_lock(M)    pthread_mutex_lock(&M)
+#define mutex_unlock(M)  pthread_mutex_unlock(&M)
+#define mutex_destroy(M) pthread_mutex_destroy(&M)
+
+#endif
 
 /* ----------------------------------------------------------------------- */
 
@@ -39,7 +61,7 @@ typedef struct zxspectrum_private
 
   unsigned int    prev_border;
 
-  pthread_mutex_t lock;
+  mutex_t         lock;
   zxbox_t         dirty;
   zxscreen_t      screen_copy;
   uint32_t        converted[SCREEN_WIDTH * SCREEN_HEIGHT];
@@ -115,7 +137,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  pthread_mutex_lock(&prv->lock);
+  mutex_lock(prv->lock);
 
   if (dirty == NULL)
   {
@@ -140,7 +162,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
   // copy less here (but that's complicated).
   memcpy(&prv->screen_copy, &prv->pub.screen.pixels, SCREEN_LENGTH);
 
-  pthread_mutex_unlock(&prv->lock);
+  mutex_unlock(prv->lock);
 
   prv->config.draw(dirty, prv->config.opaque);
 }
@@ -177,7 +199,7 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 
   prv->config = *config;
 
-  pthread_mutex_init(&prv->lock, NULL);
+  mutex_init(prv->lock);
 
   prv->dirty.x0 = INT_MAX;
   prv->dirty.y0 = INT_MAX;
@@ -196,6 +218,8 @@ void zxspectrum_destroy(zxspectrum_t *doomed)
 
   zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
 
+  mutex_destroy(prv->lock);
+
   free(prv);
 }
 
@@ -203,7 +227,7 @@ uint32_t *zxspectrum_claim_screen(zxspectrum_t *state)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  pthread_mutex_lock(&prv->lock);
+  mutex_lock(prv->lock);
 
   /* Check for any changes */
   if (prv->dirty.x0 != INT_MAX || prv->dirty.y0 != INT_MAX ||
@@ -223,5 +247,5 @@ void zxspectrum_release_screen(zxspectrum_t *state)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  pthread_mutex_unlock(&prv->lock);
+  mutex_unlock(prv->lock);
 }
