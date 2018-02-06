@@ -119,7 +119,7 @@ do {                                                          \
 #define ASSERT_ROUTE_VALID(r)                                 \
 do                                                            \
 {                                                             \
-  assert((r).index == routeindex_0_HALT ||                    \
+  assert((r).index == routeindex_255_WANDER ||                \
         ((r).index & ~routeindexflag_REVERSED) < routeindex__LIMIT); \
 }                                                             \
 while (0)
