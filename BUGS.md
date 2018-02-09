@@ -4,6 +4,10 @@ BUGS
 Unfixed
 -------
 
+Pending:
+
+* Thread Sanitiser reports multiple problems. Needs locking in various places.
+
 Queue:
 
 * The guard who marches above main gate seems to spawn too late compared with the original game.
@@ -16,10 +20,8 @@ Queue:
 * Have seen guards and prisoners getting bunched up in doorway.
 * Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps.
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
-* Thread Sanitiser reports multiple problems. Needs locking in various places.
 * Guards & commandant don't always catch the hero on contact.
-* Hero getting wedged into a corner by a guard after breakfast, dancing left-right.
-* Undefined behaviour in searchlight_plot when producing the attribute address.
+* Undefined behaviour in `searchlight_plot` when producing the attribute address.
 
 Fixed
 -----
@@ -87,7 +89,6 @@ Fixed
     * Fixed 6-Jan-18 in 37a5900: Code which calls `stamp()` needs to cancel it with `sleep(0)`.
 31. Nondeterminism! The game does not run the same way twice.
     * (Not a bug) 30-Jan-18: The `game_counter` state variable is incremented by the menu when animating the waving morale flag. This counter is also used to drive the main game clock. Any time spent on the menu increments the game counter which results in events taking place at different points when the game runs. The resulting cascade causes characters to appear and move around at different times. For two games to run in sync they must be started at exactly the same moment. This applies to the original game too.
-
-
-
+32. Hero getting wedged into a corner by a guard after breakfast, dancing left-right.
+    * Fixed 8-Feb-18: The red flag fix from 19-Dec-17 identified stray code in `in_permitted_area` but it wasn't really stray code, I'd just failed to correctly identify how the C register was being handled.
 

@@ -2003,10 +2003,8 @@ void in_permitted_area(tgestate_t *state)
 
   route = state->vischars[0].route;
   ASSERT_ROUTE_VALID(route);
-  /* The following lines were found to be redundant in the original game so
-   * have been disabled. */
-//  if (route.index & routeindexflag_REVERSED)
-//    C = route.step + 1;
+  if (route.index & routeindexflag_REVERSED)
+    route.step++;
 
   if (route.index == routeindex_255_WANDER)
   {
@@ -2014,10 +2012,8 @@ void in_permitted_area(tgestate_t *state)
 
     // 1 => Hut area
     // 2 => Yard area
-    area = ((route.step & ~7) == 8) ? 1 : 2;
-    if (in_permitted_area_end_bit(state, area))
-      goto set_flag_green;
-    else
+    area = ((state->vischars[0].route.step & ~7) == 8) ? 1 : 2; // NOT using route.step
+    if (!in_permitted_area_end_bit(state, area))
       goto set_flag_red;
   }
   else // en route
@@ -2045,11 +2041,9 @@ found:
     // route index was found in route_to_permitted
 
     permitted = tab->permitted;
-    // loc.y = 0; // not needed
-    permitted += route.step; // original code used B=0
-    if (!in_permitted_area_end_bit(state, *permitted))
+    if (!in_permitted_area_end_bit(state, permitted[route.step]))
     {
-      if (state->vischars[0].route.index & routeindexflag_REVERSED) // FUTURE: route index is already in 'route'
+      if (state->vischars[0].route.index & routeindexflag_REVERSED) // FUTURE: route index is already in 'route.index'
         permitted++;
 
       i = 0;
