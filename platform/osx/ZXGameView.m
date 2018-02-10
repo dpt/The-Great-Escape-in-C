@@ -56,35 +56,38 @@
   zxspectrum_t   *zx;
   tgestate_t     *game;
 
-  unsigned int   *pixels;
-  GLclampf        backgroundRed, backgroundGreen, backgroundBlue;
-
   pthread_t       thread;
-  zxkeyset_t      keys;
-  zxkempston_t    kempston;
 
   BOOL            doSetupDrawing;
   int             borderSize;
   BOOL            snap;
 
-  int             speed;
-  BOOL            paused;
+  // -- Start of variables accessed from game thread must be @synchronized
 
   BOOL            quit;
+  BOOL            paused;
+
+  int             speed;    // percent
 
   struct timeval  stamps[MAXSTAMPS];
   int             nstamps;
 
+  zxkeyset_t      keys;
+  zxkempston_t    kempston;
+
+  GLclampf        backgroundRed, backgroundGreen, backgroundBlue;
+
   struct
   {
-    BOOL                    enabled;
-    int                     index; // index into samples
-    pthread_mutex_t         mutex;
-    bitfifo_t              *fifo;
-    int                     lastvol;
-    AudioComponentInstance  instance;
+    BOOL          enabled;
+    int           index;    // index into samples
+    bitfifo_t    *fifo;
+    int           lastvol;  // most recently output volume
+    AudioComponentInstance instance;
   }
   audio;
+
+  // -- End of variables accessed from game thread must be @synchronized
 }
 
 @property (nonatomic, readwrite) CGFloat scale;
@@ -137,35 +140,26 @@
   zx              = NULL;
   game            = NULL;
 
-  pixels          = NULL;
-  backgroundRed = backgroundGreen = backgroundBlue = 0.0;
-
   thread          = NULL;
-  keys            = 0ULL;
-  kempston        = 0;
 
   doSetupDrawing  = YES;
   borderSize      = DEFAULTBORDERSIZE;
   snap            = YES;
 
-  speed           = 100;
+  quit            = NO;
   paused          = NO;
 
-  quit            = NO;
+  speed           = 100;
 
   memset(stamps, 0, sizeof(stamps));
   nstamps = 0;
 
+  keys            = 0ULL;
+  kempston        = 0;
+
+  backgroundRed = backgroundGreen = backgroundBlue = 0.0;
 
   _scale          = 1.0;
-
-
-  audio.enabled   = YES;
-
-
-
-  // TODO: allocate two window buffers
-
 
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
@@ -177,7 +171,10 @@
 
   [self setupAudio];
 
-  pthread_create(&thread, NULL /* pthread_attr_t */, tge_thread, (__bridge void *)(self));
+  pthread_create(&thread,
+                 NULL /* pthread_attr_t */,
+                 tge_thread,
+                 (__bridge void *)(self));
 
   return;
 
@@ -197,7 +194,10 @@ failure:
 - (void)stop
 {
   // Signal to the game thread to quit
-  quit = YES;
+  @synchronized(self)
+  {
+    quit = YES;
+  }
 
   // Wait for it to yield
   // Is this is a bad idea to wait like this on the UI thread?
@@ -279,17 +279,20 @@ failure:
     default:                      j = zxjoystick_UNKNOWN; break;
   }
 
-  if (j != zxjoystick_UNKNOWN)
+  @synchronized(self)
   {
-    zxkempston_assign(&kempston, j, down);
-  }
-  else
-  {
-    // zxkeyset_set/clearchar converts generic keypresses for us
-    if (down)
-      keys = zxkeyset_setchar(keys, u);
+    if (j != zxjoystick_UNKNOWN)
+    {
+      zxkempston_assign(&kempston, j, down);
+    }
     else
-      keys = zxkeyset_clearchar(keys, u);
+    {
+      // zxkeyset_set/clearchar converts generic keypresses for us
+      if (down)
+        keys = zxkeyset_setchar(keys, u);
+      else
+        keys = zxkeyset_clearchar(keys, u);
+    }
   }
 }
 
@@ -320,8 +323,11 @@ failure:
    * bool command = (modifierFlags & NSCommandKeyMask) != 0;
    */
 
-  zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
-  zxkeyset_assign(&keys, zxkey_SYMBOL_SHIFT, alt);
+  @synchronized(self)
+  {
+    zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
+    zxkeyset_assign(&keys, zxkey_SYMBOL_SHIFT, alt);
+  }
 
   // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }
@@ -339,39 +345,42 @@ failure:
 
   tag = [sender tag];
 
-  if (tag == 0) // pause/unpause
+  @synchronized(self)
   {
-    paused = !paused;
-    return;
-  }
+    if (tag == 0) // pause/unpause
+    {
+      paused = !paused;
+      return;
+    }
 
-  // any other action results in unpausing
-  paused = NO;
+    // any other action results in unpausing
+    paused = NO;
 
-  switch (tag)
-  {
-    default:
-    case 100: // normal speed
-      speed = 100;
-      break;
+    switch (tag)
+    {
+      default:
+      case 100: // normal speed
+        speed = 100;
+        break;
 
-    case -1: // maximum speed
+      case -1: // maximum speed
+        speed = max_speed;
+        break;
+
+      case 1: // increase speed
+        speed += 25;
+        break;
+
+      case 2: // decrease speed
+        speed -= 25;
+        break;
+    }
+
+    if (speed < min_speed)
+      speed = min_speed;
+    else if (speed > max_speed)
       speed = max_speed;
-      break;
-
-    case 1: // increase speed
-      speed += 25;
-      break;
-
-    case 2: // decrease speed
-      speed -= 25;
-      break;
   }
-
-  if (speed < min_speed)
-    speed = min_speed;
-  else if (speed > max_speed)
-    speed = max_speed;
 }
 
 - (IBAction)toggleSnap:(id)sender
@@ -452,6 +461,8 @@ failure:
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+  uint32_t *pixels;
+
   // Note: NSOpenGLViews would appear to never receive a graphics context, so
   // we must draw exclusively in terms of GL ops.
 
@@ -469,20 +480,21 @@ failure:
 
   (void) dirtyRect;
 
+  pixels = zxspectrum_claim_screen(zx);
+
   // Clear the background
   // Do this every frame or you'll see junk in the border.
   glClearColor(backgroundRed, backgroundGreen, backgroundBlue, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  if (pixels)
-  {
-    // Draw the image
-    glPixelZoom(zsx, zsy);
-    glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-  }
+  // Draw the image
+  glPixelZoom(zsx, zsy);
+  glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   // Flush to screen
   glFinish();
+
+  zxspectrum_release_screen(zx);
 }
 
 // -----------------------------------------------------------------------------
@@ -493,20 +505,40 @@ static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
   tgestate_t *game = view->game;
+  BOOL        quit;
 
   tge_setup(game);
 
   // While in menu state
-  while (!view->quit)
+  for (;;)
+  {
+    @synchronized(view)
+    {
+      quit = view->quit;
+    }
+
+    if (quit)
+      break;
+
     if (tge_menu(game) > 0)
       break; // game begins
+  }
 
-  // While in game state
-  if (!view->quit)
+  if (!quit)
   {
     tge_setup2(game);
-    while (!view->quit)
+
+    // While in game state
+    for (;;)
     {
+      @synchronized(view)
+      {
+        quit = view->quit;
+      }
+
+      if (quit)
+        break;
+
       tge_main(game);
       view->nstamps = 0; // reset all timing info
     }
@@ -519,13 +551,10 @@ static void *tge_thread(void *arg)
 
 #pragma mark - Game thread callbacks
 
-static void draw_handler(unsigned int  *pixels,
-                         const zxbox_t *dirty,
+static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
-
-  view->pixels = pixels;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     // Odd: This refreshes the whole window no matter what size of rect is specified
@@ -547,19 +576,34 @@ static void stamp_handler(void *opaque)
 static void sleep_handler(int durationTStates, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
+  BOOL paused;
 
-  // Unstack timestamps (even if we're paused)
-  assert(view->nstamps > 0);
-  if (view->nstamps <= 0)
-    return;
-  --view->nstamps;
+  @synchronized(view)
+  {
+    // Unstack timestamps (even if we're paused)
+    assert(view->nstamps > 0);
+    if (view->nstamps <= 0)
+      return;
+    --view->nstamps;
 
-  if (view->paused)
+    paused = view->paused;
+  }
+
+  if (paused)
   {
     // Check twice per second for unpausing
-    // FIXME: Slow spinwait without any synchronisation
-    while (view->paused)
+    for (;;)
+    {
+      @synchronized(view)
+      {
+        paused = view->paused;
+      }
+
+      if (!paused)
+        break;
+
       usleep(500000); /* 0.5s */
+    }
   }
   else
   {
@@ -575,13 +619,16 @@ static void sleep_handler(int durationTStates, void *opaque)
 
     gettimeofday(&now, NULL); // get time now before anything else
 
-    // 'duration' tells us how long the operation should take since the previous mark call.
-    // Turn T-state duration into seconds
-    duration = durationTStates / tstatesPerSec;
-    // Adjust the game speed
-    duration = duration * 100 / view->speed;
+    @synchronized(view)
+    {
+      // 'duration' tells us how long the operation should take since the previous mark call.
+      // Turn T-state duration into seconds
+      duration = durationTStates / tstatesPerSec;
+      // Adjust the game speed
+      duration = duration * 100 / view->speed;
 
-    then = &view->stamps[view->nstamps];
+      then = &view->stamps[view->nstamps];
+    }
 
     delta.tv_sec  = now.tv_sec  - then->tv_sec;
     delta.tv_usec = now.tv_usec - then->tv_usec;
@@ -603,11 +650,17 @@ static void sleep_handler(int durationTStates, void *opaque)
 static int key_handler(uint16_t port, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
+  int         k;
 
-  if (port == port_KEMPSTON_JOYSTICK)
-    return view->kempston;
-  else
-    return zxkeyset_for_port(port, view->keys);
+  @synchronized(view)
+  {
+    if (port == port_KEMPSTON_JOYSTICK)
+      k = view->kempston;
+    else
+      k = zxkeyset_for_port(port, view->keys);
+  }
+
+  return k;
 }
 
 static void border_handler(int colour, void *opaque)
@@ -637,19 +690,14 @@ static void border_handler(int colour, void *opaque)
 
 static void speaker_handler(int on_off, void *opaque)
 {
-  ZXGameView *view = (__bridge id) opaque;
+  ZXGameView  *view = (__bridge id) opaque;
   unsigned int bit = on_off;
-  result_t err;
 
-  pthread_mutex_lock(&view->audio.mutex);
-
-  err = bitfifo_enqueue(view->audio.fifo, &bit, 0, 1);
-  if (err == result_BITFIFO_FULL)
-    ;
-  //  if (err)
-  //    goto failure;
-
-  pthread_mutex_unlock(&view->audio.mutex);
+  @synchronized(view)
+  {
+    // There's nothing we can do if the buffer is full, so ignore errors
+    (void) bitfifo_enqueue(view->audio.fifo, &bit, 0, 1);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -773,7 +821,6 @@ static OSStatus playbackCallback(void                       *inRefCon,
   // Setup audio
   audio.enabled  = YES;
   audio.index    = 0;
-  pthread_mutex_init(&audio.mutex, NULL);
   audio.fifo     = NULL;
   audio.lastvol  = 0;
   audio.instance = instance;
@@ -836,76 +883,76 @@ OSStatus playbackCallback(void                       *inRefCon,
   OSStatus    rc;
   UInt32      i;
 
-  pthread_mutex_lock(&view->audio.mutex);
-
-  // CHECK: Is this going to screw up with mNumberBuffers > 1 since i'm
-  //        fetching from the fifo?
-
-  for (i = 0; i < ioData->mNumberBuffers; i++)
+  @synchronized(view)
   {
-    assert(inNumberFrames == ioData->mBuffers[i].mDataByteSize / bytesPerSample);
+    // CHECK: Is this going to screw up with mNumberBuffers > 1 since i'm
+    //        fetching from the fifo?
 
-    UInt32 outputCapacity;
-    UInt32 outputUsed;
-
-    outputCapacity = inNumberFrames;
-    outputUsed     = 0;
-
-    while (outputUsed < outputCapacity)
+    for (i = 0; i < ioData->mNumberBuffers; i++)
     {
-      UInt32 outputCapacityRemaining;
-      size_t bitsInFifo;
-      size_t toCopy;
+      assert(inNumberFrames == ioData->mBuffers[i].mDataByteSize / bytesPerSample);
 
-      outputCapacityRemaining = outputCapacity - outputUsed;
-      bitsInFifo              = bitfifo_used(view->audio.fifo);
-      toCopy                  = MIN(bitsInFifo, outputCapacityRemaining);
+      UInt32 outputCapacity;
+      UInt32 outputUsed;
 
-      if (bitsInFifo == 0)
-        goto no_data;
+      outputCapacity = inNumberFrames;
+      outputUsed     = 0;
 
-      const signed short maxVolume = 32500; // tweak this down to quieten
-
-      signed short      *p;
-      signed short       vol;
-      UInt32             j;
-
-      p = (signed short *) ioData->mBuffers[i].mData + outputUsed;
-      for (j = 0; j < toCopy; j++)
+      while (outputUsed < outputCapacity)
       {
-        unsigned int bits;
+        UInt32 outputCapacityRemaining;
+        size_t bitsInFifo;
+        size_t toCopy;
 
-        bits = 0;
-        err = bitfifo_dequeue(view->audio.fifo, &bits, AVG);
-        if (err == result_BITFIFO_INSUFFICIENT ||
-            err == result_BITFIFO_EMPTY)
-          // When the fifo empties maintain the most recent volume
-          vol = view->audio.lastvol;
-        else
-          vol = (int) __builtin_popcount(bits) * maxVolume / AVG;
-        *p++ = vol;
+        outputCapacityRemaining = outputCapacity - outputUsed;
+        bitsInFifo              = bitfifo_used(view->audio.fifo);
+        toCopy                  = MIN(bitsInFifo, outputCapacityRemaining);
 
-        view->audio.lastvol = vol;
+        if (bitsInFifo == 0)
+          goto no_data;
+
+        const signed short maxVolume = 32500; // tweak this down to quieten
+
+        signed short      *p;
+        signed short       vol;
+        UInt32             j;
+
+        p = (signed short *) ioData->mBuffers[i].mData + outputUsed;
+        for (j = 0; j < toCopy; j++)
+        {
+          unsigned int bits;
+
+          bits = 0;
+          err = bitfifo_dequeue(view->audio.fifo, &bits, AVG);
+          if (err == result_BITFIFO_INSUFFICIENT ||
+              err == result_BITFIFO_EMPTY)
+            // When the fifo empties maintain the most recent volume
+            vol = view->audio.lastvol;
+          else
+            vol = (int) __builtin_popcount(bits) * maxVolume / AVG;
+          *p++ = vol;
+
+          view->audio.lastvol = vol;
+        }
+
+        outputUsed += toCopy;
       }
+      ioData->mBuffers[i].mDataByteSize = outputUsed * bytesPerSample;
 
-      outputUsed += toCopy;
+      assert(outputUsed == outputCapacity);
     }
-    ioData->mBuffers[i].mDataByteSize = outputUsed * bytesPerSample;
 
-    assert(outputUsed == outputCapacity);
+    rc = noErr;
+    goto exit;
+
+
+  no_data:
+    ioData->mBuffers[0].mDataByteSize = 0;
+    rc = -1;
+
+  exit:
+    return rc;
   }
-
-  rc = noErr;
-  goto exit;
-
-
-no_data:
-  ioData->mBuffers[0].mDataByteSize = 0;
-  rc = -1;
-
-exit:
-  pthread_mutex_unlock(&view->audio.mutex);
-  return rc;
 }
 
 @end
