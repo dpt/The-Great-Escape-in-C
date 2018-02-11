@@ -1903,19 +1903,27 @@ void cutting_wire(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
+#define permitted_route_ROOM (1 << 7) /* Encodes a room index. */
+
 /**
- * $9F21: In permitted area.
+ * $9F21: Check the hero's map position and set the flag accordingly.
+ *
+ * Also detect escapes.
  *
  * \param[in] state Pointer to game state.
  */
 void in_permitted_area(tgestate_t *state)
 {
-#define R (1<<7) /* Encodes a room index. */
-
   /**
-   * $9EF9: Variable-length arrays, 255 terminated, which encode rooms or
-   * permitted areas for a given route and step within the route.
+   * $9EF9: Seven variable-length arrays which encode a list of valid rooms
+   * (if top bit set) or permitted areas (0, 1 or 2) for a given route and
+   * step within the route. Terminated with 255.
+   *
+   * Note that while routes encode transitions _between_ rooms this table
+   * encodes rooms or areas, so each list here will be one entry longer than
+   * the corresponding route.
    */
+#define R permitted_route_ROOM /* shorthand */
   static const uint8_t permitted_route42[] = { R| 2, R|2,                      255 }; /* for route_hut2_left_to_right */
   static const uint8_t permitted_route5[]  = { R| 3,   1,    1,    1,          255 }; /* for route_exit_hut2 */
   static const uint8_t permitted_route14[] = {    1,   1,    1,    0,    2, 2, 255 }; /* for route_go_to_yard */
@@ -1923,11 +1931,6 @@ void in_permitted_area(tgestate_t *state)
   static const uint8_t permitted_route44[] = { R| 3, R|2,                      255 }; /* for route_hut2_right_to_left */
   static const uint8_t permitted_route43[] = { R|25,                           255 }; /* for route_7833 */
   static const uint8_t permitted_route45[] = {    1,                           255 }; /* for route_hero_roll_call */
-
-  // While routes encode transitions (go here, go there) this table encodes
-  // areas (or rooms) so remember that these are one entry longer than the
-  // matching route.
-
 #undef R
 
   /**
@@ -2123,19 +2126,25 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 
   room = state->room_index; /* Conv: Dereferenced up-front once. */
 
-  /* The (1 << 7) flag indicates that a room index is specified. */
-  if (room_and_flags & (1 << 7))
+  if (room_and_flags & permitted_route_ROOM)
   {
-    ASSERT_ROOM_VALID(room_and_flags & ~(1 << 7));
-    return room == (room_and_flags & ~(1 << 7));
+    /* Hero should be in the specified room. */
+    ASSERT_ROOM_VALID(room_and_flags & ~permitted_route_ROOM);
+    return room == (room_and_flags & ~permitted_route_ROOM);
   }
-
-  if (room == room_0_OUTDOORS)
+  else if (room == room_0_OUTDOORS) // is outside
+  {
+    /* Hero is outdoors - check bounds. */
     return within_camp_bounds(room_and_flags, &state->hero_map_position);
-
-  /* Any other room is not permitted. */
-  return 0;
+  }
+  else
+  {
+    /* Hero should be outside but is in room - not permitted. */
+    return 0;
+  }
 }
+
+#undef permitted_route_ROOM
 
 /**
  * $A01A: For outdoor areas is the specified position within the bounds of the area?
