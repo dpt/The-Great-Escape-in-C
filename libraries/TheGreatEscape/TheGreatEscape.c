@@ -1949,7 +1949,7 @@ void in_permitted_area(tgestate_t *state)
 #undef R
 
   /**
-   * $9EE4: Maps route indicies to pointers to the above arrays.
+   * $9EE4: Maps route indices to pointers to the above arrays.
    *
    * Suspect that this means "if you're in <this> route you can be in <these> places."
    */
@@ -2019,6 +2019,7 @@ void in_permitted_area(tgestate_t *state)
   if (state->in_solitary)
     goto set_flag_green;
 
+  // puzzling - look at the /next/ step?
   route = state->vischars[0].route;
   ASSERT_ROUTE_VALID(route);
   if (route.index & routeindexflag_REVERSED)
@@ -2026,23 +2027,28 @@ void in_permitted_area(tgestate_t *state)
 
   if (route.index == routeindex_255_WANDER)
   {
+    /* Hero is wandering */
+
     uint8_t area; /* was A */
 
-    // 1 => Hut area
-    // 2 => Yard area
-    area = ((state->vischars[0].route.step & ~7) == 8) ? 1 : 2; // NOT using route.step
+    /* Note that this does NOT using route.step which is possibly modified. */
+    /* 1 => Hut area, 2 => Yard area */
+    area = ((state->vischars[0].route.step & ~7) == 8) ? 1 : 2;
     if (!in_permitted_area_end_bit(state, area))
       goto set_flag_red;
+    else
+      goto set_flag_green; /* This happens naturally anyway */
   }
-  else // en route
+  else
   {
+    /* Hero is en route */
+
     const route_to_permitted_t *tab;       /* was HL */
     uint8_t                     iters;     /* was B */
     const uint8_t              *permitted; /* was HL */
 
-    // A is a route index
-    routeindex = route.index & ~routeindexflag_REVERSED; // added to coax A back from route
-    tab = &route_to_permitted[0]; // table mapping bytes to offsets
+    routeindex = route.index & ~routeindexflag_REVERSED;
+    tab = &route_to_permitted[0];
     iters = NELEMS(route_to_permitted);
     do
     {
@@ -2052,25 +2058,31 @@ void in_permitted_area(tgestate_t *state)
     }
     while (--iters);
 
-    // anything not found in route_to_permitted => green flag
+    /* If the route is not found in route_to_permitted assume a green flag */
     goto set_flag_green;
 
 found:
-    // route index was found in route_to_permitted
+    /* Route index was found in route_to_permitted[] */
 
     permitted = tab->permitted;
+    // PUSH permitted(DE)
+    // POP HL
+    // HL = permitted + route.step(C)
+    // PUSH permitted(DE)
     if (!in_permitted_area_end_bit(state, permitted[route.step]))
+    // POP HL = permitted
     {
-      if (state->vischars[0].route.index & routeindexflag_REVERSED) // FUTURE: route index is already in 'route.index'
-        permitted++;
+      // FUTURE: The route index is already in 'route.index'.
+      if (state->vischars[0].route.index & routeindexflag_REVERSED)
+        permitted++; // puzzling - see above
 
       i = 0;
       for (;;)
       {
         uint8_t room_or_area; /* was A */
 
-        room_or_area = permitted[i]; // likely; A is room_and_flags
-        if (room_or_area == 255) /* hit end of list */
+        room_or_area = permitted[i];
+        if (room_or_area == 255) /* end of list */
           goto set_flag_red; /* Conv: Jump adjusted */
         if (in_permitted_area_end_bit(state, room_or_area))
           break; /* green */
@@ -2128,6 +2140,8 @@ set_flag_red:
 
 /**
  * $A007: In permitted area (end bit).
+ *
+ * Checks that the hero is in the specified room or camp bounds.
  *
  * \param[in] state          Pointer to game state.
  * \param[in] room_and_flags If bit 7 is set then bits 0..6 contain a room index. Otherwise it's an area index as passed into within_camp_bounds. (was A)
