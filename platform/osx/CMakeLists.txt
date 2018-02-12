@@ -21,14 +21,15 @@ set(OTHERS  # other resources
 add_executable(${TARGET}
   MACOSX_BUNDLE
   ${SOURCES}
+  ${RESOURCES}
 )
 
-# # Package the other stuff into Resources/*
-# set_source_files_properties(en.lproj/Credits.rtf
-#   PROPERTIES
-#   MACOSX_PACKAGE_LOCATION
-#   Resources
-# )
+# Package the other stuff into Resources/*
+set_source_files_properties(${RESOURCES}
+  PROPERTIES
+  MACOSX_PACKAGE_LOCATION
+  Resources
+)
 
 set_target_properties(${TARGET}
   PROPERTIES

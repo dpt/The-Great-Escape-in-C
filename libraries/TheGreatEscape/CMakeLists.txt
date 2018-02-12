@@ -30,6 +30,3 @@ target_include_directories(LibTheGreatEscape
   PRIVATE
   include/
 )
-
-# Do we need this?
-# target_link_libraries(LibTheGreatEscape LibZXSpectrum)
