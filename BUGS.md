@@ -18,6 +18,7 @@ Queue:
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
 * Guards & commandant don't always catch the hero on contact.
 * Undefined behaviour in `searchlight_plot` when producing the attribute address.
+* Prove the game can be completed.
 
 Fixed
 -----
