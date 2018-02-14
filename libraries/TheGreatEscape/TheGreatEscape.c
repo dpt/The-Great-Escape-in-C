@@ -8101,6 +8101,10 @@ const tile_t *select_tile_set(tgestate_t *state,
  */
 void spawn_characters(tgestate_t *state)
 {
+  /* Size, in UDGs, of a buffer zone around the visible screen in which
+   * visible characters will spawn. */
+  enum { GRACE = 8 };
+
   uint8_t            map_y, map_x;                  /* was H, L */
   uint8_t            map_y_clamped, map_x_clamped;  /* was D, E */
   characterstruct_t *charstr;                       /* was HL */
@@ -8110,11 +8114,11 @@ void spawn_characters(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Form a clamped map position in DE. */
+  /* Form a clamped map position in (map_x, map_y). */
   map_x = state->map_position.x;
   map_y = state->map_position.y;
-  map_x_clamped = (map_x < 8) ? 0 : map_x - 8;
-  map_y_clamped = (map_y < 8) ? 0 : map_y - 8;
+  map_x_clamped = (map_x < GRACE) ? 0 : map_x - GRACE;
+  map_y_clamped = (map_y < GRACE) ? 0 : map_y - GRACE;
 
   /* Walk all character structs. */
   charstr = &state->character_structs[0];
@@ -8123,22 +8127,25 @@ void spawn_characters(tgestate_t *state)
   {
     if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) == 0)
     {
-      /* Is the character in this room? */
+      /* Is this character in the current room? */
       if ((room = state->room_index) == charstr->room)
       {
         if (room == room_0_OUTDOORS)
         {
           /* Outdoors. */
 
-          /* Screen Y calculation. */
-          y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height; // 0x100 is represented as zero in original code. (CHECK 0x100 is right)
-          if (y <= map_y_clamped || y > MIN(map_y_clamped + 32, 0xFF))
-            goto skip; // check
+          /* Screen Y calculation.
+           * The 0x100 here is represented as zero in the original game. */
+          y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height;
+          if (y <= map_y_clamped ||
+              y > MIN(map_y_clamped + GRACE + 16 + GRACE, 0xFF))
+            goto skip;
 
           /* Screen X calculation. */
           x = (0x40 - charstr->pos.x + charstr->pos.y) * 2;
-          if (x <= map_x_clamped || x > MIN(map_x_clamped + 40, 0xFF))
-            goto skip; // check
+          if (x <= map_x_clamped ||
+              x > MIN(map_x_clamped + GRACE + 24 + GRACE, 0xFF))
+            goto skip;
         }
 
         spawn_character(state, charstr); // return code ignored
