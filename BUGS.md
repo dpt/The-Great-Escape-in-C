@@ -6,9 +6,6 @@ Unfixed
 
 Queue:
 
-* Dogs and guards seem to be able to catch the hero though the fence. Doesn't happen in the original.
-    * `collision: -> solitary` says the debug log
-    * _Possibly_ fixed in 6-Jul-17 fix... nope, still happens.
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
 * I've seen the hero glide off on his knees through a fence when wire snipping is complete.
 * Have seen NPCs get stuck at night in hero's bedroom.
@@ -91,3 +88,6 @@ Fixed
     * Fixed 10-Feb-18: Locking added.
 34. The guard who marches above main gate seems to spawn too late compared with the original game.
     * Fixed 14-Feb-18: I'd mistranslated the start of `spawn_characters` where it clamps the map position. A subtract was missing, offsetting the calculation by (8,8).
+35. Dogs and guards seem to be able to catch the hero though the fence.
+    * (Not a bug) 14-Feb-18: This happens in the original game too. It happens on the right hand fence more than it does by the fence gate. The hero looks closer to the fence when he's caught on that right hand fence so maybe the boundary needs to be adjusted.
+
