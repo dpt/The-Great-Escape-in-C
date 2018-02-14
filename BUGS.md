@@ -6,7 +6,6 @@ Unfixed
 
 Queue:
 
-* The guard who marches above main gate seems to spawn too late compared with the original game.
 * Dogs and guards seem to be able to catch the hero though the fence. Doesn't happen in the original.
     * `collision: -> solitary` says the debug log
     * _Possibly_ fixed in 6-Jul-17 fix... nope, still happens.
@@ -90,4 +89,5 @@ Fixed
     * Fixed 8-Feb-18 in 96c1c05: The red flag fix from 19-Dec-17 identified stray code in `in_permitted_area` but it wasn't really stray code, I'd just failed to correctly identify how the C register was being propagated.
 33. Thread Sanitiser reports multiple problems. Needs locking in various places.
     * Fixed 10-Feb-18: Locking added.
-
+34. The guard who marches above main gate seems to spawn too late compared with the original game.
+    * Fixed 14-Feb-18: I'd mistranslated the start of `spawn_characters` where it clamps the map position. A subtract was missing, offsetting the calculation by (8,8).

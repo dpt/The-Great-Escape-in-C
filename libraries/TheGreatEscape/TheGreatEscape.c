@@ -8113,8 +8113,8 @@ void spawn_characters(tgestate_t *state)
   /* Form a clamped map position in DE. */
   map_x = state->map_position.x;
   map_y = state->map_position.y;
-  map_x_clamped = (map_x < 8) ? 0 : map_x;
-  map_y_clamped = (map_y < 8) ? 0 : map_y;
+  map_x_clamped = (map_x < 8) ? 0 : map_x - 8;
+  map_y_clamped = (map_y < 8) ? 0 : map_y - 8;
 
   /* Walk all character structs. */
   charstr = &state->character_structs[0];
