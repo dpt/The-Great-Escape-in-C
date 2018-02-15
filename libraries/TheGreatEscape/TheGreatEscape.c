@@ -1875,8 +1875,8 @@ void cutting_wire(tgestate_t *state)
     input_DOWN + input_LEFT  + input_KICK
   };
 
-  vischar_t *hero = &state->vischars[0]; /* new, for conciseness */
-  int        delta; /* was A */
+  vischar_t   *hero = &state->vischars[0]; /* new, for conciseness */
+  unsigned int delta; /* was A */
 
   assert(state != NULL);
 

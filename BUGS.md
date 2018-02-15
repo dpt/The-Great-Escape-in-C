@@ -4,10 +4,13 @@ BUGS
 Unfixed
 -------
 
+Next up:
+
+* Assert when the bottommost row of the map is brought into view.
+
 Queue:
 
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
-* I've seen the hero glide off on his knees through a fence when wire snipping is complete.
 * Have seen NPCs get stuck at night in hero's bedroom.
 * Have seen guards and prisoners getting bunched up in doorway.
 * Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps.
@@ -90,4 +93,5 @@ Fixed
     * Fixed 14-Feb-18: I'd mistranslated the start of `spawn_characters` where it clamps the map position. A subtract was missing, offsetting the calculation by (8,8).
 35. Dogs and guards seem to be able to catch the hero though the fence.
     * (Not a bug) 14-Feb-18: This happens in the original game too. It happens on the right hand fence more than it does by the fence gate. The hero looks closer to the fence when he's caught on that right hand fence so maybe the boundary needs to be adjusted.
-
+36. When wire snipping was complete the hero would slide off the screen on his knees.
+    * Fixed 14-Feb-18: Unsigned/signed mixup.
