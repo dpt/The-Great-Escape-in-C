@@ -39,6 +39,7 @@ set_target_properties(${TARGET}
 
 find_library(AUDIOUNIT_LIBRARY AudioUnit)
 find_library(COCOA_LIBRARY Cocoa)
+find_library(COREIMAGE_LIBRARY CoreImage)
 find_library(OPENGL_LIBRARY OpenGL)
 
 target_link_libraries(${TARGET}
@@ -46,6 +47,7 @@ target_link_libraries(${TARGET}
   LibTheGreatEscape
   ${AUDIOUNIT_LIBRARY}
   ${COCOA_LIBRARY}
+  ${COREIMAGE_LIBRARY}
   ${OPENGL_LIBRARY}
 )
 
