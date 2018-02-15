@@ -4,10 +4,6 @@ BUGS
 Unfixed
 -------
 
-Next up:
-
-* Assert when the bottommost row of the map is brought into view.
-
 Queue:
 
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
@@ -94,4 +90,7 @@ Fixed
 35. Dogs and guards seem to be able to catch the hero though the fence.
     * (Not a bug) 14-Feb-18: This happens in the original game too. It happens on the right hand fence more than it does by the fence gate. The hero looks closer to the fence when he's caught on that right hand fence so maybe the boundary needs to be adjusted.
 36. When wire snipping was complete the hero would slide off the screen on his knees.
-    * Fixed 14-Feb-18: Unsigned/signed mixup.
+    * Fixed 15-Feb-18: Unsigned/signed mixup.
+37. An assert was raised when the bottom of the map was brought into view.
+    * Fixed 15-Feb-18: `get_supertiles` could read beyond the end of `map[]`.
+

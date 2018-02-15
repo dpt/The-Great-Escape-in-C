@@ -4052,26 +4052,25 @@ void get_supertiles(tgestate_t *state)
   /* Get vertical offset. */
   v = state->map_position.y & ~3; /* = 0, 4, 8, 12, ... */
 
-  /* Multiply A by 13.5. (v is a multiple of 4, so this goes 0, 54, 108, 162, ...) */
-  tiles = &map[0] - MAPX + (v + (v >> 1)) * 9; // Subtract MAPX so it skips the first row.
+  /* Multiply 'v' by (MAPX / 4) (= 13.5 = 1.5 * 9).
+   * 'v' is a multiple of 4, so this goes 0, 54, 108, 162, ...)
+   * MAPX is subtracted to skip the first row. */
+  tiles = &map[0] - MAPX + (v + (v >> 1)) * 9;
 
   /* Add horizontal offset. */
   tiles += state->map_position.x >> 2;
 
-  /* Populate map_buf with 7x5 array of supertile refs. */
   iters = state->st_rows;
+  /* Conv: Avoid reading outside the map bounds. */
+  if ((tiles + ((state->st_rows - 1) * MAPX) + state->st_columns) > &map[MAPX * MAPY])
+    iters--;
+
+  /* Populate map_buf with 7x5 array of supertile refs. */
   buf = &state->map_buf[0];
   do
   {
     ASSERT_MAP_PTR_VALID(tiles);
-    if (tiles >= &map[0] && (tiles + state->st_columns) < &map[MAPX * MAPY]) // conv: debugging
-      memcpy(buf, tiles, state->st_columns);
-    else
-    {
-      assert(0);
-      memset(buf, 42, state->st_columns); // debug
-    }
-
+    memcpy(buf, tiles, state->st_columns);
     buf   += state->st_columns;
     tiles += MAPX;
   }
