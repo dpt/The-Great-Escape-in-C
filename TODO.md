@@ -6,6 +6,7 @@ Core
 - [ ] Fix core game bugs (see BUGS.md).
 - [ ] Fix analyser issues (vars assigned to but never read).
 - [x] Stop the core overwriting shared writable room defs to make things appear.
+- [ ] Made the code buildable with sdcc.
 
 macOS
 -----
@@ -14,13 +15,17 @@ macOS
 - [ ] Audio performance ought to be checked out. Avoid bitfifo or just optimise its storage? (e.g. runlength encode the waveform)
 - [x] Ensure that the game sleeps properly. Look into macOS timing stuff.
 - [ ] Perhaps replace the OpenGL front end with SpriteKit.
-- [ ] TV simulator shader (greyscale, scanlines, blurring, etc.)
+- [x] TV simulator (shader) (greyscale, scanlines, blurring, etc.)
 - [ ] Add a help page or user guide. Keymap. Include solutions.
 - [ ] Real joystick support.
 
 Windows
 -------
 - [ ] Windows UI - bring to parity with macOS UI.
+
+RISC OS
+-------
+- [ ] Port.
 
 General
 -------
