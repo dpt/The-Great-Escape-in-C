@@ -1888,10 +1888,13 @@ void cutting_wire(tgestate_t *state)
   }
   else
   {
-    /* Countdown reached: Snip the wire. */
-    /* BUG: 'delta' is always zero here, so 'hero->direction' is always set
-     * to zero. */
-    hero->direction = delta & vischar_DIRECTION_MASK;
+    /* Countdown reached: Break through the fence. */
+    /* BUG FIX: The original game neglects to fetch hero->direction here and
+     * uses 'delta' instead as the direction. delta is always zero here, so
+     * 'hero->direction' gets set to zero too. Thus the hero will always face
+     * top-left (direction_TOP_LEFT == 0) after breaking through a fence.
+     * We fix that here. */
+    hero->direction = hero->direction & vischar_DIRECTION_MASK;
     hero->input = input_KICK;
     hero->mi.pos.height = 24;
 
