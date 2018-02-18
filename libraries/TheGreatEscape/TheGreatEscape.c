@@ -5885,7 +5885,9 @@ b0d0:
         input_DOWN + input_RIGHT + input_KICK
       };
 
-      new_direction = state->IY->direction;
+      /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
+       * new_inputs[] if we collide when crawling. */
+      new_direction = state->IY->direction & vischar_DIRECTION_MASK;
       assert(new_direction < 4);
       state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
       assert((state->IY->input & ~input_KICK) < 9);
