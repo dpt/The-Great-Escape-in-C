@@ -4,7 +4,19 @@
 #include <stdint.h>
 
 /**
- * Identifiers for character sprites.
+ * A spritedef defines a bitmap + mask pair;
+ */
+typedef struct spritedef
+{
+  uint8_t        width;  /**< in bytes + 1 */
+  uint8_t        height; /**< in rows */
+  const uint8_t *bitmap;
+  const uint8_t *mask;
+}
+spritedef_t;
+
+/**
+ * Identifiers of the sprites in the sprites[] array.
  */
 enum
 {
@@ -50,23 +62,6 @@ enum
 
   sprite_FLAG_FLIP = 1 << 7 /**< Left/right flip flag. */
 };
-
-/**
- * Holds a sprite index.
- */
-typedef uint8_t spriteindex_t;
-
-/**
- * A spritedef defines a bitmap + mask pair;
- */
-typedef struct spritedef
-{
-  uint8_t        width;  /**< in bytes + 1 */
-  uint8_t        height; /**< in rows */
-  const uint8_t *bitmap;
-  const uint8_t *mask;
-}
-spritedef_t;
 
 extern const spritedef_t sprites[sprite__LIMIT];
 

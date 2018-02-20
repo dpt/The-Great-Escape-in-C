@@ -422,14 +422,19 @@ typedef struct tinypos
 tinypos_t;
 
 /**
+ * Holds a relative sprite index.
+ */
+typedef uint8_t spriteindex_t;
+
+/**
  * Holds a movable item.
  * This is a sub-struct of vischar (from 'pos' onwards).
  */
 typedef struct movableitem
 {
   pos_t              pos;           /**< map position */
-  const spritedef_t *sprite;        /**< sprite def */
-  spriteindex_t      sprite_index;  /**< index into def */
+  const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
+  spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
 movableitem_t;
 
