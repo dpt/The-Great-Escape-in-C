@@ -6571,22 +6571,22 @@ void action_wiresnips(tgestate_t *state)
   return;
 
 set_to_4: /* Crawl TL */
-  flag = 4;
+  flag = direction_TOP_LEFT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
 set_to_5: /* Crawl TR. */
-  flag = 5;
+  flag = direction_TOP_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
 set_to_6: /* Crawl BR. */
-  flag = 6;
+  flag = direction_BOTTOM_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
 set_to_7: /* Crawl BL. */
-  flag = 7;
+  flag = direction_BOTTOM_LEFT | vischar_DIRECTION_CRAWL;
 
 action_wiresnips_tail:
-  state->vischars[0].direction      = flag; // walk/crawl flag
+  state->vischars[0].direction      = flag; // dir + walk/crawl flag
   state->vischars[0].input          = input_KICK;
   state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
   state->vischars[0].mi.pos.height  = 12; // crawling height
