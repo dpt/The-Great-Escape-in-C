@@ -5221,8 +5221,6 @@ void zoombox_draw_tile(tgestate_t     *state,
 
 /* ----------------------------------------------------------------------- */
 
-#define REVERSE routeindexflag_REVERSED
-
 /**
  * $AD59: Decides searchlight movement.
  *
@@ -5232,6 +5230,8 @@ void zoombox_draw_tile(tgestate_t     *state,
  */
 void searchlight_movement(searchlight_movement_t *slstate)
 {
+#define REVERSE (1 << 7)
+
   uint8_t        x,y;       /* was E,D */
   uint8_t        index;     /* was A */
   const uint8_t *ptr;       /* was BC */
@@ -5299,6 +5299,8 @@ void searchlight_movement(searchlight_movement_t *slstate)
     slstate->xy.x = x; // Conv: Reversed store order.
     slstate->xy.y = y;
   }
+
+#undef REVERSE
 }
 
 /**
