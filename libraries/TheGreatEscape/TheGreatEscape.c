@@ -347,7 +347,7 @@ void setup_movable_items(tgestate_t *state)
 
   spawn_characters(state);
   mark_nearby_items(state);
-  called_from_main_loop_9(state);
+  animate(state);
   move_map(state);
   plot_sprites(state);
 }
@@ -1642,7 +1642,7 @@ void main_loop(tgestate_t *state)
   spawn_characters(state);
   mark_nearby_items(state);
   ring_bell(state);
-  called_from_main_loop_9(state);
+  animate(state);
   move_map(state);
   message_display(state); /* second */
   ring_bell(state); /* second */
@@ -6821,7 +6821,7 @@ const wall_t walls[24] =
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B5CE: called_from_main_loop_9
+ * $B5CE: Works out screen positions and animations.
  *
  * work out screen positions and animations
  *
@@ -6830,7 +6830,7 @@ const wall_t walls[24] =
  *
  * \param[in] state Pointer to game state.
  */
-void called_from_main_loop_9(tgestate_t *state)
+void animate(tgestate_t *state)
 {
 #define O (0<<7)
 #define I (1<<7) // could be: play anim backwards

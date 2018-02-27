@@ -460,7 +460,7 @@ void action_wiresnips(tgestate_t *state);
 
 extern const wall_t walls[24];
 
-void called_from_main_loop_9(tgestate_t *state);
+void animate(tgestate_t *state);
 
 void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar);
 void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar);
