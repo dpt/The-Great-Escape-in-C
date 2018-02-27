@@ -3,6 +3,7 @@
 
 /* ----------------------------------------------------------------------- */
 
+/** Used to specify variable-length arrays. */
 #define UNKNOWN 1
 
 #define NELEMS(a) ((int) (sizeof(a) / sizeof(a[0])))
