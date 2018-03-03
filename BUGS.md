@@ -4,6 +4,11 @@ BUGS
 Unfixed
 -------
 
+In progress:
+
+* Address Sanitiser reports global buffer overflow when crawling through tunnels.
+    * An animation state is accessed out of bounds for certain movements.
+
 Queue:
 
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
