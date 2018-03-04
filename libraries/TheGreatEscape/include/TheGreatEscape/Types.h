@@ -11,6 +11,7 @@
 #include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/Tiles.h"
+#include "TheGreatEscape/Types.h"
 #include "TheGreatEscape/Utils.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
@@ -221,7 +222,7 @@ enum vischar_byte7_values // $8007 etc.
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
   vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
-  vischar_ANIMINDEX_BIT7               = 1 << 7  // up/down flag
+  vischar_ANIMINDEX_REVERSE            = 1 << 7  // play the animation in reverse
 };
 
 enum vischar_direction_values // $800E etc.
@@ -422,6 +423,30 @@ typedef struct tinypos
 tinypos_t;
 
 /**
+ * An animation frame.
+ */
+typedef struct animframe
+{
+  int8_t  dx, dy, dh;  /**< How much this frame moves the character by. Signed deltas. */
+  uint8_t spriteindex; /**< Sprite index (relative to vischar's sprite base) + flip flag in top bit. */
+}
+animframe_t;
+
+/**
+ * An animation.
+ *
+ * "from" and "to" will only differ when the character is turning.
+ */
+typedef struct anim
+{
+  uint8_t     nframes;         /**< Number of frames in this animation. */
+  direction_t from, to;        /**< Which direction to turn to when animation starts ('from' when reversed, 'to' when not). */
+  direction_t map_direction;   /**< Direction to move the map, or 255 to not move it. */
+  animframe_t frames[UNKNOWN]; /**< Animation frames. */
+}
+anim_t;
+
+/**
  * Holds a relative sprite index.
  */
 typedef uint8_t spriteindex_t;
@@ -463,10 +488,10 @@ typedef struct vischar
   uint8_t         counter_and_flags;
 
   /** $8008 pointer to animations (assigned once only) */
-  const uint8_t **animbase;
+  const anim_t  **animbase;
 
   /** $800A value in animations */
-  const uint8_t  *anim;
+  const anim_t  *anim;
 
   /** $800C */
   uint8_t         animindex; // animation index + up/down flag
@@ -681,7 +706,7 @@ mask_t;
  */
 typedef struct character_class_data
 {
-  const uint8_t    **animbase;
+  const anim_t     **animbase;
   const spritedef_t *sprite;
 }
 character_class_data_t;
@@ -699,17 +724,6 @@ typedef struct searchlight_movement
 }
 searchlight_movement_t;
 
-/**
- * An animation frame.
- */
-typedef struct anim
-{
-  int8_t  dx, dy, dh;  /**< signed deltas */
-  uint8_t spriteindex; /**< top bit is a flip flag */
-}
-anim_t;
-
 /* ----------------------------------------------------------------------- */
 
 #endif /* TYPES_H */
-

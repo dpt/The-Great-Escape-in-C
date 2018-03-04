@@ -591,7 +591,8 @@ extern const default_item_location_t default_item_locations[item__LIMIT];
 
 extern const character_class_data_t character_class_data[4];
 
-extern const uint8_t *animations[24];
+#define animations__LIMIT 24
+extern const anim_t *animations[animations__LIMIT];
 
 /* $D000 onwards */
 

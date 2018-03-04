@@ -287,7 +287,7 @@ void set_hero_sprite_for_room(tgestate_t *state)
   hero->input = input_KICK;
 
   /* vischar_DIRECTION_CRAWL is set, or cleared, here but not tested
-   * directly anywhere else so it must be an offset into byte_CDAA[].
+   * directly anywhere else so it must be an offset into animindices[].
    */
 
   /* When in tunnel rooms force the hero sprite to 'prisoner' and set the
@@ -4689,9 +4689,9 @@ void move_map(tgestate_t *state)
     &move_map_down_left,
   };
 
-  const uint8_t *anim;              /* was DE */
+  const anim_t  *anim;              /* was DE */
   uint8_t        animindex;         /* was C */
-  direction_t    direction;         /* was A */
+  direction_t    map_direction;     /* was A */
   uint8_t        move_map_y;        /* was A */
   movemapfn_t   *pmovefn;           /* was HL */
   uint8_t        x,y;               /* was C,B */
@@ -4710,36 +4710,36 @@ void move_map(tgestate_t *state)
 
   anim      = state->vischars[0].anim;
   animindex = state->vischars[0].animindex;
-  direction = anim[3]; // third byte of anim_[A-X] - 255, 0, 1, 2, or 3
-  if (direction == 255)
+  map_direction = anim->map_direction;
+  if (map_direction == 255)
     return; /* Don't move. */
 
-  if (animindex & vischar_ANIMINDEX_BIT7)
-    direction ^= 2; /* Exchange up and down. */
+  if (animindex & vischar_ANIMINDEX_REVERSE)
+    map_direction ^= 2; /* Exchange up and down. */
 
-  pmovefn = movemapfns[direction];
+  pmovefn = movemapfns[map_direction];
   // PUSH HL // pushes move_map routine to stack
   // PUSH AF
 
   /* Map clamping stuff. */
   if (/* DISABLES CODE */ (0))
   {
-    // Equivalent
-         if (direction == direction_TOP_LEFT)     { y = 124; x = 192; }
-    else if (direction == direction_TOP_RIGHT)    { y = 124; x =   0; }
-    else if (direction == direction_BOTTOM_RIGHT) { y =   0; x =   0; }
-    else if (direction == direction_BOTTOM_LEFT)  { y =   0; x = 192; }
+    /* FUTURE: Equivalent. */
+         if (map_direction == direction_TOP_LEFT)     { y = 124; x = 192; }
+    else if (map_direction == direction_TOP_RIGHT)    { y = 124; x =   0; }
+    else if (map_direction == direction_BOTTOM_RIGHT) { y =   0; x =   0; }
+    else if (map_direction == direction_BOTTOM_LEFT)  { y =   0; x = 192; }
   }
   else
   {
     y = 124;
     x = 0;
     /* direction_BOTTOM_* - bottom of the map clamp */
-    if (direction >= direction_BOTTOM_RIGHT)
+    if (map_direction >= direction_BOTTOM_RIGHT)
       y = 0;
     /* direction_*_LEFT - left of the map clamp */
-    if (direction != direction_TOP_RIGHT &&
-        direction != direction_BOTTOM_RIGHT)
+    if (map_direction != direction_TOP_RIGHT &&
+        map_direction != direction_BOTTOM_RIGHT)
       x = 192;
   }
 
@@ -4754,7 +4754,7 @@ void move_map(tgestate_t *state)
   // It gets passed into the move functions.
   // Is this a vertical index/offset only?
   pmove_map_y = &state->move_map_y;
-  if (direction <= direction_TOP_RIGHT)
+  if (map_direction <= direction_TOP_RIGHT)
     /* direction_TOP_* */
     move_map_y = *pmove_map_y + 1;
   else
@@ -6823,58 +6823,71 @@ const wall_t walls[24] =
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B5CE: Works out screen positions and animations.
- *
- * work out screen positions and animations
- *
- * - movement
- * - crash if disabled, crash if iters reduced from 8
+ * $B5CE: Animates all visible characters.
  *
  * \param[in] state Pointer to game state.
  */
 void animate(tgestate_t *state)
 {
-#define O (0<<7)
-#define I (1<<7) // could be: play anim backwards
+  /* The most common animations use the forward case, but the game will also
+   * play some animations backwards when required. For example when crawling
+   * in straight tunnels the hero cannot turn around. Moving in the opposite
+   * direction doesn't turn the character around but instead plays the same
+   * crawl animation but in reverse mode.
+   */
 
   /**
-   * $CDAA: Maps (facing direction, user input) to animation + flag.
+   * $CDAA: Maps a character's direction and user input to an animation index
+   * and reverse flag.
+   *
+   * The horizontal axis is input (U/D/L/R = Up/Down/Left/Right)
+   * and the vertical axis is direction (TL/TR/BR/BL + crawl flag).
+   *
+   * For example:
+   * if (direction,input) is (TL, None) then index is 8 which is anim_wait_tl.
+   * if (direction,input) is (TR + Crawl, D+L) then index is 21 which is anim_crawlwait_tr.
+   *
+   * Modulo the reverse flag the highest index in the table is 23 which is
+   * the max index in animations[] (== animations__LIMIT - 1).
    */
-  static const uint8_t byte_CDAA[8 /*direction*/][9 /*input*/] =
+  static const uint8_t animindices[8 /*direction*/][9 /*input*/] =
   {
-    // (U/D/L/R = Up/Down/Left/Right)
-    // None,  U,      D,      L,      U+L,    D+L,    R,      U+R,    D+R
-    { O| 8, O| 0, O| 4, I| 7, O| 0, I| 7, O| 4, O| 4, O| 4 }, // TL
-    { O| 9, I| 4, O| 5, O| 5, I| 4, O| 5, O| 1, O| 1, O| 5 }, // TR
-    { O|10, I| 5, O| 2, O| 6, I| 5, O| 6, I| 5, I| 5, O| 2 }, // BR
-    { O|11, O| 7, I| 6, O| 3, O| 7, O| 3, O| 7, O| 7, I| 6 }, // BL
-    { O|20, O|12, I|12, I|19, O|12, I|19, O|16, O|16, I|12 }, // TL + Crawl
-    { O|21, I|16, O|17, I|13, I|16, I|21, O|13, O|13, O|17 }, // TR + Crawl
-    { O|22, I|14, O|14, O|18, I|14, O|14, I|17, I|17, O|14 }, // BR + Crawl
-    { O|23, O|19, I|18, O|15, O|19, O|15, I|15, I|15, I|18 }, // BL + Crawl
+#define F (0 << 7) /* Top bit set: animation plays forwards. */
+#define R (1 << 7) /* Top bit clear: animation plays in reverse. */
+    /* None,   U,    D,    L,  U+L,  D+L,    R,  U+R,  D+R */
+    {  8|F,  0|F,  4|F,  7|R,  0|F,  7|R,  4|F,  4|F,  4|F }, /* TL */
+    {  9|F,  4|R,  5|F,  5|F,  4|R,  5|F,  1|F,  1|F,  5|F }, /* TR */
+    { 10|F,  5|R,  2|F,  6|F,  5|R,  6|F,  5|R,  5|R,  2|F }, /* BR */
+    { 11|F,  7|F,  6|R,  3|F,  7|F,  3|F,  7|F,  7|F,  6|R }, /* BL */
+    { 20|F, 12|F, 12|R, 19|R, 12|F, 19|R, 16|F, 16|F, 12|R }, /* TL + Crawl */
+    { 21|F, 16|R, 17|F, 13|R, 16|R, 21|R, 13|F, 13|F, 17|F }, /* TR + Crawl */
+    { 22|F, 14|R, 14|F, 18|F, 14|R, 14|F, 17|R, 17|R, 14|F }, /* BR + Crawl */
+    { 23|F, 19|F, 18|R, 15|F, 19|F, 15|F, 15|R, 15|R, 18|R }, /* BL + Crawl */
   };
-  // highest index = 23 (== max index in animations)
 
-  uint8_t        iters;     /* was B */
-  const uint8_t *anim;      /* was HL */
-  uint8_t        animindex; /* was A */
-  uint8_t        A;         /* was A */
-  uint8_t        C;         /* was C */
-  const uint8_t *DE;        /* was HL */
-  spriteindex_t  Adash;     /* was A' */
-  vischar_t     *vischar;   /* a cache of IY (Conv: added) */
+  uint8_t            iters;         /* was B */
+  const anim_t      *animA;         /* was HL */
+  const animframe_t *frameA;        /* was HL */
+  uint8_t            animindex;     /* was A */
+  spriteindex_t      spriteindex;   /* was A */
+  uint8_t            newanimindex;  /* was C */
+  uint8_t            length;        /* was C */
+  const anim_t      *animB;         /* was DE */
+  const animframe_t *frameB;        /* was DE */
+  spriteindex_t      spriteindex2;  /* was A' */
+  vischar_t         *vischar;       /* a cache of IY (Conv: added) */
 
   assert(state != NULL);
 
-  anim = DE = NULL; // Conv: init
-  Adash = 0; // Conv: initialise
+  frameA = frameB = NULL; // Conv: init
+  spriteindex2 = 0; // Conv: initialise
 
+  /* Animate all vischars. */
   iters     = vischars_LENGTH;
   state->IY = &state->vischars[0];
   do
   {
     vischar = state->IY; /* Conv: Added local copy of IY. */
-
     if (vischar->flags == vischar_FLAGS_EMPTY_SLOT)
       goto next;
 
@@ -6887,61 +6900,58 @@ void animate(tgestate_t *state)
 
     assert(vischar->input < 9);
 
-    anim = vischar->anim;
+    animA = vischar->anim;
     animindex = vischar->animindex;
-    if (animindex & vischar_ANIMINDEX_BIT7) // up/down flag
+    if (animindex & vischar_ANIMINDEX_REVERSE)
     {
-      animindex &= ~vischar_ANIMINDEX_BIT7;
-      if (animindex == 0)
-        goto end_bit;
+      /* Reached end of animation? */
+      /* BUG FIX: Checks for 0x7F, not 0. */
+      animindex &= ~vischar_ANIMINDEX_REVERSE;
+      if (animindex == 0x7F) /* i.e. -1 */
+        goto init;
 
-      anim += (animindex + 1) * 4 - 1; /* 4..512 + 1 */
-      A = *anim++; // a spriteindex_t
+      assert(animindex < animA->nframes);
 
-      SWAP(uint8_t, A, Adash);
+      frameA = &animA->frames[animindex];
+      spriteindex = frameA->spriteindex;
 
-// Conv: Simplified sign extend sequence to this. Too far?
-#define SXT_8_16(P) ((uint16_t) (*(int8_t *) (P)))
+      SWAP(uint8_t, spriteindex, spriteindex2);
 
-decrement:
-      SWAP(const uint8_t *, DE, anim);
+backwards:
+      SWAP(const animframe_t *, frameB, frameA);
 
-      // sampled DE = $CF9A, $CF9E, $CFBE, $CFC2, $CFB2, $CFB6, $CFA6, $CFAA (animations)
+      state->saved_pos.pos.x      = vischar->mi.pos.x      - frameB->dx;
+      state->saved_pos.pos.y      = vischar->mi.pos.y      - frameB->dy;
+      state->saved_pos.pos.height = vischar->mi.pos.height - frameB->dh;
 
-      state->saved_pos.pos.x = vischar->mi.pos.x - SXT_8_16(DE);
-      DE++;
-      state->saved_pos.pos.y = vischar->mi.pos.y - SXT_8_16(DE);
-      DE++;
-      state->saved_pos.pos.height = vischar->mi.pos.height - SXT_8_16(DE);
+      if (touch(state, vischar, spriteindex2))
+        goto pop_next; /* don't animate if collided */
 
-      if (touch(state, vischar, Adash /* sprite_index */))
-        goto pop_next; // don't animate if collided
-
-      vischar->animindex--;
+      /* Conv: Preserve reverse flag. */
+      vischar->animindex = (vischar->animindex - 1) | vischar_ANIMINDEX_REVERSE;
     }
     else
     {
-      if (animindex == *anim)
-        goto end_bit;
+      /* Reached end of animation? */
+      if (animindex == animA->nframes)
+        goto init;
 
-      anim += (animindex + 1) * 4;
+      assert(animindex < animA->nframes);
 
-increment:
-      SWAP(const uint8_t *, DE, anim);
+      frameA = &animA->frames[animindex];
 
-      state->saved_pos.pos.x = vischar->mi.pos.x + SXT_8_16(DE);
-      DE++;
-      state->saved_pos.pos.y = vischar->mi.pos.y + SXT_8_16(DE);
-      DE++;
-      state->saved_pos.pos.height = vischar->mi.pos.height + SXT_8_16(DE);
-      DE++;
+forwards:
+      SWAP(const animframe_t *, frameB, frameA);
 
-      A = *DE; // a spriteindex_t
+      state->saved_pos.pos.x      = vischar->mi.pos.x      + frameB->dx;
+      state->saved_pos.pos.y      = vischar->mi.pos.y      + frameB->dy;
+      state->saved_pos.pos.height = vischar->mi.pos.height + frameB->dh;
+      spriteindex = frameB->spriteindex;
 
-      SWAP(uint8_t, A, Adash);
+      SWAP(uint8_t, spriteindex, spriteindex2);
 
-      if (touch(state, vischar, Adash /* sprite_index */))
-        goto pop_next; // don't animate if collided
+      if (touch(state, vischar, spriteindex2))
+        goto pop_next; /* don't animate if collided */
 
       vischar->animindex++;
     }
@@ -6963,43 +6973,45 @@ next:
 kicked:
   vischar->input &= ~input_KICK;
   assert(vischar->input < 9);
-
-end_bit:
+  /* fall through */
+init:
   assert(vischar->input < 9);
   assert(vischar->direction < 8);
-  C = byte_CDAA[vischar->direction][vischar->input];
-  // Conv: Original game uses ADD A,A to double A and in doing so discards top flag bit. We mask it off instead.
-  assert((C & ~I) < 24);
-  DE = vischar->animbase[C & ~I]; // sampled animbase always $CDF2 == &animations[0]
-  vischar->anim = DE;
-  if ((C & I) == 0)
+  newanimindex = animindices[vischar->direction][vischar->input];
+  /* Conv: Original game uses ADD A,A to double A and in doing so discards
+   * the top flag bit. We mask it off instead. */
+  assert((newanimindex & ~R) < 24);
+  animB = vischar->animbase[newanimindex & ~R]; /* animbase is always &animations[0] */
+  vischar->anim = animB;
+  if ((newanimindex & R) == 0)
   {
     vischar->animindex = 0;
-    DE += 2;
-    vischar->direction = *DE;
-    DE += 2; // point to groups of four
-    SWAP(const uint8_t *, DE, anim);
-    goto increment;
+    vischar->direction = animB->to;
+    frameB = &animB->frames[0]; // theoretically a no-op
+    SWAP(const animframe_t *, frameB, frameA);
+    goto forwards;
   }
   else
   {
-    const uint8_t *stacked;
+    const animframe_t *stacked;
 
-    C = *DE; // count of four-byte groups
-    vischar->animindex = C | vischar_ANIMINDEX_BIT7;
-    vischar->direction = *++DE;
-    DE += 3; // point to groups of four
-    stacked = DE;
-    SWAP(const uint8_t *, DE, anim);
-    anim += C * 4 - 1;
-    A = *anim; // last byte in group of four, flip flag?
-    SWAP(uint8_t, A, Adash);
-    anim = stacked;
-    goto decrement;
+    length = animB->nframes;
+    /* BUG FIX: (length - 1) used here, not length. */
+    vischar->animindex = (length - 1) | vischar_ANIMINDEX_REVERSE;
+    vischar->direction = animB->from;
+    /* BUG FIX: Final frame used here, not first. */
+    frameB = &animB->frames[length - 1];
+    stacked = frameB;
+    SWAP(const animframe_t *, frameB, frameA);
+    spriteindex = animB->frames[length - 1].spriteindex;
+    SWAP(spriteindex_t, spriteindex, spriteindex2);
+    assert(frameA == stacked);
+    frameA = stacked;
+    goto backwards;
   }
 
-#undef I
-#undef O
+#undef R
+#undef F
 }
 
 /* ----------------------------------------------------------------------- */
@@ -10906,115 +10918,145 @@ const default_item_location_t default_item_locations[item__LIMIT] =
 
 /* ----------------------------------------------------------------------- */
 
-/* Conv: Moved to precede parent array. */
+/* $CF06: Animations
+ *
+ * These anim_t's are written here as arrays of uint8_t to allow the variable
+ * length final member to be initialised.
+ *
+ * Conv: These were formerly located at the end of the sprite definitions but
+ * moved here so they precede the parent array animations[].
+ */
 
-// spriteindex's top bit is probably a flip flag.
+/* Define shorthands for directions and crawl flag. */
+#define TL direction_TOP_LEFT
+#define TR direction_TOP_RIGHT
+#define BR direction_BOTTOM_RIGHT
+#define BL direction_BOTTOM_LEFT
+#define CR vischar_DIRECTION_CRAWL
+#define NO 255
 
 /* Define a shorthand for the flip flag. */
 #define F sprite_FLAG_FLIP
 #define _ 0
 
-/* The first byte is the number of trailing anim_t's. */
+/* "Do nothing" animations for crawling */
+static const uint8_t anim_crawlwait_tl[] = { 1, TL|CR,TL|CR, NO,  0, 0, 0, _|10 };
+static const uint8_t anim_crawlwait_tr[] = { 1, TR|CR,TR|CR, NO,  0, 0, 0, F|10 };
+static const uint8_t anim_crawlwait_br[] = { 1, BR|CR,BR|CR, NO,  0, 0, 0, F| 8 };
+static const uint8_t anim_crawlwait_bl[] = { 1, BL|CR,BL|CR, NO,  0, 0, 0, _| 8 };
 
-// struct animation
-// {
-//   uint8_t count;     // how many anims in anim[]
-//   uint8_t A;         // unknown yet
-//   uint8_t B;         // unknown yet
-//                      // A+B differ when changing direction
-//   uint8_t direction; // selects map movement routine in move_map:
-//                      // 0 = player moves down-right (map is shifted up-left)
-//                      // 1 = player moves down-left  (map is shifted up-right)
-//                      // 2 = player moves up-left    (map is shifted down-right)
-//                      // 3 = player moves up-right   (map is shifted down-left)
-//                      // 255 = don't move the map
-//                      // perhaps a direction_t if interpretation of this field is "which direction to move the map"
-//   anim_t  anim[UNKNOWN];
-//                      // each anim has x/y/z - a triple of delta values used for movement
-//                      // z's are always zero as no movement changes height
-// };
+/* Walking animations */
+static const uint8_t anim_walk_tl[]      = { 4, TL,TL,       BR,  2, 0, 0, _| 0,
+                                                                  2, 0, 0, _| 1,
+                                                                  2, 0, 0, _| 2,
+                                                                  2, 0, 0, _| 3 };
+static const uint8_t anim_walk_tr[]      = { 4, TR,TR,       BL,  0, 2, 0, F| 0,
+                                                                  0, 2, 0, F| 1,
+                                                                  0, 2, 0, F| 2,
+                                                                  0, 2, 0, F| 3 };
+static const uint8_t anim_walk_br[]      = { 4, BR,BR,       TL, -2, 0, 0, _| 4,
+                                                                 -2, 0, 0, _| 5,
+                                                                 -2, 0, 0, _| 6,
+                                                                 -2, 0, 0, _| 7 };
+static const uint8_t anim_walk_bl[]      = { 4, BL,BL,       TR,  0,-2, 0, F| 4,
+                                                                  0,-2, 0, F| 5,
+                                                                  0,-2, 0, F| 6,
+                                                                  0,-2, 0, F| 7 };
 
-static const uint8_t anim_crawlwait_tl[] = { 1, 4,4,255,  0, 0, 0, _|10 };
-static const uint8_t anim_crawlwait_tr[] = { 1, 5,5,255,  0, 0, 0, F|10 };
-static const uint8_t anim_crawlwait_br[] = { 1, 6,6,255,  0, 0, 0, F|8  };
-static const uint8_t anim_crawlwait_bl[] = { 1, 7,7,255,  0, 0, 0, _|8  };
+/* "Do nothing" animations */
+static const uint8_t anim_wait_tl[]      = { 1, TL,TL,       NO,  0, 0, 0, _| 0 };
+static const uint8_t anim_wait_tr[]      = { 1, TR,TR,       NO,  0, 0, 0, F| 0 };
+static const uint8_t anim_wait_br[]      = { 1, BR,BR,       NO,  0, 0, 0, _| 4 };
+static const uint8_t anim_wait_bl[]      = { 1, BL,BL,       NO,  0, 0, 0, F| 4 };
 
-static const uint8_t anim_walk_tl[]      = { 4, 0,0,2,    2, 0, 0, _|0,  2, 0, 0, _|1,  2, 0, 0, _|2,  2, 0, 0, _|3 };
-static const uint8_t anim_walk_tr[]      = { 4, 1,1,3,    0, 2, 0, F|0,  0, 2, 0, F|1,  0, 2, 0, F|2,  0, 2, 0, F|3 };
-static const uint8_t anim_walk_br[]      = { 4, 2,2,0,   -2, 0, 0, _|4, -2, 0, 0, _|5, -2, 0, 0, _|6, -2, 0, 0, _|7 };
-static const uint8_t anim_walk_bl[]      = { 4, 3,3,1,    0,-2, 0, F|4,  0,-2, 0, F|5,  0,-2, 0, F|6,  0,-2, 0, F|7 };
+/* Turning animations */
+static const uint8_t anim_turn_tl[]      = { 2, TL,TR,       NO,  0, 0, 0, _| 0,
+                                                                  0, 0, 0, F| 0 };
+static const uint8_t anim_turn_tr[]      = { 2, TR,BR,       NO,  0, 0, 0, F| 0,
+                                                                  0, 0, 0, _| 4 };
+static const uint8_t anim_turn_br[]      = { 2, BR,BL,       NO,  0, 0, 0, _| 4,
+                                                                  0, 0, 0, F| 4 };
+static const uint8_t anim_turn_bl[]      = { 2, BL,TL,       NO,  0, 0, 0, F| 4,
+                                                                  0, 0, 0, _| 0 };
 
-static const uint8_t anim_wait_tl[]      = { 1, 0,0,255,  0, 0, 0, _|0  };
-static const uint8_t anim_wait_tr[]      = { 1, 1,1,255,  0, 0, 0, F|0  };
-static const uint8_t anim_wait_br[]      = { 1, 2,2,255,  0, 0, 0, _|4  };
-static const uint8_t anim_wait_bl[]      = { 1, 3,3,255,  0, 0, 0, F|4  };
+/* Crawling animations */
+static const uint8_t anim_crawl_tl[]     = { 2, TL|CR,TL|CR, BR,  2, 0, 0, _|10,
+                                                                  2, 0, 0, _|11 };
+static const uint8_t anim_crawl_tr[]     = { 2, TR|CR,TR|CR, BL,  0, 2, 0, F|10,
+                                                                  0, 2, 0, F|11 };
+static const uint8_t anim_crawl_br[]     = { 2, BR|CR,BR|CR, TL, -2, 0, 0, F| 8,
+                                                                 -2, 0, 0, F| 9 };
+static const uint8_t anim_crawl_bl[]     = { 2, BL|CR,BL|CR, TR,  0,-2, 0, _| 8,
+                                                                  0,-2, 0, _| 9 };
 
-static const uint8_t anim_turn_tl[]      = { 2, 0,1,255,  0, 0, 0, _|0,  0, 0, 0, F|0  };
-static const uint8_t anim_turn_tr[]      = { 2, 1,2,255,  0, 0, 0, F|0,  0, 0, 0, _|4  };
-static const uint8_t anim_turn_br[]      = { 2, 2,3,255,  0, 0, 0, _|4,  0, 0, 0, F|4  };
-static const uint8_t anim_turn_bl[]      = { 2, 3,0,255,  0, 0, 0, F|4,  0, 0, 0, _|0  };
-
-static const uint8_t anim_crawl_tl[]     = { 2, 4,4,2,    2, 0, 0, _|10, 2, 0, 0, _|11 };
-static const uint8_t anim_crawl_tr[]     = { 2, 5,5,3,    0, 2, 0, F|10, 0, 2, 0, F|11 };
-static const uint8_t anim_crawl_br[]     = { 2, 6,6,0,   -2, 0, 0, F|8, -2, 0, 0, F|9  };
-static const uint8_t anim_crawl_bl[]     = { 2, 7,7,1,    0,-2, 0, _|8,  0,-2, 0, _|9  };
-
-static const uint8_t anim_crawlturn_tl[] = { 2, 4,5,255,  0, 0, 0, _|10, 0, 0, 0, F|10 };
-static const uint8_t anim_crawlturn_tr[] = { 2, 5,6,255,  0, 0, 0, F|10, 0, 0, 0, F|8  };
-static const uint8_t anim_crawlturn_br[] = { 2, 6,7,255,  0, 0, 0, F|8,  0, 0, 0, _|8  };
-static const uint8_t anim_crawlturn_bl[] = { 2, 7,4,255,  0, 0, 0, _|8,  0, 0, 0, _|10 };
+/* Turning while crawling animations */
+static const uint8_t anim_crawlturn_tl[] = { 2, TL|CR,TR|CR, NO,  0, 0, 0, _|10,
+                                                                  0, 0, 0, F|10 };
+static const uint8_t anim_crawlturn_tr[] = { 2, TR|CR,BR|CR, NO,  0, 0, 0, F|10,
+                                                                  0, 0, 0, F| 8 };
+static const uint8_t anim_crawlturn_br[] = { 2, BR|CR,BL|CR, NO,  0, 0, 0, F| 8,
+                                                                  0, 0, 0, _| 8 };
+static const uint8_t anim_crawlturn_bl[] = { 2, BL|CR,TL|CR, NO,  0, 0, 0, _| 8,
+                                                                  0, 0, 0, _|10 };
 
 #undef _
 #undef F
 
+#undef NO
+#undef CR
+#undef BL
+#undef BR
+#undef TR
+#undef TL
+
 /**
- * $CDF2: Animation states.
+ * $CDF2: Array of pointers to animations.
  */
-const uint8_t *animations[24] =
+const anim_t *animations[animations__LIMIT] =
 {
-  // Comments here record which animation is selected by byte_CDAA.
+  // Comments here record which animation is selected by animindices[].
   // [facing direction:user input]
   //
 
   // Normal animations, move the map
-  anim_walk_tl, //  0 [TL:Up,    TL:Up+Left]
-  anim_walk_tr, //  1 [TR:Right, TR:Up+Right]
-  anim_walk_br, //  2 [BR:Down,  BR:Down+Right]
-  anim_walk_bl, //  3 [BL:Left,  BL:Down+Left]
+  (const anim_t *) anim_walk_tl, //  0 [TL:Up,    TL:Up+Left]
+  (const anim_t *) anim_walk_tr, //  1 [TR:Right, TR:Up+Right]
+  (const anim_t *) anim_walk_br, //  2 [BR:Down,  BR:Down+Right]
+  (const anim_t *) anim_walk_bl, //  3 [BL:Left,  BL:Down+Left]
 
   // Normal + turning
-  anim_turn_tl, //  4 [TL:Down, TL:Right,     TL:Up+Right,  TL:Down+Right, TR:Up,    TR:Up+Left]
-  anim_turn_tr, //  5 [TR:Down, TR:Left,      TR:Down+Left, TR:Down+Right, BR:Up,    BR:Up+Left, BR:Right, BR:Up+Right]
-  anim_turn_br, //  6 [BR:Left, BR:Down+Left, BL:Down,      BL:Down+Right]
-  anim_turn_bl, //  7 [TL:Left, TL:Down+Left, BL:Up,        BL:Up+Left,    BL:Right, BL:Up+Right]
+  (const anim_t *) anim_turn_tl, //  4 [TL:Down, TL:Right,     TL:Up+Right,  TL:Down+Right, TR:Up,    TR:Up+Left]
+  (const anim_t *) anim_turn_tr, //  5 [TR:Down, TR:Left,      TR:Down+Left, TR:Down+Right, BR:Up,    BR:Up+Left, BR:Right, BR:Up+Right]
+  (const anim_t *) anim_turn_br, //  6 [BR:Left, BR:Down+Left, BL:Down,      BL:Down+Right]
+  (const anim_t *) anim_turn_bl, //  7 [TL:Left, TL:Down+Left, BL:Up,        BL:Up+Left,    BL:Right, BL:Up+Right]
 
   // Standing still
-  anim_wait_tl, //  8 [TL:None]
-  anim_wait_tr, //  9 [TR:None]
-  anim_wait_br, // 10 [BR:None]
-  anim_wait_bl, // 11 [BL:None]
+  (const anim_t *) anim_wait_tl, //  8 [TL:None]
+  (const anim_t *) anim_wait_tr, //  9 [TR:None]
+  (const anim_t *) anim_wait_br, // 10 [BR:None]
+  (const anim_t *) anim_wait_bl, // 11 [BL:None]
 
   // Note that when crawling the hero won't spin around in the tunnel. He'll
   // retain his orientation until specficially spun around using the controls
   // opposite to the direction of the tunnel.
 
   // Crawling (map movement is enabled which is odd... we never move the map when crawling)
-  anim_crawl_tl, // 12 [TL+crawl:Up,   TL+crawl:Down,      TL+crawl:Up+Left, TL+crawl:Down+Right]
-  anim_crawl_tr, // 13 [TR+crawl:Left, TR+crawl:Right,     TR+crawl:Up+Right]
-  anim_crawl_br, // 14 [BR+crawl:Up,   BR+crawl:Down,      BR+crawl:Up+Left, BR+crawl:Down+Left, BR+crawl:Down+Right]
-  anim_crawl_bl, // 15 [BL+crawl:Left, BL+crawl:Down+Left, BL+crawl:Right,   BL+crawl:Up+Right]
+  (const anim_t *) anim_crawl_tl, // 12 [TL+crawl:Up,   TL+crawl:Down,      TL+crawl:Up+Left, TL+crawl:Down+Right]
+  (const anim_t *) anim_crawl_tr, // 13 [TR+crawl:Left, TR+crawl:Right,     TR+crawl:Up+Right]
+  (const anim_t *) anim_crawl_br, // 14 [BR+crawl:Up,   BR+crawl:Down,      BR+crawl:Up+Left, BR+crawl:Down+Left, BR+crawl:Down+Right]
+  (const anim_t *) anim_crawl_bl, // 15 [BL+crawl:Left, BL+crawl:Down+Left, BL+crawl:Right,   BL+crawl:Up+Right]
 
   // Crawling + turning
-  anim_crawlturn_tl, // 16 [TL+crawl:Right, TL+crawl:Up+Right,   TR+crawl:Up,    TR+crawl:Up+Left]   // turn to face TR
-  anim_crawlturn_tr, // 17 [TR+crawl:Down,  TR+crawl:Down+Right, BR+crawl:Right, BR+crawl:Up+Right]  // turn to face BR
-  anim_crawlturn_br, // 18 [BR+crawl:Left,  BL+crawl:Down,       BL+crawl:Down+Right]                // turn to face BL
-  anim_crawlturn_bl, // 19 [TL+crawl:Left,  TL+crawl:Down+Left,  BL+crawl:Up,    BL+crawl:Up+Left]   // turn to face TL
+  (const anim_t *) anim_crawlturn_tl, // 16 [TL+crawl:Right, TL+crawl:Up+Right,   TR+crawl:Up,    TR+crawl:Up+Left]   // turn to face TR
+  (const anim_t *) anim_crawlturn_tr, // 17 [TR+crawl:Down,  TR+crawl:Down+Right, BR+crawl:Right, BR+crawl:Up+Right]  // turn to face BR
+  (const anim_t *) anim_crawlturn_br, // 18 [BR+crawl:Left,  BL+crawl:Down,       BL+crawl:Down+Right]                // turn to face BL
+  (const anim_t *) anim_crawlturn_bl, // 19 [TL+crawl:Left,  TL+crawl:Down+Left,  BL+crawl:Up,    BL+crawl:Up+Left]   // turn to face TL
 
   // Crawling still
-  anim_crawlwait_tl, // 20 [TL+crawl:None]
-  anim_crawlwait_tr, // 21 [TR+crawl:None, TR+crawl:Down+Left] // looks like it ought to be 18, not 21
-  anim_crawlwait_br, // 22 [BR+crawl:None]
-  anim_crawlwait_bl, // 23 [BL+crawl:None]
+  (const anim_t *) anim_crawlwait_tl, // 20 [TL+crawl:None]
+  (const anim_t *) anim_crawlwait_tr, // 21 [TR+crawl:None, TR+crawl:Down+Left] // looks like it ought to be 18, not 21
+  (const anim_t *) anim_crawlwait_br, // 22 [BR+crawl:None]
+  (const anim_t *) anim_crawlwait_bl, // 23 [BL+crawl:None]
 };
 
 /* ----------------------------------------------------------------------- */
