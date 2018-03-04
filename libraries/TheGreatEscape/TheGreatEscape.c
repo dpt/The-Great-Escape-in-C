@@ -3450,7 +3450,7 @@ void character_sits(tgestate_t *state,
 
   assert(state  != NULL);
   assert(routeindex >= routeindex_18_PRISONER_SITS_1 &&
-         routeindex <= routeindex_22_PRISONER_SITS_2);
+         routeindex <= routeindex_23_PRISONER_SITS_3);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
@@ -9148,13 +9148,14 @@ void character_event(tgestate_t *state, route_t *route)
 
   routeindex = route->index;
   if (routeindex >= routeindex_7_PRISONER_SLEEPS_1 &&
-      routeindex <= routeindex_12_PRISONER_SLEEPS_3) // 6 indices
+      routeindex <= routeindex_12_PRISONER_SLEEPS_3)
   {
     character_sleeps(state, routeindex, route);
     return;
   }
+  /* BUG FIX: Prisoner assigned route 23 now sits. */
   if (routeindex >= routeindex_18_PRISONER_SITS_1 &&
-      routeindex <= routeindex_22_PRISONER_SITS_2) // only 5 indices - is this why one character doesn't sit for breakfast? there's an entry in routes[] which looks like it ought to match
+      routeindex <= routeindex_23_PRISONER_SITS_3)
   {
     character_sits(state, routeindex, route);
     return;

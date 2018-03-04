@@ -102,4 +102,7 @@ Fixed
     * Instead he repeatedly walks at the hero and the score rises by 50 each time.
     * Fixed 4-Mar-18: `bribed_character` wasn't being reset to 255 at game start as per original game state.
     * However the original game neglects to reset it in `reset_game`, we now do that too.
+40. Prisoner on route 23 wouldn't sit down for breakfast.
+    * Original game bug.
+    * Fixed 4-Mar-18.
 
