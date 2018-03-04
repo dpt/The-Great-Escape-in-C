@@ -6044,12 +6044,12 @@ int is_door_locked(tgestate_t *state)
 
   assert(state != NULL);
 
-  cur   = state->current_door & ~door_LOCKED; // probably door_REVERSE
+  cur   = state->current_door & ~door_LOCKED;
   door  = &state->locked_doors[0];
   iters = NELEMS(state->locked_doors);
   do
   {
-    if ((*door & ~door_LOCKED) == cur) // is definitely door_LOCKED, as 'door' is fetched from locked_doors[]
+    if ((*door & ~door_LOCKED) == cur)
     {
       if ((*door & door_LOCKED) == 0)
         return 0; /* Door is open. */
