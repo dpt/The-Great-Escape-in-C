@@ -201,6 +201,7 @@ failure:
   @synchronized(self)
   {
     quit = YES;
+    paused = NO;
   }
 
   // Wait for it to yield
