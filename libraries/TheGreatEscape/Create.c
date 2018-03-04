@@ -384,6 +384,9 @@ static void tge_initialise(tgestate_t *state)
          searchlight_states,
          sizeof(searchlight_states));
 
+  /* $AF8E */
+  state->bribed_character = character_NONE;
+
   /* $DD69 */
   memcpy(state->item_attributes,
          item_attributes,

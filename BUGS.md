@@ -98,4 +98,8 @@ Fixed
     * Fixed 15-Feb-18: `get_supertiles` could read beyond the end of `map[]`.
 38. Address Sanitiser reports global buffer overflow when crawling through tunnels.
     * Fixed 4-Mar-18: Reversed animations (used when crawling) had broken logic. Original game bug.
+39. Commandant was unable to send the hero to solitary when caught.
+    * Instead he repeatedly walks at the hero and the score rises by 50 each time.
+    * Fixed 4-Mar-18: `bribed_character` wasn't being reset to 255 at game start as per original game state.
+    * However the original game neglects to reset it in `reset_game`, we now do that too.
 

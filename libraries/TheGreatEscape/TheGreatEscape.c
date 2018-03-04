@@ -7111,6 +7111,9 @@ void reset_game(tgestate_t *state)
   state->room_index = room_2_HUT2LEFT;
   hero_sleeps(state);
 
+  /* BUG FIX: Reset bribed character index. */
+  state->bribed_character = character_NONE;
+
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
 
