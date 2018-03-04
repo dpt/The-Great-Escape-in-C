@@ -6,8 +6,6 @@ Unfixed
 
 In progress:
 
-* Address Sanitiser reports global buffer overflow when crawling through tunnels.
-    * An animation state is accessed out of bounds for certain movements.
 
 Queue:
 
@@ -98,4 +96,6 @@ Fixed
     * Fixed 15-Feb-18: Unsigned/signed mixup.
 37. An assert was raised when the bottom of the map was brought into view.
     * Fixed 15-Feb-18: `get_supertiles` could read beyond the end of `map[]`.
+38. Address Sanitiser reports global buffer overflow when crawling through tunnels.
+    * Fixed 4-Mar-18: Reversed animations (used when crawling) had broken logic. Original game bug.
 
