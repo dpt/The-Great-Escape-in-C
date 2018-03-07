@@ -5868,9 +5868,11 @@ int collision(tgestate_t *state)
       {
         state->IY->input = input_KICK;
 
-b0d0:
-        // is the 5 a character_behaviour delay field?
-        state->IY->counter_and_flags = (state->IY->counter_and_flags & ~vischar_BYTE7_COUNTER_MASK) | 5; // preserve flags and set 5? // sampled IY = $8000, $80E0
+collided:
+        /* Delay character_behaviour() for five turns. This delay controls
+         * how long it takes before a blocked character will try another
+         * direction. */
+        state->IY->counter_and_flags = (state->IY->counter_and_flags & ~vischar_BYTE7_COUNTER_MASK) | 5;
         // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
         //if (!Z)
           return 1; /* odd -- returning with Z not set */
@@ -5897,7 +5899,7 @@ b0d0:
         state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
       else
         state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
-      goto b0d0;
+      goto collided;
     }
 
 pop_next:
@@ -9445,12 +9447,14 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
+  /* Proceed into the character behaviour handling only when this delay field
+   * hits zero. This stops characters navigating around obstacles too
+   * quickly. */
   counter_and_flags = vischar->counter_and_flags; // Conv: Use of A dropped.
-  /* If the bottom nibble is set then decrement it. */
   if (counter_and_flags & vischar_BYTE7_COUNTER_MASK)
   {
     vischar->counter_and_flags = --counter_and_flags;
-    return; // if i nop this then characters get wedged
+    return;
   }
 
   vischar2 = vischar; // no need for separate HL and IY now other code reduced

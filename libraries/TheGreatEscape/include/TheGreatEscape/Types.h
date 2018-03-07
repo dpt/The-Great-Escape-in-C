@@ -216,7 +216,7 @@ enum vischar_flags_values // $8001 etc.
 
 enum vischar_byte7_values // $8007 etc.
 {
-  vischar_BYTE7_COUNTER_MASK           = 0x0F,
+  vischar_BYTE7_COUNTER_MASK           = 0x0F,   // character_behaviour() counts this field down to zero. it controls how quickly the vischar will try alternate directions when encountering an obstacle.
   // (bit 4 unused)
   vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
