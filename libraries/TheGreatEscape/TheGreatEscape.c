@@ -7117,9 +7117,6 @@ void reset_game(tgestate_t *state)
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
 
-  // BUG: item_structs ought to have each element's flags restored so that
-  // itemstruct_ITEM_FLAG_HELD is reset.
-
   // BUG: fails to reset position of stoves and crate. (IIRC DOS version
   // resets them whenever they're spawned).
 }
