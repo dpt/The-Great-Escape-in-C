@@ -10860,6 +10860,7 @@ void item_discovered(tgestate_t *state, item_t item)
   if (item == item_NONE)
     return;
 
+  /* BUG FIX: 'item' was not masked in the original code. */
   item &= itemstruct_ITEM_MASK;
 
   ASSERT_ITEM_VALID(item);
@@ -10870,7 +10871,6 @@ void item_discovered(tgestate_t *state, item_t item)
   default_item_location = &default_item_locations[item];
   room = default_item_location->room_and_flags;
 
-  /* Conv: 'item' was not masked in the original code (bug fix). */
   itemstruct = item_to_itemstruct(state, item);
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
   itemstruct->room_and_flags = default_item_location->room_and_flags;
