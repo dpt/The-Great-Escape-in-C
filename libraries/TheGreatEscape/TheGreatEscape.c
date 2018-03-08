@@ -7114,11 +7114,13 @@ void reset_game(tgestate_t *state)
   /* BUG FIX: Reset bribed character index. */
   state->bribed_character = character_NONE;
 
+  /* BUG FIX: Reset position of stoves and crate. */
+  state->movable_items[0].pos = (pos_t) { 62, 35, 16 };
+  state->movable_items[1].pos = (pos_t) { 55, 54, 14 };
+  state->movable_items[2].pos = (pos_t) { 62, 35, 16 };
+
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
-
-  // BUG: fails to reset position of stoves and crate. (IIRC DOS version
-  // resets them whenever they're spawned).
 }
 
 /* ----------------------------------------------------------------------- */
