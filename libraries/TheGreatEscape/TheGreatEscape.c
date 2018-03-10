@@ -5662,7 +5662,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   assert((sprite_index & ~sprite_FLAG_FLIP) < sprite__LIMIT);
 
   stashed_sprite_index = sprite_index;
-  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_BYTE7_LOCATABLE; // wild guess: clamp character in position?
+  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_TOUCH_ENTERED; // wild guess: clamp character in position?
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
 
@@ -7386,7 +7386,7 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
   do
   {
-    if ((vischar->counter_and_flags & vischar_BYTE7_LOCATABLE) == 0)
+    if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) == 0)
       goto next;
 
     if ((vischar->mi.pos.x + 4 < x) ||
@@ -7420,7 +7420,7 @@ next:
 
   if ((item_and_flag & item_FOUND) == 0)
   {
-    found_vischar->counter_and_flags &= ~vischar_BYTE7_LOCATABLE;
+    found_vischar->counter_and_flags &= ~vischar_TOUCH_ENTERED;
 
     *pvischar = found_vischar; // Conv: Additional code.
 

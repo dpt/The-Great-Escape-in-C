@@ -220,7 +220,7 @@ enum vischar_byte7_values // $8007 etc.
   // (bit 4 unused)
   vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
-  vischar_BYTE7_LOCATABLE              = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
+  vischar_TOUCH_ENTERED                = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
 
   vischar_ANIMINDEX_REVERSE            = 1 << 7  // play the animation in reverse
 };
