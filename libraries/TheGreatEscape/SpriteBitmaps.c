@@ -1073,10 +1073,13 @@ const uint8_t bitmap_guard_facing_top_left_1[] =
   ___XX___,________,
 };
 
+/* BUG FIX: The bottom right facing guard bitmaps have been shifted up by a
+ * row while preserving their original sizes. The original game drew them a
+ * row too low resulting guards moving up and down as they turned. */
+
 // 16x29
 const uint8_t bitmap_guard_facing_bottom_right_1[] =
 {
-  ________,________,
   ________,________,
   _____XXX,X_______,
   ____XXXX,XX______,
@@ -1105,12 +1108,12 @@ const uint8_t bitmap_guard_facing_bottom_right_1[] =
   ____X_XX,X_______,
   _____X_X,XXX_____,
   ________,X_______,
+  ________,________,
 };
 
 // 16x29
 const uint8_t bitmap_guard_facing_bottom_right_2[] =
 {
-  ________,________,
   ________,________,
   _____XXX,X_______,
   ____XXXX,XX______,
@@ -1139,12 +1142,12 @@ const uint8_t bitmap_guard_facing_bottom_right_2[] =
   ______XX,__XX____,
   _____XX_,________,
   ______XX,X_______,
+  ________,________,
 };
 
 // 16x28
 const uint8_t bitmap_guard_facing_bottom_right_3[] =
 {
-  ________,________,
   ________,________,
   _____XXX,X_______,
   ____XXXX,XX______,
@@ -1172,12 +1175,12 @@ const uint8_t bitmap_guard_facing_bottom_right_3[] =
   _XX_____,_XX_____,
   _XXX____,_XXX____,
   __XXX___,__XXX___,
+  ________,________,
 };
 
 // 16x28
 const uint8_t bitmap_guard_facing_bottom_right_4[] =
 {
-  ________,________,
   ________,________,
   _____XXX,X_______,
   ____XXXX,XX______,
@@ -1205,6 +1208,7 @@ const uint8_t bitmap_guard_facing_bottom_right_4[] =
   ____XX__,X_______,
   ___X__X_,XX______,
   ____XXXX,_XX_____,
+  ________,________,
 };
 
 // 24x16
