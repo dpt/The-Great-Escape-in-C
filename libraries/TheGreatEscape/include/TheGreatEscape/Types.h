@@ -184,7 +184,6 @@ enum input_flags
  */
 enum vischar_character_values // $8000 etc.
 {
-  vischar_CHARACTER_EMPTY_SLOT         = 0xFF,
   vischar_CHARACTER_MASK               = 0x1F /* Character index mask. */
 };
 

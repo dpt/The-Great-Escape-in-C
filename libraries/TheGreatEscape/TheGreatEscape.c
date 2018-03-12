@@ -8302,7 +8302,7 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   iters = vischars_LENGTH - 1;
   do
   {
-    if (vischar->character == vischar_CHARACTER_EMPTY_SLOT)
+    if (vischar->character == character_NONE)
       goto found_empty_slot;
     vischar++;
   }
