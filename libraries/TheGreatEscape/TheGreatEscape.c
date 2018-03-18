@@ -7271,7 +7271,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   while (--iters);
 
   /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
-  if (--state->searchlight_state == searchlight_STATE_SEARCHING) // state went 255
+  if (--state->searchlight_state == searchlight_STATE_SEARCHING)
   {
     attrs = choose_game_window_attributes(state);
     set_game_window_attributes(state, attrs);
@@ -8350,7 +8350,7 @@ found_empty_slot:
   if (Z == 1) // if collision or bounds_check is nonzero, then return
     return 0; // check
 
-  character = charstr->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character */
+  character = charstr->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character (transfer to vischar) */
   charstr->character_and_flags = character;
 
   character &= characterstruct_CHARACTER_MASK;
@@ -9507,7 +9507,7 @@ pursue_hero:
         return;
       }
     }
-    /* Mode 4: Character witnessed a bribe being given (in accept_bribe). */
+    /* Mode 4: Hostile character witnessed a bribe being given (in accept_bribe). */
     else if (flags == vischar_FLAGS_SAW_BRIBE)
     {
       character_t  bribed_character; /* was A */
@@ -9521,7 +9521,7 @@ pursue_hero:
         found = &state->vischars[1];
         do
         {
-          if (found->character == bribed_character) /* BUG: Doesn't mask found->character with vischar_CHARACTER_MASK. */
+          if (found->character == bribed_character) /* (possible) BUG: Doesn't mask found->character with vischar_CHARACTER_MASK. */
             goto bribed_visible;
           found++;
         }
@@ -11151,8 +11151,8 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
   do
   {
-    const enum itemstruct_flags FLAGS = itemstruct_ROOM_FLAG_NEARBY_6 |
-                                        itemstruct_ROOM_FLAG_NEARBY_7;
+    const enum itemstruct_room_and_flags FLAGS = itemstruct_ROOM_FLAG_NEARBY_6 |
+                                                 itemstruct_ROOM_FLAG_NEARBY_7;
 
     if ((itemstr->room_and_flags & FLAGS) == FLAGS)
     {
@@ -11173,7 +11173,7 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
         /* It seems that A' is the output register, irrespective. */
-        item_and_flag = (item__LIMIT - iters) | item_FOUND; // iteration count + 'item found' flag
+        item_and_flag = (item__LIMIT - iters) | item_FOUND; /* item index + 'item found' flag */
       }
     }
     itemstr++;

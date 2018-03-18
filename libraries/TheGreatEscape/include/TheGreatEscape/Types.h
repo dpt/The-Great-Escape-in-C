@@ -80,6 +80,9 @@ enum character
   character_NONE = 255
 };
 
+/**
+ * Holds a character identifier.
+ */
 typedef uint8_t character_t;
 
 /**
@@ -91,7 +94,7 @@ enum
 };
 
 /**
- * Named elements of movable_items[].
+ * Identifiers of movable_items.
  */
 enum movable_item_index
 {
@@ -175,75 +178,170 @@ enum input_flags
   input_LEFT_FIRE                      = input_LEFT  + input_FIRE,
   input_RIGHT_FIRE                     = input_RIGHT + input_FIRE,
 
-  /* input_KICK is a flag set to force an update. */
-  input_KICK                           = 1 << 7,
+  /** Bit 7 is set to force an update. */
+  input_KICK                           = 1 << 7
 };
 
 /**
- * Identifiers of visible character structure flags.
+ * Constants for vischar.character field.
  */
-enum vischar_character_values // $8000 etc.
+enum vischar_character_values
 {
-  vischar_CHARACTER_MASK               = 0x1F /* Character index mask. */
+  /** Bits 0..4 form a mask to isolate the index of the vischar's character.
+   */
+  vischar_CHARACTER_MASK               = 0x1F
+
+  /** CHECK: Are any other parts of this field used? */
 };
 
-enum vischar_flags_values // $8001 etc.
+/**
+ * Constants for vischar.flags field.
+ */
+enum vischar_flags_values
 {
+  /** Indicates that this vischar is unused. */
   vischar_FLAGS_EMPTY_SLOT             = 0xFF,
+
+  /** Bits 0..5 form a mask to isolate all of the modes.
+   * Note: 0x0F would be sufficient. */
   vischar_FLAGS_MASK                   = 0x3F,
 
-  /* Bits 0..1 are flags for the hero only. */
+  /* The bottom nibble of flags contains either two flags for the hero,
+   * or a pursuit mode field for NPCs. */
+
+  /** Bit 0 is set when the hero is picking a lock. (Hero only) */
   vischar_FLAGS_PICKING_LOCK           = 1 << 0,
+
+  /** Bit 1 is set when the hero is cutting wire. (Hero only) */
   vischar_FLAGS_CUTTING_WIRE           = 1 << 1,
 
-  /* Bits 0..3 is the current pursuit mode for NPCs only. */
-  vischar_FLAGS_PURSUE                 = 1 << 0, // this flag is set when a visible friendly was nearby when a bribe was used. it's also set by hostiles_pursue
-  vischar_FLAGS_HASSLE                 = 2 << 0, // this flag is set in guards_follow_suspicious_character when the hero is under player control. it causes hostiles to follow the hero and get in his way but not arrest him.
-  vischar_FLAGS_DOG_FOOD               = 3 << 0, // set when food is in the vicinity of a dog
-  vischar_FLAGS_SAW_BRIBE              = 4 << 0, // this flag is set when a visible hostile was nearby when a bribe was used. perhaps it distracts the guards?
-  vischar_FLAGS_PURSUIT_MASK           = 0x0F,   // mask to cover the above four pursuit states
+  /** Bits 0..3 are a mask to isolate the pursuit mode. */
+  vischar_FLAGS_PURSUIT_MASK           = 0x0F,
 
-  // (bits 4 and 5 unused)
-  vischar_FLAGS_TARGET_IS_DOOR         = 1 << 6, // affects scaling. reset by set_hero_route. set by set_route
-  vischar_FLAGS_NO_COLLIDE             = 1 << 7  // don't do collision() for this vischar
+  /** Pursuit mode == 1 when a friendly character was nearby when a bribe was
+   * used or when a hostile is pursuing with intent to capture. (NPC only)
+   * Set in hostiles_pursue(). */
+  vischar_FLAGS_PURSUE                 = 1 << 0,
 
-  // vischar_FLAGS_TARGET_IS_DOOR:
-  // set by set_route (get_target A == 128 case), spawn_character (get_target A == 128 case), handle_route (get_target A == 128 case)
-  // cleared by set_hero_route, set_character_route (store_to_vischar case), target_reached (character entering door chunk)
-  // tested by character_behaviour (selects a multiply by 4), target_reached (character entering door chunk)
+  /** Pursuit mode == 2 when a hostile sees a player-controlled hero, or the
+   * flag is red. It causes hostiles to follow the hero and get in his way
+   * but not arrest him. (NPC only)
+   * Set in guards_follow_suspicious_character(). */
+  vischar_FLAGS_HASSLE                 = 2 << 0,
+
+  /** Pursuit mode == 3 when food is in the vicinity of a dog.
+   * (Guard dog NPC only) */
+  vischar_FLAGS_DOG_FOOD               = 3 << 0,
+
+  /** Pursuit mode == 4 when a hostile was nearby when a bribe was accepted.
+   * It causes the hostile to target the character who accepted the bribe.
+   * (Hostile NPC only) */
+  vischar_FLAGS_SAW_BRIBE              = 4 << 0,
+
+  /* Bits 4 and 5 are unused */
+
+  /** Bit 6 is set when the next target is a door. */
+  vischar_FLAGS_TARGET_IS_DOOR         = 1 << 6,
+
+  /** Bit 7 is set in animate() to stop collision() running for this vischar.
+   */
+  vischar_FLAGS_NO_COLLIDE             = 1 << 7
 };
 
-enum vischar_byte7_values // $8007 etc.
+/**
+ * Constants for vischar.counter_and_flags field.
+ */
+enum vischar_counter_and_flags_values
 {
-  vischar_BYTE7_COUNTER_MASK           = 0x0F,   // character_behaviour() counts this field down to zero. it controls how quickly the vischar will try alternate directions when encountering an obstacle.
-  // (bit 4 unused)
-  vischar_BYTE7_Y_DOMINANT             = 1 << 5, // when set makes vischar_move_y() run in preference to vischar_move_x()
-  vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6, // when set this stops the map from being moved. hero only. set when touch() sees a character touching.
-  vischar_TOUCH_ENTERED                = 1 << 7, // set by touch(). stops locate_vischar_or_itemstruct considering a vischar
+  /** Bits 0..3 form a mask to isolate the character behaviour delay field.
+   *
+   * character_behaviour() counts this field down to zero at which point it
+   * performs character behaviours. In the game this is only ever set to
+   * five. */
+  vischar_BYTE7_COUNTER_MASK           = 0x0F,
 
-  vischar_ANIMINDEX_REVERSE            = 1 << 7  // play the animation in reverse
+  /* Bit 4 is unused */
+
+  /** Bit 5 is set when vischar_move_y() should run in preference to
+   * vischar_move_x(). */
+  vischar_BYTE7_Y_DOMINANT             = 1 << 5,
+
+  /** Bit 6 is set when map movement should be inhibited. (Hero only)
+   * Set in touch(). */
+  vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6,
+
+  /** Bit 7 is set when touch() was entered, implying that vischar->mi etc.
+   * are setup. Set by touch(). */
+  vischar_TOUCH_ENTERED                = 1 << 7
 };
 
-enum vischar_direction_values // $800E etc.
+/**
+ * Constants for vischar.animindex field.
+ */
+enum vischar_animindex_values
 {
+  /** Bit 7 is set to play the animation in reverse. */
+  vischar_ANIMINDEX_REVERSE            = 1 << 7
+};
+
+/**
+ * Constants for vischar.direction field.
+ */
+enum vischar_direction_values
+{
+  /** Bits 0..1 form a mask to isolate the direction field. */
   vischar_DIRECTION_MASK               = 0x03,
+
+  /** Bit 2 is set when crawling. */
   vischar_DIRECTION_CRAWL              = 1 << 2
 };
 
 /**
- * Identifiers of character struct flags and masks.
+ * Constants for itemstruct.item_and_flags field.
  */
-enum itemstruct_flags
+enum itemstruct_item_and_flags
 {
+  /** Bits 0..3 form a mask to isolate the item field. */
   itemstruct_ITEM_MASK                 = 0x0F,
-  itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4, // only used (in a mask) by pick_up_item, but never set AFAICT
-  itemstruct_ITEM_FLAG_POISONED        = 1 << 5, // used with item_FOOD only
-  itemstruct_ITEM_FLAG_HELD            = 1 << 7, /**< Set when the item is picked up for the first time (for scoring). */
 
-  itemstruct_ROOM_NONE                 = 0x3F,
+  /** Bit 4 is an unknown purpose flag used in a mask by pick_up_item(), but
+   * never set. It's possibly evidence of a larger ITEM_MASK.
+   */
+  itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4,
+
+  /** Bit 5 is set on item_FOOD when it is poisoned. This only affects the
+   * amount of time a guard dog is stalled for. The dog will eat the food and
+   * "die" (halt) either way. */
+  itemstruct_ITEM_FLAG_POISONED        = 1 << 5,
+
+  /* Bit 6 is unused */
+
+  /** Bit 7 is set when the item is picked up for the first time (for
+   * scoring). */
+  itemstruct_ITEM_FLAG_HELD            = 1 << 7
+};
+
+/**
+ * Constants for itemstruct.room_and_flags field.
+ */
+enum itemstruct_room_and_flags
+{
+  /** Bits 0..5 form a mask to isolate the room field. */
   itemstruct_ROOM_MASK                 = 0x3F,
-  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6, /**< Set when the item is nearby. Cleared by mark_nearby_items and locate_vischar_or_itemstruct. */
-  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7  /**< Set when the item is nearby. Cleared by mark_nearby_items. Enables find_nearby_item for the item. follow_suspicious_character uses it on item_FOOD to trigger guard dog stuff. */
+
+  /** Indicates that the item is nowhere. This is (item_NONE &
+   * itemstruct_ROOM_MASK). */
+  itemstruct_ROOM_NONE                 = 0x3F,
+
+  /** Bit 6 is set when the item is nearby.
+   * Cleared by mark_nearby_items() and locate_vischar_or_itemstruct(). */
+  itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6,
+
+  /** Bit 7 is set when the item is nearby.
+   * Cleared by mark_nearby_items(). Enables find_nearby_item() for the item.
+   * follow_suspicious_character() uses it on item_FOOD to trigger guard dog
+   * stuff. */
+  itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7
 };
 
 /**
@@ -251,40 +349,60 @@ enum itemstruct_flags
  */
 enum doorindex_flags
 {
-  door_REVERSE                         = 1 << 7, /* Used to reverse door transitions. */
-  door_LOCKED                          = 1 << 7, /* Used to lock doors. Seems to be only relevant for locked_doors[]. */
-  door_NONE                            = 0xFF
+  /** Bit 7 of the index passed into get_door() indicates to to reverse door
+   * transitions. */
+  door_REVERSE                         = 1 << 7,
+
+  /** Bit 7 of an index in locked_doors[] indicates that the door is indeed
+   * locked. */
+  door_LOCKED                          = 1 << 7, // FIXME change to interiordoor_LOCKED
+
+  /** Indicates no interior door. */
+  door_NONE                            = 0xFF // FIXME change to interiordoor_NONE
 };
 
 /**
- * Identifiers of character struct flags and masks.
+ * Constants for characterstruct.character_and_flags field.
  */
 enum characterstruct_flags
 {
-  /* Byte 0 */
-  characterstruct_CHARACTER_MASK       = 0x1F,   /**< Character index mask. */
-  characterstruct_FLAG_DISABLED        = 1 << 6, /**< Disables the character. */ // set when on-screen (in vischar)?
+  /** Bits 0..4 form a mask to isolate the character index. */
+  characterstruct_CHARACTER_MASK       = 0x1F,
+
+  /* Bit 5 is unused */
+
+  /** Bit 6 disables the character. */
+  characterstruct_FLAG_DISABLED        = 1 << 6 // FIXME it's set when the character is on-screen as a vischar so it's more like "spawned"
+
+  /* Bit 7 is unused */
 };
 
 /**
- * Identifiers of door flags and masks.
+ * Constants for door_t.room_and_flags field.
  */
 enum door_flags
 {
-  door_FLAGS_MASK_DIRECTION           = 0x03, // up/down or direction field?
+  /** Bits 0..1 are a direction_t. */
+  door_FLAGS_MASK_DIRECTION           = 0x03
+
+  /* Bits 2..7 are a room_t. */
 };
 
 /**
- * Identifiers of searchlight flags.
+ * Constants for tgestate.searchlight_state field.
  */
-enum searchlight_flags
+enum searchlight_state
 {
-  searchlight_STATE_CAUGHT             = 0x1F, /**< Number of turns before the spotlight gives up looking when the hero hides behind something. */
-  searchlight_STATE_SEARCHING          = 0xFF, /**< Likely: Hunting for the hero. */
+  /** Number of turns before the spotlight gives up looking when the hero
+   * hides behind something. */
+  searchlight_STATE_CAUGHT             = 0x1F,
+
+  /** Indicates that the searchlight is searching for the hero. */
+  searchlight_STATE_SEARCHING          = 0xFF
 };
 
 /**
- * Identifiers of items used during escape.
+ * Flags for escapeitem_t.
  */
 enum escapeitem_flags
 {
@@ -380,8 +498,12 @@ typedef uint8_t eventtime_t;
  */
 typedef struct route
 {
-  routeindex_t index; /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7 to reverse the route. */
-  uint8_t      step;  /** Step within the route. */
+  /** Route index as specified to get_route() or 0xFF for "wander". Set bit 7
+   * to reverse the route. */
+  routeindex_t index;
+
+  /** Step within the route. */
+  uint8_t      step;
 }
 route_t;
 
@@ -501,8 +623,7 @@ typedef struct vischar
   // likely a prev/next version of the 'direction' field
   uint8_t         input;
 
-  /** $800E direction and walk/crawl flag */
-  // a direction_t?
+  /** $800E direction and crawl flag. Indexes animindices[] directly. */
   uint8_t         direction;
 
   /** $800F movable item (position, current character sprite set, sprite_index) */
