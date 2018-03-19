@@ -371,8 +371,9 @@ enum characterstruct_flags
 
   /* Bit 5 is unused */
 
-  /** Bit 6 disables the character. */
-  characterstruct_FLAG_DISABLED        = 1 << 6 // FIXME it's set when the character is on-screen as a vischar so it's more like "spawned"
+  /** Bit 6 is set when the character has spawned on-screen as a vischar.
+   * The characterstruct entry is disabled while this flag is set. */
+  characterstruct_FLAG_ON_SCREEN       = 1 << 6
 
   /* Bit 7 is unused */
 };

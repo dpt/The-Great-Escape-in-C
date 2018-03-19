@@ -3196,7 +3196,7 @@ void set_character_route(tgestate_t *state,
   ASSERT_ROUTE_VALID(route);
 
   charstr = get_character_struct(state, character);
-  if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) != 0)
+  if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
   {
     assert(character == (charstr->character_and_flags & characterstruct_CHARACTER_MASK));
 
@@ -8147,7 +8147,7 @@ void spawn_characters(tgestate_t *state)
   iters   = character_structs__LIMIT;
   do
   {
-    if ((charstr->character_and_flags & characterstruct_FLAG_DISABLED) == 0)
+    if ((charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN) == 0)
     {
       /* Is this character in the current room? */
       if ((room = state->room_index) == charstr->room)
@@ -8294,7 +8294,8 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   assert(state   != NULL);
   assert(charstr != NULL);
 
-  if (charstr->character_and_flags & characterstruct_FLAG_DISABLED) /* character disabled */
+  /* Skip spawning if the character is already on-screen. */
+  if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
     return 1; // NZ
 
   /* Find an empty slot in the visible character list. */
@@ -8350,7 +8351,8 @@ found_empty_slot:
   if (Z == 1) // if collision or bounds_check is nonzero, then return
     return 0; // check
 
-  character = charstr->character_and_flags | characterstruct_FLAG_DISABLED; /* Disable character (transfer to vischar) */
+  /* Transfer character to vischar. */
+  character = charstr->character_and_flags | characterstruct_FLAG_ON_SCREEN;
   charstr->character_and_flags = character;
 
   character &= characterstruct_CHARACTER_MASK;
@@ -8511,7 +8513,9 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     /* A non-object character. */
 
     charstr = get_character_struct(state, character);
-    charstr->character_and_flags &= ~characterstruct_FLAG_DISABLED; /* Enable character */
+
+    /* Re-enable the character. */
+    charstr->character_and_flags &= ~characterstruct_FLAG_ON_SCREEN;
 
     room = vischar->room;
     charstr->room = room;
@@ -8780,7 +8784,7 @@ uint8_t get_target(tgestate_t       *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C6A0: Move one character around at a time.
+ * $C6A0: Move one (off-screen) character around at a time.
  *
  * \param[in] state Pointer to game state.
  */
@@ -8812,10 +8816,10 @@ void move_characters(tgestate_t *state)
     character = character_0_COMMANDANT;
   state->character_index = character;
 
-  /* Get its chararacter struct, exiting if it's not enabled. */
+  /* Get its chararacter struct, exiting if it's on-screen. */
   charstr = get_character_struct(state, character);
-  if (charstr->character_and_flags & characterstruct_FLAG_DISABLED)
-    return; /* Disabled character. */
+  if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
+    return;
 
   // PUSH HL_charstr
 
