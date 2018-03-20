@@ -454,7 +454,7 @@ void setup_doors(tgestate_t *state)
   {
     /* Save any door index which matches the current room. */
     // Rooms are always rectangular so should have no more than four doors but that is unchecked by this code.
-    if ((door->room_and_flags & ~door_FLAGS_MASK_DIRECTION) == room)
+    if ((door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) == room)
       /* Current room. */
       *pdoorindex++ = door_index ^ door_REVERSE; // Store the index and the reverse flag.
 
@@ -6097,7 +6097,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   iters = 16;
   do
   {
-    if ((door_pos->room_and_flags & door_FLAGS_MASK_DIRECTION) == direction)
+    if ((door_pos->room_and_direction & door_FLAGS_MASK_DIRECTION) == direction)
       if (door_in_range(state, door_pos) == 0)
         goto found;
     door_pos += 2;
@@ -6114,9 +6114,9 @@ found:
   if (is_door_locked(state))
     return;
 
-  vischar->room = (door_pos->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in doors[])
+  vischar->room = (door_pos->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2; // sampled HL = $792E (in doors[])
   ASSERT_ROOM_VALID(vischar->room);
-  if ((door_pos->room_and_flags & door_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
+  if ((door_pos->room_and_direction & door_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
     /* Point to the next door's pos */
     transition(state, &door_pos[1].pos);
   else
@@ -6323,7 +6323,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     state->current_door = current_door;
 
     door = get_door(current_door);
-    room_and_flags = door->room_and_flags;
+    room_and_flags = door->room_and_direction;
 
     /* Does the character face the same direction as the door? */
     if ((vischar->direction & vischar_DIRECTION_MASK) != (room_and_flags & door_FLAGS_MASK_DIRECTION))
@@ -8935,10 +8935,10 @@ trigger_event:
       // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
       // => doors.room_and_flags
 
-      DEcharstr->room = (HLdoor->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2;
+      DEcharstr->room = (HLdoor->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
       // Stuff reading from doors.
-      if ((HLdoor->room_and_flags & door_FLAGS_MASK_DIRECTION) < 2)
+      if ((HLdoor->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
         // top left or top right
         // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
         HLtinypos = &HLdoor[1].pos;
@@ -9841,9 +9841,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
       vischar->route.step++;
 
     door = get_door(doorindex); // door related
-    vischar->room = (door->room_and_flags & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
+    vischar->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
 
-    if ((door->room_and_flags & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
+    if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
       /* TOP_LEFT or TOP_RIGHT */
       tinypos = &door[1].pos; // was HL += 5;
     else

@@ -767,7 +767,8 @@ typedef void (charevnt_handler_t)(tgestate_t *state,
  */
 typedef struct door
 {
-  uint8_t   room_and_flags; // top 6 bits are a room_t, bottom 2 are a direction_t
+  /** The top six bits are a room_t. The bottom two bits are a direction_t. */
+  uint8_t   room_and_direction;
   tinypos_t pos;
 }
 door_t;
