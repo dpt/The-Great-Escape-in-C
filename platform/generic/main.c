@@ -29,8 +29,7 @@ static int keystroke_time;
 
 // -----------------------------------------------------------------------------
 
-static void draw_handler(unsigned int  *pixels,
-                         const zxbox_t *dirty,
+static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
 }
