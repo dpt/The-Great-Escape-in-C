@@ -355,10 +355,16 @@ enum doorindex_flags
 
   /** Bit 7 of an index in locked_doors[] indicates that the door is indeed
    * locked. */
-  door_LOCKED                          = 1 << 7, // FIXME change to interiordoor_LOCKED
+  door_LOCKED                          = 1 << 7 // FIXME change to lockeddoor_LOCKED ?
+};
 
-  /** Indicates no interior door. */
-  door_NONE                            = 0xFF // FIXME change to interiordoor_NONE
+/**
+ * Constants for tgestate.interior_doors array.
+ */
+enum interiordoor_flags
+{
+  /** Indicates an empty interior door entry. */
+  interiordoor_NONE                    = 0xFF
 };
 
 /**

@@ -432,12 +432,12 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->interior_doors[] with door_NONE. */
-  // Alternative: memset(&state->interior_doors[0], door_NONE, 4);
+  /* Wipe state->interior_doors[] with interiordoor_NONE. */
+  // Alternative: memset(&state->interior_doors[0], interiordoor_NONE, 4);
   pdoorindex = &state->interior_doors[3];
   iters = 4;
   do
-    *pdoorindex-- = door_NONE;
+    *pdoorindex-- = interiordoor_NONE;
   while (--iters);
 
   pdoorindex++;
@@ -6324,7 +6324,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   for (pdoors = &state->interior_doors[0]; ; pdoors++)
   {
     current_door = *pdoors;
-    if (current_door == door_NONE)
+    if (current_door == interiordoor_NONE)
       return; /* Reached end of list. */
 
     state->current_door = current_door;
@@ -6750,7 +6750,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
       interior_doors = &state->interior_doors[0];
 each_interior_door:
       interior_door_index = *interior_doors;
-      if (interior_door_index != door_NONE)
+      if (interior_door_index != interiordoor_NONE)
       {
         if ((interior_door_index & ~door_REVERSE) == locked_door_index) // this must be door_REVERSE as it came from interior_doors[]
           goto found;
