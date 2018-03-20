@@ -894,13 +894,6 @@ const door_t doors[door_MAX * 2] =
   // direction is the direction of the door in the current room
   // pos is the position of the door in the current room
 
-  // odd stuff:
-  // rooms 28, 2, 4, 13 come out at the same place? 42, 28 -- maybe just doors in the same pos in different rooms
-  // rooms 34 and 48 come out at the same place? -- ditto
-  // rooms 3, 5, 23 ... 32,46
-  //
-  // could these be deltas rather than absolute values?
-
   // 0 - gate - initially locked
   { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 138,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 178, 142,  6 } },
