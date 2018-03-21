@@ -200,18 +200,6 @@ enum input_flags
 };
 
 /**
- * Constants for vischar.character field.
- */
-enum vischar_character_values
-{
-  /** Bits 0..4 form a mask to isolate the index of the vischar's character.
-   */
-  vischar_CHARACTER_MASK               = 0x1F
-
-  /** CHECK: Are any other parts of this field used? */
-};
-
-/**
  * Constants for vischar.flags field.
  */
 enum vischar_flags_values

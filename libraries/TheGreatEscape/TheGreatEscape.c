@@ -9425,7 +9425,8 @@ void automatics(tgestate_t *state)
     {
       character_t character; /* was A */
 
-      character = vischar->character & vischar_CHARACTER_MASK;
+      character = vischar->character; /* Conv: Removed redundant mask op. */
+      assert(character != character_NONE);
       if (character <= character_19_GUARD_DOG_4) /* Hostile characters only. */
       {
         /* Characters 0..19. */
@@ -9994,7 +9995,8 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
   {
     character_t character; /* was A */
 
-    character = vischar->character & vischar_CHARACTER_MASK;
+    character = vischar->character; /* Conv: Removed redundant mask op. */
+    assert(character != character_NONE);
 
     /* Call character_event at the end of commandant route 36. */
     if (character == character_0_COMMANDANT)
