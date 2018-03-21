@@ -354,13 +354,13 @@ enum itemstruct_room_and_flags
  */
 enum doorindex_flags
 {
-  /** Bit 7 of the index passed into get_door() indicates to to reverse door
+  /** Bit 7 of the index passed into get_door() indicates to reverse door
    * transitions. */
   door_REVERSE                         = 1 << 7,
 
   /** Bit 7 of an index in locked_doors[] indicates that the door is indeed
    * locked. */
-  door_LOCKED                          = 1 << 7 // FIXME change to lockeddoor_LOCKED ?
+  door_LOCKED                          = 1 << 7
 };
 
 /**
@@ -780,7 +780,7 @@ door_t;
 
 /**
  * Holds a door index.
- * The top bit may be door_LOCKED, the rest is a door index.
+ * The top bit may be door_LOCKED or door_REVERSE. The rest is a door index.
  */
 typedef uint8_t doorindex_t;
 

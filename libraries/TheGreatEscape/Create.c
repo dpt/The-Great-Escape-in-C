@@ -299,7 +299,7 @@ static void tge_initialise(tgestate_t *state)
     0x1727,
   };
 
-  /* $F05D: Locked gates and doors. */
+  /* $F05D: Default locked gates and doors. */
   static const doorindex_t locked_doors[] =
   {
     /* The doorindex_t indices here are those as passed to get_door. */

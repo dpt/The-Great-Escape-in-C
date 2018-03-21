@@ -6059,7 +6059,7 @@ int is_door_locked(tgestate_t *state)
 
   assert(state != NULL);
 
-  cur   = state->current_door & ~door_LOCKED;
+  cur   = state->current_door & ~door_REVERSE;
   door  = &state->locked_doors[0];
   iters = NELEMS(state->locked_doors);
   do
