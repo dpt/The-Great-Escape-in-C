@@ -18,8 +18,6 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include <stdint.h>
-
 #include "TheGreatEscape/SuperTiles.h"
 
 /** Dimensions of the map. */

@@ -18,8 +18,6 @@
 #ifndef ROOM_DEFS_H
 #define ROOM_DEFS_H
 
-#include <stdint.h>
-
 #include "TheGreatEscape/Types.h"
 #include "TheGreatEscape/Rooms.h"
 
