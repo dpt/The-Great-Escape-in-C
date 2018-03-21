@@ -5946,7 +5946,7 @@ next:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B107: A character accepted a bribe from the hero.
+ * $B107: A friendly character is taking a bribe from the hero.
  *
  * \param[in] state Pointer to game state.
  */
@@ -9594,14 +9594,14 @@ bribed_visible:
 
         pos    = &found->mi.pos;
         target = &vischar2->target;
-        if (state->room_index > room_0_OUTDOORS)
+        if (state->room_index == room_0_OUTDOORS)
         {
-          /* Indoors */
+          /* Outdoors */
           pos_to_tinypos(pos, target);
         }
         else
         {
-          /* Outdoors */
+          /* Indoors */
           target->x = pos->x; // note: narrowing
           target->y = pos->y; // note: narrowing
         }
