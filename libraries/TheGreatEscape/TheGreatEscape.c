@@ -9573,7 +9573,7 @@ pursue_hero:
         found = &state->vischars[1];
         do
         {
-          if (found->character == bribed_character) /* (possible) BUG: Doesn't mask found->character with vischar_CHARACTER_MASK. */
+          if (found->character == bribed_character)
             goto bribed_visible;
           found++;
         }
