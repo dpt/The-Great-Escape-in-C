@@ -121,7 +121,10 @@ void invalidate_bitmap(tgestate_t *state,
   y = y + 1;      /* inclusive lower bound becomes exclusive upper */
   y = y - height; /* get min-y */
 
-  dirty = (zxbox_t) { x, y, x + width, y + height };
+  dirty.x0 = x;
+  dirty.y0 = y;
+  dirty.x1 = x + width;
+  dirty.y1 = y + height;
   state->speccy->draw(state->speccy, &dirty);
 }
 
@@ -145,7 +148,10 @@ void invalidate_attrs(tgestate_t *state,
   y = y * 8;      /* scale */
   y = y - height; /* get min-y */
 
-  dirty = (zxbox_t) { x, y, x + width, y + height };
+  dirty.x0 = x;
+  dirty.y0 = y;
+  dirty.x1 = x + width;
+  dirty.y1 = y + height;
   state->speccy->draw(state->speccy, &dirty);
 }
 
@@ -384,8 +390,11 @@ void setup_movable_item(tgestate_t          *state,
   /* Conv: Reset data inlined. */
 
   vischar1->flags             = 0;
-  vischar1->route             = (route_t) { routeindex_0_HALT, 0 };
-  vischar1->target            = (tinypos_t) { 0, 0, 0 };
+  vischar1->route.index       = routeindex_0_HALT;
+  vischar1->route.step        = 0;
+  vischar1->target.x          = 0;
+  vischar1->target.y          = 0;
+  vischar1->target.height     = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
@@ -1793,9 +1802,10 @@ void process_player_input(tgestate_t *state)
       if (state->hero_in_bed == 0)
       {
         /* Hero was at breakfast. */
-        state->vischars[0].route    = (route_t) { routeindex_43_7833, 0 };
-        state->vischars[0].mi.pos.x = 52;
-        state->vischars[0].mi.pos.y = 62;
+        state->vischars[0].route.index = routeindex_43_7833;
+        state->vischars[0].route.step  = 0;
+        state->vischars[0].mi.pos.x    = 52;
+        state->vischars[0].mi.pos.y    = 62;
         set_roomdef(state,
                     room_25_BREAKFAST,
                     roomdef_25_BENCH_G,
@@ -1805,10 +1815,13 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].route    = (route_t) { routeindex_44_HUT2_RIGHT_TO_LEFT, 1 };
-        state->vischars[0].target.x = 46;
-        state->vischars[0].target.y = 46;
-        state->vischars[0].mi.pos   = (pos_t) { 46, 46, 24 };
+        state->vischars[0].route.index   = routeindex_44_HUT2_RIGHT_TO_LEFT;
+        state->vischars[0].route.step    = 1;
+        state->vischars[0].target.x      = 46;
+        state->vischars[0].target.y      = 46;
+        state->vischars[0].mi.pos.x      = 46;
+        state->vischars[0].mi.pos.y      = 46;
+        state->vischars[0].mi.pos.height = 24;
         set_roomdef(state,
                     room_2_HUT2LEFT,
                     roomdef_2_BED,
@@ -2069,7 +2082,8 @@ found:
 
         assert(i < 256);
 
-        route2 = (route_t) { state->vischars[0].route.index, i };
+        route2.index = state->vischars[0].route.index;
+        route2.step  = i;
         set_hero_route(state, &route2);
       }
     }
@@ -7116,9 +7130,15 @@ void reset_game(tgestate_t *state)
   state->bribed_character = character_NONE;
 
   /* BUG FIX: Reset position of stoves and crate. */
-  state->movable_items[0].pos = (pos_t) { 62, 35, 16 };
-  state->movable_items[1].pos = (pos_t) { 55, 54, 14 };
-  state->movable_items[2].pos = (pos_t) { 62, 35, 16 };
+  state->movable_items[0].pos.x      = 62;
+  state->movable_items[0].pos.y      = 35;
+  state->movable_items[0].pos.height = 16;
+  state->movable_items[1].pos.x      = 55;
+  state->movable_items[1].pos.y      = 54;
+  state->movable_items[1].pos.height = 14;
+  state->movable_items[2].pos.x      = 62;
+  state->movable_items[2].pos.y      = 35;
+  state->movable_items[2].pos.height = 16;
 
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
@@ -7223,7 +7243,9 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos         = (tinypos_t) { reset->x, reset->y, 18 }; /* BUG: This is reset to 18 but the initial data is 24. */
+    charstr->pos.x       = reset->x;
+    charstr->pos.y       = reset->y;
+    charstr->pos.height  = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
     charstr->route.index = 0; /* Stand still */
     charstr++;
     reset++;
@@ -8549,11 +8571,13 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
         character <= character_19_GUARD_DOG_4)
     {
       /* Choose random locations in the fenced off area (right side). */
-      vischar->route = (route_t) { routeindex_255_WANDER, 0 }; /* 0..7 */
+      vischar->route.index = routeindex_255_WANDER; /* 0..7 */
+      vischar->route.step  = 0;
       if (character >= character_18_GUARD_DOG_3) /* Characters 18 and 19 */
       {
         /* Choose random locations in the fenced off area (bottom side). */
-        vischar->route = (route_t) { routeindex_255_WANDER, 24 }; /* 24..31 */
+        vischar->route.index = routeindex_255_WANDER; /* 24..31 */
+        vischar->route.step  = 24;
       }
     }
 
@@ -9202,7 +9226,8 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 {
   // this is something like: commandant walks to yard
 
-  *route = (route_t) { routeindex_3_COMMANDANT, 21 }; // route_commandant
+  route->index = routeindex_3_COMMANDANT;
+  route->step  = 21;
 }
 
 /**
@@ -9211,7 +9236,8 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 void charevnt_hero_release(tgestate_t *state, route_t *route)
 {
   /* Reverse the commandant's route. */
-  *route = (route_t) { routeindex_36_GO_TO_SOLITARY | routeindexflag_REVERSED, 3 };
+  route->index = routeindex_36_GO_TO_SOLITARY | routeindexflag_REVERSED;
+  route->step  = 3;
 
   state->automatic_player_counter = 0; /* Force automatic control */
 
@@ -9245,7 +9271,8 @@ void charevnt_wander_left(tgestate_t *state, route_t *route)
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { routeindex_255_WANDER, 16 }; /* 16..23 */
+  route->index = routeindex_255_WANDER;
+  route->step  = 16; /* 16..23 */
 }
 
 /**
@@ -9271,7 +9298,8 @@ void charevnt_wander_yard(tgestate_t *state, route_t *route)
   //              :************X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { routeindex_255_WANDER, 56 }; /* 56..63 */
+  route->index = routeindex_255_WANDER;
+  route->step  = 56; /* 56..63 */
 }
 
 /**
@@ -9297,7 +9325,8 @@ void charevnt_wander_top(tgestate_t *state, route_t *route)
   //              :            X:
   //              '~~~~~~~~~~~~~'
 
-  *route = (route_t) { routeindex_255_WANDER, 8 }; /* 8..15 */
+  route->index = routeindex_255_WANDER;
+  route->step  = 8; /* 8..15 */
 }
 
 // Conv: Inlined set_route_ffxx() in the above functions.
@@ -9329,7 +9358,8 @@ void charevnt_breakfast(tgestate_t *state, route_t *route)
  */
 void charevnt_exit_hut2(tgestate_t *state, route_t *route)
 {
-  *route = (route_t) { routeindex_5_EXIT_HUT2, 0 };
+  route->index = routeindex_5_EXIT_HUT2;
+  route->step  = 0;
 }
 
 /**
@@ -9505,7 +9535,8 @@ pursue_hero:
         /* Food is no longer nearby: Choose random locations in the fenced-
          * off area (right side). */
         vischar2->flags = 0; /* clear vischar_FLAGS_DOG_FOOD */
-        vischar2->route = (route_t) { routeindex_255_WANDER, 0 }; /* 0..7 */
+        vischar2->route.index = routeindex_255_WANDER;
+        vischar2->route.step  = 0; /* 0..7 */
         (void) get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
