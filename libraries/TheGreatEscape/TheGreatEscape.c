@@ -3882,6 +3882,22 @@ void escaped(tgestate_t *state)
   itemflags = join_item_to_escapeitem(pitem++, itemflags);
   itemflags = join_item_to_escapeitem(pitem,   itemflags);
 
+  /*         Items                     Message
+   *    Unf Pur Ppr Cmp                -------
+   *    ---+---+---+---
+   *  0  .   .   .   .  "BUT WERE RECAPTURED TOTALLY UNPREPARED" (lose)
+   *  1  .   .   .   X  "BUT WERE RECAPTURED DUE TO LACK OF PAPERS" (lose)
+   *  2  .   .   X   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
+   *  3  .   .   X   X  (the game offers no extra message) (win)
+   *  4  .   X   .   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
+   *  5  .   X   .   X  "AND WILL CROSS THE BORDER SUCCESSFULLY" (win)
+   *  6  .   X   X   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
+   *  8  X   .   .   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
+   *  9  X   .   .   X  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
+   * 10  X   .   X   .  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
+   * 12  X   X   .   .  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
+   */
+
   /* Print item-tailored messages. */
   if (itemflags == (escapeitem_COMPASS | escapeitem_PURSE))
   {
@@ -3896,10 +3912,11 @@ void escaped(tgestate_t *state)
     message = &messages[5]; /* BUT WERE RECAPTURED */
     message = screenlocstring_plot(state, message);
 
-    /* No uniform => AND SHOT AS A SPY. */
+    /* Have uniform => AND SHOT AS A SPY. */
+
     if (itemflags < escapeitem_UNIFORM)
     {
-      /* No objects => TOTALLY UNPREPARED. */
+      /* No items => TOTALLY UNPREPARED. */
       message = &messages[7];
       if (itemflags)
       {
