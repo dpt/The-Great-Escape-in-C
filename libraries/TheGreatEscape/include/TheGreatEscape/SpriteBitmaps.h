@@ -15,8 +15,8 @@
  * The recreated version is copyright (c) 2012-2018 David Thomas
  */
 
-#ifndef SPRITE_DATA_H
-#define SPRITE_DATA_H
+#ifndef SPRITE_BITMAPS_H
+#define SPRITE_BITMAPS_H
 
 extern const uint8_t bitmap_commandant_facing_top_left_4[];
 extern const uint8_t bitmap_commandant_facing_top_left_3[];
@@ -73,5 +73,5 @@ extern const uint8_t mask_crate[];
 extern const uint8_t bitmap_stove[];
 extern const uint8_t mask_stove[];
 
-#endif /* SPRITE_DATA_H */
+#endif /* SPRITE_BITMAPS_H */
 

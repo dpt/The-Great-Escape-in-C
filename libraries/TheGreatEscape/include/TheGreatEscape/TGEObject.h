@@ -15,8 +15,8 @@
  * The recreated version is copyright (c) 2012-2018 David Thomas
  */
 
-#ifndef TGEOBJECT_H
-#define TGEOBJECT_H
+#ifndef TGE_OBJECT_H
+#define TGE_OBJECT_H
 
 #include <stdint.h>
 
@@ -36,5 +36,5 @@ struct tgeobject
  */
 typedef struct tgeobject tgeobject_t;
 
-#endif /* TGEOBJECT_H */
+#endif /* TGE_OBJECT_H */
 

@@ -15,8 +15,8 @@
  * The recreated version is copyright (c) 2012-2018 David Thomas
  */
 
-#ifndef ROOMDEFS_H
-#define ROOMDEFS_H
+#ifndef ROOM_DEFS_H
+#define ROOM_DEFS_H
 
 #include <stdint.h>
 
@@ -51,4 +51,4 @@ void set_roomdef(tgestate_t *state,
                  int         offset,
                  int         new_byte);
 
-#endif /* ROOMDEFS_H */
+#endif /* ROOM_DEFS_H */

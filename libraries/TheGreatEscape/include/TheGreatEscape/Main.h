@@ -15,8 +15,8 @@
  * The recreated version is copyright (c) 2012-2018 David Thomas
  */
 
-#ifndef THEGREATESCAPE_H
-#define THEGREATESCAPE_H
+#ifndef MAIN_H
+#define MAIN_H
 
 #include <stdlib.h>
 
@@ -676,4 +676,4 @@ int user_confirm(tgestate_t *state);
 
 void wipe_full_screen_and_attributes(tgestate_t *state);
 
-#endif /* THEGREATESCAPE_H */
+#endif /* MAIN_H */

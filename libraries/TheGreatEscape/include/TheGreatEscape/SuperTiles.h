@@ -15,8 +15,8 @@
  * The recreated version is copyright (c) 2012-2018 David Thomas
  */
 
-#ifndef SUPERTILES_H
-#define SUPERTILES_H
+#ifndef SUPER_TILES_H
+#define SUPER_TILES_H
 
 #include <stdint.h>
 
@@ -47,5 +47,5 @@ enum
  */
 extern const supertile_t supertiles[supertileindex__LIMIT];
 
-#endif /* SUPERTILES_H */
+#endif /* SUPER_TILES_H */
 
