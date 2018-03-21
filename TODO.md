@@ -39,7 +39,7 @@ General
 - [ ] Huge tidy-up.
   - [ ] astyle / clang-format the source.
 - [ ] Fix all the 'FUTURE' issues.
-- [ ] Acknowledge everyone's copyright everywhere: The Great Escape (C) Ocean etc. etc.
+- [x] Acknowledge everyone's copyright everywhere: The Great Escape (C) Ocean etc. etc.
 - [ ] Extract the sound and graphics from an image of the original game, rather than embedding it all.
 - [ ] Versioning.
 
