@@ -7447,7 +7447,6 @@ next:
   }
   while (--iters);
 
-  // IY is returned from this, but is an itemstruct_t not a vischar
   // item_and_flag is passed through if no itemstruct is found.
   item_and_flag = get_greatest_itemstruct(state,
                                           item_and_flag,
@@ -11224,8 +11223,6 @@ uint8_t get_greatest_itemstruct(tgestate_t    *state,
         y = pos->y * 8;
         x = pos->x * 8;
         *pitemstr = (itemstruct_t *) itemstr;
-
-        state->IY = (vischar_t *) itemstr; // FIXME: Cast is a bodge. // Odd!
 
         /* The original code has an unpaired A register exchange here. If the
          * loop continues then it's unclear which output register is used. */
