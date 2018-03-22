@@ -351,20 +351,20 @@ struct tgestate
   uint8_t         enable_24_right_2; // was $E259 - 24 case, rotate right, second clip
   uint8_t         enable_24_right_3; // was $E199 - 24 case, rotate right, third  clip
   uint8_t         enable_24_right_4; // was $E26A - 24 case, rotate right, fourth clip
-  
+
   uint8_t         enable_24_left_1;  // was $E1AA - 24 case, rotate left,  first  clip
   uint8_t         enable_24_left_2;  // was $E27B - 24 case, rotate left,  second clip
   uint8_t         enable_24_left_3;  // was $E1BF - 24 case, rotate left,  third  clip
   uint8_t         enable_24_left_4;  // was $E290 - 24 case, rotate left,  fourth clip
-  
+
   uint8_t         enable_16_left_1;  // was $E319 - 16 case, rotate left,  first  clip
   uint8_t         enable_16_left_2;  // was $E32A - 16 case, rotate left,  second clip
   uint8_t         enable_16_left_3;  // was $E340 - 16 case, rotate left,  third  clip
-  
+
   uint8_t         enable_16_right_1; // was $E3C5 - 16 case, rotate right, first  clip
   uint8_t         enable_16_right_2; // was $E3D6 - 16 case, rotate right, second clip
   uint8_t         enable_16_right_3; // was $E3EC - 16 case, rotate right, third  clip
-  
+
   /** $EDD3: Start addresses for game screen (usually 128). */
   uint16_t       *game_window_start_offsets;
 

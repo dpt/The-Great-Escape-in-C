@@ -345,49 +345,49 @@ static const uint16_t semitone_to_frequency[] =
 uint16_t frequency_for_semitone(uint8_t semitone, uint8_t *beep)
 {
   // FUTURE: Embed the semitone_to_frequency table in here.
-  
+
   uint16_t frequency; /* was BC */
-  
+
   // Middle C on the piano keyboard is C4 at 261.625565Hz (C4 is the scientific name).
   // A4 is 220Hz (scientific)
   // I'm measuring the output from this code here as:
   // C3 generates ~140Hz (probably ought to be C4 @ 131Hz)
   // C4 generates ~275Hz (probably ought to be C5 @ 262Hz)
-  
+
 #if 0
   frequency = semitone_to_frequency[semitone];
   // Original loads endian swapped... no idea why.
   frequency = ((frequency & 0xFF00) >> 8) | ((frequency & 0x00FF) << 8);
-  
+
   // Increment the value by 0x0101.
   // But why not just bake it into the table? Is it a frequency adjustment factor?
-  
+
 #define INC_LO(x) \
 do { x = (x & 0xFF00) | (((x & 0x00FF) + 0x0001) & 0x00FF); } while (0)
 #define INC_HI(x) \
 do { x = (x & 0x00FF) | (((x & 0xFF00) + 0x0100) & 0xFF00); } while (0)
-  
+
   INC_LO(frequency);
   INC_HI(frequency);
   if ((frequency & 0xFF00) == 0) // if 'hi' part rolled over
     INC_LO(frequency);
-  
+
 #undef INC_HI
 #undef INC_LO
 #else
   // Conv: Alternative which avoids some of the big endian swapping nonsense.
   frequency = semitone_to_frequency[semitone];
-  
+
   /* This value pre-increments the loop counters used in the music routine so
    * that they count down correctly. It could have been baked into the
    * semitone_to_frequency table. */
   frequency += 0x0101;
-  
+
   frequency = ((frequency & 0xFF00) >> 8) | ((frequency & 0x00FF) << 8);
 #endif
-  
+
   *beep = 0; /* Zero the beeper bit. */
-  
+
   return frequency;
 }
 

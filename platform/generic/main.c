@@ -47,17 +47,17 @@ static int key_handler(uint16_t port, void *opaque)
 {
     if (port == port_KEMPSTON_JOYSTICK)
         return 0; // active high (zeroes by default)
-    
+
     keystroke_time++;
 
     // first send a '2' to select Kempston joystick mode
     if (keystroke_time < 3 && port == port_KEYBOARD_12345)
         return 0x1F ^ 2;
-    
+
     // then send a '0' to start the game
     if (keystroke_time < 6 && port == port_KEYBOARD_09876)
         return 0x1F ^ 1;
-    
+
     return 0x1F;
 }
 

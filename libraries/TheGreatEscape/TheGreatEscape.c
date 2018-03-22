@@ -11340,7 +11340,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // state->iso_pos.y seems to match, but state->map_position.y is 2 bigger
 
   /* Calculate X plotting offset. */
-  
+
   // Conv: Assigns to signed var.
   x = state->iso_pos.x - state->map_position.x;
 
