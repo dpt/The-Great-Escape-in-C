@@ -226,22 +226,22 @@ enum vischar_flags_values
   /** Pursuit mode == 1 when a friendly character was nearby when a bribe was
    * used or when a hostile is pursuing with intent to capture. (NPC only)
    * Set in hostiles_pursue(). */
-  vischar_FLAGS_PURSUE                 = 1 << 0,
+  vischar_PURSUIT_PURSUE               = 1 << 0,
 
   /** Pursuit mode == 2 when a hostile sees a player-controlled hero, or the
    * flag is red. It causes hostiles to follow the hero and get in his way
    * but not arrest him. (NPC only)
    * Set in guards_follow_suspicious_character(). */
-  vischar_FLAGS_HASSLE                 = 2 << 0,
+  vischar_PURSUIT_HASSLE               = 2 << 0,
 
   /** Pursuit mode == 3 when food is in the vicinity of a dog.
    * (Guard dog NPC only) */
-  vischar_FLAGS_DOG_FOOD               = 3 << 0,
+  vischar_PURSUIT_DOG_FOOD             = 3 << 0,
 
   /** Pursuit mode == 4 when a hostile was nearby when a bribe was accepted.
    * It causes the hostile to target the character who accepted the bribe.
    * (Hostile NPC only) */
-  vischar_FLAGS_SAW_BRIBE              = 4 << 0,
+  vischar_PURSUIT_SAW_BRIBE            = 4 << 0,
 
   /* Bits 4 and 5 are unused */
 
@@ -611,8 +611,8 @@ typedef struct vischar
   route_t         route;
 
   /** $8004 target position */
-  // gets set to state->hero_map_position when vischar_FLAGS_PURSUE
-  // gets set to state->item_structs[item_FOOD].pos when vischar_FLAGS_DOG_FOOD
+  // gets set to state->hero_map_position when vischar_PURSUIT_PURSUE
+  // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
   tinypos_t       target;

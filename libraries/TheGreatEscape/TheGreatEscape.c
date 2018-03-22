@@ -5796,7 +5796,7 @@ int collision(tgestate_t *state)
       goto pop_next;
 
     /* If IY vischar is pursuing... */
-    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_FLAGS_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
+    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_PURSUIT_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
     {
       /* and CURRENT vischar is the hero... */
       if (vischar == &state->vischars[0])
@@ -5963,7 +5963,7 @@ void accept_bribe(tgestate_t *state)
 
   increase_morale_by_10_score_by_50(state);
 
-  /* Clear the vischar_FLAGS_PURSUE flag. */
+  /* Clear the vischar_PURSUIT_PURSUE flag. */
   state->IY->flags = 0;
 
   route = &state->IY->route;
@@ -5979,13 +5979,13 @@ void accept_bribe(tgestate_t *state)
   state->item_structs[item_BRIBE].room_and_flags = (room_t) itemstruct_ROOM_NONE;
   draw_all_items(state);
 
-  /* Set the vischar_FLAGS_SAW_BRIBE flag on all visible hostiles. */
+  /* Set the vischar_PURSUIT_SAW_BRIBE flag on all visible hostiles. */
   iters   = vischars_LENGTH - 1;
   vischar = &state->vischars[1];
   do
   {
     if (vischar->character <= character_19_GUARD_DOG_4)
-      vischar->flags = vischar_FLAGS_SAW_BRIBE;
+      vischar->flags = vischar_PURSUIT_SAW_BRIBE;
     vischar++;
   }
   while (--iters);
@@ -6456,7 +6456,7 @@ void action_bribe(tgestate_t *state)
 
 found:
   state->bribed_character = character;
-  vischar->flags = vischar_FLAGS_PURSUE; /* Bribed character pursues hero. */
+  vischar->flags = vischar_PURSUIT_PURSUE; /* Bribed character pursues hero. */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9458,10 +9458,10 @@ void automatics(tgestate_t *state)
           guards_follow_suspicious_character(state, vischar);
 
         /* If there is (poisoned) food nearby then put the guard dogs
-         * (characters 16..19) into vischar_FLAGS_DOG_FOOD pursue mode. */
+         * (characters 16..19) into vischar_PURSUIT_DOG_FOOD pursue mode. */
         if (character >= character_16_GUARD_DOG_1 &&
             state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
-            vischar->flags = vischar_FLAGS_DOG_FOOD;
+            vischar->flags = vischar_PURSUIT_DOG_FOOD;
       }
 
       character_behaviour(state, vischar);
@@ -9517,7 +9517,7 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
   if (flags != 0)
   {
     /* Mode 1: Hero is chased by hostiles and sent to solitary if caught. */
-    if (flags == vischar_FLAGS_PURSUE)
+    if (flags == vischar_PURSUIT_PURSUE)
     {
 pursue_hero:
       /* Pursue the hero. */
@@ -9526,7 +9526,7 @@ pursue_hero:
       goto move;
     }
     /* Mode 2: Hero is chased by hostiles if under player control. */
-    else if (flags == vischar_FLAGS_HASSLE)
+    else if (flags == vischar_PURSUIT_HASSLE)
     {
       if (state->automatic_player_counter > 0)
       {
@@ -9537,13 +9537,13 @@ pursue_hero:
       {
         /* The hero is under automatic control: hostiles lose interest and
          * resume following their original route. */
-        vischar2->flags = 0; /* clear vischar_FLAGS_HASSLE */
+        vischar2->flags = 0; /* clear vischar_PURSUIT_HASSLE */
         (void) get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
     /* Mode 3: The food item is near a guard dog. */
-    else if (flags == vischar_FLAGS_DOG_FOOD)
+    else if (flags == vischar_PURSUIT_DOG_FOOD)
     {
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
@@ -9556,7 +9556,7 @@ pursue_hero:
       {
         /* Food is no longer nearby: Choose random locations in the fenced-
          * off area (right side). */
-        vischar2->flags = 0; /* clear vischar_FLAGS_DOG_FOOD */
+        vischar2->flags = 0; /* clear vischar_PURSUIT_DOG_FOOD */
         vischar2->route.index = routeindex_255_WANDER;
         vischar2->route.step  = 0; /* 0..7 */
         (void) get_target_assign_pos(state, vischar2, &vischar2->route);
@@ -9564,7 +9564,7 @@ pursue_hero:
       }
     }
     /* Mode 4: Hostile character witnessed a bribe being given (in accept_bribe). */
-    else if (flags == vischar_FLAGS_SAW_BRIBE)
+    else if (flags == vischar_PURSUIT_SAW_BRIBE)
     {
       character_t  bribed_character; /* was A */
       vischar_t   *found;            /* was HL */
@@ -9586,7 +9586,7 @@ pursue_hero:
 
       /* Bribed character was not visible: hostiles lose interest and resume
        * following their original route. */
-      vischar2->flags = 0; /* clear vischar_FLAGS_SAW_BRIBE */
+      vischar2->flags = 0; /* clear vischar_PURSUIT_SAW_BRIBE */
       (void) get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
 
@@ -9844,9 +9844,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 
   flags_all = vischar->flags;
   flags_lower6 = flags_all & vischar_FLAGS_MASK; // lower 6 bits only
-  if (flags_lower6) // if in one of these states: vischar_FLAGS_PURSUE || vischar_FLAGS_HASSLE || vischar_FLAGS_DOG_FOOD || vischar_FLAGS_SAW_BRIBE
+  if (flags_lower6) // if in one of these states: vischar_PURSUIT_PURSUE || vischar_PURSUIT_HASSLE || vischar_PURSUIT_DOG_FOOD || vischar_PURSUIT_SAW_BRIBE
   {
-    if (flags_lower6 == vischar_FLAGS_PURSUE)
+    if (flags_lower6 == vischar_PURSUIT_PURSUE)
     {
       if (vischar->character == state->bribed_character)
         accept_bribe(state);
@@ -9854,15 +9854,15 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
         solitary(state); // caught pursued character (ie. the hero)
       return; // exit via // factored out
     }
-    else if (flags_lower6 == vischar_FLAGS_HASSLE ||
-             flags_lower6 == vischar_FLAGS_SAW_BRIBE)
+    else if (flags_lower6 == vischar_PURSUIT_HASSLE ||
+             flags_lower6 == vischar_PURSUIT_SAW_BRIBE)
     {
       /* Nothing to do in these cases. */
       return;
     }
     else
     {
-      assert(flags_lower6 == vischar_FLAGS_DOG_FOOD);
+      assert(flags_lower6 == vischar_PURSUIT_DOG_FOOD);
 
       /* Decide how long until food is discovered. */
       if ((state->item_structs[item_FOOD].item_and_flags & itemstruct_ITEM_FLAG_POISONED) == 0)
@@ -10697,7 +10697,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
     return;
 
   /* If this (hostile) character saw the bribe being used then ignore the hero. */
-  if (vischar->flags == vischar_FLAGS_SAW_BRIBE)
+  if (vischar->flags == vischar_PURSUIT_SAW_BRIBE)
     return;
 
   // this must be line of sight checking (outdoors only)
@@ -10748,7 +10748,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   {
     /* Hostiles *not* in guard towers hassle the hero. */
     if (vischar->mi.pos.height < 32) /* uses A as temporary */
-      vischar->flags = vischar_FLAGS_HASSLE;
+      vischar->flags = vischar_PURSUIT_HASSLE;
   }
   else
   {
@@ -10779,7 +10779,7 @@ void hostiles_pursue(tgestate_t *state)
   {
     if (vischar->character <= character_19_GUARD_DOG_4 &&
         vischar->mi.pos.height < 32) /* Excludes the guards high up in towers. */
-      vischar->flags = vischar_FLAGS_PURSUE;
+      vischar->flags = vischar_PURSUIT_PURSUE;
     vischar++;
   }
   while (--iters);
