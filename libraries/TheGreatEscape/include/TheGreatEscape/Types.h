@@ -602,7 +602,7 @@ movableitem_t;
 typedef struct vischar
 {
   /** $8000 character index */
-  uint8_t         character;
+  character_t     character;
 
   /** $8001 flags */
   uint8_t         flags;
