@@ -84,3 +84,4 @@ uint8_t *plot_single_glyph(tgestate_t *state, int character, uint8_t *output)
 /* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
+

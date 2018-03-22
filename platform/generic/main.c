@@ -172,3 +172,5 @@ failure:
 
     exit(EXIT_FAILURE);
 }
+
+// vim: ts=8 sts=2 sw=2 et

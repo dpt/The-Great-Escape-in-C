@@ -75,3 +75,4 @@ extern const uint8_t mask_stove[];
 
 #endif /* SPRITE_BITMAPS_H */
 
+// vim: ts=8 sts=2 sw=2 et

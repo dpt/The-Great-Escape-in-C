@@ -27,3 +27,4 @@ extern const tgeobject_t *interior_object_defs[interiorobject__LIMIT];
 
 #endif /* INTERIOR_OBJECT_DEFS_H */
 
+// vim: ts=8 sts=2 sw=2 et

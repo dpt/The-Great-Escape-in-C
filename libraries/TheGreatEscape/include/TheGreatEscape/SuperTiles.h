@@ -49,3 +49,4 @@ extern const supertile_t supertiles[supertileindex__LIMIT];
 
 #endif /* SUPER_TILES_H */
 
+// vim: ts=8 sts=2 sw=2 et

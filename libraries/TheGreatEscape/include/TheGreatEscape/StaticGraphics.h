@@ -51,3 +51,5 @@ void plot_statics_and_menu_text(tgestate_t *state);
 /* ----------------------------------------------------------------------- */
 
 #endif /* STATIC_GRAPHICS_H */
+
+// vim: ts=8 sts=2 sw=2 et

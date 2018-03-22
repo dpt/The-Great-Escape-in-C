@@ -28,3 +28,5 @@ uint8_t *plot_single_glyph(tgestate_t *state,
                            uint8_t    *output);
 
 #endif /* TEXT_H */
+
+// vim: ts=8 sts=2 sw=2 et

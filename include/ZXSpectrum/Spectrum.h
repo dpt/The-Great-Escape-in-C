@@ -216,3 +216,4 @@ void zxspectrum_release_screen(zxspectrum_t *state);
 
 #endif /* ZXSPECTRUM_H */
 
+// vim: ts=8 sts=2 sw=2 et

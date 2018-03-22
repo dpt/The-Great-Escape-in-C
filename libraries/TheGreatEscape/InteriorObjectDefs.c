@@ -629,5 +629,3 @@ const tgeobject_t *interior_object_defs[interiorobject__LIMIT] =
 };
 
 // vim: ts=8 sts=2 sw=2 et
-
-

@@ -31,3 +31,5 @@ void zxscreen_convert(const void    *screen,
 #endif
 
 #endif /* ZXSPECTRUM_SCREEN_H */
+
+// vim: ts=8 sts=2 sw=2 et

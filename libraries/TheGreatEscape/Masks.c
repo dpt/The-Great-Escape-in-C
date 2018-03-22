@@ -546,3 +546,5 @@ const mask_t exterior_mask_data[58] =
   { 13, {  44,  47,  81,  90 }, {  62,  62,  8 } }, // fence end piece 13
   { 13, {  60,  63,  73,  82 }, {  70,  70,  8 } }, // fence end piece 13
 };
+
+// vim: ts=8 sts=2 sw=2 et

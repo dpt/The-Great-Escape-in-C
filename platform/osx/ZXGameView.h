@@ -29,3 +29,5 @@
 - (void)getGameWidth:(int *)width height:(int *)height border:(int *)border;
 
 @end
+
+// vim: ts=8 sts=2 sw=2 et

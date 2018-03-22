@@ -241,3 +241,5 @@ void zxscreen_convert(const void    *vscr,
       pattrs -= 8;
   }
 }
+
+// vim: ts=8 sts=2 sw=2 et

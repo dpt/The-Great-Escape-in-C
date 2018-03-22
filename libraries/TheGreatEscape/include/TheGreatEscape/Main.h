@@ -677,3 +677,5 @@ int user_confirm(tgestate_t *state);
 void wipe_full_screen_and_attributes(tgestate_t *state);
 
 #endif /* MAIN_H */
+
+// vim: ts=8 sts=2 sw=2 et

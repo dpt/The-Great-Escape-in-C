@@ -35,3 +35,5 @@ void zxkempston_assign(zxkempston_t *kempston,
 
   *kempston = (*kempston & ~(1 << i)) | on_off << i;
 }
+
+// vim: ts=8 sts=2 sw=2 et

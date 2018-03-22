@@ -57,3 +57,5 @@ void queue_message(tgestate_t *state,
 void message_display(tgestate_t *state);
 
 #endif /* MESSAGES_H */
+
+// vim: ts=8 sts=2 sw=2 et

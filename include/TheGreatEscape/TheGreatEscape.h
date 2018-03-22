@@ -104,3 +104,4 @@ TGE_API void tge_main(tgestate_t *state);
 
 #endif /* THE_GREAT_ESCAPE_H */
 
+// vim: ts=8 sts=2 sw=2 et

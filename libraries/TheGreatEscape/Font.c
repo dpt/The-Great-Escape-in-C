@@ -472,4 +472,3 @@ const unsigned char ascii_to_font[256] =
 };
 
 // vim: ts=8 sts=2 sw=2 et
-

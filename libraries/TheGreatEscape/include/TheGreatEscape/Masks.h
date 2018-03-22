@@ -28,3 +28,5 @@ extern const uint8_t *mask_pointers[30];
 extern const mask_t exterior_mask_data[58];
 
 #endif /* MASKS_H */
+
+// vim: ts=8 sts=2 sw=2 et

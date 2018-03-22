@@ -36,3 +36,5 @@ void zxkempston_assign(zxkempston_t *kempston,
 #endif
 
 #endif /* ZXSPECTRUM_KEMPSTON_H */
+
+// vim: ts=8 sts=2 sw=2 et

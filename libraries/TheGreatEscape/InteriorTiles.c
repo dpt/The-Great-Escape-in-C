@@ -2356,5 +2356,3 @@ const tile_t interior_tiles[interiortile__LIMIT] =
 };
 
 // vim: ts=8 sts=2 sw=2 et
-
-

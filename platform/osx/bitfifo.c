@@ -345,3 +345,5 @@ int bitfifo_empty(const bitfifo_t *fifo)
   /* fifo is empty if head == tail */
   return fifo->head == fifo->tail;
 }
+
+// vim: ts=8 sts=2 sw=2 et

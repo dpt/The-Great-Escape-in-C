@@ -52,3 +52,4 @@ typedef uint8_t item_t;
 
 #endif /* ITEMS_H */
 
+// vim: ts=8 sts=2 sw=2 et

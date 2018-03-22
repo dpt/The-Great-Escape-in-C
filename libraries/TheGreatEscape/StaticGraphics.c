@@ -315,4 +315,3 @@ static void plot_static_tiles(tgestate_t             *state,
 /* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
-

@@ -21,3 +21,5 @@
 #define door_MAX 62
 
 #endif /* DOORS_H */
+
+// vim: ts=8 sts=2 sw=2 et

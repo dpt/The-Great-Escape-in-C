@@ -50,3 +50,5 @@ void set_roomdef(tgestate_t *state,
                  int         new_byte);
 
 #endif /* ROOM_DEFS_H */
+
+// vim: ts=8 sts=2 sw=2 et

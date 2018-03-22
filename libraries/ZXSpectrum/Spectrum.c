@@ -249,3 +249,5 @@ void zxspectrum_release_screen(zxspectrum_t *state)
 
   mutex_unlock(prv->lock);
 }
+
+// vim: ts=8 sts=2 sw=2 et

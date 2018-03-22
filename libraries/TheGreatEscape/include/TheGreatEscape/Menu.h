@@ -27,3 +27,5 @@ void set_menu_item_attributes(tgestate_t *state,
 int menu_screen(tgestate_t *state);
 
 #endif /* MENU_H */
+
+// vim: ts=8 sts=2 sw=2 et

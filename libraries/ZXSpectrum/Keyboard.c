@@ -164,3 +164,4 @@ zxkeyset_t zxkeyset_clearchar(zxkeyset_t keystate, int c)
   return keystate;
 }
 
+// vim: ts=8 sts=2 sw=2 et

@@ -36,3 +36,5 @@ extern const supertileindex_t map[MAPX * MAPY];
 #define MAP_HEIGHT 137
 
 #endif /* MAP_H */
+
+// vim: ts=8 sts=2 sw=2 et

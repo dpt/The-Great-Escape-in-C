@@ -104,3 +104,5 @@ zxkeyset_t zxkeyset_clearchar(zxkeyset_t keystate, int c);
 #endif
 
 #endif /* ZXSPECTRUM_KEYBOARD_H */
+
+// vim: ts=8 sts=2 sw=2 et

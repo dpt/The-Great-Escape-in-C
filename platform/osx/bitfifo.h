@@ -94,3 +94,5 @@ int bitfifo_empty(const T *fifo);
 #endif
 
 #endif /* DATASTRUCT_BITFIFO_H */
+
+// vim: ts=8 sts=2 sw=2 et
