@@ -3935,6 +3935,7 @@ void escaped(tgestate_t *state)
   message = &messages[10]; /* PRESS ANY KEY */
   (void) screenlocstring_plot(state, message);
 
+  // FIXME: Loops which won't check the quit flag.
   /* Wait for a keypress. */
   do
     keys = keyscan_all(state);
