@@ -5953,6 +5953,7 @@ next:
  */
 void accept_bribe(tgestate_t *state)
 {
+  route_t    *route;  /* was HL */
   item_t    *item;    /* was DE */
   uint8_t    iters;   /* was B */
   vischar_t *vischar; /* was HL */
@@ -5962,9 +5963,11 @@ void accept_bribe(tgestate_t *state)
 
   increase_morale_by_10_score_by_50(state);
 
-  state->IY->flags = 0; // this clears vischar_FLAGS_PURSUE. does it clear anything else?
+  /* Clear the vischar_FLAGS_PURSUE flag. */
+  state->IY->flags = 0;
 
-  (void) get_target_assign_pos(state, state->IY, &state->IY->route); /* FIXME these IYs. route should be HL? */
+  route = &state->IY->route;
+  (void) get_target_assign_pos(state, state->IY, route);
 
   /* Return early if we have no bribes. */
   item = &state->items_held[0];
