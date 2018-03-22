@@ -107,4 +107,7 @@ Fixed
 40. Prisoner on route 23 wouldn't sit down for breakfast.
     * Original game bug.
     * Fixed 4-Mar-18.
+41. Bribes were accepted but had no effect.
+    * Conversion bug: a test was accidentally inverted.
+    * Fixed 21-Mar-18.
 
