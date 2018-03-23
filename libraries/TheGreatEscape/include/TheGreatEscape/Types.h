@@ -547,7 +547,7 @@ typedef struct pos
 pos_t;
 
 /**
- * Holds a smaller scale version of pos_t.
+ * Holds a smaller scale version of pos_t.
  */
 typedef struct tinypos
 {

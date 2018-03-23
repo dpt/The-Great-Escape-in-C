@@ -79,7 +79,7 @@ TGE_API void tge_setup(tgestate_t *state);
 /**
  * Run the game menu.
  *
- * Call this repeatedly until it returns > 0.
+ * Call this repeatedly until it returns > 0.
  *
  * \return > 0 when it's time to continue on to tge_setup2.
  */
