@@ -9,9 +9,12 @@ set(SOURCES
   main.m
 )
 
+set(GENERATED_ICNS
+  ${PROJECT_BINARY_DIR}/platform/osx/AppIcon.icns
+)
+
 set(RESOURCES
-  AppIcon.icns
-# ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.icns
+  ${GENERATED_ICNS}
   en.lproj/Credits.rtf
 )
 
@@ -22,8 +25,6 @@ set(XIBS
   en.lproj/MainMenu
   en.lproj/ZXGameWindow
 )
-
-set(APPICONSET ${RESOURCES_SOURCE_DIR}/Images.xcassets/AppIcon.appiconset)
 
 add_executable(${TARGET}
   MACOSX_BUNDLE
@@ -57,11 +58,21 @@ target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}
 )
 
+set(SRCICONSET
+    ${RESOURCES_SOURCE_DIR}/TheGreatEscape/Images.xcassets/AppIcon.appiconset
+)
+
+set(TMPICONSET
+    ${PROJECT_BINARY_DIR}/platform/osx/AppIcon.iconset
+)
+
 find_program(ICONUTIL_EXE NAMES iconutil)
 add_custom_command(
-    OUTPUT ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.icns
-    COMMAND ${ICONUTIL_EXE} --convert icns --output ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.icns ${APPICONSET}
-    DEPENDS ${APPICONSET}
+    DEPENDS ${SRCICONSET}
+    OUTPUT ${GENERATED_ICNS}
+    # copy Xcode project's iconset to the binary dir as 'AppIcon.iconset' then process it otherwise iconutil barfs
+    COMMAND cp -R ${SRCICONSET} ${TMPICONSET}
+    COMMAND ${ICONUTIL_EXE} --convert icns --output ${GENERATED_ICNS} ${TMPICONSET}
     COMMENT "Building app icon..."
 )
 
