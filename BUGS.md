@@ -111,3 +111,5 @@ Fixed
     * Conversion bug: a test was accidentally inverted.
     * Fixed 21-Mar-18.
 
+vim: wrap linebreak textwidth=0 wrapmargin=0 breakindent
+
