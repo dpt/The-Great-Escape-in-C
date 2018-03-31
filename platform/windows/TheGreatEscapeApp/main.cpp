@@ -2,10 +2,11 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2017. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
 //
 
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 
 #include <windows.h>
@@ -19,9 +20,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// TODO: these will need to be passed in rather than hard-coded
-#define WIDTH  256
-#define HEIGHT 192
+// Configuration
+//
+#define DEFAULTWIDTH      256
+#define DEFAULTHEIGHT     192
+#define DEFAULTBORDERSIZE  32
 
 #define MAXSTAMPS           4 /* depth of nested timestamp stack */
 
@@ -32,16 +35,13 @@ static const WCHAR szGameWindowTitle[]     = L"The Great Escape";
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static LONG g_window_adjust_x, g_window_adjust_y;
-
-///////////////////////////////////////////////////////////////////////////////
-
 typedef struct gamewin
 {
   HINSTANCE       instance;
   HWND            window;
   BITMAPINFO      bitmapinfo;
 
+  tgeconfig_t     config;
   zxspectrum_t   *zx;
   tgestate_t     *tge;
 
@@ -190,12 +190,6 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
 
 static int CreateGame(gamewin_t *gamewin)
 {
-  static const tgeconfig_t tgeconfig =
-  {
-    WIDTH  / 8,
-    HEIGHT / 8
-  };
-
   zxconfig_t        zxconfig;
   zxspectrum_t     *zx;
   tgestate_t       *tge;
@@ -215,7 +209,10 @@ static int CreateGame(gamewin_t *gamewin)
   if (zx == NULL)
     goto failure;
 
-  tge = tge_create(zx, &tgeconfig);
+  gamewin->config.width  = DEFAULTWIDTH  / 8;
+  gamewin->config.height = DEFAULTHEIGHT / 8;
+
+  tge = tge_create(zx, &gamewin->config);
   if (tge == NULL)
     goto failure;
 
@@ -230,8 +227,8 @@ static int CreateGame(gamewin_t *gamewin)
 
   bmih = &gamewin->bitmapinfo.bmiHeader;
   bmih->biSize          = sizeof(BITMAPINFOHEADER);
-  bmih->biWidth         = WIDTH;
-  bmih->biHeight        = -HEIGHT; // negative height flips the image
+  bmih->biWidth         = DEFAULTWIDTH;
+  bmih->biHeight        = -DEFAULTHEIGHT; // negative height flips the image
   bmih->biPlanes        = 1;
   bmih->biBitCount      = 32;
   bmih->biCompression   = BI_RGB;
@@ -311,10 +308,21 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
 
     case WM_PAINT:
       {
+        const bool    snap = true;
+
+        float         gameWidth, gameHeight;
         unsigned int *pixels;
         PAINTSTRUCT   ps;
         HDC           hdc;
         RECT          clientrect;
+        float         windowWidth, windowHeight;
+        float         gameWidthsPerWindow, gameHeightsPerWindow;
+        float         gamesPerWindow;
+        int           drawWidth, drawHeight;
+        int           xOffset, yOffset;
+
+        gameWidth  = gamewin->config.width  * 8;
+        gameHeight = gamewin->config.height * 8;
 
         pixels = zxspectrum_claim_screen(gamewin->zx);
 
@@ -322,15 +330,41 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
 
         GetClientRect(hwnd, &clientrect);
 
+        windowWidth  = clientrect.right  - clientrect.left;
+        windowHeight = clientrect.bottom - clientrect.top;
+
+        // How many natural-scale games fit comfortably into the window?
+        gameWidthsPerWindow  = (windowWidth  - DEFAULTBORDERSIZE * 2) / gameWidth;
+        gameHeightsPerWindow = (windowHeight - DEFAULTBORDERSIZE * 2) / gameHeight;
+        gamesPerWindow = min(gameWidthsPerWindow, gameHeightsPerWindow);
+
+        // Try again without a border if the window is very small
+        if (gamesPerWindow < 1.0)
+        {
+          gameWidthsPerWindow  = windowWidth  / gameWidth;
+          gameHeightsPerWindow = windowHeight / gameHeight;
+          gamesPerWindow = min(gameWidthsPerWindow, gameHeightsPerWindow);
+        }
+
+        // Snap the game scale to whole units
+        if (gamesPerWindow > 1.0 && snap)
+        {
+          const float snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
+          gamesPerWindow = floor(gamesPerWindow * snapSteps) / snapSteps;
+        }
+
+        drawWidth  = gameWidth  * gamesPerWindow;
+        drawHeight = gameHeight * gamesPerWindow;
+
+        // Centre the game within the window (note that conversion to int floors the values)
+        xOffset = (windowWidth  - drawWidth)  / 2;
+        yOffset = (windowHeight - drawHeight) / 2;
+
         StretchDIBits(hdc,
-                      0,
-                      0,
-                      clientrect.right - clientrect.left,
-                      -(clientrect.top - clientrect.bottom),
-                      0,
-                      0,
-                      WIDTH,
-                      HEIGHT,
+                      xOffset, yOffset,
+                      drawWidth, drawHeight,
+                      0, 0,
+                      DEFAULTWIDTH, DEFAULTHEIGHT,
                       pixels,
                       &gamewin->bitmapinfo,
                       DIB_RGB_COLORS,
@@ -384,82 +418,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       //     break;
 
     case WM_SIZING:
-    {
-      // http://playtechs.blogspot.co.uk/2007/10/forcing-window-to-maintain-particular.html
-
-      const int window_ratio_x = 256, window_ratio_y = 192;
-
-      int   edge = LOWORD(wParam);
-      RECT *rect = reinterpret_cast<RECT *>(lParam);
-      LONG width, height;
-      LONG newwidth, newheight;
-
-      width  = rect->right - rect->left - g_window_adjust_x;
-      height = rect->bottom - rect->top - g_window_adjust_y;
-
-      switch (edge)
-      {
-      case WMSZ_LEFT:
-      case WMSZ_RIGHT:
-      {
-        newheight = g_window_adjust_y + width * window_ratio_y / window_ratio_x;
-        rect->top = (rect->top + rect->bottom) / 2 - newheight / 2;
-        rect->bottom = rect->top + newheight;
-      }
-      break;
-
-      case WMSZ_TOP:
-      case WMSZ_BOTTOM:
-      {
-        newwidth = g_window_adjust_x + height * window_ratio_x / window_ratio_y;
-        rect->left = (rect->left + rect->right) / 2 - newwidth / 2;
-        rect->right = rect->left + newwidth;
-      }
-      break;
-
-      case WMSZ_TOPLEFT:
-      case WMSZ_TOPRIGHT:
-      case WMSZ_BOTTOMLEFT:
-      case WMSZ_BOTTOMRIGHT:
-      {
-        if (width * window_ratio_y > height * window_ratio_x)
-        {
-          // wider than high
-          newwidth = width;
-          newheight = g_window_adjust_y + (width - g_window_adjust_x) * window_ratio_y / window_ratio_x;
-        }
-        else
-        {
-          // higher than wide
-          newheight = height;
-          newwidth = g_window_adjust_x + (height - g_window_adjust_y) * window_ratio_x / window_ratio_y;
-        }
-
-        switch (edge)
-        {
-        case WMSZ_TOPLEFT:
-          rect->left = rect->right - newwidth;
-          rect->top = rect->bottom - newheight;
-          break;
-        case WMSZ_TOPRIGHT:
-          rect->top = rect->bottom - newheight;
-          rect->right = rect->left + newwidth;
-          break;
-        case WMSZ_BOTTOMLEFT:
-          rect->bottom = rect->top + newheight;
-          rect->left = rect->right - newwidth;
-          break;
-        case WMSZ_BOTTOMRIGHT:
-          rect->bottom = rect->top + newheight;
-          rect->right = rect->left + newwidth;
-          break;
-        }
-      }
-      break;
-      }
-
       return TRUE;
-    }
 
     default:
       return DefWindowProc(hwnd, message, wParam, lParam);
@@ -481,7 +440,7 @@ BOOL RegisterGameWindowClass(HINSTANCE hInstance)
   wcx.hInstance     = hInstance;
   wcx.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
   wcx.hCursor       = LoadCursor(NULL, IDC_ARROW);
-  wcx.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+  wcx.hbrBackground = CreateSolidBrush(0x00000000);
   wcx.lpszMenuName  = NULL;
   wcx.lpszClassName = szGameWindowClassName;
   wcx.hIconSm       = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
@@ -511,8 +470,8 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin
   // Required window dimensions
   rect.left   = 0;
   rect.top    = 0;
-  rect.right  = WIDTH;
-  rect.bottom = HEIGHT;
+  rect.right  = DEFAULTWIDTH  + DEFAULTBORDERSIZE * 2;
+  rect.bottom = DEFAULTHEIGHT + DEFAULTBORDERSIZE * 2;
 
   // Adjust window dimensions for window furniture
   result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
@@ -556,14 +515,6 @@ void DestroyGameWindow(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void calculateWindowAdjustments(LONG width, LONG height)
-{
-  RECT rect = { 0, 0, width, height };
-  AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-  g_window_adjust_x = (rect.right - rect.left) - width;
-  g_window_adjust_y = (rect.bottom - rect.top) - height;
-}
-
 int WINAPI WinMain(__in     HINSTANCE hInstance,
                    __in_opt HINSTANCE hPrevInstance,
                    __in     LPSTR     lpszCmdParam,
@@ -576,8 +527,6 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
   rc = RegisterGameWindowClass(hInstance);
   if (!rc)
     return 0;
-
-  calculateWindowAdjustments(WIDTH, HEIGHT);
 
   rc = CreateGameWindow(hInstance, nCmdShow, &game1);
   if (!rc)
