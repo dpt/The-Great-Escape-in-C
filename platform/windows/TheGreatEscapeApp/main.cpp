@@ -8,8 +8,10 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 
 #include <windows.h>
+#include <CommCtrl.h>
 
 #include "ZXSpectrum/Spectrum.h"
 #include "ZXSpectrum/Keyboard.h"
@@ -273,6 +275,40 @@ static void DestroyGame(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
+                                        UINT   message,
+                                        WPARAM wParam,
+                                        LPARAM lParam)
+{
+  TCHAR buf[100];
+  wsprintf(buf, L"%d\n", message);
+  OutputDebugString(buf);
+
+  switch(message)
+  {
+  case WM_INITDIALOG:
+    return TRUE;
+
+  case WM_COMMAND:
+    switch(LOWORD(wParam))
+    {
+    case IDOK:
+      EndDialog(hwnd, IDOK);
+      break;
+
+    case IDCANCEL:
+      EndDialog(hwnd, IDCANCEL);
+      break;
+    }
+    break;
+
+  default:
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                                      UINT   message,
                                      WPARAM wParam,
@@ -401,21 +437,93 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       }
       break;
 
-      // later:
-      // case WM_COMMAND:
-      //     {
-      //         int wmId = LOWORD(wParam);
-      //         switch (wmId)
-      //         {
-      //             case 0:// temp
-      //             //case ...:
-      //             //  break;
-      //
-      //             default:
-      //                 return DefWindowProc(hwnd, message, wParam, lParam);
-      //         }
-      //     }
-      //     break;
+    case WM_COMMAND:
+    {
+      int wmId = LOWORD(wParam);
+      switch (wmId)
+      {
+      case ID_HELP_ABOUT:
+      {
+        (void) DialogBox(GetModuleHandle(NULL),
+                         MAKEINTRESOURCE(IDD_ABOUT),
+                         hwnd,
+                         AboutDialogueProcedure);
+        break;
+      }
+      break;
+
+      case ID_FILE_EXIT:
+      {
+        DestroyGame(gamewin);
+        PostQuitMessage(0);
+      }
+      break;
+
+      case ID_FILE_NEW:
+      {
+      }
+      break;
+
+      case ID_GAME_DUPLICATE:
+      {
+      }
+      break;
+
+      case ID_VIEW_ACTUALSIZE:
+      {
+      }
+      break;
+
+      case ID_VIEW_ZOOMIN:
+      {
+      }
+      break;
+
+      case ID_VIEW_ZOOMOUT:
+      {
+      }
+      break;
+
+      case ID_VIEW_SNAPTOWHOLEPIXELS:
+      {
+      }
+      break;
+
+      case ID_SOUND_ENABLED:
+      {
+      }
+      break;
+
+      case ID_SPEED_PAUSE:
+      {
+      }
+      break;
+
+      case ID_SPEED_100:
+      {
+      }
+      break;
+
+      case ID_SPEED_MAXIMUM:
+      {
+      }
+      break;
+
+      case ID_SPEED_FASTER:
+      {
+      }
+      break;
+
+      case ID_SPEED_SLOWER:
+      {
+      }
+      break;
+
+      default:
+        return DefWindowProc(hwnd, message, wParam, lParam);
+      }
+    }
+    break;
 
     case WM_SIZING:
       return TRUE;
@@ -441,7 +549,7 @@ BOOL RegisterGameWindowClass(HINSTANCE hInstance)
   wcx.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
   wcx.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcx.hbrBackground = CreateSolidBrush(0x00000000);
-  wcx.lpszMenuName  = NULL;
+  wcx.lpszMenuName  = MAKEINTRESOURCE(IDR_MENU1);
   wcx.lpszClassName = szGameWindowClassName;
   wcx.hIconSm       = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
@@ -463,9 +571,11 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin
 
   *new_gamewin = NULL;
 
-  gamewin = (gamewin_t *) malloc(sizeof(*gamewin));
+  gamewin = (gamewin_t *) calloc(sizeof(*gamewin), 1);
   if (gamewin == NULL)
     return FALSE;
+
+  gamewin->instance = hInstance;
 
   // Required window dimensions
   rect.left   = 0;
@@ -523,6 +633,16 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
   int        rc;
   gamewin_t *game1;
   MSG        msg;
+
+  {
+    static const INITCOMMONCONTROLSEX iccex =
+    {
+      sizeof(INITCOMMONCONTROLSEX),
+      ICC_LINK_CLASS
+    };
+
+    InitCommonControlsEx(&iccex);
+  }
 
   rc = RegisterGameWindowClass(hInstance);
   if (!rc)
