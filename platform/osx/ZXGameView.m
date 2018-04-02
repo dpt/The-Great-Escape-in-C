@@ -444,6 +444,7 @@ failure:
   NSRect  baseRect;
   CGSize  viewSize;
   CGFloat gameWidthsPerView, gameHeightsPerView, gamesPerView;
+  int     reducedBorder;
   GLsizei xOffset, yOffset;
   GLsizei drawWidth, drawHeight;
 
@@ -454,20 +455,19 @@ failure:
   baseRect = [self bounds];
   viewSize = baseRect.size;
 
-  // How many game windows fit comfortably into the view?
-  gameWidthsPerView  = (viewSize.width  - borderSize * 2) / gameSize.width;
-  gameHeightsPerView = (viewSize.height - borderSize * 2) / gameSize.height;
-  gamesPerView = MIN(gameWidthsPerView, gameHeightsPerView);
-
-  // Try again without the border if the view is very small
-  if (gamesPerView < 1.0)
+  // How many 1:1 game windows fit comfortably into the view?
+  // Try to fit while reducing the border if the view is very small
+  reducedBorder = borderSize;
+  do
   {
-    gameWidthsPerView  = viewSize.width  / gameSize.width;
-    gameHeightsPerView = viewSize.height / gameSize.height;
+    gameWidthsPerView  = (viewSize.width  - reducedBorder * 2) / gameSize.width;
+    gameHeightsPerView = (viewSize.height - reducedBorder * 2) / gameSize.height;
     gamesPerView = MIN(gameWidthsPerView, gameHeightsPerView);
+    reducedBorder--;
   }
+  while (reducedBorder >= 0 && gamesPerView < 1.0);
 
-  // Force scaling if a full game won't fit
+  // Snap the game scale to whole units
   if (gamesPerView > 1.0 && snap)
   {
       const CGFloat snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
