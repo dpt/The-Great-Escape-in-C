@@ -768,7 +768,7 @@ static void speaker_handler(int on_off, void *opaque)
 // 318181.81 recurring OUTs/s theoretical max
 
 
-// This is a AURenderCallback except that type is a pointer.
+// This is the same as a AURenderCallback except it's not a pointer type.
 static OSStatus playbackCallback(void                       *inRefCon,
                                  AudioUnitRenderActionFlags *ioActionFlags,
                                  const AudioTimeStamp       *inTimeStamp,
