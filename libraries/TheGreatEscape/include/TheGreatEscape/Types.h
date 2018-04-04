@@ -601,47 +601,47 @@ movableitem_t;
  */
 typedef struct vischar
 {
-  /** $8000 character index */
+  /** ($8000) character index */
   character_t     character;
 
-  /** $8001 flags */
+  /** ($8001) flags */
   uint8_t         flags;
 
-  /** $8002 route */
+  /** ($8002) route */
   route_t         route;
 
-  /** $8004 target position */
+  /** ($8004) target position */
   // gets set to state->hero_map_position when vischar_PURSUIT_PURSUE
   // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
   tinypos_t       target;
 
-  /** $8007 top nibble = flags, bottom nibble = counter used by character_behaviour only */
+  /** ($8007) top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
 
-  /** $8008 pointer to animations (assigned once only) */
+  /** ($8008) pointer to animations (assigned once only) */
   const anim_t  **animbase;
 
-  /** $800A value in animations */
-  const anim_t  *anim;
+  /** ($800A) value in animations */
+  const anim_t   *anim;
 
-  /** $800C */
+  /** ($800C) */
   uint8_t         animindex; // animation index + up/down flag
 
-  /** $800D movement */
+  /** ($800D) movement */
   // compared to flags?
   // bottom two bits are a direction field
   // likely a prev/next version of the 'direction' field
   uint8_t         input;
 
-  /** $800E direction and crawl flag. Indexes animindices[] directly. */
+  /** ($800E) direction and crawl flag. Indexes animindices[] directly. */
   uint8_t         direction;
 
-  /** $800F movable item (position, current character sprite set, sprite_index) */
+  /** ($800F) movable item (position, current character sprite set, sprite_index) */
   movableitem_t   mi;
 
-  /** $8018,$801A 16-bit map-relative x,y coord of vischar's top left */
+  /** ($8018,$801A) 16-bit map-relative x,y coord of vischar's top left */
   // in_permitted_area tests this against absolute values to determine the
   // position. this tells me that this is an isometric projected map coord
   // with 3 bits of fixed point, not a screen coord as previously suspected.
@@ -649,13 +649,13 @@ typedef struct vischar
   // Same coordinate space as map_position but multiplied by 8.
   bigxy_t         iso_pos; // scaled 13.3 format
 
-  /** $801C current room index */
+  /** ($801C) current room index */
   room_t          room;
 
-  /** $801D unused */
+  /** ($801D) unused */
   uint8_t         unused; // FUTURE: Remove
 
-  /** $801E, $801F copy of sprite width, height from spritedef_t */
+  /** ($801E,$801F) copy of sprite width, height from spritedef_t */
   uint8_t         width_bytes, height;
 }
 vischar_t;
