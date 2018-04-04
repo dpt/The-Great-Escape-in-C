@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <list>
+
 #include <windows.h>
 #include <CommCtrl.h>
 
@@ -49,6 +51,8 @@ typedef struct gamewin
 
   HANDLE          thread;
   DWORD           threadId;
+
+  bool            snap;
 
   zxkeyset_t      keys;
 
@@ -246,6 +250,8 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->thread   = thread;
   gamewin->threadId = threadId;
 
+  gamewin->snap     = true;
+
   gamewin->keys     = 0;
 
   gamewin->speed    = 100;
@@ -275,39 +281,159 @@ static void DestroyGame(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin)
+{
+  gamewin_t *gamewin;
+  RECT       rect;
+  BOOL       result;
+  HWND       window;
+
+  *new_gamewin = NULL;
+
+  gamewin = (gamewin_t *) calloc(sizeof(*gamewin), 1);
+  if (gamewin == NULL)
+    return FALSE;
+
+  gamewin->instance = hInstance;
+
+  // Required window dimensions
+  rect.left   = 0;
+  rect.top    = 0;
+  rect.right  = DEFAULTWIDTH  + DEFAULTBORDERSIZE * 2;
+  rect.bottom = DEFAULTHEIGHT + DEFAULTBORDERSIZE * 2;
+
+  // Adjust window dimensions for window furniture
+  result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+  if (result == 0)
+    goto failure;
+
+  window = CreateWindowEx(0,
+    szGameWindowClassName,
+    szGameWindowTitle,
+    WS_OVERLAPPEDWINDOW,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
+    rect.right - rect.left, rect.bottom - rect.top,
+    NULL,
+    NULL,
+    hInstance,
+    gamewin);
+  if (!window)
+    goto failure;
+
+  ShowWindow(window, nCmdShow);
+
+  gamewin->window = window;
+
+  *new_gamewin = gamewin;
+
+  return TRUE;
+
+
+failure:
+  free(gamewin);
+
+  return FALSE;
+}
+
+void DestroyGameWindow(gamewin_t *doomed)
+{
+  //DestroyWindow(doomed->window);
+  free(doomed);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// naming gets confused here - what are games, game windows, etc.
+
+static std::list<gamewin_t *> AllGameWindows;
+
+static int CreateNewGame()
+{
+  gamewin_t *game;
+  int        rc;
+
+  rc = CreateGameWindow(GetModuleHandle(NULL), SW_NORMAL, &game);
+  if (!rc)
+    return 0;
+
+  AllGameWindows.push_back(game);
+
+  return rc;
+}
+
+static void DestroySingleGame(gamewin_t *doomed)
+{
+  DestroyGame(doomed);
+  DestroyGameWindow(doomed);
+}
+
+static void DestroyAllGameWindows()
+{
+  for (auto it = AllGameWindows.begin(); it != AllGameWindows.end(); it++)
+    DestroySingleGame(*it);
+  AllGameWindows.clear();
+}
+
+static void DestroyGameWindowThenQuit(gamewin_t *doomed)
+{
+  DestroySingleGame(doomed);
+  AllGameWindows.remove(doomed);
+
+  // If no games remain then shut down the app
+  // Check this is needed
+  if (AllGameWindows.empty())
+    PostQuitMessage(0);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
                                         UINT   message,
                                         WPARAM wParam,
                                         LPARAM lParam)
 {
-  TCHAR buf[100];
-  wsprintf(buf, L"%d\n", message);
-  OutputDebugString(buf);
-
   switch(message)
   {
+  case WM_NOTIFY:
+    switch (((LPNMHDR) lParam)->code)
+    {
+    case NM_CLICK:
+    case NM_RETURN:
+      switch (LOWORD(wParam))
+      {
+      case IDC_ABOUTLINK:
+      {
+        PNMLINK pNMLink = (PNMLINK) lParam;
+        LITEM   item    = pNMLink->item;
+
+        ShellExecute(NULL, TEXT("open"), item.szUrl, NULL, NULL, SW_SHOW);
+        return TRUE;
+      }
+      }
+      break;
+    }
+    return FALSE;
+
   case WM_INITDIALOG:
+    // TODO: Fetch version number or string from library
+    SetDlgItemText(hwnd, IDC_ABOUTVERSION, TEXT("C version 1.0"));
     return TRUE;
 
   case WM_COMMAND:
-    switch(LOWORD(wParam))
+    switch (LOWORD(wParam))
     {
     case IDOK:
-      EndDialog(hwnd, IDOK);
-      break;
-
-    case IDCANCEL:
-      EndDialog(hwnd, IDCANCEL);
-      break;
+      EndDialog(hwnd, 0);
+      return TRUE;
     }
-    break;
-
-  default:
     return FALSE;
   }
 
-  return TRUE;
+  return FALSE;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                                      UINT   message,
@@ -338,15 +464,12 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       break;
 
     case WM_DESTROY:
-      DestroyGame(gamewin);
-      PostQuitMessage(0);
+      DestroyGameWindowThenQuit(gamewin);
       break;
 
     case WM_PAINT:
       {
-        const bool    snap = true;
-
-        float         gameWidth, gameHeight;
+        int           gameWidth, gameHeight;
         unsigned int *pixels;
         PAINTSTRUCT   ps;
         HDC           hdc;
@@ -354,6 +477,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         float         windowWidth, windowHeight;
         float         gameWidthsPerWindow, gameHeightsPerWindow;
         float         gamesPerWindow;
+        int           reducedBorder;
         int           drawWidth, drawHeight;
         int           xOffset, yOffset;
 
@@ -370,20 +494,19 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         windowHeight = clientrect.bottom - clientrect.top;
 
         // How many natural-scale games fit comfortably into the window?
-        gameWidthsPerWindow  = (windowWidth  - DEFAULTBORDERSIZE * 2) / gameWidth;
-        gameHeightsPerWindow = (windowHeight - DEFAULTBORDERSIZE * 2) / gameHeight;
-        gamesPerWindow = min(gameWidthsPerWindow, gameHeightsPerWindow);
-
-        // Try again without a border if the window is very small
-        if (gamesPerWindow < 1.0)
+        // Try to fit while reducing the border if the window is very small
+        reducedBorder = DEFAULTBORDERSIZE;
+        do
         {
-          gameWidthsPerWindow  = windowWidth  / gameWidth;
-          gameHeightsPerWindow = windowHeight / gameHeight;
+          gameWidthsPerWindow  = (windowWidth  - reducedBorder * 2) / gameWidth;
+          gameHeightsPerWindow = (windowHeight - reducedBorder * 2) / gameHeight;
           gamesPerWindow = min(gameWidthsPerWindow, gameHeightsPerWindow);
+          reducedBorder--;
         }
+        while (reducedBorder >= 0 && gamesPerWindow < 1.0);
 
         // Snap the game scale to whole units
-        if (gamesPerWindow > 1.0 && snap)
+        if (gamesPerWindow > 1.0 && gamewin->snap)
         {
           const float snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
           gamesPerWindow = floor(gamesPerWindow * snapSteps) / snapSteps;
@@ -412,11 +535,13 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       }
       break;
 
-      // later:
-      // case WM_CLOSE: // sent to the window when "X" is pressed
-      //     if (MessageBox(hwnd, L"Really quit?", szGameWindowTitle, MB_OKCANCEL) == IDOK)
-      //         DestroyWindow(hwnd); // this is the default anyway
-      //     break;
+    case WM_CLOSE:
+      if (MessageBox(hwnd,
+                     TEXT("Really quit?"),
+                     szGameWindowTitle,
+                     MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
+        DestroyGameWindowThenQuit(gamewin);
+      break;
 
     case WM_KEYDOWN:
     case WM_KEYUP:
@@ -444,7 +569,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       {
       case ID_HELP_ABOUT:
       {
-        (void) DialogBox(GetModuleHandle(NULL),
+        (void) DialogBox(gamewin->instance,
                          MAKEINTRESOURCE(IDD_ABOUT),
                          hwnd,
                          AboutDialogueProcedure);
@@ -453,15 +578,11 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       break;
 
       case ID_FILE_EXIT:
-      {
-        DestroyGame(gamewin);
-        PostQuitMessage(0);
-      }
+      DestroyGameWindowThenQuit(gamewin);
       break;
 
       case ID_FILE_NEW:
-      {
-      }
+      CreateNewGame();
       break;
 
       case ID_GAME_DUPLICATE:
@@ -485,8 +606,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       break;
 
       case ID_VIEW_SNAPTOWHOLEPIXELS:
-      {
-      }
+      gamewin->snap = !gamewin->snap;
+      // TODO: refresh full window
       break;
 
       case ID_SOUND_ENABLED:
@@ -525,15 +646,14 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
     }
     break;
 
-    case WM_SIZING:
-      return TRUE;
-
     default:
       return DefWindowProc(hwnd, message, wParam, lParam);
   }
 
   return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 BOOL RegisterGameWindowClass(HINSTANCE hInstance)
 {
@@ -560,95 +680,27 @@ BOOL RegisterGameWindowClass(HINSTANCE hInstance)
   return TRUE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin)
-{
-  gamewin_t *gamewin;
-  RECT       rect;
-  BOOL       result;
-  HWND       window;
-
-  *new_gamewin = NULL;
-
-  gamewin = (gamewin_t *) calloc(sizeof(*gamewin), 1);
-  if (gamewin == NULL)
-    return FALSE;
-
-  gamewin->instance = hInstance;
-
-  // Required window dimensions
-  rect.left   = 0;
-  rect.top    = 0;
-  rect.right  = DEFAULTWIDTH  + DEFAULTBORDERSIZE * 2;
-  rect.bottom = DEFAULTHEIGHT + DEFAULTBORDERSIZE * 2;
-
-  // Adjust window dimensions for window furniture
-  result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-  if (result == 0)
-    goto failure;
-
-  window = CreateWindowEx(0,
-                          szGameWindowClassName,
-                          szGameWindowTitle,
-                          WS_OVERLAPPEDWINDOW,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          rect.right - rect.left, rect.bottom - rect.top,
-                          NULL,
-                          NULL,
-                          hInstance,
-                          gamewin);
-  if (!window)
-    goto failure;
-
-  ShowWindow(window, nCmdShow);
-  UpdateWindow(window);
-
-  gamewin->window = window;
-
-  *new_gamewin = gamewin;
-
-  return TRUE;
-
-
-failure:
-  free(gamewin);
-
-  return FALSE;
-}
-
-void DestroyGameWindow(gamewin_t *doomed)
-{
-  free(doomed);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 int WINAPI WinMain(__in     HINSTANCE hInstance,
                    __in_opt HINSTANCE hPrevInstance,
                    __in     LPSTR     lpszCmdParam,
                    __in     int       nCmdShow)
 {
-  int        rc;
-  gamewin_t *game1;
-  MSG        msg;
-
+  static const INITCOMMONCONTROLSEX iccex =
   {
-    static const INITCOMMONCONTROLSEX iccex =
-    {
-      sizeof(INITCOMMONCONTROLSEX),
-      ICC_LINK_CLASS
-    };
+    sizeof(INITCOMMONCONTROLSEX),
+    ICC_LINK_CLASS
+  };
 
-    InitCommonControlsEx(&iccex);
-  }
+  int rc;
+  MSG msg;
+
+  InitCommonControlsEx(&iccex);
 
   rc = RegisterGameWindowClass(hInstance);
   if (!rc)
     return 0;
 
-  rc = CreateGameWindow(hInstance, nCmdShow, &game1);
+  rc = CreateNewGame();
   if (!rc)
     return 0;
 
@@ -658,7 +710,7 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
     DispatchMessage(&msg);
   }
 
-  DestroyGameWindow(game1);
+  DestroyAllGameWindows();
 
   return msg.wParam;
 }
