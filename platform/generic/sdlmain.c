@@ -48,7 +48,7 @@ typedef struct
 
   SDL_Renderer *renderer;
   SDL_Texture  *texture;
-  int           menu;
+  int           menu; // bool
 
   int           sleep_us; // us to sleep for on the next loop
 }
