@@ -2,7 +2,7 @@
 #
 # The Great Escape
 #
-# (c) David Thomas, 2017-2018.
+# Copyright (c) David Thomas, 2017-2018
 #
 
 cmake_minimum_required(VERSION 2.8)
