@@ -20,7 +20,7 @@
 
 /* ----------------------------------------------------------------------- */
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #include <windows.h>
 
@@ -30,7 +30,11 @@
 #define mutex_lock(M)    EnterCriticalSection(&M)
 #define mutex_unlock(M)  LeaveCriticalSection(&M)
 
-#else
+#elif defined(_POSIX_THREADS) || \
+      defined(_POSIX_VERSION) || \
+      defined(__unix__)       || \
+      defined(__unix)         || \
+     (defined(__APPLE__) && defined(__MACH__))
 
 #include <pthread.h>
 
@@ -40,6 +44,24 @@
 #define mutex_unlock(M)  pthread_mutex_unlock(&M)
 #define mutex_destroy(M) pthread_mutex_destroy(&M)
 
+#else
+
+#warning Default threading used
+
+#define mutex_t          int
+#define mutex_init(M)
+#define mutex_lock(M)
+#define mutex_unlock(M)
+#define mutex_destroy(M)
+
+#endif
+
+#ifdef __riscos
+typedef uint32_t outputpixel_t;
+#define OUTPUT_SCREEN_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 8) // 4bpp
+#else
+typedef uint32_t outputpixel_t;
+#define OUTPUT_SCREEN_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT)
 #endif
 
 /* ----------------------------------------------------------------------- */
@@ -104,8 +126,8 @@ typedef struct zxspectrum_private
 
   mutex_t         lock;
   zxbox_t         dirty;
-  zxscreen_t      screen_copy;
-  uint32_t        converted[SCREEN_WIDTH * SCREEN_HEIGHT];
+  zxscreen_t      screen_copy; // most recent 'complete' screen
+  outputpixel_t   converted[OUTPUT_SCREEN_SIZE];
 }
 zxspectrum_private_t;
 
@@ -322,7 +344,12 @@ uint32_t *zxspectrum_claim_screen(zxspectrum_t *state)
   /* Check for any changes */
   if (zxbox_is_valid(&prv->dirty))
   {
+    // Convert the screen only when it's asked for
+#ifdef __riscos
+    zxscreen_convert16(prv->screen_copy.pixels, prv->converted, &prv->dirty);
+#else
     zxscreen_convert(prv->screen_copy.pixels, prv->converted, &prv->dirty);
+#endif
 
     /* Invalidate the dirty region once complete */
     zxbox_invalidate(&prv->dirty);

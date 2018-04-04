@@ -26,6 +26,11 @@ void zxscreen_convert(const void    *screen,
                       unsigned int  *output,
                       const zxbox_t *dirty);
 
+// 4bpp variant
+void zxscreen_convert16(const void    *vscr,
+                        unsigned int  *poutput,
+                        const zxbox_t *dirty);
+
 #ifdef __cplusplus
 }
 #endif

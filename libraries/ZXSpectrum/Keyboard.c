@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #ifdef _WIN32
+#include <intrin.h>
 #include <windows.h>
 #endif
 
@@ -27,15 +28,17 @@ void zxkeyset_assign(zxkeyset_t *keystate,
 
 static uint32_t __inline my_clz(uint32_t value)
 {
-#ifdef _WIN32
+#if defined(_MSC_VER)
   DWORD leading_zero = 0;
 
   if (_BitScanReverse(&leading_zero, value))
     return 31 - leading_zero;
   else
     return 32;
-#else
+#elif defined(__GNUC__)
   return value ? __builtin_clz(value) : 32;
+#else
+  return 0; // FIXME
 #endif
 }
 
