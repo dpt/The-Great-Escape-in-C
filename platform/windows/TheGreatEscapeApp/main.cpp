@@ -435,6 +435,49 @@ INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// todo: synchronisation
+static void SetSpeed(gamewin_t *gamewin, int tag)
+{
+  const int min_speed = 10;      // percent
+  const int max_speed = 1000000; // percent
+  int       newspeed;
+
+  if (tag == 0)
+  {
+    gamewin->paused = !gamewin->paused;
+    return;
+  }
+
+  gamewin->paused = false;
+
+  switch (tag)
+  {
+  default:
+  case 100: // normal speed
+    newspeed = 100;
+    break;
+
+  case -1: // maximum speed
+    newspeed = max_speed;
+    break;
+
+  case 1: // increase speed
+    newspeed = gamewin->speed + 25;
+    break;
+
+  case 2: // decrease speed
+    newspeed = gamewin->speed - 25;
+    break;
+  }
+
+  if (newspeed < min_speed)
+    newspeed = min_speed;
+  else if (newspeed > max_speed)
+    newspeed = max_speed;
+
+  gamewin->speed = newspeed;
+}
+
 LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                                      UINT   message,
                                      WPARAM wParam,
@@ -586,8 +629,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       break;
 
       case ID_GAME_DUPLICATE:
-      {
-      }
+      // NYI
       break;
 
       case ID_VIEW_ACTUALSIZE:
@@ -611,32 +653,27 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
       break;
 
       case ID_SOUND_ENABLED:
-      {
-      }
+      // NYI
       break;
 
       case ID_SPEED_PAUSE:
-      {
-      }
-      break;
-
       case ID_SPEED_100:
-      {
-      }
-      break;
-
       case ID_SPEED_MAXIMUM:
-      {
-      }
-      break;
-
       case ID_SPEED_FASTER:
-      {
-      }
-      break;
-
       case ID_SPEED_SLOWER:
       {
+        int s;
+
+        switch (wmId)
+        {
+        case ID_SPEED_PAUSE:   s =   0; break;
+        default:
+        case ID_SPEED_100:     s = 100; break;
+        case ID_SPEED_MAXIMUM: s =  -1; break;
+        case ID_SPEED_FASTER:  s =   1; break;
+        case ID_SPEED_SLOWER:  s =   2; break;
+        }
+        SetSpeed(gamewin, s);
       }
       break;
 
@@ -691,8 +728,12 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
     ICC_LINK_CLASS
   };
 
-  int rc;
-  MSG msg;
+  HACCEL hAccelTable;
+  int    rc;
+  MSG    msg;
+
+  hAccelTable = LoadAccelerators(hInstance,
+                                 MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
   InitCommonControlsEx(&iccex);
 
@@ -706,8 +747,11 @@ int WINAPI WinMain(__in     HINSTANCE hInstance,
 
   while (GetMessage(&msg, NULL, 0, 0) > 0)
   {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
   }
 
   DestroyAllGameWindows();
