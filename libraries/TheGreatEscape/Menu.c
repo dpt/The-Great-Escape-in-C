@@ -24,6 +24,9 @@
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
 
+/* When enabled will start the game immediately in Kempston input mode. */
+// #define IMMEDIATE_START
+
 //static
 //int check_menu_keys(tgestate_t *state);
 //
@@ -56,7 +59,11 @@ static int check_menu_keys(tgestate_t *state)
 
   keycode = menu_keyscan(state);
   if (keycode == 0xFF)
+#ifdef IMMEDIATE_START
+    keycode = 2;
+#else
     return 0; /* no keypress */
+#endif
 
   if (keycode)
   {
@@ -74,7 +81,11 @@ static int check_menu_keys(tgestate_t *state)
                              keycode,
                              attribute_BRIGHT_YELLOW_OVER_BLACK);
 
+#ifdef IMMEDIATE_START
+    return -1;
+#else
     return 1;
+#endif
   }
   else
   {
