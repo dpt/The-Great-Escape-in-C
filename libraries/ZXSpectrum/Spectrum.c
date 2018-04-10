@@ -16,6 +16,8 @@
 
 #include "ZXSpectrum/Spectrum.h"
 
+#include "ZXSpectrum/Macros.h"
+
 /* ----------------------------------------------------------------------- */
 
 #ifdef _WIN32
@@ -42,15 +44,54 @@
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * Return the minimum of (a,b).
- */
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+/* Set minimums smaller than maximums to invalidate. */
+static void zxbox_invalidate(zxbox_t *b)
+{
+  b->x0 = INT_MAX;
+  b->y0 = INT_MAX;
+  b->x1 = INT_MIN;
+  b->y1 = INT_MIN;
+}
 
-/**
- * Return the maximum of (a,b).
- */
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+/* Return true if box is valid. */
+static int zxbox_is_valid(zxbox_t *b)
+{
+  return (b->x0 < b->x1) && (b->y0 < b->y1);
+}
+
+/* Set largest possible valid box. */
+static void zxbox_maximise(zxbox_t *b)
+{
+  b->x0 = INT_MIN;
+  b->y0 = INT_MIN;
+  b->x1 = INT_MAX;
+  b->y1 = INT_MAX;
+}
+
+/* Return true if box is largest possible. */
+static int zxbox_is_maximised(const zxbox_t *b)
+{
+  return b->x0 == INT_MIN &&
+         b->y0 == INT_MIN &&
+         b->x1 == INT_MAX &&
+         b->y1 == INT_MAX;
+}
+
+/* Return true if box can hold (width,height) at (0,0). */
+static int zxbox_exceeds(const zxbox_t *b, int width, int height)
+{
+  return (b->x0 <= 0)     && (b->y0 <= 0)      &&
+         (b->x1 >= width) && (b->y1 >= height);
+}
+
+/* Return the union in 'c' of boxes 'a' and 'b'. */
+static void zxbox_union(const zxbox_t *a, const zxbox_t *b, zxbox_t *c)
+{
+  c->x0 = MIN(a->x0, b->x0);
+  c->y0 = MIN(a->y0, b->y0);
+  c->x1 = MAX(a->x1, b->x1);
+  c->y1 = MAX(a->y1, b->y1);
+}
 
 /* ----------------------------------------------------------------------- */
 
@@ -131,36 +172,77 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
  *
  * - only the game (thread) writes to pub.screen
  * - this entry point is called after the game modifies the screen and wants us to know about it
- * - we copy the whole screen and update the dirty region ready for zxspectrum_claim_screen
+ * - we copy the (whole) screen and update the dirty region ready for zxspectrum_claim_screen
  */
+/* Try to avoid copying the entire screen every update. */
 static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
   mutex_lock(prv->lock);
 
-  if (dirty == NULL)
+  /* If no dirty rectangle was specified then assume the full screen. */
+  if (dirty == NULL || zxbox_exceeds(dirty, SCREEN_WIDTH, SCREEN_HEIGHT))
   {
-    /* Entire screen has been modified */
-    prv->dirty.x0 = 0;
-    prv->dirty.y0 = 0;
-    prv->dirty.x1 = SCREEN_WIDTH;
-    prv->dirty.y1 = SCREEN_HEIGHT;
+    /* Entire screen has been modified - copy it all. */
+    memcpy(&prv->screen_copy, &prv->pub.screen, SCREEN_LENGTH);
+
+    /* Maximise the overall dirty box that zxspectrum_claim_screen() will
+     * use. */
+    zxbox_maximise(&prv->dirty);
   }
   else
   {
-    /* Part of the screen has been modified. Union the new dirty region with
-     * the outstanding one. */
-    prv->dirty.x0 = MIN(prv->dirty.x0, dirty->x0);
-    prv->dirty.y0 = MIN(prv->dirty.y0, dirty->y0);
-    prv->dirty.x1 = MAX(prv->dirty.x1, dirty->x1);
-    prv->dirty.y1 = MAX(prv->dirty.y1, dirty->y1);
-  }
+    /* Copy the dirty region only into the screen copy. */
 
-  /* Copy the dirty region into the screen copy */
-  // TODO: This copies the full screen every time. Use the dirty region to
-  // copy less here (but that's complicated).
-  memcpy(&prv->screen_copy, &prv->pub.screen.pixels, SCREEN_LENGTH);
+    zxbox_t box;
+    int     width;
+    int     height;
+    int     linear_y;
+
+    /* Clamp the dirty rectangle to the screen dimensions. */
+    box.x0 = CLAMP(dirty->x0, 0, 255);
+    box.y0 = CLAMP(dirty->y0, 0, 191);
+    box.x1 = CLAMP(dirty->x1, 1, 256);
+    box.y1 = CLAMP(dirty->y1, 1, 192);
+
+    /* Divide down the x coordinates to get byte-sized quantities. */
+    box.x0 = (box.x0    ) >> 3; /* divide to 0..31 rounding down */
+    box.x1 = (box.x1 + 7) >> 3; /* divide to 0..31 rounding up */
+
+    width = box.x1 - box.x0;
+
+    /* Convert y coordinates into screen space - (0,0) is top left. */
+    height = box.y1 - box.y0;
+    box.y0 = 192 - box.y1;
+    box.y1 = box.y0 + height;
+
+    for (linear_y = box.y0; linear_y < box.y1; linear_y++)
+    {
+      /* Transpose fields using XOR */
+      unsigned int tmp = (linear_y ^ (linear_y >> 3)) & 7;
+      int          y   = linear_y ^ (tmp | (tmp << 3));
+
+      memcpy(&prv->screen_copy.pixels[y * 32 + box.x0],
+             &prv->pub.screen.pixels[y * 32 + box.x0],
+             width);
+    }
+
+    /* Divide down the y coordinates to get attribute-sized quantities. */
+    box.y0 = (box.y0    ) >> 3;
+    box.y1 = (box.y1 + 7) >> 3;
+
+    for (linear_y = box.y0; linear_y < box.y1; linear_y++)
+    {
+      memcpy(&prv->screen_copy.attributes[linear_y * 32 + box.x0],
+             &prv->pub.screen.attributes[linear_y * 32 + box.x0],
+             width);
+    }
+
+    /* Union the overall dirty box that zxspectrum_claim_screen() will use
+     * with the outstanding one. */
+    zxbox_union(&prv->dirty, dirty, &prv->dirty);
+  }
 
   mutex_unlock(prv->lock);
 
@@ -201,10 +283,7 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 
   mutex_init(prv->lock);
 
-  prv->dirty.x0 = INT_MAX;
-  prv->dirty.y0 = INT_MAX;
-  prv->dirty.x1 = INT_MIN;
-  prv->dirty.y1 = INT_MIN;
+  zxbox_invalidate(&prv->dirty);
 
   prv->prev_border = ~0;
 
@@ -230,14 +309,12 @@ uint32_t *zxspectrum_claim_screen(zxspectrum_t *state)
   mutex_lock(prv->lock);
 
   /* Check for any changes */
-  if (prv->dirty.x0 != INT_MAX || prv->dirty.y0 != INT_MAX ||
-      prv->dirty.x1 != INT_MIN || prv->dirty.y1 != INT_MIN)
+  if (zxbox_is_valid(&prv->dirty))
   {
     zxscreen_convert(prv->screen_copy.pixels, prv->converted, &prv->dirty);
 
     /* Invalidate the dirty region once complete */
-    prv->dirty.x0 = prv->dirty.y0 = INT_MAX;
-    prv->dirty.x1 = prv->dirty.y1 = INT_MIN;
+    zxbox_invalidate(&prv->dirty);
   }
 
   return prv->converted;

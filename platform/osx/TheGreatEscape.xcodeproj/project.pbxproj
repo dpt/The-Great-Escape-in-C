@@ -131,6 +131,7 @@
 		559B69721F1C30B2006FC753 /* Kempston.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Kempston.c; path = ../../libraries/ZXSpectrum/Kempston.c; sourceTree = "<group>"; };
 		55A827831F8D63F6006FC753 /* ZXGameWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameWindow.h; sourceTree = "<group>"; };
 		55A827841F8D63F6006FC753 /* ZXGameWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindow.m; sourceTree = "<group>"; };
+		55AB651E207D764600A45AC9 /* Macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = ../../libraries/ZXSpectrum/include/ZXSpectrum/Macros.h; sourceTree = "<group>"; };
 		55AF25BF1D363686002F5E0B /* Keyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Keyboard.h; sourceTree = "<group>"; };
 		55AF25C01D363686002F5E0B /* Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Screen.h; sourceTree = "<group>"; };
 		55AF25C11D363686002F5E0B /* Spectrum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spectrum.h; sourceTree = "<group>"; };
@@ -247,6 +248,7 @@
 			isa = PBXGroup;
 			children = (
 				558FC67E1A0EE13600A4F50F /* include (public) */,
+				55AB651D207D763100A45AC9 /* include (private) */,
 				559B69721F1C30B2006FC753 /* Kempston.c */,
 				55AF25C21D363695002F5E0B /* Keyboard.c */,
 				55AF25C31D363695002F5E0B /* Screen.c */,
@@ -343,6 +345,14 @@
 			);
 			name = "include (private)";
 			path = include;
+			sourceTree = "<group>";
+		};
+		55AB651D207D763100A45AC9 /* include (private) */ = {
+			isa = PBXGroup;
+			children = (
+				55AB651E207D764600A45AC9 /* Macros.h */,
+			);
+			name = "include (private)";
 			sourceTree = "<group>";
 		};
 		55DD2D1E1FA550B1006FC753 /* Support */ = {

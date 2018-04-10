@@ -5,9 +5,12 @@
  * Copyright (c) David Thomas, 2013-2018. <dave@davespace.co.uk>
  */
 
+#include <assert.h>
 #include <stdlib.h>
 
 #include "ZXSpectrum/Screen.h"
+
+#include "ZXSpectrum/Macros.h"
 
 /* Define to highlight dirty rectangles when they're drawn. */
 // #define SHOW_DIRTY_RECTS
@@ -141,9 +144,6 @@ do { \
   *poutput++ = pal[(input >> (shift + 0)) & 1]; \
 } while (0)
 
-#define CLAMP(val, min, max) \
-  ((val < min) ? min : (val > max) ? max : val)
-
 /* For reference:
  *
  * Spectrum screen memory has the arrangement:
@@ -157,8 +157,6 @@ void zxscreen_convert(const void    *vscr,
                       unsigned int  *poutput,
                       const zxbox_t *dirty)
 {
-  static const zxbox_t fullscreen = { 0, 0, 256, 192 };
-
   zxbox_t              box;
   int                  height;
   const unsigned int  *pattrs;
@@ -169,24 +167,18 @@ void zxscreen_convert(const void    *vscr,
   unsigned int         attrs;
   const unsigned int  *pal;
 
+  assert(dirty);
+
 #ifdef SHOW_DIRTY_RECTS
   static int foo;
   foo = 0x20202020 - foo;
 #endif
 
-  if (dirty)
-  {
-    /* If a dirty rectangle was given clamp it to the screen dimensions. */
-    box.x0 = CLAMP(dirty->x0, 0, 255);
-    box.y0 = CLAMP(dirty->y0, 0, 191);
-    box.x1 = CLAMP(dirty->x1, 1, 256);
-    box.y1 = CLAMP(dirty->y1, 1, 192);
-  }
-  else
-  {
-    /* If no dirty rectangle was specified then assume the full screen. */
-    box = fullscreen;
-  }
+  /* Clamp the dirty rectangle to the screen dimensions. */
+  box.x0 = CLAMP(dirty->x0, 0, 255);
+  box.y0 = CLAMP(dirty->y0, 0, 191);
+  box.x1 = CLAMP(dirty->x1, 1, 256);
+  box.y1 = CLAMP(dirty->y1, 1, 192);
 
   /* The inner loop processes 32 pixels at a time so we convert x coordinates
    * into chunks four attributes wide while rounding up and down as

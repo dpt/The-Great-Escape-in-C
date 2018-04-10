@@ -29,7 +29,7 @@ PUBLIC_INCLUDES=$(ROOT)/include
 LIBRARIES=$(ROOT)/libraries
 # Private includes would apply to all builds. It would be better if this
 # were handled on a per-module basis.
-PRIVATE_INCLUDES=$(LIBRARIES)/$(PROJECT)/include
+PRIVATE_INCLUDES=-I$(LIBRARIES)/$(PROJECT)/include -I$(LIBRARIES)/ZXSpectrum/include
 PLATFORM_DIR=$(ROOT)/platform/generic
 EXE=$(PROJECT)
 
@@ -100,7 +100,7 @@ endif
 
 # Tools (config)
 #
-INCLUDES=-I$(PUBLIC_INCLUDES) -I$(LIBRARIES) -I$(PLATFORM_DIR) -I$(PRIVATE_INCLUDES)
+INCLUDES=-I$(PUBLIC_INCLUDES) -I$(LIBRARIES) -I$(PLATFORM_DIR) $(PRIVATE_INCLUDES)
 WARNINGS=-Wall -Wextra -Wno-unused-parameter
 
 # Tools (generic)
