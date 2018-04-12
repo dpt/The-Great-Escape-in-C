@@ -72,15 +72,9 @@ static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
-  RECT       rect;
 
-  rect.left   = 0;
-  rect.top    = 0;
-  rect.right  = 65536; // FIXME: Find a symbol for whole window dimension.
-  rect.bottom = 65536;
-
-  // kick the window
-  InvalidateRect(gamewin->window, &rect, FALSE);
+  // Invalidate the entire client area and don't erase the background
+  InvalidateRect(gamewin->window, NULL, FALSE);
 }
 
 static void stamp_handler(void *opaque)
