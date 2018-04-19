@@ -11,8 +11,10 @@
 #include <cstdlib>
 
 #include <list>
+#include <vector>
 
 #include <windows.h>
+#include <tchar.h>
 #include <CommCtrl.h>
 
 #include "ZXSpectrum/Spectrum.h"
@@ -34,8 +36,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static const WCHAR szGameWindowClassName[] = L"TheGreatEscapeWindowsApp";
-static const WCHAR szGameWindowTitle[]     = L"The Great Escape";
+static const TCHAR szGameWindowClassName[] = _T("TheGreatEscapeWindowsApp");
+static const TCHAR szGameWindowTitle[]     = _T("The Great Escape");
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -382,6 +384,45 @@ static void DestroyGameWindowThenQuit(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool FillOutVersionFields(HWND hwnd)
+{
+  TCHAR   executableFilename[MAX_PATH + 1];
+  DWORD   dataSize;
+  LPVOID  productName;
+  UINT    productNameLen;
+  LPVOID  productVersion;
+  UINT    productVersionLen;
+
+  if (GetModuleFileName(NULL, executableFilename, MAX_PATH) == 0)
+  {
+    return false;
+  }
+
+  dataSize = GetFileVersionInfoSize(executableFilename, NULL);
+  if (dataSize == 0)
+  {
+    return false;
+  }
+
+  std::vector<BYTE> data(dataSize);
+
+  if (GetFileVersionInfo(executableFilename, NULL, dataSize, &data[0]) == 0)
+  {
+    return false;
+  }
+
+  if (VerQueryValue(&data[0], _T("\\StringFileInfo\\080904b0\\ProductName"), &productName, &productNameLen) == 0 ||
+      VerQueryValue(&data[0], _T("\\StringFileInfo\\080904b0\\ProductVersion"), &productVersion, &productVersionLen) == 0)
+  {
+    return false;
+  }
+
+  SetDlgItemText(hwnd, IDC_ABOUTNAME, (LPCTSTR) productName);
+  SetDlgItemText(hwnd, IDC_ABOUTVERSION, (LPCTSTR) productVersion);
+
+  return true;
+}
+
 INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
                                         UINT   message,
                                         WPARAM wParam,
@@ -410,8 +451,7 @@ INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
     return FALSE;
 
   case WM_INITDIALOG:
-    // TODO: Fetch version number or string from library
-    SetDlgItemText(hwnd, IDC_ABOUTVERSION, TEXT("C version 1.0"));
+    FillOutVersionFields(hwnd);
     return TRUE;
 
   case WM_COMMAND:
@@ -495,6 +535,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         int rc;
 
         rc = CreateGame(gamewin);
+        // MessageBox()
         // if (rc)
         //   error;
       }
