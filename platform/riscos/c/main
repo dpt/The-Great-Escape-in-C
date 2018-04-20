@@ -59,14 +59,72 @@ static int keystroke_time;
 static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
+  static int first = 1;
+
   state_t  *state = opaque;
   uint32_t *pixels;
+  char      clip[9];
 
   pixels = zxspectrum_claim_screen(state->zx);
 
-  memcpy(state->sprite + ((16) + (44) + (16 * 4 * 2)) / 4,
-         pixels,
-         256*192/2);
+  if (first)
+  {
+    static const zxbox_t all = { 0, 0, 256, 192 };
+    first = 0;
+    dirty = &all;
+  }
+
+// copy across only the dirty rectangle
+//
+
+  char *dst;
+  char *src;
+  size_t rowbytes;
+  int y;
+  int w;
+  int dx0, dx1, dy0, dy1;
+
+  dst = (char *) state->sprite + 16 + 44 + (16 * 4 * 2);
+  src = (char *) pixels;
+  rowbytes = 256 / 2;
+
+  dx0 = (dirty->x0    ) >> 1; // round down to byte boundary
+  dx1 = (dirty->x1 + 1) >> 1; // round up
+  w = dx1 - dx0; // width in bytes
+
+  // double check these inversions
+  dy0 = 192 - (dirty->y1);
+  dy1 = 192 - (dirty->y0);
+
+  for (y = dy0; y < dy1; y++)
+    memcpy(dst + y * rowbytes + dx0, src + y * rowbytes + dx0, w);
+
+// set a clip region
+//
+
+  int x0,y0,x1,y1;
+
+  x0 = dirty->x0 * 2; // scale to OS units
+  y0 = dirty->y0 * 2; // scale to OS units
+  x1 = dirty->x1 * 2; // scale to OS units
+  y1 = dirty->y1 * 2; // scale to OS units
+
+  clip[0] = 24;
+  clip[1] = x0;
+  clip[2] = x0 >> 8;
+  clip[3] = y0;
+  clip[4] = y0 >> 8;
+  clip[5] = (x1 - 1);
+  clip[6] = (x1 - 1) >> 8;
+  clip[7] = (y1 - 1);
+  clip[8] = (y1 - 1) >> 8;
+  _swix(OS_WriteN,
+        _INR(0,1),
+        clip,
+        9);
+
+// plot
+//
 
   _swi(OS_SpriteOp,
        _INR(0,7),

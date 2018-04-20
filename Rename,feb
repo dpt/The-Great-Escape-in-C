@@ -1,0 +1,85 @@
+| >Rename
+
+| Rename TGE sources TO RISC OS convention
+Alias R Rename %%0 %%1
+
+| Rename TGE sources FROM RISC OS convention
+|Alias R Rename %%1 %%0
+
+CDir include.ZXSpectrum.h
+|
+R include.ZXSpectrum.Kempston/h include.ZXSpectrum.h.Kempston
+R include.ZXSpectrum.Keyboard/h include.ZXSpectrum.h.Keyboard
+R include.ZXSpectrum.Screen/h include.ZXSpectrum.h.Screen
+R include.ZXSpectrum.Spectrum/h  include.ZXSpectrum.h.Spectrum
+
+CDir include.TheGreatEscape.h
+|
+R include.TheGreatEscape.TheGreatEscape/h include.TheGreatEscape.h.TheGreatEscape
+
+CDir libraries.ZXSpectrum.c
+|
+R libraries.ZXSpectrum.Kempston/c libraries.ZXSpectrum.c.Kempston
+R libraries.ZXSpectrum.Keyboard/c libraries.ZXSpectrum.c.Keyboard
+R libraries.ZXSpectrum.Screen/c libraries.ZXSpectrum.c.Screen
+R libraries.ZXSpectrum.Spectrum/c  libraries.ZXSpectrum.c.Spectrum
+
+CDir libraries.ZXSpectrum.include.h
+|
+R libraries.ZXSpectrum.include.ZXSpectrum/h libraries.ZXSpectrum.include.h.ZXSpectrum
+
+CDir libraries.TheGreatEscape.include.TheGreatEscape.h
+|
+R libraries.TheGreatEscape.include.TheGreatEscape.Doors/h libraries.TheGreatEscape.include.TheGreatEscape.h.Doors
+R libraries.TheGreatEscape.include.TheGreatEscape.ExteriorTiles/h libraries.TheGreatEscape.include.TheGreatEscape.h.ExteriorTiles
+R libraries.TheGreatEscape.include.TheGreatEscape.Font/h libraries.TheGreatEscape.include.TheGreatEscape.h.Font
+R libraries.TheGreatEscape.include.TheGreatEscape.Input/h libraries.TheGreatEscape.include.TheGreatEscape.h.Input
+R libraries.TheGreatEscape.include.TheGreatEscape.InteriorObjectDefs/h libraries.TheGreatEscape.include.TheGreatEscape.h.InteriorObjectDefs
+R libraries.TheGreatEscape.include.TheGreatEscape.InteriorObjects/h libraries.TheGreatEscape.include.TheGreatEscape.h.InteriorObjects
+R libraries.TheGreatEscape.include.TheGreatEscape.InteriorTiles/h libraries.TheGreatEscape.include.TheGreatEscape.h.InteriorTiles
+R libraries.TheGreatEscape.include.TheGreatEscape.ItemBitmaps/h libraries.TheGreatEscape.include.TheGreatEscape.h.ItemBitmaps
+R libraries.TheGreatEscape.include.TheGreatEscape.Items/h libraries.TheGreatEscape.include.TheGreatEscape.h.Items
+R libraries.TheGreatEscape.include.TheGreatEscape.Main/h libraries.TheGreatEscape.include.TheGreatEscape.h.Main
+R libraries.TheGreatEscape.include.TheGreatEscape.Map/h libraries.TheGreatEscape.include.TheGreatEscape.h.Map
+R libraries.TheGreatEscape.include.TheGreatEscape.Masks/h libraries.TheGreatEscape.include.TheGreatEscape.h.Masks
+R libraries.TheGreatEscape.include.TheGreatEscape.Menu/h libraries.TheGreatEscape.include.TheGreatEscape.h.Menu
+R libraries.TheGreatEscape.include.TheGreatEscape.Messages/h libraries.TheGreatEscape.include.TheGreatEscape.h.Messages
+R libraries.TheGreatEscape.include.TheGreatEscape.Music/h libraries.TheGreatEscape.include.TheGreatEscape.h.Music
+R libraries.TheGreatEscape.include.TheGreatEscape.Pixels/h libraries.TheGreatEscape.include.TheGreatEscape.h.Pixels
+R libraries.TheGreatEscape.include.TheGreatEscape.RoomDefs/h libraries.TheGreatEscape.include.TheGreatEscape.h.RoomDefs
+R libraries.TheGreatEscape.include.TheGreatEscape.Rooms/h libraries.TheGreatEscape.include.TheGreatEscape.h.Rooms
+R libraries.TheGreatEscape.include.TheGreatEscape.Routes/h libraries.TheGreatEscape.include.TheGreatEscape.h.Routes
+R libraries.TheGreatEscape.include.TheGreatEscape.SpriteBitmaps/h libraries.TheGreatEscape.include.TheGreatEscape.h.SpriteBitmaps
+R libraries.TheGreatEscape.include.TheGreatEscape.Sprites/h libraries.TheGreatEscape.include.TheGreatEscape.h.Sprites
+R libraries.TheGreatEscape.include.TheGreatEscape.State/h libraries.TheGreatEscape.include.TheGreatEscape.h.State
+R libraries.TheGreatEscape.include.TheGreatEscape.StaticGraphics/h libraries.TheGreatEscape.include.TheGreatEscape.h.StaticGraphics
+R libraries.TheGreatEscape.include.TheGreatEscape.StaticTiles/h libraries.TheGreatEscape.include.TheGreatEscape.h.StaticTiles
+R libraries.TheGreatEscape.include.TheGreatEscape.SuperTiles/h libraries.TheGreatEscape.include.TheGreatEscape.h.SuperTiles
+R libraries.TheGreatEscape.include.TheGreatEscape.Text/h libraries.TheGreatEscape.include.TheGreatEscape.h.Text
+R libraries.TheGreatEscape.include.TheGreatEscape.TGEObject/h libraries.TheGreatEscape.include.TheGreatEscape.h.TGEObject
+R libraries.TheGreatEscape.include.TheGreatEscape.Tiles/h libraries.TheGreatEscape.include.TheGreatEscape.h.Tiles
+R libraries.TheGreatEscape.include.TheGreatEscape.Types/h libraries.TheGreatEscape.include.TheGreatEscape.h.Types
+R libraries.TheGreatEscape.include.TheGreatEscape.Utils/h libraries.TheGreatEscape.include.TheGreatEscape.h.Utils
+
+CDir libraries.TheGreatEscape.c
+|
+R libraries.TheGreatEscape.Create/c libraries.TheGreatEscape.c.Create
+R libraries.TheGreatEscape.ExteriorTiles/c libraries.TheGreatEscape.c.ExteriorTiles
+R libraries.TheGreatEscape.Font/c libraries.TheGreatEscape.c.Font
+R libraries.TheGreatEscape.Input/c libraries.TheGreatEscape.c.Input
+R libraries.TheGreatEscape.InteriorObjectDefs/c libraries.TheGreatEscape.c.InteriorObjectDefs
+R libraries.TheGreatEscape.InteriorTiles/c libraries.TheGreatEscape.c.InteriorTiles
+R libraries.TheGreatEscape.ItemBitmaps/c libraries.TheGreatEscape.c.ItemBitmaps
+R libraries.TheGreatEscape.Map/c libraries.TheGreatEscape.c.Map
+R libraries.TheGreatEscape.Masks/c libraries.TheGreatEscape.c.Masks
+R libraries.TheGreatEscape.Menu/c libraries.TheGreatEscape.c.Menu
+R libraries.TheGreatEscape.Messages/c libraries.TheGreatEscape.c.Messages
+R libraries.TheGreatEscape.Music/c libraries.TheGreatEscape.c.Music
+R libraries.TheGreatEscape.RoomDefs/c libraries.TheGreatEscape.c.RoomDefs
+R libraries.TheGreatEscape.SpriteBitmaps/c libraries.TheGreatEscape.c.SpriteBitmaps
+R libraries.TheGreatEscape.Sprites/c libraries.TheGreatEscape.c.Sprites
+R libraries.TheGreatEscape.StaticGraphics/c libraries.TheGreatEscape.c.StaticGraphics
+R libraries.TheGreatEscape.StaticTiles/c libraries.TheGreatEscape.c.StaticTiles
+R libraries.TheGreatEscape.SuperTiles/c libraries.TheGreatEscape.c.SuperTiles
+R libraries.TheGreatEscape.Text/c libraries.TheGreatEscape.c.Text
+R libraries.TheGreatEscape.TheGreatEscape/c libraries.TheGreatEscape.c.TheGreatEscape
