@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <tchar.h>
 #include <CommCtrl.h>
+#include <mmsystem.h>
+#include <windowsx.h>
 
 #include "ZXSpectrum/Spectrum.h"
 #include "ZXSpectrum/Keyboard.h"
@@ -23,6 +25,10 @@
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "resource.h"
+
+#include "bitfifo.h"
+
+#pragma comment(lib, "winmm.lib")
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +39,12 @@
 #define DEFAULTBORDERSIZE  32
 
 #define MAXSTAMPS           4 /* depth of nested timestamp stack */
+
+#define BUFSZ            (44100 / 50)  // 1/50th sec at 44.1kHz
+
+#define SAMPLE_RATE     (44100)
+#define BITFIFO_LENGTH  (220500 / 4) // one seconds' worth of input bits (fifo will be ~27KiB)
+#define AVG             (5) // average this many input bits to make an output sample
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -65,8 +77,228 @@ typedef struct gamewin
 
   ULONGLONG       stamps[MAXSTAMPS];
   int             nstamps;
+
+  struct
+  {
+    CRITICAL_SECTION  soundLock;      // protects all following members
+    HANDLE            soundDoneSema;  // signals that a sound has done playing
+    HWAVEOUT          waveOut;        // device handle
+    WAVEHDR           waveHdr;        // wave header
+    UINT              bufferUsed;
+    bitfifo_t        *fifo;
+    signed short      lastvol;
+
+    WORD              buffer[BUFSZ];  // 1/50th sec at 44.1kHz
+  }
+  sound;
 }
 gamewin_t;
+
+///////////////////////////////////////////////////////////////////////////////
+
+// https://msdn.microsoft.com/en-us/library/windows/desktop/dd797970(v=vs.85).aspx
+
+static void CALLBACK SoundCallback(HWAVEOUT  hwo,
+  UINT      uMsg,
+  DWORD_PTR dwInstance,
+  DWORD_PTR dwParam1,
+  DWORD_PTR dwParam2);
+
+static void EmitSound(gamewin_t *state);
+
+static int OpenSound(gamewin_t *state)
+{
+  WAVEFORMATEX waveFormatEx; // wave format specifier
+  HWAVEOUT     waveOut;      // device handle
+
+  const WORD  nChannels      = 1;
+  const DWORD nSamplesPerSec = 44100; //
+  const WORD  wBitsPerSample = 16;    // 8 or 16
+
+  WORD nBlockAlign = nChannels * wBitsPerSample / 8;
+
+  // initialise in structure order
+  waveFormatEx.wFormatTag      = WAVE_FORMAT_PCM;
+  waveFormatEx.nChannels       = nChannels;
+  waveFormatEx.nSamplesPerSec  = nSamplesPerSec;
+  waveFormatEx.nAvgBytesPerSec = nSamplesPerSec * nBlockAlign;
+  waveFormatEx.nBlockAlign     = nBlockAlign;
+  waveFormatEx.wBitsPerSample  = wBitsPerSample;
+  waveFormatEx.cbSize          = 0;
+
+  // reset this: it's checked to unprepare
+  state->sound.waveHdr.dwFlags = 0;
+
+  state->sound.bufferUsed = 0;
+
+  state->sound.fifo = bitfifo_create(BITFIFO_LENGTH);
+  if (state->sound.fifo == NULL)
+    goto failure; // OOM
+
+  InitializeCriticalSection(&state->sound.soundLock);
+
+  // initial counter = 1, max counter = 1
+  state->sound.soundDoneSema = CreateSemaphore(NULL, 1, 1, NULL);
+
+  if (waveOutOpen(&waveOut,
+    WAVE_MAPPER,
+    &waveFormatEx,
+    (DWORD_PTR) SoundCallback, // dwCallback
+    (DWORD_PTR) state, // dwCallbackInstance
+    CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
+  {
+    MessageBox(NULL, _T("unable to open WAVE_MAPPER device"), _T("Some Caption"), MB_TOPMOST);  // check
+    return -1;
+  }
+
+  state->sound.waveOut = waveOut;
+
+  assert(state->sound.fifo);
+
+  return 0;
+
+failure:
+  return 1;
+}
+
+static void CloseSound(gamewin_t *state)
+{
+  MMRESULT result;
+
+  result = waveOutReset(state->sound.waveOut);
+  if (result)
+  {
+    return;
+  }
+
+  if (state->sound.waveHdr.dwFlags & WHDR_PREPARED)
+  {
+    result = waveOutUnprepareHeader(state->sound.waveOut, &state->sound.waveHdr, sizeof(WAVEHDR));
+    if (result)
+    {
+      return;
+    }
+  }
+
+  result = waveOutClose(state->sound.waveOut);
+  if (result)
+  {
+    return;
+  }
+
+  CloseHandle(state->sound.soundDoneSema);
+
+  DeleteCriticalSection(&state->sound.soundLock);
+
+  bitfifo_destroy(state->sound.fifo);
+}
+
+static void EmitSound(gamewin_t *state)
+{
+  MMRESULT mmresult;
+
+  // wait for the previous sound to clear
+  WaitForSingleObject(state->sound.soundDoneSema, INFINITE);
+
+  {
+    result_t    err;
+
+    UINT outputCapacity;
+    UINT outputUsed;
+
+    outputCapacity = BUFSZ;
+    outputUsed     = 0;
+
+    // try to fill the buffer
+    while (state->sound.bufferUsed < outputCapacity)
+    {
+      UINT   outputCapacityRemaining;
+      size_t bitsInFifo;
+      size_t toCopy;
+
+      outputCapacityRemaining = outputCapacity - state->sound.bufferUsed;
+      bitsInFifo              = bitfifo_used(state->sound.fifo);
+      toCopy                  = min(bitsInFifo, outputCapacityRemaining);
+
+      if (bitsInFifo == 0)
+        goto no_data;
+
+      const signed short maxVolume = 32500; // tweak this down to quieten
+
+      signed short      *p;
+      signed short       vol;
+      UINT               j;
+
+      p = (signed short *) &state->sound.buffer[outputUsed];
+      for (j = 0; j < toCopy; j++)
+      {
+        unsigned int bits;
+
+        bits = 0;
+        err = bitfifo_dequeue(state->sound.fifo, &bits, AVG);
+        if (err == result_BITFIFO_INSUFFICIENT ||
+            err == result_BITFIFO_EMPTY)
+          // When the fifo empties maintain the most recent volume
+          vol = state->sound.lastvol;
+        else
+          vol = (int) __popcnt(bits) * maxVolume / AVG;
+        *p++ = vol;
+
+        state->sound.lastvol = vol;
+      }
+
+      outputUsed += toCopy;
+    }
+
+    return;
+
+  no_data:
+    return;
+  }
+
+  if (state->sound.waveHdr.dwFlags & WHDR_PREPARED)
+  {
+    mmresult = waveOutUnprepareHeader(state->sound.waveOut, &state->sound.waveHdr, sizeof(WAVEHDR));
+    if (mmresult)
+    {
+      printf("blah 1\n");
+    }
+  }
+
+  // prepare the waveform audio data block for playback
+  state->sound.waveHdr.lpData = (LPSTR) &state->sound.buffer[0];
+  state->sound.waveHdr.dwBufferLength = 2 * 1/*channels*/ * BUFSZ;
+  state->sound.waveHdr.dwFlags = 0;
+  state->sound.waveHdr.dwLoops = 0;
+  mmresult = waveOutPrepareHeader(state->sound.waveOut, &state->sound.waveHdr, sizeof(WAVEHDR));
+  if (mmresult)
+  {
+    printf("blah 2\n");
+  }
+
+  mmresult = waveOutWrite(state->sound.waveOut, &state->sound.waveHdr, sizeof(WAVEHDR));
+  if (mmresult)
+  {
+    printf("blah 3\n");
+  }
+}
+
+static void CALLBACK SoundCallback(HWAVEOUT  hwo,
+                                   UINT      uMsg,
+                                   DWORD_PTR dwInstance,
+                                   DWORD_PTR dwParam1,
+                                   DWORD_PTR dwParam2)
+{
+  gamewin_t *state = (gamewin_t *) dwInstance;
+
+  if (uMsg == WOM_DONE)
+  {
+    // we can't do anything complex in the callback, so just release the semaphore
+    EnterCriticalSection(&state->sound.soundLock);
+    ReleaseSemaphore(state->sound.soundDoneSema, 1, NULL);
+    LeaveCriticalSection(&state->sound.soundLock);
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -159,7 +391,15 @@ static void border_handler(int colour, void *opaque)
 
 static void speaker_handler(int on_off, void *opaque)
 {
-  // does nothing presently
+  gamewin_t   *gamewin = (gamewin_t *) opaque;
+  unsigned int bit = on_off;
+
+  EnterCriticalSection(&gamewin->sound.soundLock);
+
+  // There's nothing we can do if the buffer is full, so ignore errors
+  (void) bitfifo_enqueue(gamewin->sound.fifo, &bit, 0, 1);
+
+  LeaveCriticalSection(&gamewin->sound.soundLock);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -169,12 +409,17 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
   gamewin_t  *win  = (gamewin_t *) lpParam;
   tgestate_t *game = win->tge;
 
+  assert(win->sound.fifo);
+
   tge_setup(game);
 
   // While in menu state
   while (!win->quit)
+  {
     if (tge_menu(game) > 0)
       break; // game begins
+    EmitSound(win);
+  }
 
   // While in game state
   if (!win->quit)
@@ -184,6 +429,7 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
     {
       tge_main(game);
       win->nstamps = 0; // reset all timing info
+      EmitSound(win);
     }
   }
 
@@ -217,6 +463,8 @@ static int CreateGame(gamewin_t *gamewin)
   tge = tge_create(zx, &gamewin->config);
   if (tge == NULL)
     goto failure;
+
+  OpenSound(gamewin);
 
   thread = CreateThread(NULL,           // default security attributes
                         0,              // use default stack size
@@ -256,6 +504,8 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->quit     = false;
 
   gamewin->nstamps  = 0;
+
+  assert(gamewin->sound.fifo);
 
   return 0;
 
