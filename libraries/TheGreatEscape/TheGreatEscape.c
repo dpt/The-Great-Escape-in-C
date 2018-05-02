@@ -673,7 +673,7 @@ void setup_room(tgestate_t *state)
  * <w> <h>: width, height
  * Repeat:
  *   <t>:                  emit tile <t>
- *   <255> <64..127> <t>:  emit tiles <t> <t+1> <t+2> .. up to 63 times
+ *   <255> <64..79> <t>:   emit tiles <t> <t+1> <t+2> .. up to 15 times
  *   <255> <128..254> <t>: emit tile <t> up to 126 times
  *   <255> <255>:          emit <255>
  * @endcode
@@ -729,9 +729,10 @@ expand:
         {
           byte &= 0xF0;
           if (byte >= 128)
-            goto run;
+            goto repetition;
           if (byte == 64)
             goto range;
+          assert(0);
         }
       }
 
@@ -750,7 +751,7 @@ expand:
   return;
 
 
-run:
+repetition:
   byte = *data++ & 0x7F;
   val = *data;
   do
