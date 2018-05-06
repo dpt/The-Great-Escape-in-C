@@ -611,7 +611,7 @@ void setup_room(tgestate_t *state)
 
   setup_doors(state);
 
-  state->roomdef_bounds_index = get_roomdef(state, room_index, offset++);
+  state->roomdef_dimensions_index = get_roomdef(state, room_index, offset++);
 
   /* Copy boundaries into state. */
   state->roomdef_object_bounds_count = count = get_roomdef(state, room_index, offset); /* count of boundaries */
@@ -717,7 +717,6 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
     do
     {
 expand:
-
       assert(width  > 0);
       assert(height > 0);
 
@@ -765,7 +764,7 @@ repetition:
       width = self_width;
       output += columns - width; /* move to next row */
 
-      // val = *data; // needless reload
+      // val = *data; // needless reload in C version (required in original)
 
       if (--height == 0)
         return;
@@ -6243,7 +6242,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   /**
    * $6B85: Room dimensions.
    */
-  static const wackybounds_t roomdef_bounds[10] =
+  static const wackybounds_t roomdef_dimensions[10] =
   {
     {  66, 26,  70, 22 },
     {  62, 22,  58, 26 },
@@ -6265,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  room_bounds = &roomdef_bounds[state->roomdef_bounds_index];
+  room_bounds = &roomdef_dimensions[state->roomdef_dimensions_index];
   saved_pos = &state->saved_pos.pos;
   /* Conv: Merged conditions, flipped compares and reordered. */
   // inclusive/exclusive bounds look strange here

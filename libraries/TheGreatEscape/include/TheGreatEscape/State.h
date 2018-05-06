@@ -194,8 +194,8 @@ struct tgestate
   /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
   uint8_t         searchlight_state;
 
-  /** $81BE: Index into roomdef_bounds[]. */
-  uint8_t         roomdef_bounds_index;
+  /** $81BE: Index into roomdef_dimensions[]. */
+  uint8_t         roomdef_dimensions_index;
   /** $81BF: Current room bounds count. */
   uint8_t         roomdef_object_bounds_count;
   /** $81C0: Copy of current room def's additional bounds (allows for four
