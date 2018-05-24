@@ -168,13 +168,24 @@ static void zx_out(zxspectrum_t *state, uint16_t address, uint8_t byte)
   }
 }
 
-/* The game is telling us that the screen has been modified.
+/* The game is telling us that the screen it draws to has been modified.
  *
- * - only the game (thread) writes to pub.screen
- * - this entry point is called after the game modifies the screen and wants us to know about it
- * - we copy the (whole) screen and update the dirty region ready for zxspectrum_claim_screen
+ * Only the game (thread) writes to pub.screen. This entry point is called
+ * when the game modifies it and wants us to know that. We're not obligated
+ * to cause a screen/window refresh immediately, so may maintain an overall
+ * dirty rectangle coalesced from multiple updates, but doing it in a timely
+ * manner will improve the game's latency.
+ *
+ * We try to avoid copying the whole screen buffer on every update, where
+ * practical, for speed. We do a partial copy then update our dirty rectangle
+ * ready for zxspectrum_claim_screen.
+ *
+ * It's tempting to not copy the pub.screen here but instead wait for a
+ * redraw message from the OS and do it then. However, the duration of this
+ * call is the only window we have for legal access to pub.screen, so we have
+ * to quickly copy out into our own buffer from where zxspectrum_claim_screen
+ * can have unimpeded access.
  */
-/* Try to avoid copying the entire screen every update. */
 static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
@@ -193,7 +204,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
   }
   else
   {
-    /* Copy the dirty region only into the screen copy. */
+    /* Copy pub.screen's dirty region into the screen copy. */
 
     zxbox_t box;
     int     width;
