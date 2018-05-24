@@ -10395,7 +10395,7 @@ const uint8_t *get_route(routeindex_t index)
 
     &route_7795[0],                 //  1: L-shaped route in the fenced area
     &route_7799[0],                 //  2: guard's route around the front perimeter wall
-    &route_commandant[0],           //  3: set by charevnt_commandant_to_yard [longest of all the routes -- comandants's route perhaps?]
+    &route_commandant[0],           //  3: the commandant's route - the longest of all the routes
     &route_77CD[0],                 //  4: guard's route marching over the front gate
 
     &route_exit_hut2[0],            //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
