@@ -336,7 +336,7 @@ enum itemstruct_room_and_flags
 
   /** Indicates that the item is nowhere. This is (item_NONE &
    * itemstruct_ROOM_MASK). */
-  itemstruct_ROOM_NONE                 = 0x3F,
+  itemstruct_ROOM_NONE                 = 0x3F,  // can probably go
 
   /** Bit 6 is set when the item is nearby.
    * Cleared by mark_nearby_items() and locate_vischar_or_itemstruct(). */
