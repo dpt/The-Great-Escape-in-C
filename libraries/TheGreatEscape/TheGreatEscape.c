@@ -1921,7 +1921,7 @@ void cutting_wire(tgestate_t *state)
 #define permitted_route_ROOM (1 << 7) /* Encodes a room index. */
 
 /**
- * $9F21: Check the hero's map position and set the flag accordingly.
+ * $9F21: Check the hero's map position and colour the flag accordingly.
  *
  * Also detect escapes.
  *
