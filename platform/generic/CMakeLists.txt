@@ -1,8 +1,10 @@
-add_executable(EscapeGeneric
+set(TARGET ${PROJECT_NAME})
+
+add_executable(${TARGET}
   main.c
 )
 
-target_link_libraries(EscapeGeneric
-  ZXSpectrum
-  TheGreatEscape
+target_link_libraries(${TARGET}
+  LibZXSpectrum
+  LibTheGreatEscape
 )
