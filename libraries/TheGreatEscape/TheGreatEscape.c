@@ -3683,8 +3683,6 @@ void set_route_go_to_yard_reversed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  // route $E is 5 long, so offset 4 could be the final byte and the '128' flag is a reverse
-
   static const route_t t14 = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 };
   set_hero_route(state, &t14);
 
