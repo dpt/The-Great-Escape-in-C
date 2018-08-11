@@ -3814,7 +3814,7 @@ void go_to_roll_call(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A50B: Screen reset.
+ * $A50B: Reset the screen.
  *
  * \param[in] state Pointer to game state.
  */
@@ -4256,7 +4256,7 @@ void plot_horizontal_tiles_common(tgestate_t             *state,
   // Conv: A was A'.
   A = state->map_position.x & 3; // map_position lo (repeats earlier work)
   if (A == 0)
-    return;
+    return; /* can skip trailing edge */
 
   iters = A;
   do
@@ -5091,7 +5091,7 @@ void zoombox_fill(tgestate_t *state)
       hz_count2 = state->zoombox.width; /* TODO: This duplicates the read above. */
       memcpy(dst, src, hz_count2);
 
-      // these computations might take the values out of range on the final iteration (but never be used)
+      // these computations might take the values out of range on the final iteration (but will never be used)
       dst += hz_count2; // this is LDIR post-increment. it can be removed along with the line below.
       src += hz_count2 + src_skip; // move to next source line
       dst -= hz_count1; // was E -= self_AC55; // undo LDIR postinc
