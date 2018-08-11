@@ -4995,6 +4995,7 @@ void zoombox(tgestate_t *state)
   {
     state->speccy->stamp(state->speccy);
 
+    /* Shrink X and grow width until X is 1 */
     pvar = &state->zoombox.x;
     var = *pvar;
     if (var != 1)
@@ -5004,12 +5005,14 @@ void zoombox(tgestate_t *state)
       pvar[1]++;
     }
 
-    pvar++; // &state->width;
+    /* Grow width until it's 22 */
+    pvar++; /* -> &state->width */
     var += *pvar;
     if (var < 22)
       (*pvar)++;
 
-    pvar++; // &state->zoombox.y;
+    /* Shrink Y and grow height until Y is 1 */
+    pvar++; /* -> &state->zoombox.y */
     var = *pvar;
     if (var != 1)
     {
@@ -5018,7 +5021,8 @@ void zoombox(tgestate_t *state)
       pvar[1]++;
     }
 
-    pvar++; // &state->height;
+    /* Grow height until it's 15 */
+    pvar++; /* -> &state->height */
     var += *pvar;
     if (var < 15)
       (*pvar)++;
