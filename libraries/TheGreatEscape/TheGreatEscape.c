@@ -4772,8 +4772,6 @@ void move_map(tgestate_t *state)
       x = 192;
   }
 
-  /* Note: This looks like it ought to be an AND but it's definitely an OR in
-   * the original game. */
   if (state->map_position.x == x || state->map_position.y == y)
     return; /* Don't move. */
 
