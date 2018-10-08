@@ -56,8 +56,8 @@ static const uint8_t roomdef_2_hut2_left[] =
 {
   1, /* room dimensions index */
   2, /* number of boundaries */
-  48, 64, 43, 56, /* boundary */
-  24, 38, 26, 40, /* boundary */
+  48, 64, 43, 56, /* boundary */ // bed boundary
+  24, 38, 26, 40, /* boundary */ // table boundary
   2, /* number of mask bytes */
   13, 8, /* mask */
   8, /* nobjects */
