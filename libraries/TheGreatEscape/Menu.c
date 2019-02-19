@@ -476,7 +476,7 @@ static uint8_t menu_keyscan(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F4B7: Runs the menu screen.
+ * $F4B7: Run the menu screen.
  *
  * Waits for user to select an input device, waves the morale flag and plays
  * the title tune.
@@ -492,8 +492,8 @@ int menu_screen(tgestate_t *state)
   uint16_t frequency_0;     /* was DE */
   uint16_t frequency_1;     /* was DE' */
   uint8_t  datum;           /* was A */
-  uint8_t  overall_delay;   /* was A */
-  uint8_t  iters;           /* was H */
+  uint8_t  major_delay;     /* was A */
+  uint8_t  minor_delay;     /* was H */
   uint16_t channel0_index;  /* was HL */
   uint16_t channel1_index;  /* was HL' */
   uint8_t  speaker0;        /* was L */
@@ -520,8 +520,8 @@ int menu_screen(tgestate_t *state)
   wave_morale_flag(state);
 
   /* Play music */
+
   channel0_index = state->music_channel0_index + 1;
-  /* Loop until the end marker is encountered. */
   for (;;)
   {
     state->music_channel0_index = channel0_index;
@@ -533,7 +533,6 @@ int menu_screen(tgestate_t *state)
   frequency_0 = counter_0 = frequency_for_semitone(datum, &speaker0);
 
   channel1_index = state->music_channel1_index + 1;
-  /* Loop until the end marker is encountered. */
   for (;;)
   {
     state->music_channel1_index = channel1_index;
@@ -544,13 +543,14 @@ int menu_screen(tgestate_t *state)
   }
   frequency_1 = counter_1 = frequency_for_semitone(datum, &speaker1);
 
+  /* When the second channel is silent use the first channel's frequency. */
   if ((counter_1 >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
     frequency_1 = counter_1 = counter_0;
 
-  overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
+  major_delay = 24; /* overall tune speed (a delay: lower values are faster) */
   do
   {
-    iters = 255;
+    minor_delay = 255;
     do
     {
       int to_emit = 3; // Conv: Whatever we do always emit this many bits
@@ -595,9 +595,9 @@ int menu_screen(tgestate_t *state)
       while (to_emit-- > 0)
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, bit);
     }
-    while (--iters);
+    while (--minor_delay);
   }
-  while (--overall_delay);
+  while (--major_delay);
 
   /* Conv: Timing: Calibrated to original game. */
   state->speccy->sleep(state->speccy, 300365);
