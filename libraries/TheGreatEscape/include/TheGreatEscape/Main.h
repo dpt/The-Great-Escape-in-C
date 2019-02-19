@@ -628,8 +628,10 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             item_t        item);
 
 uint8_t item_visible(tgestate_t *state,
-                     uint16_t   *clipped_width,
-                     uint16_t   *clipped_height);
+                     uint8_t    *left_skip,
+                     uint8_t    *clipped_width,
+                     uint8_t    *top_skip,
+                     uint8_t    *clipped_height);
 
 extern const spritedef_t item_definitions[item__LIMIT];
 

@@ -11283,8 +11283,10 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 //  xy_t         *HL; /* was HL */
 //  tinypos_t    *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
-  uint16_t      clipped_width;  /* was BC */
-  uint16_t      clipped_height; /* was DE */
+  uint8_t       left_skip;      /* was B */
+  uint8_t       clipped_width;  /* was C */
+  uint8_t       top_skip;       /* was D */
+  uint8_t       clipped_height; /* was E */
   uint8_t       instr;          /* was A */
   uint8_t       A;              /* was A */
   uint8_t       offset_tmp;     /* was A' */
@@ -11324,23 +11326,27 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
-  if (item_visible(state, &clipped_width, &clipped_height) != 0)
+  if (item_visible(state,
+                  &left_skip,
+                  &clipped_width,
+                  &top_skip,
+                  &clipped_height))
     return 0; /* invisible */
 
   // PUSH clipped_width
   // PUSH clipped_height
 
-  state->self_E2C2 = clipped_height & 0xFF; // self modify masked_sprite_plotter_16_wide_left
+  state->self_E2C2 = clipped_height; // self modify masked_sprite_plotter_16_wide_left
 
-  if ((clipped_width >> 8) == 0)
+  if (left_skip == 0)
   {
     instr = 119; /* opcode of 'LD (HL),A' */
-    offset_tmp = clipped_width & 0xFF;
+    offset_tmp = clipped_width;
   }
   else
   {
     instr = 0; /* opcode of 'NOP' */
-    offset_tmp = 3 - (clipped_width & 0xFF);
+    offset_tmp = 3 - clipped_width;
   }
 
   offset = offset_tmp; /* FUTURE: Could assign directly to offset instead. */
@@ -11361,7 +11367,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0) /* no rows to skip */
+  if (top_skip == 0) /* no rows to skip */
     y = (state->iso_pos.y - state->map_position.y) * state->window_buf_stride;
 
   // (state->iso_pos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
@@ -11374,20 +11380,20 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 3);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, 3);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (clipped_height - 1) * state->columns + clipped_width - 1, 3);
 
   maskbuf = &state->mask_buffer[0];
 
   // POP DE  // get clipped_height
   // PUSH DE
 
-  state->foreground_mask_pointer = &maskbuf[(clipped_height >> 8) * 4];
+  state->foreground_mask_pointer = &maskbuf[top_skip * 4];
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   // POP DE  // this pop/push seems to be needless - DE already has the value
   // PUSH DE
 
-  A = clipped_height >> 8; // A = D // sign?
+  A = top_skip; // A = D // sign?
   if (A)
   {
     /* The original game has a generic multiply loop here which is setup to
@@ -11409,7 +11415,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
      */
 
     A *= 2;
-    // clipped_height &= 0x00FF; // D = 0
+    // top_skip = 0
   }
 
   /* D ends up as zero either way. */
@@ -11440,14 +11446,18 @@ uint8_t setup_item_plotting(tgestate_t   *state,
  * Called by setup_item_plotting only.
  *
  * \param[in]  state          Pointer to game state.
- * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (clipped width, lefthand skip)
- * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (clipped height, top skip)
+ * \param[out] left_skip      Pointer to returned left edge skip. (was B)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was C)
+ * \param[out] top_skip       Pointer to returned top edge skip.  (was D)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was E)
  *
  * \return 0 => visible, 1 => invisible. (was A)
  */
 uint8_t item_visible(tgestate_t *state,
-                     uint16_t   *clipped_width,
-                     uint16_t   *clipped_height)
+                     uint8_t    *left_skip,
+                     uint8_t    *clipped_width,
+                     uint8_t    *top_skip,
+                     uint8_t    *clipped_height)
 {
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
@@ -11456,12 +11466,14 @@ uint8_t item_visible(tgestate_t *state,
   xy_t        map_position;       /* was DE */
   uint8_t     window_right_edge;  /* was A  */
   int8_t      available_right;    /* was A  */
-  uint16_t    new_width;          /* was BC */
+  uint8_t     new_left;           /* was B  */
+  uint8_t     new_width;          /* was C  */
   uint8_t     item_right_edge;    /* was A  */
   int8_t      available_left;     /* was A  */
   uint8_t     window_bottom_edge; /* was A  */
   int8_t      available_bottom;   /* was A  */
-  uint16_t    new_height;         /* was DE */
+  uint8_t     new_top;            /* was D  */
+  uint8_t     new_height;         /* was E  */
   uint8_t     item_bottom_edge;   /* was A  */
   uint8_t     available_top;      /* was A  */
 
@@ -11470,8 +11482,10 @@ uint8_t item_visible(tgestate_t *state,
   assert(clipped_height != NULL);
 
   /* Conv: Added to guarantee initialisation of return values. */
-  *clipped_width  = 65535;
-  *clipped_height = 65535;
+  *left_skip      = 255;
+  *clipped_width  = 255;
+  *top_skip       = 255;
+  *clipped_height = 255;
 
   /* To determine visibility and sort out clipping there are five cases to
    * consider per axis:
@@ -11504,6 +11518,7 @@ uint8_t item_visible(tgestate_t *state,
   if (available_right < WIDTH_BYTES)
   {
     /* Case (D): Item's right edge is off-screen, so truncate width. */
+    new_left  = 0;
     new_width = available_right;
   }
   else
@@ -11521,13 +11536,19 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Check for item partway off-screen. */
     if (available_left < WIDTH_BYTES)
+    {
       /* Case (B): Left edge is off-screen and right edge is on-screen.
        * Pack the lefthand skip into the low byte and the clipped width into
        * the high byte. */
-      new_width = ((WIDTH_BYTES - available_left) << 8) | available_left;
+      new_left  = WIDTH_BYTES - available_left;
+      new_width = available_left;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_left  = 0;
       new_width = WIDTH_BYTES;
+    }
   }
 
   /*
@@ -11552,6 +11573,7 @@ uint8_t item_visible(tgestate_t *state,
   if (available_bottom < HEIGHT)
   {
     /* Case (D): Item's bottom edge is off-screen, so truncate height. */
+    new_top    = 0;
     new_height = 8;
   }
   else
@@ -11568,16 +11590,24 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Check for item partway off-screen. */
     if (available_top < HEIGHT)
+    {
       /* Case (B): Top edge is off-screen and bottom edge is on-screen.
        * Pack the top skip into the low byte and the clipped height into the
        * high byte. */
-      new_height = (8 << 8) | (state->item_height - 8);
+      new_top    = 8;
+      new_height = state->item_height - 8;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_top    = 0;
       new_height = state->item_height;
+    }
   }
 
+  *left_skip      = new_left;
   *clipped_width  = new_width;
+  *top_skip       = new_top;
   *clipped_height = new_height;
 
   return 0; /* Visible */
