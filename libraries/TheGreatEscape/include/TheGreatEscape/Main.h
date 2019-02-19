@@ -502,8 +502,10 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst);
 
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
-                    uint16_t        *clipped_width,
-                    uint16_t        *clipped_height);
+                    uint8_t         *left_skip,
+                    uint8_t         *clipped_width,
+                    uint8_t         *top_skip,
+                    uint8_t         *clipped_height);
 
 void restore_tiles(tgestate_t *state);
 

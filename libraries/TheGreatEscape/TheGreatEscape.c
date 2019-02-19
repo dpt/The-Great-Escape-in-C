@@ -7792,8 +7792,6 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
 /**
  * $BAF7: Clips the given vischar's dimensions against the game window.
  *
- * Returns 255 if the vischar is outside the game window, or zero if visible.
- *
  * If the vischar spans a boundary a packed field is returned in the
  * respective clipped width/height. The low byte holds the width/height to
  * draw and the high byte holds the number of columns/rows to skip.
@@ -7802,54 +7800,64 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
  *
  * \param[in]  state          Pointer to game state.
  * \param[in]  vischar        Pointer to visible character.       (was IY)
- * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (width, lefthand skip)
- * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (height, top skip)
+ * \param[out] left_skip      Pointer to returned left edge skip. (was B)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was C)
+ * \param[out] top_skip       Pointer to returned top edge skip.  (was D)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was E)
  *
- * \return 0 => visible, 255 => invisible. (was A)
+ * \return 255 if the vischar is outside the game window, or zero if visible. (was A)
  */
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
-                    uint16_t        *clipped_width,
-                    uint16_t        *clipped_height)
+                    uint8_t         *left_skip,
+                    uint8_t         *clipped_width,
+                    uint8_t         *top_skip,
+                    uint8_t         *clipped_height)
 {
   uint8_t  window_right_edge;   /* was A  */
   int8_t   available_right;     /* was A  */
-  uint16_t new_width;           /* was BC */
+  uint8_t  new_left;            /* was B  */
+  uint8_t  new_width;           /* was C  */
   int8_t   vischar_right_edge;  /* was A  */
   int8_t   available_left;      /* was A  */
   uint16_t window_bottom_edge;  /* was HL */
   uint16_t available_bottom;    /* was HL */
-  uint16_t new_height;          /* was DE */
+  uint8_t  new_top;             /* was D  */
+  uint8_t  new_height;          /* was E  */
   uint16_t vischar_bottom_edge; /* was HL */
   uint16_t available_top;       /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
+  assert(left_skip      != NULL);
   assert(clipped_width  != NULL);
+  assert(top_skip       != NULL);
   assert(clipped_height != NULL);
 
   /* Conv: Added to guarantee initialisation of return values. */
-  *clipped_width  = 65535;
-  *clipped_height = 65535;
+  *left_skip      = 255;
+  *clipped_width  = 255;
+  *top_skip       = 255;
+  *clipped_height = 255;
 
   /* To determine visibility and sort out clipping there are five cases to
    * consider per axis:
-   * (A) vischar is completely off left/top of screen
-   * (B) vischar is clipped/truncated on its left/top
+   * (A) vischar is completely off the left/top of screen
+   * (B) vischar is clipped on its left/top
    * (C) vischar is entirely visible
-   * (D) vischar is clipped/truncated on its right/bottom
-   * (E) vischar is completely off right/bottom of screen
+   * (D) vischar is clipped on its right/bottom
+   * (E) vischar is completely off the right/bottom of screen
    */
 
   /*
-   * Handle horizontal intersections.
+   * Handle horizontal cases.
    */
 
   /* Calculate the right edge of the window in map space. */
   /* Conv: Columns was constant 24; replaced with state var. */
   window_right_edge = state->map_position.x + state->columns;
 
-  /* Subtracting vischar's x yields the space available between vischar's
+  /* Subtracting vischar's x gives the space available between vischar's
    * left edge and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
   // state->iso_pos is iso_pos / 8.
@@ -7861,7 +7869,8 @@ int vischar_visible(tgestate_t      *state,
   /* Check for vischar partway off-screen. */
   if (available_right < vischar->width_bytes)
   {
-    /* Case (D): Vischar's right edge is off-screen, so truncate width. */
+    /* Case (D): Vischar's right edge is off-screen so truncate its width. */
+    new_left  = 0;
     new_width = available_right;
   }
   else
@@ -7869,7 +7878,7 @@ int vischar_visible(tgestate_t      *state,
     /* Calculate the right edge of the vischar. */
     vischar_right_edge = state->iso_pos.x + vischar->width_bytes;
 
-    /* Subtracting the map position's x yields the space available between
+    /* Subtracting the map position's x gives the space available between
      * vischar's right edge and the left edge of the window (in bytes).
      * Note that available_left is signed to allow the subsequent test. */
     available_left = vischar_right_edge - state->map_position.x;
@@ -7879,17 +7888,21 @@ int vischar_visible(tgestate_t      *state,
 
     /* Check for vischar partway off-screen. */
     if (available_left < vischar->width_bytes)
-      /* Case (B): Left edge is off-screen and right edge is on-screen.
-       * Pack the lefthand skip into the low byte and the clipped width into
-       * the high byte. */
-      new_width = ((vischar->width_bytes - available_left) << 8) | available_left;
+    {
+      /* Case (B): Left edge is off-screen and right edge is on-screen. */
+      new_left  = vischar->width_bytes - available_left;
+      new_width = available_left;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_left  = 0;
       new_width = vischar->width_bytes;
+    }
   }
 
   /*
-   * Handle vertical intersections.
+   * Handle vertical cases.
    */
 
   /* Note: this uses vischar->iso_pos not state->iso_pos as above.
@@ -7912,6 +7925,7 @@ int vischar_visible(tgestate_t      *state,
   if (available_bottom < vischar->height)
   {
     /* Case (D): Vischar's bottom edge is off-screen, so truncate height. */
+    new_top    = 0;
     new_height = available_bottom;
   }
   else
@@ -7919,7 +7933,7 @@ int vischar_visible(tgestate_t      *state,
     /* Calculate the bottom edge of the vischar. */
     vischar_bottom_edge = vischar->iso_pos.y + vischar->height;
 
-    /* Subtracting the map position's y (scaled) yields the space available
+    /* Subtracting the map position's y (scaled) gives the space available
      * between vischar's bottom edge and the top edge of the window (in
      * rows). */
     available_top = vischar_bottom_edge - state->map_position.y * 8;
@@ -7929,16 +7943,22 @@ int vischar_visible(tgestate_t      *state,
 
     /* Check for vischar partway off-screen. */
     if (available_top < vischar->height)
-      /* Case (B): Top edge is off-screen and bottom edge is on-screen.
-       * Pack the top skip into the low byte and the clipped height into the
-       * high byte. */
-      new_height = ((vischar->height - available_top) << 8) | available_top;
+    {
+      /* Case (B): Top edge is off-screen and bottom edge is on-screen. */
+      new_top    = vischar->height - available_top;
+      new_height = available_top;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_top    = 0;
       new_height = vischar->height;
+    }
   }
 
+  *left_skip      = new_left;
   *clipped_width  = new_width;
+  *top_skip       = new_top;
   *clipped_height = new_height;
 
   return 0; /* Visible */
@@ -7951,7 +7971,7 @@ invisible:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BB98: Paints any tiles occupied by visible characters with tiles from tile_buf.
+ * $BB98: Paint any tiles occupied by visible characters with tiles from tile_buf.
  *
  * \param[in] state Pointer to game state.
  */
@@ -7962,11 +7982,13 @@ void restore_tiles(tgestate_t *state)
   uint8_t             height;                 /* was A / $BC5F */
   int8_t              heightsigned;           /* was A */
   uint8_t             width;                  /* was $BC61 */
-  uint8_t             tilebuf_stride;         /* was $BC8E */
-  uint8_t             windowbuf_stride;       /* was $BC95 */
+  uint8_t             tilebuf_skip;           /* was $BC8E */
+  uint8_t             windowbuf_skip;         /* was $BC95 */
   uint8_t             width_counter, height_counter;  /* was B, C */
-  uint16_t            clipped_width;          /* was BC */
-  uint16_t            clipped_height;         /* was DE */
+  uint8_t             left_skip;              /* was B */
+  uint8_t             clipped_width;          /* was C */
+  uint8_t             top_skip;               /* was D */
+  uint8_t             clipped_height;         /* was E */
   const xy_t         *map_position;           /* was HL */
   uint8_t            *windowbuf;              /* was HL */
   uint8_t            *windowbuf2;             /* was DE */
@@ -7992,19 +8014,25 @@ void restore_tiles(tgestate_t *state)
     state->iso_pos.y = vischar->iso_pos.y >> 3; // divide by 8 (16-to-8)
     state->iso_pos.x = vischar->iso_pos.x >> 3; // divide by 8 (16-to-8)
 
-    if (vischar_visible(state, vischar, &clipped_width, &clipped_height))
-      goto next; /* invisible */
+    if (vischar_visible(state,
+                        vischar,
+                       &left_skip,
+                       &clipped_width,
+                       &top_skip,
+                       &clipped_height))
+      goto next; /* not visible */
 
-    // $BBD3
-    height = ((clipped_height >> 3) & 0x1F) + 2; // the masking will only be required if the top byte of clipped_height contains something
+    /* Conv: Rotate and mask turned into right shift. */
+    height = (clipped_height >> 3) + 2;
 
+    // so this is the on-screen y offset?
     heightsigned = height + state->iso_pos.y - state->map_position.y;
     if (heightsigned >= 0)
     {
       heightsigned -= 17; // likely window_buf height
       if (heightsigned > 0)
       {
-        clipped_height = heightsigned; // original code assigns low byte only - could be an issue
+        clipped_height = heightsigned;
         heightsigned = height - clipped_height;
         if (heightsigned < 0) // if carry
         {
@@ -8029,20 +8057,20 @@ clamp_height: // was $BBF8
     if (height > 5) // note: this is height, not heightsigned (preceding POP removed)
       height = 5; // outer loop counter // height
 
-    width            = clipped_width & 0xFF; // was self modify // inner loop counter // width
-    tilebuf_stride   = state->columns - width; // was self modify
-    windowbuf_stride = tilebuf_stride + 7 * state->columns; // was self modify // == (8 * state->columns - C)
+    width          = clipped_width; // was self modify // inner loop counter // width
+    tilebuf_skip   = state->columns - width; // was self modify
+    windowbuf_skip = tilebuf_skip + 7 * state->columns; // was self modify // == (8 * state->columns - C)
 
     map_position = &state->map_position;
 
     /* Work out x,y offsets into the tile buffer. */
 
-    if ((clipped_width >> 8) == 0)
+    if (left_skip == 0)
       x = state->iso_pos.x - map_position->x;
     else
       x = 0; // was interleaved
 
-    if ((clipped_height >> 8) == 0)
+    if (top_skip == 0)
       y = state->iso_pos.y - map_position->y;
     else
       y = 0; // was interleaved
@@ -8093,10 +8121,10 @@ clamp_height: // was $BBF8
       /* Reset x offset. Advance to next row. */
       x -= width;
       y++;
-      tilebuf   += tilebuf_stride;
+      tilebuf   += tilebuf_skip;
       if (height_counter > 1)
         ASSERT_TILE_BUF_PTR_VALID(tilebuf);
-      windowbuf += windowbuf_stride;
+      windowbuf += windowbuf_skip;
       if (height_counter > 1)
         ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
     }
@@ -11464,7 +11492,7 @@ uint8_t item_visible(tgestate_t *state,
   /* Conv: Columns was constant 24; replaced with state var. */
   window_right_edge = map_position.x + state->columns;
 
-  /* Subtracting item's x yields the space available between item's left edge
+  /* Subtracting item's x gives the space available between item's left edge
    * and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
   available_right = window_right_edge - piso_pos->x;
@@ -11483,7 +11511,7 @@ uint8_t item_visible(tgestate_t *state,
     /* Calculate the right edge of the item. */
     item_right_edge = piso_pos->x + WIDTH_BYTES;
 
-    /* Subtracting the map position's x yields the space available between
+    /* Subtracting the map position's x gives the space available between
      * item's right edge and the left edge of the window (in bytes).
      * Note that available_left is signed to allow the subsequent test. */
     available_left = item_right_edge - map_position.x;
@@ -11513,7 +11541,7 @@ uint8_t item_visible(tgestate_t *state,
   /* Conv: Rows was constant 17; replaced with state var. */
   window_bottom_edge = map_position.y + state->rows;
 
-  /* Subtracting the item's y yields the space available between window's
+  /* Subtracting the item's y gives the space available between window's
    * bottom edge and the item's top. */
   available_bottom = window_bottom_edge - piso_pos->y;
   if (available_bottom <= 0)
@@ -11531,7 +11559,7 @@ uint8_t item_visible(tgestate_t *state,
     /* Calculate the bottom edge of the item. */
     item_bottom_edge = piso_pos->y + HEIGHT;
 
-    /* Subtracting the map position's y (scaled) yields the space available
+    /* Subtracting the map position's y (scaled) gives the space available
      * between item's bottom edge and the top edge of the window (in UDGs).
      */
     available_top = item_bottom_edge - map_position.y;
@@ -12334,8 +12362,10 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
-  uint16_t           clipped_width;  /* was BC */
-  uint16_t           clipped_height; /* was DE */
+  uint8_t            left_skip;      /* was B */
+  uint8_t            clipped_width;  /* was C */
+  uint8_t            top_skip;       /* was D */
+  uint8_t            clipped_height; /* was E */
   const size_t      *enables;        /* was HL */
   uint8_t            self_E4C0;      /* was $E4C0 */
   uint8_t            offset;         /* was A' */
@@ -12393,15 +12423,20 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
 
-  if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
+  if (vischar_visible(state,
+                      vischar,
+                     &left_skip,
+                     &clipped_width,
+                     &top_skip,
+                     &clipped_height)) // used A as temporary
     return 0; /* invisible */
 
   // PUSH clipped_width
   // PUSH clipped_height
 
-  E = clipped_height & 0xFF; // must be no of visible rows? // Conv: added
+  E = clipped_height; // must be no of visible rows? // Conv: added
 
-  assert((clipped_width & 0xFF) < 100);
+  assert(clipped_width < 100);
   assert(E < 100);
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
@@ -12426,15 +12461,15 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   self_E4C0 = A; // self-modify
   // E = A
   // A = B
-  if ((clipped_width >> 8) == 0) // no lefthand skip: start with 'on'
+  if (left_skip == 0) // no lefthand skip: start with 'on'
   {
     instr = 119; /* opcode of 'LD (HL),A' */
-    offset = clipped_width & 0xFF; // process this many bytes before clipping
+    offset = clipped_width; // process this many bytes before clipping
   }
   else // lefthand skip present: start with 'off'
   {
     instr = 0; /* opcode of 'NOP' */
-    offset = A - (clipped_width & 0xFF); // clip until this many bytes have been processed
+    offset = A - clipped_width; // clip until this many bytes have been processed
   }
 
   // EXX
@@ -12455,13 +12490,13 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // EXX
 
   assert(vischar->iso_pos.y / 8 - state->map_position.y < state->rows);
-  assert(vischar->iso_pos.y / 8 - state->map_position.y + (clipped_height & 0xFF) / 8 <= state->rows);
+  assert(vischar->iso_pos.y / 8 - state->map_position.y + clipped_height / 8 <= state->rows);
 
   /* Calculate Y plotting offset.
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0) /* no rows to skip */
+  if (top_skip == 0) /* no rows to skip */
     y = (vischar->iso_pos.y - state->map_position.y * 8) * state->columns;
 
   assert(y / 8 / state->columns < state->rows);
@@ -12481,29 +12516,29 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
    */
 
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, vischar->width_bytes - 1);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, vischar->width_bytes - 1);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (clipped_height - 1) * state->columns + clipped_width - 1, vischar->width_bytes - 1);
 
   maskbuf = &state->mask_buffer[0];
 
   // POP DE_clipped_height
   // PUSH DE
 
-  assert(((clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4) < 255);
+  assert((top_skip * 4 + (vischar->iso_pos.y & 7) * 4) < 255);
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4;
+  maskbuf += top_skip * 4 + (vischar->iso_pos.y & 7) * 4;
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE_clipped_height
 
-  A = clipped_height >> 8; // offset/skip
+  A = top_skip; // offset/skip
   if (A)
   {
     /* Conv: The original game has a generic multiply loop here. In this
      * version instead we'll just multiply. */
 
     A *= vischar->width_bytes - 1;
-    // clipped_height &= 0x00FF; // D = 0
+    // top_skip = 0
   }
 
   /* D ends up as zero either way. */
