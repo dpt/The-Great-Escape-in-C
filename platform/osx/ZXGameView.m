@@ -190,6 +190,7 @@ failure:
 
 - (void)reshape
 {
+  [super reshape];
   doSetupDrawing = YES;
 }
 
