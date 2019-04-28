@@ -10727,7 +10727,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (vischar->flags == vischar_PURSUIT_SAW_BRIBE)
     return;
 
-  // this must be line of sight checking (outdoors only)
+  /* Do line of sight checking when outdoors. */
 
   pos = &vischar->mi.pos; /* was HL += 15 */
   tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
@@ -10745,30 +10745,38 @@ void guards_follow_suspicious_character(tgestate_t *state,
     direction = vischar->direction; /* This character's direction. */
     /* Conv: Avoided shifting 'direction' here. Propagated shift into later ops. */
 
-    if ((direction & 1) == 0) /* TL or BR */
+    if ((direction & 1) == 0)
     {
-      // range check (uses A as temporary)
+      /* TL or BR */
+
+      /* Does the hero approximately match our Y coordinate? */
       if (tinypos->y - 1 >= hero_map_pos->y ||
           tinypos->y + 1 <  hero_map_pos->y)
         return;
 
+      /* Are we facing in the same direction as the hero? */
       dir = tinypos->x < hero_map_pos->x;
-      if ((direction & 2) == 0) /* TL (can't be TR) */
+      if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
         return;
     }
+    else
+    {
+      /* TR or BL */
 
-    // range check (uses A as temporary)
-    if (tinypos->x - 1 >= hero_map_pos->x ||
-        tinypos->x + 1 <  hero_map_pos->x)
-      return;
+      /* Does the hero approximately match our X coordinate? */
+      if (tinypos->x - 1 >= hero_map_pos->x ||
+          tinypos->x + 1 <  hero_map_pos->x)
+        return;
 
-    dir = tinypos->height < hero_map_pos->height;
-    if ((direction & 2) == 0) /* TL or TR */
-      dir = !dir;
-    if (dir)
-      return;
+      /* Are we facing in the same direction as the hero? */
+      dir = tinypos->y < hero_map_pos->y;
+      if ((direction & 2) == 0)
+        dir = !dir;
+      if (dir)
+        return;
+    }
   }
 
   if (!state->red_flag)
