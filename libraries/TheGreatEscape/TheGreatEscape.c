@@ -10754,7 +10754,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
           tinypos->y + 1 <  hero_map_pos->y)
         return;
 
-      /* Are we facing in the same direction as the hero? */
+      /* Are we facing the hero? */
       dir = tinypos->x < hero_map_pos->x;
       if ((direction & 2) == 0)
         dir = !dir;
@@ -10770,7 +10770,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
           tinypos->x + 1 <  hero_map_pos->x)
         return;
 
-      /* Are we facing in the same direction as the hero? */
+      /* Are we facing the hero? */
       dir = tinypos->y < hero_map_pos->y;
       if ((direction & 2) == 0)
         dir = !dir;
