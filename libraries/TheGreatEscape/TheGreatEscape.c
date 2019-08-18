@@ -183,7 +183,7 @@ void transition(tgestate_t      *state,
   {
     /* Outdoors */
 
-    /* Set position on X axis, Y axis and height (dividing by 4). */
+    /* Set position on X axis, Y axis and height (multiplying by 4). */
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
