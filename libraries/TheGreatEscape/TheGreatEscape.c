@@ -221,7 +221,7 @@ void transition(tgestate_t      *state,
       /* Outdoors */
 
       vischar->input = input_KICK;
-      vischar->direction &= vischar_DIRECTION_MASK;
+      vischar->direction &= vischar_DIRECTION_MASK; /* clear crawl flag */
       reset_outdoors(state);
       squash_stack_goto_main(state); // exit
     }
@@ -447,36 +447,36 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->interior_doors[] with interiordoor_NONE. */
-  // Alternative: memset(&state->interior_doors[0], interiordoor_NONE, 4);
+  /* Wipe state->interior_doors[] with interiordoor_NONE.
+   * Alternative: memset(&state->interior_doors[0], interiordoor_NONE, 4); */
   pdoorindex = &state->interior_doors[3];
   iters = 4;
   do
     *pdoorindex-- = interiordoor_NONE;
   while (--iters);
 
-  pdoorindex++;
+  pdoorindex++; /* Reset to first byte of interior_doors[]. */
   ASSERT_DOORS_VALID(pdoorindex);
 
   /* Ensure that no flag bits remain. */
   assert(state->room_index < room__LIMIT);
 
-  room       = state->room_index << 2; /* Shunt left to match comparison in loop. */
+  room       = state->room_index << 2; /* Shift left to match comparison in loop. */
   door_index = 0;
   door       = &doors[0];
-  door_iters = NELEMS(doors); /* Iterate over every individual door in doors[]. */
+  door_iters = NELEMS(doors); /* Iterate over every door in doors[]. */
   do
   {
-    /* Save any door index which matches the current room. */
-    // Rooms are always rectangular so should have no more than four doors but that is unchecked by this code.
+    /* Save the door index (and current reverse flag) whenever we match the
+     * current room. Rooms are always rectangular so should have no more than
+     * four doors present but that is unchecked by this code. */
     if ((door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) == room)
-      /* Current room. */
-      *pdoorindex++ = door_index ^ door_REVERSE; // Store the index and the reverse flag.
+      *pdoorindex++ = door_index ^ door_REVERSE;
 
-    /* On each step toggle the reverse flag. */
+    /* On every iteration toggle the reverse flag. */
     door_index ^= door_REVERSE;
 
-    /* Increment door_index once every two steps through the array. */
+    /* Increment door_index once every two iterations. */
     if (door_index < door_REVERSE) /* Conv: was JP M. */
       door_index++;
 
