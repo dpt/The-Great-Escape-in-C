@@ -7340,6 +7340,7 @@ void plot_sprites(tgestate_t *state)
   vischar_t    *vischar;    /* was IY */
   itemstruct_t *itemstruct; /* was IY */
   int           found;      /* was Z */
+  int           visible;    /* was Z */
 
   assert(state != NULL);
 
@@ -7359,8 +7360,8 @@ void plot_sprites(tgestate_t *state)
 
     if ((index & item_FOUND) == 0)
     {
-      found = setup_vischar_plotting(state, vischar);
-      if (found)
+      visible = setup_vischar_plotting(state, vischar);
+      if (visible)
       {
         render_mask_buffer(state);
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
@@ -7373,8 +7374,8 @@ void plot_sprites(tgestate_t *state)
     }
     else
     {
-      found = setup_item_plotting(state, itemstruct, index);
-      if (found)
+      visible = setup_item_plotting(state, itemstruct, index);
+      if (visible)
       {
         render_mask_buffer(state);
         masked_sprite_plotter_16_wide_item(state);
@@ -7386,95 +7387,99 @@ void plot_sprites(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B89C: Returns the next vischar or item to draw.
+ * $B89C: Finds the next vischar or item to draw.
  *
  * \param[in]  state       Pointer to game state.
- * \param[out] pindex      If vischar, returns vischars_LENGTH - iters; if itemstruct, returns ((item__LIMIT - iters) | (1 << 6)). (was A)
+ * \param[out] pindex      Returns (vischars_LENGTH - iters) if vischar,
+ *                         or ((item__LIMIT - iters) | (1 << 6)) if itemstruct. (was A)
  * \param[out] pvischar    Pointer to receive vischar pointer. (was IY)
  * \param[out] pitemstruct Pointer to receive itemstruct pointer. (was IY)
  *
- * \return State of Z flag: 1 if Z, 0 if NZ. // unsure which is found/notfound right now
+ * \return Non-zero if if a valid vischar or item was returned.
  */
 int locate_vischar_or_itemstruct(tgestate_t    *state,
                                  uint8_t       *pindex,
                                  vischar_t    **pvischar,
                                  itemstruct_t **pitemstruct)
 {
-  uint16_t      x;                /* was BC */
-  uint16_t      y;                /* was DE */
+  uint16_t      prev_x;           /* was BC */
+  uint16_t      prev_y;           /* was DE */
   item_t        item_and_flag;    /* was A' */
-  uint16_t      DEdash;           /* was DE' */
+  uint16_t      height;           /* was DE' */
   uint8_t       iters;            /* was B' */
   vischar_t    *vischar;          /* was HL' */
   vischar_t    *found_vischar;    /* was IY */
   itemstruct_t *found_itemstruct; /* was IY */
-
-  found_vischar = NULL; // shut up MSVC
 
   assert(state       != NULL);
   assert(pindex      != NULL);
   assert(pvischar    != NULL);
   assert(pitemstruct != NULL);
 
+  /* Conv: Quiet MS Visual Studio warning */
+  found_vischar = NULL;
+
+  /* Conv: Added */
   *pvischar    = NULL;
   *pitemstruct = NULL;
 
-  x             = 0; // prev-x
-  y             = 0; // prev-y
-  item_and_flag = item_NONE; // 'nothing found' marker 255
-  DEdash        = 0; // is this even used?
+  prev_x        = 0; /* previous x */
+  prev_y        = 0; /* previous y */
+  item_and_flag = item_NONE; /* item_NONE used as a 'nothing found' marker */
+  height        = 0; /* unused */
 
   iters   = vischars_LENGTH; /* iterations */
-  vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
+  vischar = &state->vischars[0]; /* Conv: Original code points at vischar[0].counter_and_flags */
   do
   {
-    if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) == 0)
-      goto next;
+    if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) &&
+        (vischar->mi.pos.x + 4 >= prev_x) &&
+        (vischar->mi.pos.y + 4 >= prev_y))
+    {
+      item_and_flag = vischars_LENGTH - iters; /* item index */
+      height = vischar->mi.pos.height;
 
-    if ((vischar->mi.pos.x + 4 < x) ||
-        (vischar->mi.pos.y + 4 < y))
-      goto next;
-
-    item_and_flag = vischars_LENGTH - iters; /* Item index. */ // BC' is temp.
-    DEdash = vischar->mi.pos.height;
-
-    y = vischar->mi.pos.y; /* Note: The y,x order here matches the original code. */
-    x = vischar->mi.pos.x;
-    state->IY = found_vischar = vischar;
-
-next:
+      /* Note: The y,x order here matches the original code */
+      prev_y = vischar->mi.pos.y;
+      prev_x = vischar->mi.pos.x;
+      state->IY = found_vischar = vischar;
+    }
     vischar++;
   }
   while (--iters);
 
-  // item_and_flag is passed through if no itemstruct is found.
   item_and_flag = get_greatest_itemstruct(state,
                                           item_and_flag,
-                                          x,y,
-                                          &found_itemstruct);
-  *pindex = item_and_flag; // Conv: Additional code.
-  /* If Adash's top bit remains set from initialisation, then no vischar was
-   * found. (It's not affected by get_greatest_itemstruct which passes it
-   * through). */
+                                          prev_x, prev_y,
+                                         &found_itemstruct);
+  *pindex = item_and_flag; /* Conv: Added */
+  /* If the topmost bit of item_and_flag remains set from initialisation,
+   * then no vischar was found. item_and_flag is preserved by the call to
+   * get_greatest_itemstruct. */
   if (item_and_flag & (1 << 7))
-    return 0; // NZ => not found
-
-  if ((item_and_flag & item_FOUND) == 0)
   {
+    return 0; /* not found */
+  }
+  else if ((item_and_flag & item_FOUND) == 0)
+  {
+    /* Vischar found */
+
     found_vischar->counter_and_flags &= ~vischar_TOUCH_ENTERED;
 
-    *pvischar = found_vischar; // Conv: Additional code.
+    *pvischar = found_vischar; /* Conv: Added */
 
-    return 1; // Z => found
+    return 1; /* found */
   }
   else
   {
+    /* Item found */
+
     int Z;
 
     found_itemstruct->room_and_flags &= ~itemstruct_ROOM_FLAG_NEARBY_6;
     Z = (found_itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_6) == 0; // was BIT 6,HL[1] // Odd: This tests the bit we've just cleared.
 
-    *pitemstruct = found_itemstruct; // Conv: Additional code.
+    *pitemstruct = found_itemstruct; /* Conv: Added */
 
     return Z; // check the sense isn't flipped
   }
