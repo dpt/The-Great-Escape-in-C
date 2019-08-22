@@ -8,10 +8,12 @@
   <img src="demo.gif" alt="Demo" />
 </p>
 
+
 ## Overview
 This is a largely complete C port of “[The Great Escape](http://www.worldofspectrum.org/infoseekid.cgi?id=0002125)”: the classic isometric 3D game for the 48K Sinclair ZX Spectrum in which you execute a daring escape from a wartime prison camp. Loosely based on the film of the same name, it was created by [Denton Designs](http://en.wikipedia.org/wiki/Denton_Designs) and published in 1986 by [Ocean Software](http://en.wikipedia.org/wiki/Ocean_Software).
 
 I [reverse engineered](https://github.com/dpt/The-Great-Escape/) the original game from a binary snapshot of the Spectrum version, decoding the graphics, data tables and all of the logic. Originally written in [Z80](http://en.wikipedia.org/wiki/Zilog_Z80) assembly language, I have translated it into portable C code where now builds and runs _exactly like the original_ but without the need of an [emulator](http://fuse-emulator.sourceforge.net/) on macOS and Windows. Eventually it could run on mobile platforms and in a web browser.
+
 
 ## Goals of the Project
 * Reimplement The Great Escape in portable C code.
@@ -25,9 +27,10 @@ I [reverse engineered](https://github.com/dpt/The-Great-Escape/) the original ga
 * Provide a basis for porting the game to contemporary systems of the ZX Spectrum.
 	* Although old ports of the game exist for the [PC](http://www.abandonia.com/en/games/534/Great+Escape,+The.html), [C64](http://www.lemon64.com/?game_id=1090) and [CPC](http://www.amstradabandonware.com/en/gameitems/the-great-escape/1179), retro fans would like to see the game on [other contemporary systems](http://atariage.com/forums/topic/239167-new-game-great-escape/) too.
 
-Chat
-----
+
+## Chat
 [![Join the chat at https://gitter.im/The-Great-Escape/Lobby](https://badges.gitter.im/The-Great-Escape/Lobby.svg)](https://gitter.im/The-Great-Escape/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 ## Running the Game
 The port is an exact recreation of the ZX Spectrum version of The Great Escape, including the input device selection menu. It builds and runs on macOS and Windows presently. The macOS version is currently the "best" featuring the menu music and sound effects which the Windows port lacks.
@@ -37,6 +40,7 @@ When you start the game hit '0' to start - this will let you define your preferr
 There are various other controls which vary by OS. On macOS consult the menus for keyboard shortcuts.
 
 Both platforms front-ends attempt to always preserve the game's aspect ratio and snap to whole pixels.
+
 
 ## Current Builds
 - Xcode build - works. This is my default build so is most likely to be up-to-date.
@@ -85,7 +89,9 @@ Or `MODE=release make build` to make the release version of the code.
 
 The Makefile-based build presently links against a stub `main()` which does nothing, so does not provide useful runnable code yet.
 
+
 ## Components
+
 ### `TheGreatEscape`
 This is the main game reimplemented in a single (static) library.
 
@@ -108,7 +114,9 @@ Defines an interface to a virtual ZX Spectrum to which the game talks, replacing
         windows/        - Windows build environment
 ```
 
+
 # Further (Planned) Changes
+
 ## Variable resolution
 The goal in this project, other than an understanding the original game, is to bring the escapade to modern platforms. Those platforms feature various modern marvels including high resolution, high density screens and capacitive touch screens.
 
@@ -118,4 +126,3 @@ This is tricky as at some point we’ll need to dispense with the Spectrum’s c
 
 # Related Links
 [Porting Chuckie Egg](http://marklomas.net/ch-egg/articles/porting-ch-egg.htm)
-
