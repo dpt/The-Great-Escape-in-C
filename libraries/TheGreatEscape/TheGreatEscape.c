@@ -7452,10 +7452,10 @@ int get_next_drawable(tgestate_t    *state,
   while (--iters);
 
   /* Is there an item behind the selected vischar? */
-  item_and_flag = get_greatest_itemstruct(state,
-                                          item_and_flag,
-                                          prev_x, prev_y,
-                                         &found_itemstruct);
+  item_and_flag = get_next_drawable_itemstruct(state,
+                                               item_and_flag,
+                                               prev_x, prev_y,
+                                              &found_itemstruct);
 
   *pindex = item_and_flag; /* Conv: Added */
   /* If the topmost bit of item_and_flag remains set from initialisation,
@@ -11218,63 +11218,58 @@ void mark_nearby_items(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $DBEB: Iterates over all item_structs looking for nearby items.
- *
- * Returns the furthest/highest/nearest/ item? Next frontmost?
+ * $DBEB: Find the next item to draw that is furthest behind (x,y).
  *
  * Leaf.
  *
  * \param[in]  state         Pointer to game state.
  * \param[in]  item_and_flag Initial item_and_flag, passed through if no itemstruct is found. (was A')
- * \param[in]  x             X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
+ * \param[in]  x             X pos? Compared to X. (was BC')
  * \param[in]  y             Y pos? Compared to Y. (was DE')
  * \param[out] pitemstr      Returned pointer to item struct. (was IY)
  *
  * \return item+flag. (was A')
  */
-uint8_t get_greatest_itemstruct(tgestate_t    *state,
-                                item_t         item_and_flag,
-                                uint16_t       x,
-                                uint16_t       y,
-                                itemstruct_t **pitemstr)
+uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
+                                     item_t         item_and_flag,
+                                     uint16_t       x,
+                                     uint16_t       y,
+                                     itemstruct_t **pitemstr)
 {
   uint8_t             iters;   /* was B */
   const itemstruct_t *itemstr; /* was HL */
 
   assert(state    != NULL);
-  // assert(item_and_flag);
-  // assert(x);
-  // assert(y);
   assert(pitemstr != NULL);
 
   *pitemstr = NULL; /* Conv: Added safety initialisation. */
+
+  /* Find the rearmost itemstruct that is flagged for drawing. */
 
   iters   = item__LIMIT;
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
   do
   {
+    /* Select an item if it's behind the point (x,y). */
     const enum itemstruct_room_and_flags FLAGS = itemstruct_ROOM_FLAG_NEARBY_6 |
                                                  itemstruct_ROOM_FLAG_NEARBY_7;
-
-    if ((itemstr->room_and_flags & FLAGS) == FLAGS)
+    /* Conv: Original calls out to multiply by 8, HL' is temp. */
+    if ((itemstr->room_and_flags & FLAGS) == FLAGS &&
+        (itemstr->pos.x * 8 > x) &&
+        (itemstr->pos.y * 8 > y))
     {
-      /* Conv: Original calls out to multiply by 8, HLdash is temp. */
-      if (itemstr->pos.x * 8 > x &&
-          itemstr->pos.y * 8 > y)
-      {
-        const tinypos_t *pos; /* was HL' */
+      const tinypos_t *pos; /* was HL' */
 
-        pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
-        /* Get x,y for the next iteration. */
-        y = pos->y * 8;
-        x = pos->x * 8;
-        *pitemstr = (itemstruct_t *) itemstr;
+      pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
+      /* Calculate (x,y) for the next iteration. */
+      y = pos->y * 8;
+      x = pos->x * 8;
+      *pitemstr = (itemstruct_t *) itemstr;
 
-        /* The original code has an unpaired A register exchange here. If the
-         * loop continues then it's unclear which output register is used. */
-        /* It seems that A' is the output register, irrespective. */
-        item_and_flag = (item__LIMIT - iters) | item_FOUND; /* item index + 'item found' flag */
-      }
+      /* The original code has an unpaired A register exchange here. If the
+       * loop continues then it's unclear which output register is used. */
+      /* It seems that A' is the output register, irrespective. */
+      item_and_flag = (item__LIMIT - iters) | item_FOUND; /* item index + 'item found' flag */
     }
     itemstr++;
   }

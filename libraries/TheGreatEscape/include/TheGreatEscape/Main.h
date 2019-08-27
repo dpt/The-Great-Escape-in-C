@@ -617,11 +617,11 @@ extern const anim_t *animations[animations__LIMIT];
 
 void mark_nearby_items(tgestate_t *state);
 
-uint8_t get_greatest_itemstruct(tgestate_t    *state,
-                                item_t         item_and_flag,
-                                uint16_t       x,
-                                uint16_t       y,
-                                itemstruct_t **pitemstr);
+uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
+                                     item_t         item_and_flag,
+                                     uint16_t       x,
+                                     uint16_t       y,
+                                     itemstruct_t **pitemstr);
 
 uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
