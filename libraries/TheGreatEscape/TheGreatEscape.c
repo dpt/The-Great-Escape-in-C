@@ -7347,7 +7347,7 @@ void plot_sprites(tgestate_t *state)
   for (;;)
   {
     /* This can return a vischar OR an itemstruct, but not both. */
-    found = locate_vischar_or_itemstruct(state, &index, &vischar, &itemstruct);
+    found = get_next_drawable(state, &index, &vischar, &itemstruct);
     if (!found)
       return;
 
@@ -7387,7 +7387,7 @@ void plot_sprites(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B89C: Finds the next vischar or item to draw.
+ * $B89C: Find the next vischar or itemstruct to draw.
  *
  * \param[in]  state       Pointer to game state.
  * \param[out] pindex      Returns (vischars_LENGTH - iters) if vischar,
@@ -7397,10 +7397,10 @@ void plot_sprites(tgestate_t *state)
  *
  * \return Non-zero if if a valid vischar or item was returned.
  */
-int locate_vischar_or_itemstruct(tgestate_t    *state,
-                                 uint8_t       *pindex,
-                                 vischar_t    **pvischar,
-                                 itemstruct_t **pitemstruct)
+int get_next_drawable(tgestate_t    *state,
+                      uint8_t       *pindex,
+                      vischar_t    **pvischar,
+                      itemstruct_t **pitemstruct)
 {
   uint16_t      prev_x;           /* was BC */
   uint16_t      prev_y;           /* was DE */
@@ -7428,13 +7428,16 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   item_and_flag = item_NONE; /* item_NONE used as a 'nothing found' marker */
   height        = 0; /* unused */
 
+  /* Find the rearmost vischar that is flagged for drawing. */
+
   iters   = vischars_LENGTH; /* iterations */
   vischar = &state->vischars[0]; /* Conv: Original code points at vischar[0].counter_and_flags */
   do
   {
+    /* Select a vischar if it's behind the point (prev_x - 4, prev_y - 4). */
     if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) &&
-        (vischar->mi.pos.x + 4 >= prev_x) &&
-        (vischar->mi.pos.y + 4 >= prev_y))
+        (vischar->mi.pos.x >= prev_x - 4) &&
+        (vischar->mi.pos.y >= prev_y - 4))
     {
       item_and_flag = vischars_LENGTH - iters; /* item index */
       height = vischar->mi.pos.height;
@@ -7448,10 +7451,12 @@ int locate_vischar_or_itemstruct(tgestate_t    *state,
   }
   while (--iters);
 
+  /* Is there an item behind the selected vischar? */
   item_and_flag = get_greatest_itemstruct(state,
                                           item_and_flag,
                                           prev_x, prev_y,
                                          &found_itemstruct);
+
   *pindex = item_and_flag; /* Conv: Added */
   /* If the topmost bit of item_and_flag remains set from initialisation,
    * then no vischar was found. item_and_flag is preserved by the call to

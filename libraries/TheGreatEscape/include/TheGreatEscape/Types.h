@@ -339,7 +339,7 @@ enum itemstruct_room_and_flags
   itemstruct_ROOM_NONE                 = 0x3F,  // can probably go
 
   /** Bit 6 is set when the item is nearby.
-   * Cleared by mark_nearby_items() and locate_vischar_or_itemstruct(). */
+   * Cleared by mark_nearby_items() and get_next_drawable(). */
   itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6,
 
   /** Bit 7 is set when the item is nearby.

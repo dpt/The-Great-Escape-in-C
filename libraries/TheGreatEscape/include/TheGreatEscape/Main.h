@@ -489,10 +489,10 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar);
 
 void plot_sprites(tgestate_t *state);
 
-int locate_vischar_or_itemstruct(tgestate_t    *state,
-                                 uint8_t       *pindex,
-                                 vischar_t    **pvischar,
-                                 itemstruct_t **pitemstruct);
+int get_next_drawable(tgestate_t    *state,
+                      uint8_t       *pindex,
+                      vischar_t    **pvischar,
+                      itemstruct_t **pitemstruct);
 
 void render_mask_buffer(tgestate_t *state);
 
