@@ -275,9 +275,9 @@ enum vischar_counter_and_flags_values
    * Set in touch(). */
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6,
 
-  /** Bit 7 is set when touch() was entered, implying that vischar->mi etc.
-   * are setup. Set by touch(). */
-  vischar_TOUCH_ENTERED                = 1 << 7
+  /** Bit 7 is set when touch() is entered, implying that vischar->mi etc.
+   * are setup.*/
+  vischar_DRAWABLE                     = 1 << 7
 };
 
 /**

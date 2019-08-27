@@ -5693,7 +5693,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   assert((sprite_index & ~sprite_FLAG_FLIP) < sprite__LIMIT);
 
   stashed_sprite_index = sprite_index;
-  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_TOUCH_ENTERED; // wild guess: clamp character in position?
+  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_DRAWABLE;
 
   // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
 
@@ -5701,14 +5701,10 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   if (vischar == &state->vischars[0] && state->automatic_player_counter > 0)
     door_handling(state, vischar);
 
-  /* If non-player character or hero is not cutting the fence. */
-  // NPCs are not bounds checked
-  // player is not bounds checked when cutting the fence
+  /* If a non-player character or hero when he's not cutting the fence. */
   if (vischar > &state->vischars[0] || ((state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE)) != vischar_FLAGS_CUTTING_WIRE))
-  {
     if (bounds_check(state, vischar))
       return 1; /* Within wall bounds. */
-  }
 
   if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
     if (collision(state))
@@ -7435,7 +7431,7 @@ int get_next_drawable(tgestate_t    *state,
   do
   {
     /* Select a vischar if it's behind the point (prev_x - 4, prev_y - 4). */
-    if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) &&
+    if ((vischar->counter_and_flags & vischar_DRAWABLE) &&
         (vischar->mi.pos.x >= prev_x - 4) &&
         (vischar->mi.pos.y >= prev_y - 4))
     {
@@ -7469,7 +7465,7 @@ int get_next_drawable(tgestate_t    *state,
   {
     /* Vischar found */
 
-    found_vischar->counter_and_flags &= ~vischar_TOUCH_ENTERED;
+    found_vischar->counter_and_flags &= ~vischar_DRAWABLE;
 
     *pvischar = found_vischar; /* Conv: Added */
 
