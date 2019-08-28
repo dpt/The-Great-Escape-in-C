@@ -9959,7 +9959,8 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* When on a route (.x != 255) advance the counter (.y) in the required direction. */
+  /* When on a route (route.index != 255) advance route.step in the
+   * required direction. */
   route = vischar->route.index;
   if (route != routeindex_255_WANDER)
   {
