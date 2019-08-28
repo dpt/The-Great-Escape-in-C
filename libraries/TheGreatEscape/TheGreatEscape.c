@@ -916,10 +916,10 @@ const door_t doors[door_MAX * 2] =
   { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 122,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 178, 126,  6 } },
   // 2
-  { ROOMDIR(room_34,                      TL), { 138, 179,  6 } },
+  { ROOMDIR(room_34,                      TL), { 138, 179,  6 } },  // tunnels 2 (end)
   { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 3
-  { ROOMDIR(room_48,                      TL), { 204, 121,  6 } },
+  { ROOMDIR(room_48,                      TL), { 204, 121,  6 } },  // tunnels 1 (end)
   { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 4
   { ROOMDIR(room_28_HUT1LEFT,             TR), { 217, 163,  6 } },
