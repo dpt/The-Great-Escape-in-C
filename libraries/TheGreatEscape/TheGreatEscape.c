@@ -8534,7 +8534,7 @@ again:
     {
       vischar->target.x = location->x;
       vischar->target.y = location->y;
-      // Note we're not setting .z here.
+      // Note we're not assigning .height here.
     }
   }
   vischar->counter_and_flags = 0;
