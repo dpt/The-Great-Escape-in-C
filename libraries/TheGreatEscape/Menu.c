@@ -221,7 +221,7 @@ static void choose_keys(tgestate_t *state)
     wipe_game_window(state);
     set_game_window_attributes(state, attribute_WHITE_OVER_BLACK);
 
-    /* Draw key choice prompt strings. */
+    /* Draw key choice prompts. */
     prompt_iters = NELEMS(choose_key_prompts);
     prompt = &choose_key_prompts[0];
     do
@@ -245,7 +245,7 @@ static void choose_keys(tgestate_t *state)
     }
     while (--prompt_iters);
 
-    /* Wipe keydefs. */
+    /* Wipe key definitions. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
 
     uint8_t Adash = 0; /* was A' */ // initialised to zero
@@ -257,7 +257,7 @@ static void choose_keys(tgestate_t *state)
       do
       {
         uint16_t  screenoff;  /* was $F3E9 */
-        uint8_t   A; /* was A */ // seems to be a row count
+        uint8_t   A; /* was A */
 
         // this block moved up for scope
         keydef_t *keydef;  /* was HL */
@@ -265,7 +265,7 @@ static void choose_keys(tgestate_t *state)
         uint8_t   mask;    /* was C */
 
         screenoff = *poffset++; // self modify screen addr
-        A = 0xFF;
+        A = 0xFF; /* debounce */
 
         {
           const uint8_t *hi_bytes;    /* was HL */
@@ -278,9 +278,7 @@ static void choose_keys(tgestate_t *state)
 for_loop:
           for (;;)
           {
-
             SWAP(uint8_t, A, Adash);
-
             hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
             index = 0xFF;
 try_next_port:
@@ -299,17 +297,17 @@ key_loop:
             if (carry)
               goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
 
-            A = mask;
-            A = A & keyflags;
+            A = mask & keyflags;
             if (A == 0) // temps: A'
               goto key_loop; /* Key was not pressed. Move to next key. */
 
             SWAP(uint8_t, A, Adash);
 
+            /* Keep looping until we've done a full keyscan with no result - debounce */
             if (A)
               goto for_loop;
 
-            /* Draw the pressed key. */
+            /* ... */
 
             A = index;
 
@@ -338,6 +336,7 @@ assign_keydef:
         keydef->port = port;
         keydef->mask = mask;
 
+        /* Plot */
         {
           const unsigned char *pglyph;          /* was HL */
           const char          *pkeyname;        /* was HL */
@@ -364,7 +363,8 @@ assign_keydef:
 
           if (glyph_and_flags & (1 << 7))
           {
-            /* If the top bit was set then it's a modifier key. */
+            /* If the top bit was set then it's a special key,
+             * like BREAK or ENTER. */
             pkeyname = &special_key_names[glyph_and_flags & ~(1 << 7)];
             length = *pkeyname++;
           }
