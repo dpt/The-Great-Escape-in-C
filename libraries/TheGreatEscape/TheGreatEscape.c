@@ -5686,16 +5686,15 @@ exit:
  */
 int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 {
-  spriteindex_t stashed_sprite_index; /* was $81AA */ // FUTURE: Can be removed.
+  /* Conv: Removed $81AA stashed sprite index. */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert((sprite_index & ~sprite_FLAG_FLIP) < sprite__LIMIT);
 
-  stashed_sprite_index = sprite_index;
   vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_DRAWABLE;
 
-  // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
+  /* Conv: Removed little register shuffle to get (vischar & 0xFF) into A. */
 
   /* If hero is player controlled then check for door transitions. */
   if (vischar == &state->vischars[0] && state->automatic_player_counter > 0)
@@ -5704,9 +5703,10 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   /* If a non-player character or hero when he's not cutting the fence. */
   if (vischar > &state->vischars[0] || ((state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE)) != vischar_FLAGS_CUTTING_WIRE))
     if (bounds_check(state, vischar))
-      return 1; /* Within wall bounds. */
+      return 1; /* Outwith wall bounds. */
 
-  if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
+  /* Check "real" characters for collisions. */
+  if (vischar->character <= character_25_PRISONER_6) /* character temp was in A' */
     if (collision(state))
       // there was a collision
       return 1;
@@ -5715,7 +5715,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 
   vischar->counter_and_flags &= ~vischar_BYTE7_DONT_MOVE_MAP; // clear
   vischar->mi.pos           = state->saved_pos.pos;
-  vischar->mi.sprite_index  = stashed_sprite_index; // left/right flip flag / sprite offset
+  vischar->mi.sprite_index  = sprite_index; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
   return 0; // Z
