@@ -9018,8 +9018,8 @@ trigger_event:
 
       DEcharstr_tinypos = &DEcharstr->pos;
 
-      B = change_by_delta(max, 0, &HLtinypos2->x, &DEcharstr_tinypos->x); // max, rc, second, first
-      B = change_by_delta(max, B, &HLtinypos2->y, &DEcharstr_tinypos->y);
+      B = move_towards(max, 0, &HLtinypos2->x, &DEcharstr_tinypos->x); // max, rc, second, first
+      B = move_towards(max, B, &HLtinypos2->y, &DEcharstr_tinypos->y);
       if (B != 2)
         return; /* Managed to move. */
 
@@ -9080,8 +9080,8 @@ trigger_event:
       // => locations[]
       // HL comes from HLlocation
 
-      B = change_by_delta(max, 0, &HLlocation->x, &charstr->pos.x);
-      B = change_by_delta(max, B, &HLlocation->y, &charstr->pos.y);
+      B = move_towards(max, 0, &HLlocation->x, &charstr->pos.x);
+      B = move_towards(max, B, &HLlocation->y, &charstr->pos.y);
       if (B != 2)
         return; // managed to move
     }
@@ -9101,7 +9101,7 @@ trigger_event:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C79A: Increments 'first' by ('first' - 'second').
+ * $C79A: Moves the first value toward the second.
  *
  * Used only by move_characters().
  *
@@ -9114,10 +9114,10 @@ trigger_event:
  *
  * \return rc as passed in, or rc incremented if delta was zero. (was B)
  */
-int change_by_delta(int8_t         max,
-                    int            rc,
-                    const uint8_t *second,
-                    uint8_t       *first)
+int move_towards(int8_t         max,
+                 int            rc,
+                 const uint8_t *second,
+                 uint8_t       *first)
 {
   int delta; /* was A */
 

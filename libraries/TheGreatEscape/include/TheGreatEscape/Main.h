@@ -534,10 +534,10 @@ uint8_t get_target(tgestate_t       *state,
 
 void move_characters(tgestate_t *state);
 
-int change_by_delta(int8_t         max,
-                    int            rc,
-                    const uint8_t *second,
-                    uint8_t       *first);
+int move_towards(int8_t         max,
+                 int            rc,
+                 const uint8_t *second,
+                 uint8_t       *first);
 
 // this is small enough to INLINE
 characterstruct_t *get_character_struct(tgestate_t *state,
