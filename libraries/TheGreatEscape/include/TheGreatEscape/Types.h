@@ -405,7 +405,7 @@ enum door_flags
  */
 enum searchlight_state
 {
-  /** Number of turns before the spotlight gives up looking when the hero
+  /** Number of turns before the searchlight gives up looking when the hero
    * hides behind something. */
   searchlight_STATE_CAUGHT             = 0x1F,
 

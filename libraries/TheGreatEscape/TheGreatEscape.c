@@ -5430,7 +5430,7 @@ void nighttime(tgestate_t *state)
     goto middle_bit;
   }
 
-  /* When not tracking the hero all three spotlights are cycled through. */
+  /* When not tracking the hero all three searchlights are cycled through. */
 
   slstate = &state->searchlight.states[0];
   iters = 3; // 3 iterations == three searchlights
@@ -5444,8 +5444,8 @@ void nighttime(tgestate_t *state)
 
     /* Would the searchlight intersect with the game window? */
     // Conv: Reordered into the expected series
-    // first check is if the spotlight image is off the left hand side
-    // second check is if the spotlight image is off the right hand side
+    // first check is if the searchlight image is off the left hand side
+    // second check is if the searchlight image is off the right hand side
     // etc.
     if (slstate->xy.x + 16 < map_x || slstate->xy.x >= map_x + state->columns ||
         slstate->xy.y + 16 < map_y || slstate->xy.y >= map_y + state->rows)
@@ -5479,7 +5479,7 @@ next:
 }
 
 /**
- * $AE78: Is the hero is caught in the spotlight?
+ * $AE78: Is the hero is caught in the searchlight?
  *
  * \param[in] state   Pointer to game state.
  * \param[in] slstate Pointer to per-searchlight state. (was HL)
@@ -5523,7 +5523,7 @@ void searchlight_caught(tgestate_t                   *state,
  *
  * \param[in] state     Pointer to game state.
  * \param[in] attrs     Pointer to screen attributes (can be out of bounds!) (was DE)
- * \param[in] clip_left Spotlight is to the left of the main window. (was $AE75)
+ * \param[in] clip_left Searchlight is to the left of the main window. (was $AE75)
  */
 void searchlight_plot(tgestate_t  *state,
                       attribute_t *attrs,
@@ -7317,12 +7317,13 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   do
   {
     if (*buf != 0)
-      goto still_in_spotlight;
+      goto still_in_searchlight;
     buf += MASK_BUFFER_WIDTHBYTES;
   }
   while (--iters);
 
-  /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
+  /* Otherwise the hero has escaped the searchlight, so decrement the
+   * counter. */
   if (--state->searchlight_state == searchlight_STATE_SEARCHING)
   {
     attrs = choose_game_window_attributes(state);
@@ -7331,7 +7332,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
 
   return;
 
-still_in_spotlight:
+still_in_searchlight:
   state->searchlight_state = searchlight_STATE_CAUGHT;
 }
 
