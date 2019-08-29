@@ -6183,7 +6183,8 @@ found:
 /**
  * $B252: Test whether an exterior door is in range.
  *
- * (saved_X,saved_Y) within (-2,+2) of HL[1..] scaled << 2
+ * A door is in range if (saved_X,saved_Y) is within (-3,+2) of its position
+ * (once scaled).
  *
  * \param[in] state Pointer to game state.
  * \param[in] door  Pointer to door_t. (was HL)
@@ -6587,9 +6588,9 @@ void action_wiresnips(tgestate_t *state)
     {
       coord = pos->x;
       if (coord == wall->maxx)
-        goto set_to_4;
+        goto snips_crawl_tl;
       if (coord - 1 == wall->maxx)
-        goto set_to_6;
+        goto snips_crawl_br;
     }
 
     wall++;
@@ -6608,9 +6609,9 @@ void action_wiresnips(tgestate_t *state)
     {
       coord = pos->y;
       if (coord == wall->miny)
-        goto set_to_5;
+        goto snips_crawl_tr;
       if (coord - 1 == wall->miny)
-        goto set_to_7;
+        goto snips_crawl_bl;
     }
 
     wall++;
@@ -6619,19 +6620,19 @@ void action_wiresnips(tgestate_t *state)
 
   return;
 
-set_to_4: /* Crawl TL */
+snips_crawl_tl: /* Crawl TL */
   flag = direction_TOP_LEFT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_5: /* Crawl TR. */
+snips_crawl_tr: /* Crawl TR */
   flag = direction_TOP_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_6: /* Crawl BR. */
+snips_crawl_br: /* Crawl BR */
   flag = direction_BOTTOM_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_7: /* Crawl BL. */
+snips_crawl_bl: /* Crawl BL */
   flag = direction_BOTTOM_LEFT | vischar_DIRECTION_CRAWL;
 
 action_wiresnips_tail:
