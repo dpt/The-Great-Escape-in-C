@@ -879,6 +879,7 @@ roomdef_address_t;
  */
 static const roomdef_address_t beds[beds_LENGTH] =
 {
+  /* Conv: The original game uses pointers here. */
   { room_3_HUT2RIGHT, roomdef_3_BED_A },
   { room_3_HUT2RIGHT, roomdef_3_BED_B },
   { room_3_HUT2RIGHT, roomdef_3_BED_C },
@@ -7450,7 +7451,7 @@ int get_next_drawable(tgestate_t    *state,
         (vischar->mi.pos.x >= prev_x - 4) &&
         (vischar->mi.pos.y >= prev_y - 4))
     {
-      item_and_flag = vischars_LENGTH - iters; /* item index */
+      item_and_flag = vischars_LENGTH - iters; /* Vischar index (never usefully used). */
       height = vischar->mi.pos.height;
 
       /* Note: The y,x order here matches the original code */
@@ -8928,7 +8929,7 @@ void move_characters(tgestate_t *state)
   // PUSH HL_pos
   // HL += 3; // point at charstr->route
 
-  /* If standing still, return. */
+  /* If the character is standing still, return. */
   if (charstr->route.index == routeindex_0_HALT) /* temp was A */
     // POP HL_pos
     return;
@@ -8939,7 +8940,7 @@ void move_characters(tgestate_t *state)
                                  &HLlocation);
   if (get_target_result == get_target_ROUTE_ENDS)
   {
-    /* When the route ends reverse the route. */
+    /* When the route ends, reverse the route. */
 
     HLroute = &charstr->route;
 
@@ -9106,7 +9107,7 @@ trigger_event:
  *
  * Leaf.
  *
- * \param[in] max    A maximum value, usually 2 or 6. (was A')
+ * \param[in] max    Some maximum value, usually 2 or 6. (was A')
  * \param[in] rc     Return code. Incremented if delta is zero. (was B)
  * \param[in] second Pointer to second value. (was HL)
  * \param[in] first  Pointer to first value. (was DE)
@@ -9533,7 +9534,7 @@ void automatics(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C918: Character behaviour stuff.
+ * $C918: Character behaviour.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -10702,6 +10703,7 @@ next:
   /* Set the commandant on a path which results in the hero being released. */
   memcpy(&state->character_structs[character_0_COMMANDANT].room, &solitary_commandant_reset_data, 6);
 
+  /* Queue solitary messages. */
   queue_message(state, message_YOU_ARE_IN_SOLITARY);
   queue_message(state, message_WAIT_FOR_RELEASE);
   queue_message(state, message_ANOTHER_DAY_DAWNS);
@@ -10756,7 +10758,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (state->room_index == room_0_OUTDOORS)
   {
     tinypos_t *hero_map_pos;  /* was HL */
-    int        dir;           /* Conv */
+    int        dir;           /* Conv: was carry */
     uint8_t    direction;     /* was A / C */
 
     pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
@@ -10961,7 +10963,7 @@ int is_item_discoverable_interior(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CD31: Item discovered. / reset item
+ * $CD31: An item is discovered.
  *
  * \param[in] state Pointer to game state.
  * \param[in] item  Item. (was C)
@@ -12957,7 +12959,7 @@ TGE_API void tge_setup(tgestate_t *state)
 
   wipe_full_screen_and_attributes(state);
   set_morale_flag_screen_attributes(state, attribute_BRIGHT_GREEN_OVER_BLACK);
-  /* The original code seems to pass in 68, not zero, as it uses a register
+  /* Conv: The original code passes in 68, not zero, as it uses a register
    * left over from a previous call to set_morale_flag_screen_attributes(). */
   set_menu_item_attributes(state, 0, attribute_BRIGHT_YELLOW_OVER_BLACK);
   plot_statics_and_menu_text(state);
