@@ -6818,7 +6818,7 @@ next_locked_door:
     // FUTURE: Move this into the body of the loop.
 found:
     door = get_door(*interior_doors);
-    /* Range check pattern (-2..+2). */
+    /* Range check pattern (-2..+3). */
     pos = &state->saved_pos.pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
     if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
