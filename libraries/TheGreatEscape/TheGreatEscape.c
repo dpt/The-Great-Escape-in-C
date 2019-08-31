@@ -1645,7 +1645,7 @@ void main_loop(tgestate_t *state)
   process_player_input(state);
   in_permitted_area(state);
   restore_tiles(state);
-  move_characters(state);
+  move_a_character(state);
   automatics(state);
   purge_invisible_characters(state);
   spawn_characters(state);
@@ -3276,7 +3276,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  state->entered_move_characters = 0;
+  state->entered_move_a_character = 0;
 
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
@@ -3360,7 +3360,7 @@ void store_route(route_t route, route_t *proute)
 /**
  * $A3F3: Send a character to bed.
  *
- * (entered_move_characters is non-zero.)
+ * (entered_move_a_character is non-zero.)
  *
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to route. (was HL)
@@ -3375,7 +3375,7 @@ void character_bed_state(tgestate_t *state, route_t *route)
 }
 
 /**
- * $A3F8: entered_move_characters is zero.
+ * $A3F8: entered_move_a_character is zero.
  *
  * Gets hit when hero enters hut at end of day.
  *
@@ -3724,7 +3724,7 @@ void set_route_go_to_breakfast(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A4D3: entered_move_characters is non-zero (another one).
+ * $A4D3: entered_move_a_character is non-zero (another one).
  *
  * Very similar to the routine at $A3F3.
  *
@@ -3741,7 +3741,7 @@ void charevnt_breakfast_state(tgestate_t *state, route_t *route)
 }
 
 /**
- * $A4D8: entered_move_characters is zero (another one).
+ * $A4D8: entered_move_a_character is zero (another one).
  *
  * \param[in] state Pointer to game state.
  * \param[in] route Pointer to route. (was HL)
@@ -8499,7 +8499,7 @@ found_empty_slot:
 again:
   if (HLroute->index != routeindex_0_HALT) /* if not stood still */
   {
-    state->entered_move_characters = 0;
+    state->entered_move_a_character = 0;
     // PUSH DE // -> vischar->pos
     get_target_result = get_target(state,
                                    HLroute,
@@ -8882,7 +8882,7 @@ uint8_t get_target(tgestate_t       *state,
  *
  * \param[in] state Pointer to game state.
  */
-void move_characters(tgestate_t *state)
+void move_a_character(tgestate_t *state)
 {
   character_t        character;               /* was A */
   characterstruct_t *charstr;                 /* was HL */
@@ -8902,7 +8902,7 @@ void move_characters(tgestate_t *state)
   assert(state != NULL);
 
   /* This makes future character events use state->character_index. */
-  state->entered_move_characters = 255;
+  state->entered_move_a_character = 255;
 
   /* Move to the next character, wrapping around after character 26. */
   character = state->character_index + 1;
@@ -9104,7 +9104,7 @@ trigger_event:
 /**
  * $C79A: Moves the first value toward the second.
  *
- * Used only by move_characters().
+ * Used only by move_a_character().
  *
  * Leaf.
  *
@@ -9407,7 +9407,7 @@ void charevnt_wander_top(tgestate_t *state, route_t *route)
  */
 void charevnt_bed(tgestate_t *state, route_t *route)
 {
-  if (state->entered_move_characters == 0)
+  if (state->entered_move_a_character == 0)
     character_bed_vischar(state, route);
   else
     character_bed_state(state, route);
@@ -9418,7 +9418,7 @@ void charevnt_bed(tgestate_t *state, route_t *route)
  */
 void charevnt_breakfast(tgestate_t *state, route_t *route)
 {
-  if (state->entered_move_characters == 0)
+  if (state->entered_move_a_character == 0)
     charevnt_breakfast_vischar(state, route);
   else
     charevnt_breakfast_state(state, route);
@@ -9468,7 +9468,7 @@ void automatics(tgestate_t *state)
   assert(state != NULL);
 
   /* (I've still no idea what this flag means). */
-  state->entered_move_characters = 0;
+  state->entered_move_a_character = 0;
 
   /* If the bell is ringing, hostiles pursue. */
   if (state->bell == bell_RING_PERPETUAL)
