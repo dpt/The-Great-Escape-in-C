@@ -11361,8 +11361,8 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                   &clipped_height))
     return 0; /* invisible */
 
-  // PUSH clipped_width
-  // PUSH clipped_height
+  // PUSH left_skip + clipped_width
+  // PUSH top_skip + clipped_height
 
   state->self_E2C2 = clipped_height; // self modify masked_sprite_plotter_16_wide_left
 
@@ -11412,7 +11412,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
 
   maskbuf = &state->mask_buffer[0];
 
-  // POP DE  // get clipped_height
+  // POP DE  // get top_skip + clipped_height
   // PUSH DE
 
   state->foreground_mask_pointer = &maskbuf[top_skip * 4];
@@ -11464,10 +11464,6 @@ uint8_t setup_item_plotting(tgestate_t   *state,
  * $DD02: Clips the given item's dimensions against the game window.
  *
  * Returns 1 if the item is outside the game window, or zero if visible.
- *
- * If the item spans a boundary a packed field is returned in the
- * respective clipped width/height. The low byte holds the width/height to
- * draw and the high byte holds the number of columns/rows to skip.
  *
  * Counterpart to \ref vischar_visible.
  *
@@ -12425,8 +12421,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint8_t            top_skip;       /* was D */
   uint8_t            clipped_height; /* was E */
   const size_t      *enables;        /* was HL */
-  uint8_t            self_E4C0;      /* was $E4C0 */
-  uint8_t            offset;         /* was A' */
+  uint8_t            enable_count;   /* was $E4C0 */
+  uint8_t            counter;        /* was A' */
   uint8_t            iters;          /* was B' */
   uint8_t            E;              /* was E */
   uint8_t            instr;          /* was A */
@@ -12459,12 +12455,12 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   }
 
   sprite = vischar->mi.sprite;
-  // banked in A'
 
+  // banked in A'
   state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
-  // HL now points after sprite_index
-  // DE now points to state->map_position_related.x
+  // HL now points after sprite_index, at iso_pos
+  // DE now points to state->iso_pos.x
 
   // unrolled versus original
   state->iso_pos.x = vischar->iso_pos.x >> 3;
@@ -12502,7 +12498,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     state->self_E2C2 = E; // self modify masked_sprite_plotter_16_wide_left
     state->self_E363 = E; // self-modify masked_sprite_plotter_16_wide_right
 
-    A = 3;
+    enable_count = 3;
     enables = &masked_sprite_plotter_16_enables[0];
   }
   else
@@ -12510,24 +12506,24 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift right case)
     state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift left case)
 
-    A = 4;
+    enable_count = 4;
     enables = &masked_sprite_plotter_24_enables[0];
   }
 
   // PUSH HL_enables
 
-  self_E4C0 = A; // self-modify
+  // enable_count = A; // self-modify
   // E = A
   // A = B
   if (left_skip == 0) // no lefthand skip: start with 'on'
   {
     instr = 119; /* opcode of 'LD (HL),A' */
-    offset = clipped_width; // process this many bytes before clipping
+    counter = clipped_width; // process this many bytes before clipping
   }
   else // lefthand skip present: start with 'off'
   {
     instr = 0; /* opcode of 'NOP' */
-    offset = A - clipped_width; // clip until this many bytes have been processed
+    counter = enable_count - clipped_width; // clip until this many bytes have been processed
   }
 
   // EXX
@@ -12535,12 +12531,12 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   /* Set the addresses in the jump table to NOP or LD (HL),A. */
   //Cdash = offset; // must be no of columns?
-  iters = self_E4C0; /* 3 or 4 iterations */
+  iters = enable_count; /* 3 or 4 iterations */
   do
   {
     *(((uint8_t *) state) + *enables++) = instr;
     *(((uint8_t *) state) + *enables++) = instr;
-    if (--offset == 0)
+    if (--counter == 0)
       instr ^= 119; /* Toggle between LD and NOP. */
   }
   while (--iters);
