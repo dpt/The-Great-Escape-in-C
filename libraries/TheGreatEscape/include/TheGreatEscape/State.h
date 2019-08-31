@@ -259,13 +259,13 @@ struct tgestate
 
   /** $A13E: Set to 0xFF when character_index is to be used for character events. Zero for vischar events.
    *
-   * Set to 0xFF only when move_characters is entered.
+   * Set to 0xFF only when move_a_character is entered.
    * Set to 0x00 in set_route, follow_suspicious_character and spawn_character.
    *
    * Causes character events to use character_index, not IY (vischar). This
    * needs to get set ahead of anything which causes a character event.
    */
-  uint8_t         entered_move_characters;
+  uint8_t         entered_move_a_character;
 
   /** $A13F: The hero is in bed (flag: 0 or 255). */
   uint8_t         hero_in_bed;

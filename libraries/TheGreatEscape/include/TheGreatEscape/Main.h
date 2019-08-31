@@ -532,7 +532,7 @@ uint8_t get_target(tgestate_t       *state,
                    const tinypos_t **doorpos,
                    const xy_t      **location);
 
-void move_characters(tgestate_t *state);
+void move_a_character(tgestate_t *state);
 
 int move_towards(int8_t         max,
                  int            rc,
