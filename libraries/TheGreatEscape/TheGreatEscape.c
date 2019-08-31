@@ -8314,7 +8314,7 @@ void purge_invisible_characters(tgestate_t *state)
     //
     // /* Calculate clamped upper bound. */
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
-    // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
+    // maxy = MIN(miny + EDGE + (state->rows - 1) + EDGE, 255);
     //
     // t = (vischar->iso_pos.y + 4) / 8 / 256; // round
     // if (t <= miny || t > maxy)
@@ -8323,18 +8323,19 @@ void purge_invisible_characters(tgestate_t *state)
     // if (t <= minx || t > maxx)
     //   goto reset;
 
-    // Conv: Replaced constants with state->columns/rows.
+    /* Conv: Replaced screen dimension constants with state->columns/rows. */
 
     hi = vischar->iso_pos.y >> 8;
     lo = vischar->iso_pos.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
-    if (lo <= miny || lo > MIN(miny + GRACE + (state->rows + 1) + GRACE, 255)) // Conv: C -> A
+    /* The original code uses 16 instead of 17 for 'rows' so match that. */
+    if (lo <= miny || lo > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
       goto reset;
 
     hi = vischar->iso_pos.x >> 8;
     lo = vischar->iso_pos.x & 0xFF;
     divide_by_8(&lo, &hi);
-    if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255)) // Conv: C -> A
+    if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255))
       goto reset;
 
     goto next;
