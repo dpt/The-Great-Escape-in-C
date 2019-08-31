@@ -7887,7 +7887,7 @@ int vischar_visible(tgestate_t      *state,
   available_right = window_right_edge - state->iso_pos.x;
   if (available_right <= 0)
     /* Case (E): Vischar is beyond the window's right edge. */
-    goto invisible;
+    goto not_visible;
 
   /* Check for vischar partway off-screen. */
   if (available_right < vischar->width_bytes)
@@ -7907,7 +7907,7 @@ int vischar_visible(tgestate_t      *state,
     available_left = vischar_right_edge - state->map_position.x;
     if (available_left <= 0)
       /* Case (A): Vischar's right edge is beyond the window's left edge. */
-      goto invisible;
+      goto not_visible;
 
     /* Check for vischar partway off-screen. */
     if (available_left < vischar->width_bytes)
@@ -7935,14 +7935,14 @@ int vischar_visible(tgestate_t      *state,
   /* Conv: Rows was constant 17; replaced with state var. */
   window_bottom_edge = state->map_position.y + state->rows;
 
-  /* Subtracting the vischar's y yields the space available between window's
+  /* Subtracting the vischar's y gives the space available between window's
    * bottom edge and the vischar's top. */
   available_bottom = window_bottom_edge * 8 - vischar->iso_pos.y;
   // FUTURE: The second test here can be gotten rid of if available_bottom is
   //         made signed.
   if (available_bottom <= 0 || available_bottom >= 256)
     /* Case (E): Vischar is beyond the window's bottom edge. */
-    goto invisible;
+    goto not_visible;
 
   /* Check for vischar partway off-screen. */
   if (available_bottom < vischar->height)
@@ -7962,7 +7962,7 @@ int vischar_visible(tgestate_t      *state,
     available_top = vischar_bottom_edge - state->map_position.y * 8;
     if (available_top <= 0 || available_top >= 256)
       /* Case (A): Vischar's bottom edge is beyond the window's top edge. */
-      goto invisible;
+      goto not_visible;
 
     /* Check for vischar partway off-screen. */
     if (available_top < vischar->height)
@@ -7987,7 +7987,7 @@ int vischar_visible(tgestate_t      *state,
   return 0; /* Visible */
 
 
-invisible:
+not_visible:
   return 255;
 }
 
