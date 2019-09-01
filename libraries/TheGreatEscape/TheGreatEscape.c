@@ -11218,10 +11218,9 @@ void mark_nearby_items(tgestate_t *state)
   {
     const xy_t iso_pos = itemstruct->iso_pos; /* new */
 
-    /* Conv: Ranges adjusted. */ // but it still looks asymmetric...
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (iso_pos.x >= map_xy.x - 1 && iso_pos.x <= map_xy.x + (state->columns + 1) - 1) &&
-        (iso_pos.y >= map_xy.y     && iso_pos.y <= map_xy.y + state->rows))
+        (map_xy.x - 2 >= iso_pos.x && map_xy.x + (state->columns - 1) <= iso_pos.x) &&
+        (map_xy.y - 1 >= iso_pos.y && map_xy.y + (state->rows    - 1) <= iso_pos.y))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
