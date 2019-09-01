@@ -7292,7 +7292,7 @@ void reset_map_and_characters(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B83B: Check the mask buffer to see if the hero is hiding behind something.
+ * $B83B: Check the mask data to see if the hero is hiding behind something.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -7535,121 +7535,113 @@ void render_mask_buffer(tgestate_t *state)
   {
     /* Outdoors */
 
-    iters = NELEMS(exterior_mask_data); /* BUG FIX: Was 59 (should be 58). */
-    pmask = &exterior_mask_data[0]; /* Conv: Original game points at pmask->bounds.x1. Fixed by propagation. */
+    iters = NELEMS(exterior_mask_data); // Bug? Was 59 (one too large).
+    pmask = &exterior_mask_data[0]; // offset by +2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
   }
 
-  uint8_t        A;                   /* was A */
-  const uint8_t *mask_pointer;        /* was DE */
-  uint16_t       mask_skip;           /* was HL */
-  uint8_t       *mask_buffer_pointer; /* was $81A0 */
+  uint8_t         A;                   /* was A */
+  const uint8_t  *mask_pointer;        /* was DE */
+  uint16_t        mask_skip;           /* was HL */
+  uint8_t        *mask_buffer_pointer; /* was $81A0 */
 
-  /* Fill the mask buffer with the union of all matching masks. */
+  /* Mask against all. */
   do
   {
-    uint8_t iso_pos_x, iso_pos_y, height; /* was A/C, A, A */
-    uint8_t mask_left_skip;               /* was $B837 */
-    uint8_t mask_top_skip;                /* was $B838 */
-    uint8_t mask_run_height;              /* was $B839 */
-    uint8_t mask_run_width;               /* was $B83A */
-    uint8_t mask_row_skip;                /* was $BA90 - self modified */
-    uint8_t buf_row_skip;                 /* was $BABA - self modified */
+    uint8_t scrx, scry, height; /* was A/C, A, A */
+    uint8_t clip_x;       /* was $B837 */ // x0 offset
+    uint8_t clip_y;       /* was $B838 */ // y0 offset
+    uint8_t clip_height;  /* was $B839 */ // y0 offset 2
+    uint8_t clip_width;   /* was $B83A */ // x0 offset 2
+    uint8_t self_BA90;    /* was $BA90 - self modified */
+    uint8_t skip;         /* was $BABA - self modified */
 
-    /* Skip any masks which don't overlap the character.
-     *
-     * pmask->bounds is a visual position on the map image (isometric map space)
-     * pmask->pos is a map position (map space)
-     * so we can cull masks if not on-screen and we can cull masks if behind play
-     */
+    /* Skip any masks which aren't on-screen. */
 
-    iso_pos_x = state->iso_pos.x;
-    iso_pos_y = state->iso_pos.y; /* Conv: Reordered */
-    if (iso_pos_x - 1 >= pmask->bounds.x1 || iso_pos_x + 3 < pmask->bounds.x0 ||
-        iso_pos_y - 1 >= pmask->bounds.y1 || iso_pos_y + 4 < pmask->bounds.y0)
+    // PUSH BC, PUSH HL
+
+    // pmask->bounds is a visual position on the map image (isometric map space)
+    // pmask->pos is a map position (map space)
+    // so we can cull masks if not on-screen and we can cull masks if behind player
+
+    scrx = state->iso_pos.x;
+    scry = state->iso_pos.y; // reordered
+    if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0 ||
+        scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0)  // $EC03,$EC02 $EC05,$EC04
       goto pop_next;
 
-    /* CHECK: What's in state->tinypos_stash at this point? It's set by
-     * setup_vischar_plotting, setup_item_plotting. */
+    // what's in state->tinypos_stash at this point?
+    // it's set by setup_vischar_plotting, setup_item_plotting
 
     if (state->tinypos_stash.x <= pmask->pos.x ||
-        state->tinypos_stash.y <  pmask->pos.y)
+        state->tinypos_stash.y <  pmask->pos.y) // $EC06, $EC07
       goto pop_next;
 
     height = state->tinypos_stash.height;
     if (height)
-      height--; /* make inclusive */
-    if (height >= pmask->pos.height)
+      height--; // make inclusive?
+    if (height >= pmask->pos.height) // $EC08
       goto pop_next;
 
-    /* The mask is valid: now work out clipping offsets, widths and heights. */
+    /* Work out clipping offsets, widths and heights. */
 
-    /* Conv: Removed dupe of earlier load of iso_pos_x. */
-    if (iso_pos_x >= pmask->bounds.x0)
+    // Conv: removed dupe of earlier load of scrx
+    if (scrx >= pmask->bounds.x0) // must be $EC02
     {
-      mask_left_skip  = iso_pos_x - pmask->bounds.x0; /* left edge skip for mask */
-      mask_run_width  = MIN(pmask->bounds.x1 - iso_pos_x, 3) + 1;
+      clip_x      = scrx - pmask->bounds.x0;
+      clip_width  = MIN(pmask->bounds.x1 - scrx, 3) + 1;
     }
     else
     {
-      /* Conv: Removed pmask->bounds.x0 cached in x0 (was B). */
-      mask_left_skip  = 0; /* no left edge skip */
-      mask_run_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, iso_pos_x + 4 - pmask->bounds.x0);
+      // Conv: removed pmask->bounds.x0 cached in x0 (was B)
+      clip_x      = 0;
+      clip_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - scrx));
     }
 
-    /* Conv: Removed dupe of earlier load of iso_pos_y. */
-    if (iso_pos_y >= pmask->bounds.y0)
+    // Conv: removed dupe of earlier load of scry
+    if (scry >= pmask->bounds.y0)
     {
-      mask_top_skip   = iso_pos_y - pmask->bounds.y0; /* top edge skip for mask */
-      mask_run_height = MIN(pmask->bounds.y1 - iso_pos_y, 4) + 1;
+      clip_y      = scry - pmask->bounds.y0;
+      clip_height = MIN(pmask->bounds.y1 - scry, 4) + 1;
     }
     else
     {
-      /* Conv: Removed pmask->bounds.y0 cached in x0 (was B). */
-      mask_top_skip   = 0; /* no top edge skip */
-      mask_run_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, iso_pos_y + 5 - pmask->bounds.y0);
+      // Conv: removed pmask->bounds.y0 cached in x0 (was B)
+      clip_y      = 0;
+      clip_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - scry));
     }
 
-    /* Note: In the original code, HL is here decremented to point at member
-     *       y0. */
+    // In the original code, HL is here decremented to point at member y0.
 
-    /* Calculate the initial mask buffer pointer. */
     {
-      uint8_t buf_top_skip, buf_left_skip; /* was C, B */
-      uint8_t index;                       /* was A */
+      uint8_t x, y;  /* was B, C */ // x,y are the correct way around here i think!
+      uint8_t index; /* was A */
 
-      /* When the mask has a top or left hand gap, calculate that. */
-      buf_top_skip = buf_left_skip = 0;
-      if (mask_top_skip == 0)
-        buf_top_skip  = pmask->bounds.y0 - state->iso_pos.y; /* FUTURE: Could avoid this reload of iso_pos.y. */
-      if (mask_left_skip == 0)
-        buf_left_skip = pmask->bounds.x0 - state->iso_pos.x;
+      x = y = 0;
+      // Conv: flipped order of these
+      if (clip_x == 0)
+        x = pmask->bounds.x0 - state->iso_pos.x;
+      if (clip_y == 0)
+        y = pmask->bounds.y0 - state->iso_pos.y;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
 
-      mask_buffer_pointer = &state->mask_buffer[buf_top_skip * MASK_BUFFER_ROWBYTES + buf_left_skip];
+      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_ROWBYTES + x];
 
       mask_pointer = mask_pointers[index];
 
-      /* Conv: Self modify of $BA70 removed (height loop). */
-      /* Conv: Self modify of $BA72 removed (width loop). */
-      /* mask_pointer[0] is the mask's width so this must calculate the skip
-       * from the end of one row's used data to the start of the next */
-      mask_row_skip = mask_pointer[0]      - mask_run_width; /* Conv: was self modified */
-      buf_row_skip  = MASK_BUFFER_ROWBYTES - mask_run_width; /* Conv: was self modified */
+      self_BA90 = mask_pointer[0] - clip_width; // self modify // *mask_pointer is the mask's width
+      skip = MASK_BUFFER_ROWBYTES - clip_width; // self modify
     }
 
-    /* Skip the initial clipped mask bytes. The masks are RLE compressed so
-     * we can't jump directly to the first byte we need. */
+    /* Calculate count of mask tiles to skip. */
+    mask_skip = clip_y * mask_pointer[0] + clip_x + 1;
 
-    /* First, calculate the total number of mask tiles to skip.  */
-    mask_skip = mask_top_skip * mask_pointer[0] + mask_left_skip + 1;
-
-    /* Next, loop until we've passed through that number of output bytes. */
+    /* Skip the initial clipped mask bytes. */
     do
     {
 more_to_skip:
-      A = *mask_pointer++; /* read a count byte or tile index */
+      A = *mask_pointer++; /* read count byte OR tile index */
       if (A & MASK_RUN_FLAG)
       {
         A &= ~MASK_RUN_FLAG;
@@ -7657,56 +7649,56 @@ more_to_skip:
         if ((int16_t) mask_skip < 0) /* went too far? */
           goto skip_went_negative;
         mask_pointer++; /* skip mask index */
-        if (mask_skip > 0) /* still more to skip? */
+        if (mask_skip > 0) // still more to skip?
         {
           goto more_to_skip;
         }
-        else /* mask_skip must be zero */
+        else // mask_skip must be zero
         {
-          A = 0; /* zero counter */
-          goto start_drawing;
+          A = 0; // counter
+          goto skip_went_zero;
         }
       }
     }
     while (--mask_skip);
-    A = mask_skip; /* ie. A = 0 */
-    goto start_drawing;
-
+    A = mask_skip; // ie. A = 0
+    goto skip_went_zero;
 
 skip_went_negative:
-    A = -(mask_skip & 0xFF); /* calculate skip counter */
+    A = -(mask_skip & 0xFF); // counter
 
-start_drawing:
+skip_went_zero:
     {
-      uint8_t *maskbufptr;   /* was HL */
-      uint8_t  y_count;      /* was C */
-      uint8_t  x_count;      /* was B */
-      uint8_t  right_skip;   /* was B */
-      uint8_t  Adash = 0xCC; /* Conv: Initialise with safety value */
+      uint8_t *maskbufptr;  /* was HL */
+      uint8_t  y_count;     /* was C */
+      uint8_t  x_count;     /* was B */
+      uint8_t  right_skip;  /* was B */
 
       maskbufptr = mask_buffer_pointer;
       // R I:C Iterations (inner loop);
-      y_count = mask_run_height; /* Conv: was self modified */
+      y_count = clip_height; // self modified
       do
       {
-        x_count = mask_run_width; /* Conv: was self modified */
+        x_count = clip_width; // self modified
         do
         {
           // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
           // AFAICT it's ensuring that A is always the tile and that A' is the counter
 
+          uint8_t Adash = 0xCC; // safety value
+
           SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
 
-          A = *mask_pointer; /* read a count byte or tile index */
+          A = *mask_pointer; // read count byte OR tile index
           if (A & MASK_RUN_FLAG)
           {
             A &= ~MASK_RUN_FLAG;
             SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
             mask_pointer++;
-            A = *mask_pointer; /* read next byte (tile) */
+            A = *mask_pointer; // read next byte (tile)
           }
 
-          if (A != 0) /* shortcut the blank tile 0 */
+          if (A != 0) /* shortcut the totally blank tile 0 */
             mask_against_tile(A, maskbufptr);
           maskbufptr++;
 
@@ -7718,65 +7710,73 @@ start_drawing:
         }
         while (--x_count);
 
-        /* Conv: Don't run the trailing code when we're on the final line
-         * since that results in out-of-bounds memory reads. */
+        // Conv: Avoid running the trailing code when we're on the final line
+        // since that results in out-of-bounds memory reads.
         if (y_count == 1)
           goto pop_next;
 
-        // trailing (& next line's leading?) skip
+        // trailing skip
 
-        // RENAME TO SOMETHING ELSE
-        right_skip = mask_row_skip; // self modified // == mask width - clipped width (amount to skip on the right hand side + left of next row)
-        Adash = 0;
+        right_skip = self_BA90; // self modified // == mask width - clipped width (amount to skip on the right hand side)
         if (right_skip)
         {
-          SWAP(uint8_t, A, Adash);
-
           if (A)
-            goto trailskip_dive_in; // must be continuing with a nonzero counter
+            goto baa3; // must be continuing with a nonzero counter
           do
           {
-trailskip_more_to_skip:
-            A = *mask_pointer++; /* read a count byte or tile index */
+ba9b:
+            A = *mask_pointer++; // read count byte OR tile index
             if (A & MASK_RUN_FLAG)
             {
               // it's a run
+
               A &= ~MASK_RUN_FLAG;
-trailskip_dive_in:
-              right_skip = A = right_skip - A; // CHECK THIS OVER // decrement skip
+baa3:
+              right_skip = A = right_skip - A; // CHECK THIS OVER
               if ((int8_t) right_skip < 0) // skip went negative
-                goto trailskip_went_negative;
+                goto bab6;
               mask_pointer++; // don't care about the mask index since we're skipping
               if (right_skip > 0)
-                goto trailskip_more_to_skip;
-              // else right_skip must be zero
-              SWAP(uint8_t, A, Adash);
-              goto next_line;
+                goto ba9b;
+              else // right_skip must be zero
+                goto next_line;
             }
           }
           while (--right_skip);
 
           A = 0;
-          SWAP(uint8_t, A, Adash);
           goto next_line;
-
-trailskip_went_negative:
-          A = -A;
-          SWAP(uint8_t, A, Adash);
+bab6:
+          A = -A; // does this make sense?
         }
 next_line:
-        A = buf_row_skip;
-        maskbufptr += A; // self modified
-        // original code swaps A and A' here (why? so A is the next skip value)
-        SWAP(uint8_t, A, Adash);
+        maskbufptr += skip; // self modified
       }
       while (--y_count);
     }
 
 pop_next:
+    // POP HL
+    // POP BC
     pmask++; // stride is 1 mask_t
   }
   while (--iters);
+
+  /* Dump the mask buffer to the top-left of the screen. */
+  if (/* DISABLES CODE */ (0))
+  {
+    uint8_t *slp;
+    int      yy;
+
+    slp = &state->speccy->screen.pixels[(128 + 1) * state->width];
+    for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
+    {
+      memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
+      slp = get_next_scanline(state, slp);
+    }
+
+    state->speccy->draw(state->speccy, NULL); // <<dst-to-x,y>, MASK_BUFFER_WIDTHBYTES / 8, MASK_BUFFER_HEIGHT * 8>
+  }
 }
 
 /* ----------------------------------------------------------------------- */
