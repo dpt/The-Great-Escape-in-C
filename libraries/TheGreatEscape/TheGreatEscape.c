@@ -3282,11 +3282,11 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
 
 #ifdef DEBUG_ROUTES
-  if (vischar == &state->vischars[0])
-    printf("(hero) get_target(route=%d%s step=%d)\n",
-           vischar->route.index & ~routeindexflag_REVERSED,
-           (vischar->route.index & routeindexflag_REVERSED) ? " reversed" : "",
-           vischar->route.step);
+  printf("(%s) set_route > get_target(route=%d%s step=%d)\n",
+         (vischar == &state->vischars[0]) ? "hero" : "non-hero",
+         vischar->route.index & ~routeindexflag_REVERSED,
+         (vischar->route.index & routeindexflag_REVERSED) ? " reversed" : "",
+         vischar->route.step);
 #endif
 
   get_target_result = get_target(state,
