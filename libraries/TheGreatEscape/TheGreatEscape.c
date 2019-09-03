@@ -909,6 +909,7 @@ const door_t doors[door_MAX * 2] =
   // room is a *destination* room index
   // direction is the direction of the door in the current room
   // pos is the position of the door in the current room
+  // outdoor targets are divided by 4
 
   // 0 - gate - initially locked
   { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 138,  6 } },
@@ -928,7 +929,7 @@ const door_t doors[door_MAX * 2] =
   // 5
   { ROOMDIR(room_1_HUT1RIGHT,             TL), { 212, 189,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), {  30,  46, 24 } },
-  // 6
+  // 6 - home room - door to outside
   { ROOMDIR(room_2_HUT2LEFT,              TR), { 193, 163,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 7
@@ -961,7 +962,7 @@ const door_t doors[door_MAX * 2] =
   // 16
   { ROOMDIR(room_1_HUT1RIGHT,             TR), {  44,  52, 24 } },
   { ROOMDIR(room_28_HUT1LEFT,             BL), {  38,  26, 24 } },
-  // 17 - top right door in HUT2LEFT
+  // 17 - home room - top right door in HUT2LEFT
   { ROOMDIR(room_3_HUT2RIGHT,             TR), {  36,  54, 24 } },
   { ROOMDIR(room_2_HUT2LEFT,              BL), {  38,  26, 24 } },
   // 18
