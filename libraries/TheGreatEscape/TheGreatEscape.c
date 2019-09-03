@@ -7682,39 +7682,39 @@ start_drawing:
       uint8_t  y_count;      /* was C */
       uint8_t  x_count;      /* was B */
       uint8_t  right_skip;   /* was B */
+      uint8_t  Adash = 0xCC; /* Conv: initialise with safety value */
 
       maskbufptr = mask_buffer_pointer;
-      // R I:C Iterations (inner loop);
+      // R I:C Iterations (inner loop)
       y_count = mask_run_height; /* Conv: was self modified */
       do
       {
         x_count = mask_run_width; /* Conv: was self modified */
         do
         {
-          // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
-          // AFAICT it's ensuring that A is always the tile and that A' is the counter
+          /* IN PROGRESS: The original code has some mismatched EX AF,AF
+           * operations here which are hard to grok. AFAICT it's ensuring
+           * that A is always the tile and that A' is the counter. */
 
-          uint8_t  Adash = 0xCC; /* Conv: Initialise with safety value */
-
-          SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
+          SWAP(uint8_t, A, Adash); /* bank the repeat length */
 
           A = *mask_pointer; /* read a count byte or tile index */
           if (A & MASK_RUN_FLAG)
           {
             A &= ~MASK_RUN_FLAG;
-            SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
+            SWAP(uint8_t, A, Adash); /* bank the repeat count */
             mask_pointer++;
-            A = *mask_pointer; /* read next byte (tile) */
+            A = *mask_pointer; /* read the next byte (a tile) */
           }
 
-          if (A != 0) /* shortcut the blank tile 0 */
+          if (A != 0) /* shortcut tile 0 which is blank */
             mask_against_tile(A, maskbufptr);
           maskbufptr++;
 
-          SWAP(uint8_t, A, Adash); // was A = Adash; // fetch counter
+          SWAP(uint8_t, A, Adash); /* unbank the repeat count/length */
 
-          /* advance the mask pointer when the counter reaches zero */
-          if (A == 0 || --A == 0) /* Conv: written inverted over the original version */
+          /* Advance the mask pointer when the counter reaches zero. */
+          if (A == 0 || --A == 0) /* Conv: Written inverted vs. the original version. */
             mask_pointer++;
         }
         while (--x_count);
@@ -7726,7 +7726,7 @@ start_drawing:
 
         // trailing skip
 
-        right_skip = mask_row_skip; // self modified // == mask width - clipped width (amount to skip on the right hand side + left of next row)
+        right_skip = mask_row_skip; /* Conv: Was self modified. */ // == mask width - clipped width (amount to skip on the right hand side + left of next row)
         if (right_skip)
         {
           if (A)
@@ -7757,16 +7757,16 @@ trailskip_dive_in:
           goto next_line;
 
 trailskip_went_negative:
-          A = -A; // does this make sense?
+          A = -A;
         }
 next_line:
-        maskbufptr += buf_row_skip; // self modified
+        maskbufptr += buf_row_skip; /* Conv: Was self modified. */
       }
       while (--y_count);
     }
 
 pop_next:
-    pmask++; // stride is 1 mask_t
+    pmask++;
   }
   while (--iters);
 }
