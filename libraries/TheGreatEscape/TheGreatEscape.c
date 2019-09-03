@@ -6794,18 +6794,18 @@ doorindex_t *get_nearest_door(tgestate_t *state)
       locked_door_index = *locked_doors & ~door_LOCKED;
 
       /* Search interior_doors[] for door_index. */
-      interior_doors = &state->interior_doors[0];
-each_interior_door:
-      interior_door_index = *interior_doors;
-      if (interior_door_index != interiordoor_NONE)
+      for (interior_doors = &state->interior_doors[0]; ; interior_doors++)
       {
+        interior_door_index = *interior_doors;
+        if (interior_door_index == interiordoor_NONE)
+          break; /* end of list */
+
         if ((interior_door_index & ~door_REVERSE) == locked_door_index) // this must be door_REVERSE as it came from interior_doors[]
           goto found;
 
-        interior_doors++;
-        /* There's no termination condition here where you might expect one,
-         * but since every room has at least one door it *must* find one. */
-        goto each_interior_door;
+        /* There's no termination condition here where you might expect a
+         * test to see if we've run out of doors, but since every room has
+         * at least one door it *must* find one. */
       }
 
 next_locked_door:
