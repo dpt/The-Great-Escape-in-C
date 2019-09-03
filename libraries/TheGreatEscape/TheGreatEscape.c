@@ -8299,7 +8299,7 @@ void purge_invisible_characters(tgestate_t *state)
     if (vischar->character == character_NONE)
       goto next;
 
-    /* Reset characters not in the current room. */
+    /* Reset this character if it's not in the current room. */
     if (state->room_index != vischar->room)
       goto reset;
 
