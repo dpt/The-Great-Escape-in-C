@@ -50,6 +50,11 @@ typedef enum message
 }
 message_t;
 
+/**
+ * A flag set on state.messages.display_index to show the next message.
+ */
+#define MESSAGE_NEXT_FLAG (1 << 7)
+
 /* $7D15 */
 void queue_message(tgestate_t *state,
                    message_t   message_index);
