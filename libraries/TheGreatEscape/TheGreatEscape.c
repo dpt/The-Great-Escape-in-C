@@ -8253,23 +8253,23 @@ void spawn_characters(tgestate_t *state)
       {
         if (room == room_0_OUTDOORS)
         {
-          /* Outdoors. */
+          /* Handle outdoors. */
 
-          /* Screen Y calculation.
+          /* Do screen Y calculation.
            * The 0x100 here is represented as zero in the original game. */
           y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height;
-          if (y <= map_y_clamped ||
+          if (y <= map_y_clamped || // <= might need to be <
               y > MIN(map_y_clamped + GRACE + 16 + GRACE, 0xFF))
             goto skip;
 
-          /* Screen X calculation. */
+          /* Do screen X calculation. */
           x = (0x40 - charstr->pos.x + charstr->pos.y) * 2;
-          if (x <= map_x_clamped ||
+          if (x <= map_x_clamped || // <= might need to be <
               x > MIN(map_x_clamped + GRACE + 24 + GRACE, 0xFF))
             goto skip;
         }
 
-        spawn_character(state, charstr); // return code ignored
+        (void) spawn_character(state, charstr);
       }
     }
 
