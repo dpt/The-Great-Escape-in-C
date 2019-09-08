@@ -9936,7 +9936,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
 }
 
 /**
- * $CB23: Calls get_target then puts coords in vischar->target and set flags.
+ * $CB23: Calls get_target() then puts coords in vischar->target and set flags.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9958,14 +9958,15 @@ void get_target_assign_pos(tgestate_t *state,
   get_target_result = get_target(state, route, &doorpos, &location);
   if (get_target_result != get_target_ROUTE_ENDS)
   {
-    /* Didn't hit end of list case. */
-    /* Conv: Inlined chunk from $CB61 handle_target here. */
+    /* "Didn't hit end of list" case. */
+    /* Conv: Inlined $CB61/handle_target here since we're the only user. */
 
     if (get_target_result == get_target_DOOR)
       vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
 
-    // Conv: Cope with get_target returning results in different vars.
-    // Original game just transfers x,y across.
+    /* Conv: In the original game HL returns a doorpos or a location to
+     * transfer. This version must cope with get_target() returning results in
+     * different vars. */
     if (get_target_result == get_target_DOOR)
     {
       vischar->target.x = doorpos->x;
@@ -9979,7 +9980,7 @@ void get_target_assign_pos(tgestate_t *state,
   }
   else
   {
-    route_ended(state, vischar, route); // was fallthrough
+    route_ended(state, vischar, route); /* was fallthrough */
   }
 }
 
