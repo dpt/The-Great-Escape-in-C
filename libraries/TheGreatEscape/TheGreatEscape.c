@@ -2996,7 +2996,7 @@ void wake_up(tgestate_t *state)
               interiorobject_EMPTY_BED_FACING_SE);
   if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
   {
-    // FUTURE: replace with call to setup_room_and_plot
+    /* FUTURE: Could replace with call to setup_room_and_plot. */
     setup_room(state);
     plot_interior_tiles(state);
   }
