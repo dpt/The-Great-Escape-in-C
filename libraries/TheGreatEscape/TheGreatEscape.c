@@ -7787,7 +7787,6 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
 
   assert(index < 111);
   assert(dst);
-  // ASSERT_MASK_BUF_PTR_VALID(dst); // we don't have access to state from here to compare
 
   row = &mask_tiles[index].row[0];
   iters = 8;
