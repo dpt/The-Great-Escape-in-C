@@ -10904,11 +10904,11 @@ nearby:
 /**
  * $CCFB: Is an item discoverable indoors?
  *
- * A discoverable item is one moved away from its default room, and one that
- * isn't the red cross parcel.
+ * A discoverable item is one which has been moved away from its default
+ * room, and one that isn't the red cross parcel.
  *
  * \param[in]  state Pointer to game state.
- * \param[in]  room  Room index. (was A)
+ * \param[in]  room  Room index to check against. (was A)
  * \param[out] pitem Pointer to item (if found). (Can be NULL). (was C)
  *
  * \return 0 if found, 1 if not found. (Conv: Was Z flag).
