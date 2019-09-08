@@ -7982,33 +7982,34 @@ not_visible:
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BB98: Paint any tiles occupied by visible characters with tiles from tile_buf.
+ * $BB98: Paint any tiles occupied by visible characters with tiles from
+ * tile_buf.
  *
  * \param[in] state Pointer to game state.
  */
 void restore_tiles(tgestate_t *state)
 {
-  uint8_t             iters;                  /* was B */
-  const vischar_t    *vischar;                /* new local copy */
-  uint8_t             height;                 /* was A / $BC5F */
-  int8_t              heightsigned;           /* was A */
-  uint8_t             width;                  /* was $BC61 */
-  uint8_t             tilebuf_skip;           /* was $BC8E */
-  uint8_t             windowbuf_skip;         /* was $BC95 */
-  uint8_t             width_counter, height_counter;  /* was B, C */
-  uint8_t             left_skip;              /* was B */
-  uint8_t             clipped_width;          /* was C */
-  uint8_t             top_skip;               /* was D */
-  uint8_t             clipped_height;         /* was E */
-  const xy_t         *map_position;           /* was HL */
-  uint8_t            *windowbuf;              /* was HL */
-  uint8_t            *windowbuf2;             /* was DE */
-  uint8_t             x, y;                   /* was H', L' */
-  const tileindex_t  *tilebuf;                /* was HL/DE */
-  tileindex_t         tile;                   /* was A */
-  const tile_t       *tileset;                /* was BC */
-  uint8_t             tile_counter;           /* was B' */
-  const tilerow_t    *tilerow;                /* was HL' */
+  uint8_t            iters;                         /* was B */
+  const vischar_t   *vischar;                       /* new local copy */
+  uint8_t            height;                        /* was A/$BC5F */
+  int8_t             bottom;                        /* was A */
+  uint8_t            width;                         /* was $BC61 */
+  uint8_t            tilebuf_skip;                  /* was $BC8E */
+  uint8_t            windowbuf_skip;                /* was $BC95 */
+  uint8_t            width_counter, height_counter; /* was B,C */
+  uint8_t            left_skip;                     /* was B */
+  uint8_t            clipped_width;                 /* was C */
+  uint8_t            top_skip;                      /* was D */
+  uint8_t            clipped_height;                /* was E */
+  const xy_t        *map_position;                  /* was HL */
+  uint8_t           *windowbuf;                     /* was HL */
+  uint8_t           *windowbuf2;                    /* was DE */
+  uint8_t            x, y;                          /* was H', L' */
+  const tileindex_t *tilebuf;                       /* was HL/DE */
+  tileindex_t        tile;                          /* was A */
+  const tile_t      *tileset;                       /* was BC */
+  uint8_t            tile_counter;                  /* was B' */
+  const tilerow_t   *tilerow;                       /* was HL' */
 
   assert(state != NULL);
 
@@ -8022,8 +8023,8 @@ void restore_tiles(tgestate_t *state)
       goto next;
 
     /* Get the visible character's position in screen space. */
-    state->iso_pos.y = vischar->iso_pos.y >> 3; // divide by 8 (16-to-8)
-    state->iso_pos.x = vischar->iso_pos.x >> 3; // divide by 8 (16-to-8)
+    state->iso_pos.y = vischar->iso_pos.y >> 3; /* divide by 8 (16-to-8) */
+    state->iso_pos.x = vischar->iso_pos.x >> 3; /* divide by 8 (16-to-8) */
 
     if (vischar_visible(state,
                         vischar,
@@ -8033,69 +8034,87 @@ void restore_tiles(tgestate_t *state)
                        &clipped_height))
       goto next; /* not visible */
 
+    /* Compute scaled clipped height. */
     /* Conv: Rotate and mask turned into right shift. */
-    height = (clipped_height >> 3) + 2;
+    height = (clipped_height >> 3) + 2; /* TODO: Explain the +2 fudge factor. */
 
-    // so this is the on-screen y offset?
-    heightsigned = height + state->iso_pos.y - state->map_position.y;
-    if (heightsigned >= 0)
+    /* Note: It seems that the following sequence (from here to clamp_height)
+     * duplicates the work done by vischar_visible. I can't see any benefit to
+     * it. */
+
+    /* Compute bottom = height + iso_pos_y - map_position_y. This is the
+     * distance of the (clipped) bottom edge of the vischar from the top of the
+     * window. */
+    bottom = height + state->iso_pos.y - state->map_position.y;
+    if (bottom >= 0)
     {
-      heightsigned -= 17; // likely window_buf height
-      if (heightsigned > 0)
+      /* Bottom edge is on-screen, or off the bottom of the screen. */
+
+      bottom -= state->rows; /* i.e. 17 */
+      if (bottom > 0)
       {
-        clipped_height = heightsigned;
-        heightsigned = height - clipped_height;
-        if (heightsigned < 0) // if carry
+        /* Bottom edge is now definitely visible. */
+
+        int8_t visible_height; /* was A */
+
+        visible_height = height - bottom;
+        if (visible_height < 0)
         {
-          goto next; // not visible?
+          goto next; /* not visible */
         }
-        else if (heightsigned != 0) // ie. > 0
+        else if (visible_height != 0)
         {
-          height = heightsigned;
+          height = visible_height;
           goto clamp_height;
         }
         else
         {
-          assert(heightsigned == 0);
-
-          goto next; // not visible?
+          /* Note: Could merge this case into the earlier one. */
+          assert(visible_height == 0);
+          goto next; /* not visible */
         }
       }
     }
-    // unsure about the else case here
 
-clamp_height: // was $BBF8
-    if (height > 5) // note: this is height, not heightsigned (preceding POP removed)
-      height = 5; // outer loop counter // height
+clamp_height:
+    /* Clamp the height to a maximum of five. */
+    if (height > 5)
+      height = 5;
 
-    width          = clipped_width; // was self modify // inner loop counter // width
-    tilebuf_skip   = state->columns - width; // was self modify
-    windowbuf_skip = tilebuf_skip + 7 * state->columns; // was self modify // == (8 * state->columns - C)
+    /* Conv: Self modifying code replaced. */
 
-    map_position = &state->map_position;
+    width          = clipped_width;
+    tilebuf_skip   = state->columns - width;
+    windowbuf_skip = tilebuf_skip + 7 * state->columns;
+
+    map_position   = &state->map_position;
 
     /* Work out x,y offsets into the tile buffer. */
 
     if (left_skip == 0)
       x = state->iso_pos.x - map_position->x;
     else
-      x = 0; // was interleaved
+      x = 0; /* was interleaved */
 
     if (top_skip == 0)
       y = state->iso_pos.y - map_position->y;
     else
-      y = 0; // was interleaved
+      y = 0; /* was interleaved */
+
+    /* Calculate the offset into the window buffer. */
 
     windowbuf = &state->window_buf[y * state->window_buf_stride + x];
     ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
 
+    /* Calculate the offset into the tile buffer. */
+
     tilebuf = &state->tile_buf[x + y * state->columns];
     ASSERT_TILE_BUF_PTR_VALID(tilebuf);
 
-    height_counter = height;
+    height_counter = height; /* in rows */
     do
     {
-      width_counter = width;
+      width_counter = width; /* in columns */
       do
       {
         ASSERT_TILE_BUF_PTR_VALID(tilebuf);
