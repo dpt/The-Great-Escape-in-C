@@ -8291,7 +8291,8 @@ skip:
 void purge_invisible_characters(tgestate_t *state)
 {
   /* Size, in UDGs, of a buffer zone around the visible screen in which
-   * visible characters will persist. */
+   * visible characters will persist. (Compare to the spawning size of
+   * 8). */
   enum { GRACE = 9 };
 
   uint8_t    miny, minx;  /* was D, E */
@@ -8332,6 +8333,7 @@ void purge_invisible_characters(tgestate_t *state)
 
     /* Conv: Replaced screen dimension constants with state->columns/rows. */
 
+    /* Handle Y part */
     hi = vischar->iso_pos.y >> 8;
     lo = vischar->iso_pos.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
@@ -8339,6 +8341,7 @@ void purge_invisible_characters(tgestate_t *state)
     if (lo <= miny || lo > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
       goto reset;
 
+    /* Handle X part */
     hi = vischar->iso_pos.x >> 8;
     lo = vischar->iso_pos.x & 0xFF;
     divide_by_8(&lo, &hi);
