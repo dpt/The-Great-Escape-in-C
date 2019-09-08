@@ -8269,7 +8269,7 @@ void spawn_characters(tgestate_t *state)
             goto skip;
         }
 
-        (void) spawn_character(state, charstr);
+        spawn_character(state, charstr);
       }
     }
 
@@ -8366,10 +8366,8 @@ next:
  *
  * \param[in] state   Pointer to game state.
  * \param[in] charstr Pointer to character to spawn. (was HL)
- *
- * \return 1 if spawned, 0 if no empty slots
  */
-int spawn_character(tgestate_t *state, characterstruct_t *charstr)
+void spawn_character(tgestate_t *state, characterstruct_t *charstr)
 {
   /**
    * $CD9A: Data for the four classes of characters.
@@ -8382,24 +8380,25 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
     { &animations[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
   };
 
-  vischar_t                   *vischar;           /* was HL/IY */
-  uint8_t                      iters;             /* was B */
-  characterstruct_t           *charstr2;          /* was DE */
-  pos_t                       *saved_pos;         /* was HL */
-  character_t                  character;         /* was A */
-  const character_class_data_t *metadata;         /* was DE */
-  int                          Z;                 /* flag */
-  room_t                       room;              /* was A */
-  uint8_t                      get_target_result; /* was A */
-  const tinypos_t             *doorpos;           /* was HL */
-  const xy_t                  *location;          /* was HL */
+  vischar_t                    *vischar;            /* was HL/IY */
+  uint8_t                       iters;              /* was B */
+  characterstruct_t            *charstr2;           /* was DE */
+  pos_t                        *saved_pos;          /* was HL */
+  character_t                   character;          /* was A */
+  const character_class_data_t *metadata;           /* was DE */
+  int                           Z;                  /* flag */
+  room_t                        room;               /* was A */
+  uint8_t                       target_type;        /* was A */
+  const tinypos_t              *doorpos;            /* was HL */
+  const xy_t                   *location;           /* was HL */
+  route_t                      *route;              /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
 
   /* Skip spawning if the character is already on-screen. */
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
-    return 1; // NZ
+    return; /* already spawned */
 
   /* Find an empty slot in the visible character list. */
   vischar = &state->vischars[1];
@@ -8412,19 +8411,12 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   }
   while (--iters);
 
-  return 0; // Z
+  return; /* no spare slot */
 
 
 found_empty_slot:
-
-  // POP DE  (DE = charstr)
-  // PUSH HL (vischar)
-  // POP IY  (IY_vischar = HL_vischar)
   state->IY = vischar;
-  // PUSH HL (vischar)
-  // PUSH DE (charstr)
-
-  charstr2 = charstr;
+  charstr2 = charstr; /* Conv: Original points at charstr.room */
 
   /* Scale coords dependent on which room the character is in. */
   saved_pos = &state->saved_pos.pos;
@@ -8444,25 +8436,18 @@ found_empty_slot:
   }
 
   Z = collision(state);
-  if (Z == 0)
+  if (Z == 0) /* no collision */
     Z = bounds_check(state, vischar);
-  // if Z == 1 then within wall bounds
+  if (Z == 1)
+    return; /* a character or bounds collision occurred */
 
-  // POP DE (charstr)
-  // POP HL (vischar)
-
-  if (Z == 1) // if collision or bounds_check is nonzero, then return
-    return 0; // check
-
-  /* Transfer character to vischar. */
+  /* Transfer character struct to vischar. */
   character = charstr->character_and_flags | characterstruct_FLAG_ON_SCREEN;
   charstr->character_and_flags = character;
 
   character &= characterstruct_CHARACTER_MASK;
   vischar->character = character;
   vischar->flags     = 0;
-
-  // PUSH DE (charstr)
 
   metadata = &character_class_data[0]; /* Commandant */
   if (character != 0)
@@ -8478,16 +8463,9 @@ found_empty_slot:
     }
   }
 
-  // EX DE,HL (DE = vischar, HL = metadata)
-
-  vischar->animbase  = metadata->animbase; // seems to be a constant
+  vischar->animbase  = metadata->animbase;
   vischar->mi.sprite = metadata->sprite;
   memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
-
-  // POP HL (charstr)
-
-  //HL += 5; // -> charstr->route
-  //DE += 7; // -> vischar->room
 
   room = state->room_index;
   vischar->room = room;
@@ -8497,50 +8475,32 @@ found_empty_slot:
     play_speaker(state, sound_CHARACTER_ENTERS_1);
   }
 
-  // DE -= 26; // -> vischar->route
   vischar->route = charstr->route;
-  // DE += 2, HL += 2; // DE -> vischar->pos
-  // HL -= 2; // -> charstr->route
 
-  tinypos_t *DEtarget;
-  route_t   *HLroute;
-
-  DEtarget = &vischar->target;
-  HLroute  = &charstr->route;
+  /* Conv: Removed DE handling here and below which isn't used in this port. */
+  route = &charstr->route;
 again:
-  if (HLroute->index != routeindex_0_HALT) /* if not stood still */
+  if (route->index != routeindex_0_HALT) /* if not stood still */
   {
     state->entered_move_a_character = 0;
-    // PUSH DE // -> vischar->pos
-    get_target_result = get_target(state,
-                                   HLroute,
-                                   &doorpos,
-                                   &location);
-    if (get_target_result == get_target_ROUTE_ENDS)
+    target_type = get_target(state, route, &doorpos, &location);
+    if (target_type == get_target_ROUTE_ENDS)
     {
-      // POP HL // -> vischar->pos
-      // HL -= 2; // -> vischar->route
-      // PUSH HL // save vischar->route
       (void) route_ended(state, vischar, &vischar->route);
-      // POP HL // restore vischar->route
-      // DE = HL + 2; // -> vischar->pos
 
-      // To match the original code this should jump to 'again' with HL now
-      // pointing to vischar->route, not charstr->route as on the first go.
-      // DEtarget is likely not necessary - it's only ever assigned in this
-      // code.
-      DEtarget = &vischar->target;
-      HLroute  = &vischar->route;
+      /* To match the original code this should now jump to 'again' with 'route'
+       * pointing to vischar->route, not charstr->route as used on the first
+       * round. */
+      route = &vischar->route;
 
+      /* Jump back and try again. */
       goto again;
     }
-    else if (get_target_result == get_target_DOOR)
+    else if (target_type == get_target_DOOR)
     {
       vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
     }
-    // POP DE // -> vischar->pos
-    // sampled HL is $7913 (a doors tinypos)
-    if (get_target_result == get_target_DOOR)
+    if (target_type == get_target_DOOR)
     {
       vischar->target = *doorpos;
     }
@@ -8548,17 +8508,13 @@ again:
     {
       vischar->target.x = location->x;
       vischar->target.y = location->y;
-      // Note we're not assigning .height here.
+      /* Note: We're not assigning .height here. */
     }
   }
+
   vischar->counter_and_flags = 0;
-  // DE -= 7;
-  // EX DE,HL
-  // PUSH HL
   calc_vischar_iso_pos_from_vischar(state, vischar);
-  // POP HL
-  character_behaviour(state, vischar);
-  return 1; // exit via
+  character_behaviour(state, vischar); /* (was) exit via */
 }
 
 /* ----------------------------------------------------------------------- */

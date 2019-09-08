@@ -519,7 +519,7 @@ void spawn_characters(tgestate_t *state);
 
 void purge_invisible_characters(tgestate_t *state);
 
-int spawn_character(tgestate_t *state, characterstruct_t *charstr);
+void spawn_character(tgestate_t *state, characterstruct_t *charstr);
 
 void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
