@@ -9816,8 +9816,9 @@ input_t vischar_move_y(tgestate_t *state,
  */
 void target_reached(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          flags_lower6;            /* was A */
   uint8_t          flags_all;               /* was C */
+
+  uint8_t          flags_lower6;            /* was A */
   uint8_t          food_discovered_counter; /* was A */
   uint8_t          step;                    /* was C */
   uint8_t          route;                   /* was A */
@@ -9828,91 +9829,93 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-#ifdef DEBUG_ROUTES
-  if (vischar == &state->vischars[0])
-    printf("(hero) target_reached\n");
-#endif
-
-  // In the original code HL is IY + 4 on entry.
-  // In this version we replace HL references with IY ones.
+  /* Conv: In the original code HL is IY + 4 on entry.
+   *       In this version we replace HL references with IY ones.
+   */
 
   flags_all = vischar->flags;
-  flags_lower6 = flags_all & vischar_FLAGS_MASK; // lower 6 bits only
-  if (flags_lower6) // if in one of these states: vischar_PURSUIT_PURSUE || vischar_PURSUIT_HASSLE || vischar_PURSUIT_DOG_FOOD || vischar_PURSUIT_SAW_BRIBE
+
+  /* Check for a pursuit mode. */
+  flags_lower6 = flags_all & vischar_FLAGS_MASK;
+  if (flags_lower6)
   {
+    /* We're in one of the pursuit modes - find out which one. */
     if (flags_lower6 == vischar_PURSUIT_PURSUE)
     {
+      /* Handle 'pursue' mode. */
       if (vischar->character == state->bribed_character)
-        accept_bribe(state);
+        accept_bribe(state); /* exit via */
       else
-        solitary(state); // caught pursued character (ie. the hero)
-      return; // exit via // factored out
+        /* The pursuing character caught its target. */ // this bit needs work
+        solitary(state); /* exit via */
     }
     else if (flags_lower6 == vischar_PURSUIT_HASSLE ||
              flags_lower6 == vischar_PURSUIT_SAW_BRIBE)
     {
-      /* Nothing to do in these cases. */
-      return;
+      /* Handle 'hassle' or 'saw a bribe' modes (no action required). */
     }
     else
     {
+      /* Otherwise we're in vischar_PURSUIT_DOG_FOOD mode. */
+
+      /* automatics() only permits dogs to enter this mode. */
       assert(flags_lower6 == vischar_PURSUIT_DOG_FOOD);
 
-      /* Decide how long until food is discovered. */
+      /* Decide how long remains until the food is discovered.
+       * Use 32 if the food is poisoned, 255 otherwise. */
       if ((state->item_structs[item_FOOD].item_and_flags & itemstruct_ITEM_FLAG_POISONED) == 0)
         food_discovered_counter = 32; /* food is not poisoned */
       else
         food_discovered_counter = 255; /* food is poisoned */
       state->food_discovered_counter = food_discovered_counter;
 
-      vischar->route.index = routeindex_0_HALT; /* Stand still (ie. the dog is poisoned) */
+      /* This dog has been poisoned, so make it halt. */
+      vischar->route.index = routeindex_0_HALT;
 
       character_behaviour_set_input(state, vischar, 0 /* new_input */);
-      return;
     }
-    // FUTURE: Factor out all of the returns above to here.
+
+    return;
   }
 
   if (flags_all & vischar_FLAGS_TARGET_IS_DOOR)
   {
-    /* Results in character entering. */
-
-    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // route.step
-    //orig:A = *--HL; // 80a2 etc
+    /* Handle the door - this results in the character entering. */
 
     step  = vischar->route.step;
     route = vischar->route.index;
 
-    doorindex = get_route(route)[step]; // follow this through
-    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
+    doorindex = get_route(route)[step];
+    if (route & routeindexflag_REVERSED) /* Conv: Avoid needless reload */
       doorindex ^= door_REVERSE;
 
-    // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
+    /* Conv: This is the [-2]+1 pattern which works out -1/+1. */
+    if (route & routeindexflag_REVERSED) /* Conv: Avoid needless reload */
       vischar->route.step--;
     else
       vischar->route.step++;
 
-    door = get_door(doorindex); // door related
-    vischar->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
+    /* Get the door structure for the door index and start processing it. */
+    door = get_door(doorindex);
+    vischar->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
+    /* In which direction is the door facing?
+     *
+     * Each door in the doors array is a pair of two "half doors" where each
+     * half represents one side of the doorway. We test the direction of the
+     * half door we find ourselves pointing at and use it to find the
+     * counterpart door's position. */
     if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
-      /* TOP_LEFT or TOP_RIGHT */
-      tinypos = &door[1].pos; // was HL += 5;
+      tinypos = &door[1].pos; /* TOP_LEFT or TOP_RIGHT */
     else
-      /* BOTTOM_RIGHT or BOTTOM_LEFT */
-      tinypos = &door[-1].pos; // was HL -= 3;
+      tinypos = &door[-1].pos; /* BOTTOM_RIGHT or BOTTOM_LEFT */
 
-    // PUSH HL_tinypos
-
-    if (vischar == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
+    if (vischar == &state->vischars[0])
     {
       /* Hero's vischar only. */
       vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
       get_target_assign_pos(state, vischar, &vischar->route);
     }
-
-    // POP HL_tinypos
 
     transition(state, tinypos);
 
@@ -9920,8 +9923,6 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     return;
   }
 
-  /* When on a route (route.index != 255) advance route.step in the
-   * required direction. */
   route = vischar->route.index;
   if (route != routeindex_255_WANDER)
   {
@@ -9931,7 +9932,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
       vischar->route.step++;
   }
 
-  get_target_assign_pos(state, vischar, &vischar->route); // was fallthrough
+  get_target_assign_pos(state, vischar, &vischar->route); /* was fallthrough */
 }
 
 /**
