@@ -10737,12 +10737,14 @@ void guards_follow_suspicious_character(tgestate_t *state,
 
   character = vischar->character;
 
-  /* When the uniform is worn only the commandant will recognise the hero. */
+  /* Wearing the uniform stops anyone but the commandant from pursuing the
+   * hero. */
   if (character != character_0_COMMANDANT &&
       state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_1])
     return;
 
-  /* If this (hostile) character saw the bribe being used then ignore the hero. */
+  /* If this (hostile) character saw the bribe being used then ignore the
+   * hero. */
   if (vischar->flags == vischar_PURSUIT_SAW_BRIBE)
     return;
 
