@@ -10809,18 +10809,22 @@ void is_item_discoverable(tgestate_t *state)
   room = state->room_index;
   if (room != room_0_OUTDOORS)
   {
-    if (is_item_discoverable_interior(state, room, NULL) == 0) /* Item found */
+    /* Interior. */
+
+    if (is_item_discoverable_interior(state, room, NULL) == 0)
+      /* Item was found. */
       hostiles_pursue(state);
   }
   else
   {
+    /* Exterior. */
+    
     itemstruct = &state->item_structs[0];
     iters      = item__LIMIT;
     do
     {
       if (itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
         goto nearby;
-
 next:
       itemstruct++;
     }
@@ -10828,16 +10832,15 @@ next:
     return;
 
 nearby:
-    // FUTURE: merge into loop
+    /* FUTURE: Merge into loop. */
     item = itemstruct->item_and_flags & itemstruct_ITEM_MASK;
 
     /* The green key and food items are ignored. */
     if (item == item_GREEN_KEY || item == item_FOOD)
       goto next;
 
-    /* Suspected bug in original game appears here: itemstruct pointer is
-     * decremented to access item_and_flags but is not re-adjusted
-     * afterwards. */
+    /* BUG FIX: In the original game the itemstruct pointer is decremented to
+     * access item_and_flags but is not re-adjusted afterwards. */
 
     hostiles_pursue(state);
   }
