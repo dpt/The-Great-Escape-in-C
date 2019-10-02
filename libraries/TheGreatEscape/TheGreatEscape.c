@@ -5740,89 +5740,89 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AFDF: Handle collisions including items being pushed around.
+ * $AFDF: Handle collisions between vischars, including items being pushed
+ *        around.
  *
- * \param[in] state         Pointer to game state.
+ * \param[in] state Pointer to game state.
  *
- * \return 0 if no collisions, 1 if collision.
+ * \return 0 if no collision, 1 if collision.
  */
 int collision(tgestate_t *state)
 {
-  vischar_t  *vischar;      /* was HL */
-  uint8_t     iters;        /* was B */
-  uint16_t    x;            /* was BC */
-  uint16_t    y;            /* was BC */
-  uint16_t    saved_x;      /* was HL */
-  uint16_t    saved_y;      /* was HL */
-  int8_t      delta;        /* was A */
-  uint8_t     A;
-  character_t character;    /* was A */
-  uint8_t     B;
-  uint8_t     C;
-  uint8_t     input;
-  uint8_t     direction;     /* was A (CHECK) */
-  uint16_t    new_direction; /* was BC */
+  vischar_t  *vischar;        /* was HL */
+  uint8_t     iters;          /* was B */
+  uint16_t    x;              /* was BC */
+  uint16_t    y;              /* was BC */
+  uint16_t    saved_x;        /* was HL */
+  uint16_t    saved_y;        /* was HL */
+  int8_t      delta;          /* was A */
+  uint8_t     coord;          /* was A */
+  character_t character;      /* was A */
+  uint8_t     range;          /* was B */
+  uint8_t     centre;         /* was C */
+  uint8_t     input;          /* was A */
+  uint8_t     direction;      /* was A */
+  uint16_t    new_direction;  /* was BC */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(state->IY);
 
-  // Iterate over characters being collided with (e.g. stove).
+  /* Iterate over characters being collided with (e.g. stove). */
   vischar = &state->vischars[0];
   iters = vischars_LENGTH;
   do
   {
-    if (vischar->flags & vischar_FLAGS_NO_COLLIDE) // sampled = $8001, $8021, ...
+    if (vischar->flags & vischar_FLAGS_NO_COLLIDE)
       goto next;
 
-    /*
-     * Check for contact between current vischar and saved_pos.
-     * +/-4 for x/y
+    /* Test for contact between the current vischar and saved_pos (which is
+     * set on entry either from a vischar or a characterstruct).
+     *
+     * For contact to occur the vischar being tested must be positioned
+     * within (-4..+4) on the x and y axis and within (-23..23) on the height
+     * axis.
      */
 
-    // PUSH BC, HL here
-
-    // Check: Check this all over...
-
-// This is like:
-//      if (state->saved_pos.x > vischar->mi.pos.x + 4 ||
-//          state->saved_pos.x < vischar->mi.pos.x - 4)
-//        goto pop_next;
-    x = vischar->mi.pos.x; // Conv: Moved +4 forward.
+    x = vischar->mi.pos.x; /* Conv: Moved +4 forward. */
     saved_x = state->saved_pos.pos.x;
-    if (saved_x != x + 4)
-      if (saved_x > x + 4 || saved_x < x - 4) // Conv: Removed redundant reload.
-        goto pop_next; // no x collision
+    if (saved_x != x + 4) /* redundant check */
+      if (saved_x > x + 4 || saved_x < x - 4) /* Conv: Removed redundant reload. */
+        goto next; /* no x collision */
 
-    y = vischar->mi.pos.y; // Conv: Moved +4 forward.
+    y = vischar->mi.pos.y; /* Conv: Moved +4 forward. */
     saved_y = state->saved_pos.pos.y;
-    if (saved_y != y + 4)
-      if (saved_y > y + 4 || saved_y < y - 4) // Conv: Removed redundant reload.
-        goto pop_next; // no y collision
+    if (saved_y != y + 4) /* redundant check */
+      if (saved_y > y + 4 || saved_y < y - 4) /* Conv: Removed redundant reload. */
+        goto next; /* no y collision */
 
-    /* Check the heights are within 24 of each other. */
-    // Does this ever happen for real in the game?
-    delta = state->saved_pos.pos.height - vischar->mi.pos.height; // Note: Signed result.
+    /* Ensure that the heights are within 24 of each other. This will stop
+     * the character colliding with any guards high up in watchtowers.
+     * Note: Signed result. */
+    delta = state->saved_pos.pos.height - vischar->mi.pos.height;
     if (delta < 0)
-      delta = -delta; // absolute value
+      delta = -delta; /* absolute value */
     if (delta >= 24)
-      goto pop_next;
+      goto next;
 
-    /* If IY vischar is pursuing... */
-    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_PURSUIT_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
+    /* Check for pursuit. */
+
+
+    /* If vischar IY is pursuing... */
+    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_PURSUIT_PURSUE)
     {
-      /* and CURRENT vischar is the hero... */
+      /* ...and the current vischar is the hero... */
       if (vischar == &state->vischars[0])
       {
         if (state->IY->character == state->bribed_character)
         {
-          /* IY is a bribed character pursuing the hero.
+          /* Vischar IY is a bribed character pursuing the hero.
            * When the pursuer catches the hero the bribe will be accepted. */
           accept_bribe(state);
         }
         else
         {
-          /* IY is a hostile who's caught the hero! */
-          // Conv: Removed "HL = IY + 1" code which has no effect.
+          /* Vischar IY is a hostile who's caught the hero! */
+          /* Conv: Removed "HL = IY + 1" code which has no effect. */
           solitary(state);
           NEVER_RETURNS 0;
         }
@@ -5833,127 +5833,123 @@ int collision(tgestate_t *state)
      * Check for collisions with items.
      */
 
-    // POP HL // $8021 etc.
-
-    character = vischar->character; // sampled HL = $80C0, $8040, $8000, $8020, $8060 // vischar_BYTE0
+    /* If it's an item... */
+    character = vischar->character;
     if (character >= character_26_STOVE_1)
     {
+      uint16_t *pcoord; /* was HL */
+
       /* Movable items: Stove 1, Stove 2 or Crate */
 
-      // Stoves move on which axis? screenwise it's bottom-left to top-right
-      // Crate moves on which axis? screenwise it's bottom-right to top-left
+      pcoord = &vischar->mi.pos.y;
 
-      // PUSH HL
-      uint16_t *coord; /* was HL */
-
-      coord = &vischar->mi.pos.y; // ok
-
-      B = 7; // permitted range from centre point C
-      C = 35; // centre point (29 .. 35 .. 42)
-      direction = state->IY->direction; // was interleaved
+      /* By default, setup for the stove.
+       * It can move on the Y axis only (bottom left to top right). */
+      range = 7; /* permitted range from centre point */
+      centre = 35; /* centre point (object will move from 29 to 42) */
+      direction = state->IY->direction; /* was interleaved */
       if (character == character_28_CRATE)
       {
-        /* Crate moves on x(?) axis only. */
-        coord--; // -> HL->mi.pos.x
-        C = 54; // centre point (47 .. 54 .. 61)
-        direction ^= 1; /* swap direction: left <=> right */
+        /* Setup for the crate.
+         * It can move on the X axis only (top left to bottom right). */
+        pcoord--; /* point at vischar->mi.pos.x */
+        centre = 54; /* centre point (object will move from 47 to 61) */
+        direction ^= 1; /* swap axis: left<=>right */
       }
 
       switch (direction)
       {
         case direction_TOP_LEFT:
-          /* The player is pushing the movable item forward so centre it. */
-          A = *coord; // note: narrowing // orig code loads bytes here?
-          if (A != C) // hit when hero pushes to top-left (screenwise)
+          /* The player is pushing the movable item from its front, so centre
+           * it. */
+          coord = *pcoord; /* Conv: Original code loads a byte here. */
+          if (coord != centre)
           {
-            // Conv: Replaced[-2]+1 trick
-            if (A > C)
-              (*coord)--;
+            /* Conv: This was the [-2]+1 pattern. */
+            if (coord > centre)
+              (*pcoord)--;
             else
-              (*coord)++;
+              (*pcoord)++;
           }
           break;
 
-        case direction_TOP_RIGHT: // hit when hero pushes to top-right (screenwise)
-          if (*coord != (C + B))
-            (*coord)++;
+        case direction_TOP_RIGHT:
+          if (*pcoord != (centre + range))
+            (*pcoord)++;
           break;
 
-        case direction_BOTTOM_RIGHT: // likely never happens in game, but code is present
-          *coord = C - B;
+        case direction_BOTTOM_RIGHT:
+          /* Note: This case happens in the game. */
+          *pcoord = centre - range;
           break;
 
-        case direction_BOTTOM_LEFT: // hit when hero pushes to bottom-left (screenwise)
-          if (*coord != (C - B))
-            (*coord)--;
+        case direction_BOTTOM_LEFT:
+          if (*pcoord != (centre - range))
+            (*pcoord)--;
           break;
 
         default:
           assert("Should not happen" == NULL);
           break;
       }
-
-      // POP HL
-      // POP BC
     }
 
     /*
-     * Reorient the character? Not well understood.
+     * Check for collisions with characters.
      */
 
-    input = vischar->input & ~input_KICK; // sampled HL = $806D, $804D, $802D, $808D, $800D
+    input = vischar->input & ~input_KICK;
     if (input)
     {
-      assert(input < 9); // 9 needs a symbol
+      assert(input < 9); // TODO: Add an input_XXX symbol for '9'
 
-      direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
-      if (direction != state->IY->direction)
+      /* Swap direction top <=> bottom, then compare. */
+      if ((vischar->direction ^ 2) != state->IY->direction)
       {
-        state->IY->input = input_KICK;
+        /* The characters collided while facing away from each other. */
 
-collided:
-        /* Delay character_behaviour() for five turns. This delay controls
-         * how long it takes before a blocked character will try another
-         * direction. */
+        state->IY->input = input_KICK; /* force an update */
+
+collided_set_delay:
+        /* Delay calling character_behaviour() for five turns. This delay
+         * controls how long it takes before a blocked character will try
+         * another direction. */
         state->IY->counter_and_flags = (state->IY->counter_and_flags & ~vischar_BYTE7_COUNTER_MASK) | 5;
-        // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
-        //if (!Z)
-          return 1; /* odd -- returning with Z not set */
+        return 1; /* collided */
       }
     }
 
+    /* Pick a new direction for the vischar at state->IY. */
+
+    /** $B0F8: Inputs which move the character in the next anticlockwise
+     *         direction. */
+    static const uint8_t new_inputs[4] =
     {
-      /** $B0F8: New inputs. */
-      static const uint8_t new_inputs[4] =
-      {
-        input_DOWN + input_LEFT  + input_KICK,
-        input_UP   + input_LEFT  + input_KICK,
-        input_UP   + input_RIGHT + input_KICK,
-        input_DOWN + input_RIGHT + input_KICK
-      };
+      input_DOWN + input_LEFT  + input_KICK, /* if facing TL, move D+L */
+      input_UP   + input_LEFT  + input_KICK, /* if facing TR, move U+L */
+      input_UP   + input_RIGHT + input_KICK, /* if facing BR, move U+R */
+      input_DOWN + input_RIGHT + input_KICK  /* if facing BL, move D+R */
+    };
 
-      /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
-       * new_inputs[] if we collide when crawling. */
-      new_direction = state->IY->direction & vischar_DIRECTION_MASK;
-      assert(new_direction < 4);
-      state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
-      assert((state->IY->input & ~input_KICK) < 9);
-      if ((new_direction & 1) == 0) /* TL or BR */
-        state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
-      else
-        state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
-      goto collided;
-    }
+    /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
+     * new_inputs[] if we collide when crawling. */
+    new_direction = state->IY->direction & vischar_DIRECTION_MASK;
+    assert(new_direction < 4);
+    state->IY->input = new_inputs[new_direction];
+    assert((state->IY->input & ~input_KICK) < 9);
+    if ((new_direction & 1) == 0) /* if was facing TL or BR */
+      state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
+    else
+      state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
 
-pop_next:
-    // POP HL
-    // POP BC
+    goto collided_set_delay;
+
 next:
     vischar++;
   }
   while (--iters);
 
-  return 0; // return with Z set
+  return 0; /* no collision */
 }
 
 /* ----------------------------------------------------------------------- */
