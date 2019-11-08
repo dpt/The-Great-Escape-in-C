@@ -20,8 +20,6 @@
 /* TODO
  *
  * - Some enums might be wider than expected (int vs uint8_t).
- * - Decode foreground masks.
- * - Naming: "breakfast" room ought to be "mess hall".
  */
 
 /* LATER
@@ -969,14 +967,14 @@ const door_t doors[door_MAX * 2] =
   { ROOMDIR(room_5_HUT3RIGHT,             TR), {  36,  54, 24 } },
   { ROOMDIR(room_4_HUT3LEFT,              BL), {  38,  26, 24 } },
   // 19
-  { ROOMDIR(room_23_BREAKFAST,            TR), {  40,  66, 24 } },
-  { ROOMDIR(room_25_BREAKFAST,            BL), {  38,  24, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            TR), {  40,  66, 24 } },
+  { ROOMDIR(room_25_MESS_HALL,            BL), {  38,  24, 24 } },
   // 20 -
-  { ROOMDIR(room_23_BREAKFAST,            TL), {  62,  36, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            TL), {  62,  36, 24 } },
   { ROOMDIR(room_21_CORRIDOR,             BR), {  32,  46, 24 } },
   // 21
   { ROOMDIR(room_19_FOOD,                 TR), {  34,  66, 24 } },
-  { ROOMDIR(room_23_BREAKFAST,            BL), {  34,  28, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            BL), {  34,  28, 24 } },
   // 22 - initially locked
   { ROOMDIR(room_18_RADIO,                TR), {  36,  54, 24 } },
   { ROOMDIR(room_19_FOOD,                 BL), {  56,  34, 24 } },
@@ -1809,7 +1807,7 @@ void process_player_input(tgestate_t *state)
         state->vischars[0].mi.pos.x    = 52;
         state->vischars[0].mi.pos.y    = 62;
         set_roomdef(state,
-                    room_25_BREAKFAST,
+                    room_25_MESS_HALL,
                     roomdef_25_BENCH_G,
                     interiorobject_EMPTY_BENCH);
         state->hero_in_breakfast = 0;
@@ -3032,14 +3030,14 @@ void end_of_breakfast(tgestate_t *state)
   iters = 3;
   do
   {
-    charstr->room = room_25_BREAKFAST;
+    charstr->room = room_25_MESS_HALL;
     charstr++;
   }
   while (--iters);
   iters = 3;
   do
   {
-    charstr->room = room_23_BREAKFAST;
+    charstr->room = room_23_MESS_HALL;
     charstr++;
   }
   while (--iters);
@@ -3048,13 +3046,13 @@ void end_of_breakfast(tgestate_t *state)
   set_prisoners_and_guards_route_B(state, &t2);
 
   /* Update all the benches to be empty. */
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
 
   /* Redraw current room if the game is showing an affected scene. */
   if (state->room_index >= room_1_HUT1RIGHT &&
@@ -3461,8 +3459,8 @@ void character_bed_common(tgestate_t *state,
  * $A420: Character sits.
  *
  * This is called with x = 18,19,20,21,22.
- * - 18..20 go to room_25_BREAKFAST
- * - 21..22 go to room_23_BREAKFAST
+ * - 18..20 go to room_25_MESS_HALL
+ * - 21..22 go to room_23_MESS_HALL
  *
  * \param[in] state      Pointer to game state.
  * \param[in] routeindex Index of route.   (was A)
@@ -3485,12 +3483,12 @@ void character_sits(tgestate_t *state,
 
   index = routeindex - routeindex_18_PRISONER_SITS_1;
   /* First three characters. */
-  room_index = room_25_BREAKFAST;
+  room_index = room_25_MESS_HALL;
   offset     = roomdef_25_BENCH_D;
   if (index >= 3)
   {
     /* Last two characters. */
-    room_index = room_23_BREAKFAST;
+    room_index = room_23_MESS_HALL;
     offset     = roomdef_23_BENCH_A;
     index -= 3;
   }
@@ -3500,9 +3498,9 @@ void character_sits(tgestate_t *state,
               interiorobject_PRISONER_SAT_MID_TABLE);
 
   if (routeindex < routeindex_21_PRISONER_SITS_1)
-    room = room_25_BREAKFAST;
+    room = room_25_MESS_HALL;
   else
-    room = room_23_BREAKFAST;
+    room = room_23_MESS_HALL;
 
   character_sit_sleep_common(state, room, route);
 }
@@ -3624,7 +3622,7 @@ void hero_sits(tgestate_t *state)
   assert(state != NULL);
 
   set_roomdef(state,
-              room_25_BREAKFAST,
+              room_25_MESS_HALL,
               roomdef_25_BENCH_G,
               interiorobject_PRISONER_SAT_END_TABLE);
   hero_sit_sleep_common(state, &state->hero_in_breakfast);
@@ -7258,13 +7256,13 @@ void reset_map_and_characters(tgestate_t *state)
   while (--iters);
 
   /* Clear the mess halls. */
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
 
   /* Reset characters 12..15 (guards) and 20..25 (prisoners). */
   charstr = &state->character_structs[character_12_GUARD_12];
@@ -10143,8 +10141,8 @@ const uint8_t *get_route(routeindex_t index)
     DOOR(35),                 // room_17_CORRIDOR -> room_12_CORRIDOR
     DOOR(25 | door_REVERSE),  // room_12_CORRIDOR -> room_18_RADIO
     DOOR(22 | door_REVERSE),  // room_18_RADIO    -> room_19_FOOD
-    DOOR(21 | door_REVERSE),  // room_19_FOOD     -> room_23_BREAKFAST
-    DOOR(20 | door_REVERSE),  // room_23_BREAKFAST-> room_21_CORRIDOR
+    DOOR(21 | door_REVERSE),  // room_19_FOOD     -> room_23_MESS_HALL
+    DOOR(20 | door_REVERSE),  // room_23_MESS_HALL-> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     LOCATION(42),
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
@@ -10235,8 +10233,8 @@ const uint8_t *get_route(routeindex_t index)
   {
     LOCATION(12),             // 93,104
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
-    DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
-    DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
+    DOOR(20),                 // room_21_CORRIDOR  -> room_23_MESS_HALL
+    DOOR(19 | door_REVERSE),  // room_23_MESS_HALL -> room_25_MESS_HALL
     routebyte_END
   };
   static const uint8_t route_breakfast_room_23[] =
@@ -10244,7 +10242,7 @@ const uint8_t *get_route(routeindex_t index)
     LOCATION(16),
     LOCATION(12),
     DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
-    DOOR(20),                 // room_21_CORRIDOR -> room_23_BREAKFAST
+    DOOR(20),                 // room_21_CORRIDOR -> room_23_MESS_HALL
     routebyte_END
   };
   static const uint8_t route_prisoner_sits_1[] =

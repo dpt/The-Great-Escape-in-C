@@ -729,7 +729,7 @@ static INLINE int get_roomdef_shadow(int room_index, int offset)
       }
       break;
 
-    case room_23_BREAKFAST:
+    case room_23_MESS_HALL:
       switch (offset)
       {
         case roomdef_23_BENCH_A:
@@ -741,7 +741,7 @@ static INLINE int get_roomdef_shadow(int room_index, int offset)
       }
       break;
 
-    case room_25_BREAKFAST:
+    case room_25_MESS_HALL:
       switch (offset)
       {
         case roomdef_25_BENCH_D:
