@@ -3329,7 +3329,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   if (get_target_result == get_target_ROUTE_ENDS)
   {
     state->IY = vischar;
-    (void) get_target_assign_pos(state, vischar, &vischar->route);
+    get_target_assign_pos(state, vischar, &vischar->route);
   }
   else if (get_target_result == get_target_DOOR)
   {
@@ -5975,7 +5975,7 @@ void accept_bribe(tgestate_t *state)
   state->IY->flags = 0;
 
   route = &state->IY->route;
-  (void) get_target_assign_pos(state, state->IY, route);
+  get_target_assign_pos(state, state->IY, route);
 
   /* Return early if we have no bribes. */
   item = &state->items_held[0];
@@ -8486,7 +8486,7 @@ again:
     target_type = get_target(state, route, &doorpos, &location);
     if (target_type == get_target_ROUTE_ENDS)
     {
-      (void) route_ended(state, vischar, &vischar->route);
+      route_ended(state, vischar, &vischar->route);
 
       /* To match the original code this should now jump to 'again' with 'route'
        * pointing to vischar->route, not charstr->route as used on the first
@@ -9555,7 +9555,7 @@ pursue_hero:
         /* The hero is under automatic control: hostiles lose interest and
          * resume following their original route. */
         vischar2->flags = 0; /* clear vischar_PURSUIT_HASSLE */
-        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+        get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9576,7 +9576,7 @@ pursue_hero:
         vischar2->flags = 0; /* clear vischar_PURSUIT_DOG_FOOD */
         vischar2->route.index = routeindex_255_WANDER;
         vischar2->route.step  = 0; /* 0..7 */
-        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+        get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9604,7 +9604,7 @@ pursue_hero:
       /* Bribed character was not visible: hostiles lose interest and resume
        * following their original route. */
       vischar2->flags = 0; /* clear vischar_PURSUIT_SAW_BRIBE */
-      (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+      get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
 
 bribed_visible:
@@ -9932,7 +9932,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     {
       /* Hero's vischar only. */
       vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
-      (void) get_target_assign_pos(state, vischar, &vischar->route);
+      get_target_assign_pos(state, vischar, &vischar->route);
     }
 
     // POP HL_tinypos
@@ -9954,7 +9954,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
       vischar->route.step++;
   }
 
-  (void) get_target_assign_pos(state, vischar, &vischar->route); // was fallthrough
+  get_target_assign_pos(state, vischar, &vischar->route); // was fallthrough
 }
 
 /**
@@ -9964,9 +9964,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t get_target_assign_pos(tgestate_t *state,
-                              vischar_t  *vischar,
-                              route_t    *route)
+void get_target_assign_pos(tgestate_t *state,
+                           vischar_t  *vischar,
+                           route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
   const tinypos_t *doorpos;           /* was HL */
@@ -9998,15 +9998,11 @@ uint8_t get_target_assign_pos(tgestate_t *state,
       vischar->target.x = location->x;
       vischar->target.y = location->y;
     }
-
-    return 1 << 7; // get_target_DOOR?
   }
   else
   {
-    return route_ended(state, vischar, route); // was fallthrough
+    route_ended(state, vischar, route); // was fallthrough
   }
-
-  /* FUTURE: The return values never seem to be used, so remove them. */
 }
 
 /**
@@ -10017,7 +10013,7 @@ uint8_t get_target_assign_pos(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
+void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10056,10 +10052,9 @@ do_character_event:
    */
 
   character_event(state, route);
-  if (route->index == routeindex_0_HALT) /* standing still */
-    return 0;
-  else
-    return get_target_assign_pos(state, vischar, route); // re-enter
+  if (route->index != routeindex_0_HALT) /* standing still */
+    get_target_assign_pos(state, vischar, route); // re-enter
+  return;
 
 reverse_route:
   /* We arrive here if:
@@ -10074,8 +10069,6 @@ reverse_route:
     route->step--;
   else
     route->step++;
-
-  return 0;
 }
 
 // $CB5F,2 Unreferenced bytes. [Absent in DOS version]
