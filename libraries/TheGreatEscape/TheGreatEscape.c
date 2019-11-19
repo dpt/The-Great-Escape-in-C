@@ -8849,23 +8849,23 @@ uint8_t get_target(tgestate_t       *state,
  */
 void move_a_character(tgestate_t *state)
 {
-  character_t        character;               /* was A */
-  characterstruct_t *charstr;                 /* was HL */
-  room_t             room;                    /* was A */
-  item_t             item;                    /* was C */
-  uint8_t            get_target_result;       /* was A */
-  route_t           *HLroute;                 /* was HL */
-  const tinypos_t   *HLtinypos;               /* was HL */
-  const xy_t        *HLlocation;              /* was HL */
-  uint8_t            routeindex;              /* was A */
-  characterstruct_t *DEcharstr;               /* was DE */
-  uint8_t            max;                     /* was A' */
-  uint8_t            B;                       /* was B */
-  door_t            *HLdoor;                  /* was HL */
-  tinypos_t         *DEcharstr_tinypos;       /* was DE */
+  character_t        character;       /* was A */
+  characterstruct_t *charstr;         /* was HL/DE */
+  room_t             room;            /* was A */
+  item_t             item;            /* was C */
+  uint8_t            target_type;     /* was A */
+  route_t           *route;           /* was HL */
+  const tinypos_t   *tinypos;         /* was HL */
+  const xy_t        *location;        /* was HL */
+  uint8_t            routeindex;      /* was A */
+  uint8_t            max;             /* was A' */
+  uint8_t            arrived;         /* was B */
+  door_t            *door;            /* was HL */
+  tinypos_t         *charstr_tinypos; /* was DE */
 
   assert(state != NULL);
 
+  /* Set the 'character index is valid' flag. */
   /* This makes future character events use state->character_index. */
   state->entered_move_a_character = 255;
 
@@ -8875,40 +8875,32 @@ void move_a_character(tgestate_t *state)
     character = character_0_COMMANDANT;
   state->character_index = character;
 
-  /* Get its chararacter struct, exiting if it's on-screen. */
+  /* Get its chararacter struct and exit if the character is on-screen. */
   charstr = get_character_struct(state, character);
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
     return;
-
-  // PUSH HL_charstr
 
   /* Are any items to be found in the same room as the character? */
   room = charstr->room;
   ASSERT_ROOM_VALID(room);
   if (room != room_0_OUTDOORS)
-    /* This discovers one item at a time. */
+    /* Note: This discovers just one item at a time. */
     if (is_item_discoverable_interior(state, room, &item) == 0)
       item_discovered(state, item);
 
-  // POP HL_charstr
-  // HL += 2; // point at charstr->pos
-  // PUSH HL_pos
-  // HL += 3; // point at charstr->route
-
-  /* If the character is standing still, return. */
-  if (charstr->route.index == routeindex_0_HALT) /* temp was A */
-    // POP HL_pos
+  /* If the character is standing still, return now. */
+  if (charstr->route.index == routeindex_0_HALT)
     return;
 
-  get_target_result = get_target(state,
-                                 &charstr->route,
-                                 &HLtinypos,
-                                 &HLlocation);
-  if (get_target_result == get_target_ROUTE_ENDS)
+  target_type = get_target(state,
+                          &charstr->route,
+                          &tinypos,
+                          &location);
+  if (target_type == get_target_ROUTE_ENDS)
   {
     /* When the route ends, reverse the route. */
 
-    HLroute = &charstr->route;
+    route = &charstr->route;
 
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8920,147 +8912,134 @@ void move_a_character(tgestate_t *state)
 
       /* Characters 1..11. */
 reverse_route:
-      HLroute->index = routeindex = HLroute->index ^ routeindexflag_REVERSED;
+      route->index = routeindex = route->index ^ routeindexflag_REVERSED;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
       if (routeindex & routeindexflag_REVERSED)
-        HLroute->step--;
+        route->step--;
       else
-        HLroute->step++;
-
-      // POP HL_pos
-      return;
+        route->step++;
     }
     else
     {
       /* Commandant only. */
 
-      // sampled HL = $7617 (characterstruct + 5)
-      routeindex = HLroute->index & ~routeindexflag_REVERSED;
-      if (routeindex != 36)
+      routeindex = route->index & ~routeindexflag_REVERSED;
+      if (routeindex != routeindex_36_GO_TO_SOLITARY)
         goto reverse_route;
 
 trigger_event:
-      /* We arrive here if character >= character_12_GUARD_12 or if
-       * commandant on route 36. */
+      /* We arrive here if the character index is character_12_GUARD_12, or
+       * higher, or if it's the commandant on route 36 ("go to solitary"). */
 
-      // POP DE_pos
-      character_event(state, HLroute);
-      return; // exit via
+      character_event(state, route); /* exit via */
     }
   }
   else
   {
-    if (get_target_result == get_target_DOOR)
+    if (target_type == get_target_DOOR)
     {
-      const tinypos_t *HLtinypos2; /* was HL */
+      /* Handle the target-is-a-door case. */
 
-      // POP DE_pos
-      DEcharstr = charstr; // points at characterstruct.pos
-      room = DEcharstr->room; // read one byte earlier
-      // PUSH HL_route
+      const tinypos_t *tinypos2; /* was HL */
+
+      room = charstr->room;
       if (room == room_0_OUTDOORS)
       {
-        // The original code stores to saved_pos as if it's a pair of bytes.
-        // This is different from most, if not all, of the other locations in
-        // the code which treat it as a pair of 16-bit words.
-        // Given that I assume it's just being used here as scratch space.
+        /* The original code stores to saved_pos as if it's a pair of bytes.
+         * This is different from most, if not all, of the other locations in
+         * the code which treat it as a pair of 16-bit words.
+         * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_pos.tinypos.x = HLtinypos->x >> 1;
-        state->saved_pos.tinypos.y = HLtinypos->y >> 1;
-        HLtinypos2 = &state->saved_pos.tinypos;
+        state->saved_pos.tinypos.x = tinypos->x >> 1;
+        state->saved_pos.tinypos.y = tinypos->y >> 1;
+        tinypos2 = &state->saved_pos.tinypos;
       }
       else
       {
         /* Conv: Assignment made explicit. */
-        HLtinypos2 = HLtinypos;
+        tinypos2 = tinypos;
       }
 
-      if (DEcharstr->room == room_0_OUTDOORS) // FUTURE: Remove reload of 'room'.
+      if (charstr->room == room_0_OUTDOORS) /* FUTURE: Remove reload of 'room'. */
         max = 2;
       else
         max = 6;
 
-      DEcharstr_tinypos = &DEcharstr->pos;
+      charstr_tinypos = &charstr->pos;
 
-      B = move_towards(max, 0, &HLtinypos2->x, &DEcharstr_tinypos->x); // max, rc, second, first
-      B = move_towards(max, B, &HLtinypos2->y, &DEcharstr_tinypos->y);
-      if (B != 2)
-        return; /* Managed to move. */
+      /* args: max move, rc, second val, first val */
+      arrived = move_towards(max,       0, &tinypos2->x, &charstr_tinypos->x);
+      arrived = move_towards(max, arrived, &tinypos2->y, &charstr_tinypos->y);
+      if (arrived != 2)
+        return; /* not arrived */
 
-      // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
-      // => character_structs.room
+      /* If we reach here the character has arrived at their destination.
+       *
+       * Our current target is a door, so change to the door's target room. */
 
-      /* This unpleasant cast turns HLtinypos (assigned in get_target)
-       * back into a door_t. */
-      HLdoor = (door_t *)((char *) HLtinypos - 1);
-      assert(HLdoor >= &doors[0]);
-      assert(HLdoor < &doors[door_MAX * 2]);
+      /* This unpleasant cast turns tinypos (assigned in get_target) back into a door_t. */
+      door = (door_t *)((char *) tinypos - 1);
+      assert(door >= &doors[0]);
+      assert(door < &doors[door_MAX * 2]);
 
-      // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
-      // => doors.room_and_flags
+      charstr->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
-      DEcharstr->room = (HLdoor->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
-
-      // Stuff reading from doors.
-      if ((HLdoor->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
-        // top left or top right
-        // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
-        HLtinypos = &HLdoor[1].pos;
+      /* Determine the destination door. */
+      if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
+        /* The door is facing top left or top right. */
+        tinypos = &door[1].pos; /* point at the next half of door pair */
       else
-        // bottom left or bottom right
-        HLtinypos = &HLdoor[-1].pos;
+        /* The door is facing bottom left or bottom right. */
+        tinypos = &door[-1].pos; /* point at the previous half of door pair */
 
-      room = DEcharstr->room; // *DE++;
-      DEcharstr_tinypos = &DEcharstr->pos;
+      /* Copy the door's tinypos position into the charstr. */
+      room = charstr->room;
+      charstr_tinypos = &charstr->pos;
       if (room != room_0_OUTDOORS)
       {
-        *DEcharstr_tinypos = *HLtinypos;
-//        DE += 3;
-//        DE--; // DE points to DEtinypos->height
-        // HL += 3 // HL points to next door_t?
+        /* Indoors. Copy the door's tinypos into the charstr's tinypos. */
+
+        *charstr_tinypos = *tinypos;
       }
       else
       {
+        /* Outdoors. Copy the door's tinypos into the charstr's tinypos,
+         * dividing by two. */
+
         /* Conv: Unrolled. */
-        DEcharstr_tinypos->x      = HLtinypos->x      >> 1;
-        DEcharstr_tinypos->y      = HLtinypos->y      >> 1;
-        DEcharstr_tinypos->height = HLtinypos->height >> 1;
-//        DE += 3;
-//        DE--;
+        charstr_tinypos->x      = tinypos->x      >> 1;
+        charstr_tinypos->y      = tinypos->y      >> 1;
+        charstr_tinypos->height = tinypos->height >> 1;
       }
     }
     else
     {
-      // POP DE
-      DEcharstr = charstr; // points at characterstruct.pos
+      /* Normal move case. */
 
+      /* Establish a maximum for passing into move_towards. */
       /* Conv: Reordered. */
-      if (charstr->room == room_0_OUTDOORS) // was DE[-1]
+      if (charstr->room == room_0_OUTDOORS)
         max = 2;
       else
         max = 6;
 
-      // sampled HL at $C77A = 787a, 787e, 7888, 7890, 78aa, 783a, 786a, 7896, 787c,
-      // => locations[]
-      // HL comes from HLlocation
-
-      B = move_towards(max, 0, &HLlocation->x, &charstr->pos.x);
-      B = move_towards(max, B, &HLlocation->y, &charstr->pos.y);
-      if (B != 2)
-        return; // managed to move
+      arrived = move_towards(max,       0, &location->x, &charstr->pos.x);
+      arrived = move_towards(max, arrived, &location->y, &charstr->pos.y);
+      if (arrived != 2)
+        return; /* not arrived */
     }
-//    DE++;
-    // EX DE, HL
-    // HL -> DEcharstr->route
-    routeindex = DEcharstr->route.index; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // route field
+
+    /* If we reach here the character has arrived at their destination. */
+    routeindex = charstr->route.index;
     if (routeindex == routeindex_255_WANDER)
       return;
-    if ((routeindex & routeindexflag_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
-      DEcharstr->route.step++;
+
+    if ((routeindex & routeindexflag_REVERSED) == 0)
+      charstr->route.step++;
     else
-      DEcharstr->route.step--;
+      charstr->route.step--;
   }
 }
 
@@ -9668,7 +9647,7 @@ move:
     character_behaviour_move_y_dominant(state, vischar, scale); // exit via
   }
   else
-  {
+  { // x dominant:
     input_t input; /* was ? */
 
     input = vischar_move_x(state, vischar, scale);
