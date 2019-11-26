@@ -540,14 +540,14 @@ tinyxy_t;
 /**
  * Holds an X,Y position and height.
  */
-typedef struct pos
+typedef struct bigpos
 {
   uint16_t x, y, height;
 }
-pos_t;
+bigpos_t;
 
 /**
- * Holds a smaller scale version of pos_t.
+ * Holds a smaller scale version of bigpos_t.
  */
 typedef struct tinypos
 {
@@ -590,7 +590,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  pos_t              pos;           /**< map position */
+  bigpos_t           pos;           /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }

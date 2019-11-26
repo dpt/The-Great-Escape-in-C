@@ -138,7 +138,7 @@ struct tgestate
    * Used by various places in the code. */
   union
   {
-    pos_t         pos;
+    bigpos_t      pos;
     tinypos_t     tinypos;
   }
   saved_pos;

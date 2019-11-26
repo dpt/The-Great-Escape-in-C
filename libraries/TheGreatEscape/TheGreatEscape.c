@@ -1175,7 +1175,7 @@ void use_item_common(tgestate_t *state, item_t item)
 
   ASSERT_ITEM_VALID(item);
 
-  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(pos_t));
+  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(bigpos_t));
 
   /* Conv: In the original game the action jumps to a RET for action-less
    * items. We use a NULL instead. */
@@ -1296,7 +1296,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
   tinypos_t    *outpos;  /* was DE */
-  pos_t        *inpos;   /* was HL */
+  bigpos_t     *inpos;   /* was HL */
 
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
@@ -1964,7 +1964,7 @@ void in_permitted_area(tgestate_t *state)
     { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
-  pos_t       *vcpos;      /* was HL */
+  bigpos_t    *vcpos;      /* was HL */
   tinypos_t   *pos;        /* was DE */
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
@@ -6264,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const pos_t         *saved_pos;     /* was HL */
+  const bigpos_t      *saved_pos;     /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6284,8 +6284,8 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   object_bounds = &state->roomdef_object_bounds[0]; /* Conv: Moved around. */
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
   {
-    pos_t  *pos;  /* was DE */
-    uint8_t x, y; /* was A, A */
+    bigpos_t *pos;  /* was DE */
+    uint8_t   x, y; /* was A, A */
 
     /* Conv: HL dropped. */
     pos = &state->saved_pos.pos;
@@ -6355,7 +6355,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   uint8_t          room_and_flags; /* was A */
   const door_t    *door;           /* was HL' */
   const tinypos_t *doorpos;        /* was HL' */
-  pos_t           *pos;            /* was DE' */
+  bigpos_t        *pos;            /* was DE' */
   uint8_t          x;              /* was A */
   uint8_t          y;              /* was A */
 
@@ -6751,7 +6751,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
   const door_t *door;                 /* was HL' */
   doorindex_t   locked_door_index;    /* was C */
   doorindex_t  *interior_doors;       /* was DE */
-  pos_t        *pos;                  /* was DE' */
+  bigpos_t     *pos;                  /* was DE' */
   doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
@@ -8381,7 +8381,7 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   vischar_t                    *vischar;            /* was HL/IY */
   uint8_t                       iters;              /* was B */
   characterstruct_t            *charstr2;           /* was DE */
-  pos_t                        *saved_pos;          /* was HL */
+  bigpos_t                     *saved_pos;          /* was HL */
   character_t                   character;          /* was A */
   const character_class_data_t *metadata;           /* was DE */
   int                           Z;                  /* flag */
@@ -8463,7 +8463,7 @@ found_empty_slot:
 
   vischar->animbase  = metadata->animbase;
   vischar->mi.sprite = metadata->sprite;
-  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
+  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(bigpos_t));
 
   room = state->room_index;
   vischar->room = room;
@@ -8526,7 +8526,7 @@ again:
 void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 {
   character_t        character; /* was A */
-  pos_t             *pos;       /* was DE */
+  bigpos_t          *pos;       /* was DE */
   characterstruct_t *charstr;   /* was DE */
   room_t             room;      /* was A */
 
@@ -8564,7 +8564,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
   }
   else
   {
-    pos_t     *vispos_in;   /* was HL */
+    bigpos_t  *vispos_in;   /* was HL */
     tinypos_t *charpos_out; /* was DE */
 
     /* A non-object character. */
@@ -9587,7 +9587,7 @@ pursue_hero:
 bribed_visible:
       /* Found the bribed character in vischars: hostiles target him. */
       {
-        pos_t     *pos;    /* was HL */
+        bigpos_t  *pos;    /* was HL */
         tinypos_t *target; /* was DE */
 
         pos    = &found->mi.pos;
@@ -10673,7 +10673,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
 {
   character_t  character; /* was A */
   tinypos_t   *tinypos;   /* was DE */
-  pos_t       *pos;       /* was HL */
+  bigpos_t    *pos;       /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -12354,7 +12354,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  pos_t             *pos;            /* was HL */
+  bigpos_t          *pos;            /* was HL */
   tinypos_t         *tinypos;        /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
@@ -12552,15 +12552,15 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $E542: Scale down a pos_t and assign result to a tinypos_t.
+ * $E542: Scale down a bigpos_t and assign result to a tinypos_t.
  *
  * Divides the three input 16-bit words by 8, with rounding to nearest,
  * storing the result as bytes.
  *
- * \param[in]  in  Input pos_t.      (was HL)
+ * \param[in]  in  Input bigpos_t.      (was HL)
  * \param[out] out Output tinypos_t. (was DE)
  */
-void pos_to_tinypos(const pos_t *in, tinypos_t *out)
+void pos_to_tinypos(const bigpos_t *in, tinypos_t *out)
 {
   const uint16_t *pcoordin;  /* was HL */
   uint8_t        *pcoordout; /* was DE */
