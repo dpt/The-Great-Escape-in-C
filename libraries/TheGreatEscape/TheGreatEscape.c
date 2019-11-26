@@ -1341,7 +1341,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
  */
 void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy_t *iso_pos;
+  tinyxy_t *iso_pos;
 
   assert(itemstr != NULL);
 
@@ -1360,7 +1360,7 @@ void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
  */
 void calc_interior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy_t *iso_pos;
+  tinyxy_t *iso_pos;
 
   assert(itemstr != NULL);
 
@@ -3270,7 +3270,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
   uint8_t          get_target_result; /* was A */
   tinypos_t       *target;            /* was DE */
   const tinypos_t *doorpos;           /* was HL */
-  const xy_t      *location;          /* was HL */
+  const tinyxy_t  *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3338,7 +3338,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A3ED: Store an xy_t at the specified address.
+ * $A3ED: Store an tinyxy_t at the specified address.
  *
  * Used by set_character_route only.
  *
@@ -4740,7 +4740,7 @@ void move_map(tgestate_t *state)
   uint8_t        x,y;               /* was C,B */
   uint8_t       *pmove_map_y;       /* was HL */
   uint8_t       *pmove_map_y_copy;  /* was DE */
-  xy_t           game_window_offset;  /* was HL */
+  tinyxy_t       game_window_offset;  /* was HL */
   // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
@@ -7999,7 +7999,7 @@ void restore_tiles(tgestate_t *state)
   uint8_t            clipped_width;                 /* was C */
   uint8_t            top_skip;                      /* was D */
   uint8_t            clipped_height;                /* was E */
-  const xy_t        *map_position;                  /* was HL */
+  const tinyxy_t    *map_position;                  /* was HL */
   uint8_t           *windowbuf;                     /* was HL */
   uint8_t           *windowbuf2;                    /* was DE */
   uint8_t            x, y;                          /* was H', L' */
@@ -8388,7 +8388,7 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   room_t                        room;               /* was A */
   uint8_t                       target_type;        /* was A */
   const tinypos_t              *doorpos;            /* was HL */
-  const xy_t                   *location;           /* was HL */
+  const tinyxy_t               *location;           /* was HL */
   route_t                      *route;              /* was HL */
 
   assert(state   != NULL);
@@ -8627,7 +8627,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * $C651: Return the coordinates of the route's current target.
  *
  * Given a route_t return the coordinates the character should move to.
- * Coordinates are returned as a tinypos_t when moving to a door or an xy_t
+ * Coordinates are returned as a tinypos_t when moving to a door or a tinyxy_t
  * when moving to a numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
@@ -8645,12 +8645,12 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
                    const tinypos_t **doorpos,
-                   const xy_t      **location)
+                   const tinyxy_t  **location)
 {
   /**
    * $783A: Table of map locations used in routes.
    */
-  static const xy_t locations[78] =
+  static const tinyxy_t locations[78] =
   {
     // reset_visible_character guard dogs 1 & 2 use 0..7
     // character_behaviour uss this range also, for dog behaviour
@@ -8856,7 +8856,7 @@ void move_a_character(tgestate_t *state)
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
   const tinypos_t   *tinypos;         /* was HL */
-  const xy_t        *location;        /* was HL */
+  const tinyxy_t    *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
   uint8_t            arrived;         /* was B */
@@ -9948,7 +9948,7 @@ void get_target_assign_pos(tgestate_t *state,
 {
   uint8_t          get_target_result; /* was A */
   const tinypos_t *doorpos;           /* was HL */
-  const xy_t      *location;          /* was HL */
+  const tinyxy_t  *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -11143,7 +11143,7 @@ const anim_t *animations[animations__LIMIT] =
 void mark_nearby_items(tgestate_t *state)
 {
   room_t        room;       /* was C */
-  xy_t          map_xy;     /* was D, E */
+  tinyxy_t      map_xy;     /* was D, E */
   uint8_t       iters;      /* was B */
   itemstruct_t *itemstruct; /* was HL */
 
@@ -11159,7 +11159,7 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    const xy_t iso_pos = itemstruct->iso_pos; /* new */
+    const tinyxy_t iso_pos = itemstruct->iso_pos; /* new */
 
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
         (map_xy.x - 2 >= iso_pos.x && map_xy.x + (state->columns - 1) <= iso_pos.x) &&
@@ -11251,7 +11251,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-//  xy_t         *HL; /* was HL */
+//  tinyxy_t     *HL; /* was HL */
 //  tinypos_t    *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
   uint8_t       left_skip;      /* was B */
@@ -11429,20 +11429,20 @@ uint8_t item_visible(tgestate_t *state,
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
 
-  const xy_t *piso_pos;           /* was HL */
-  xy_t        map_position;       /* was DE */
-  uint8_t     window_right_edge;  /* was A  */
-  int8_t      available_right;    /* was A  */
-  uint8_t     new_left;           /* was B  */
-  uint8_t     new_width;          /* was C  */
-  uint8_t     item_right_edge;    /* was A  */
-  int8_t      available_left;     /* was A  */
-  uint8_t     window_bottom_edge; /* was A  */
-  int8_t      available_bottom;   /* was A  */
-  uint8_t     new_top;            /* was D  */
-  uint8_t     new_height;         /* was E  */
-  uint8_t     item_bottom_edge;   /* was A  */
-  uint8_t     available_top;      /* was A  */
+  const tinyxy_t *piso_pos;           /* was HL */
+  tinyxy_t        map_position;       /* was DE */
+  uint8_t         window_right_edge;  /* was A  */
+  int8_t          available_right;    /* was A  */
+  uint8_t         new_left;           /* was B  */
+  uint8_t         new_width;          /* was C  */
+  uint8_t         item_right_edge;    /* was A  */
+  int8_t          available_left;     /* was A  */
+  uint8_t         window_bottom_edge; /* was A  */
+  int8_t          available_bottom;   /* was A  */
+  uint8_t         new_top;            /* was D  */
+  uint8_t         new_height;         /* was E  */
+  uint8_t         item_bottom_edge;   /* was A  */
+  uint8_t         available_top;      /* was A  */
 
   assert(state          != NULL);
   assert(clipped_width  != NULL);
@@ -12737,7 +12737,7 @@ void plot_game_window(tgestate_t *state)
  */
 void event_roll_call(tgestate_t *state)
 {
-  uint16_t   range;   /* was DE */ // xy_t?
+  uint16_t   range;   /* was DE */ // tinyxy_t?
   uint8_t   *pcoord;  /* was HL */
   uint8_t    iters;   /* was B */
   uint8_t    coord;   /* was A */

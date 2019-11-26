@@ -164,7 +164,7 @@ struct tgestate
    * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer.
    */
-  xy_t            iso_pos;
+  tinyxy_t        iso_pos;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
@@ -189,7 +189,7 @@ struct tgestate
   // suspect that this is a centering value
   // positive x - map shown further right
   // positive y - map shown further up
-  xy_t            map_position;
+  tinyxy_t        map_position;
 
   /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
   uint8_t         searchlight_state;
@@ -299,7 +299,7 @@ struct tgestate
   uint8_t         move_map_y;
 
   /** $A7C7: Game window plotting offset. */
-  xy_t            game_window_offset;
+  tinyxy_t        game_window_offset;
 
   /** $AB66: Zoombox parameters. */
   struct
@@ -320,7 +320,7 @@ struct tgestate
     searchlight_movement_t  states[3];
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    xy_t                    caught_coord;
+    tinyxy_t                caught_coord;
   }
   searchlight;
 

@@ -529,13 +529,13 @@ typedef struct bigxy
 bigxy_t;
 
 /**
- * Holds an X,Y position.
+ * Holds an X,Y position (8-bit).
  */
-typedef struct xy
+typedef struct tinyxy
 {
   uint8_t x, y;
 }
-xy_t;
+tinyxy_t;
 
 /**
  * Holds an X,Y position and height.
@@ -747,7 +747,7 @@ typedef struct itemstruct
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
   tinypos_t pos;
-  xy_t      iso_pos;
+  tinyxy_t  iso_pos;
 }
 itemstruct_t;
 
@@ -818,8 +818,8 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
  */
 typedef struct default_item_location
 {
-  uint8_t room_and_flags;
-  xy_t    pos;
+  uint8_t  room_and_flags;
+  tinyxy_t pos;
 }
 default_item_location_t;
 
@@ -849,7 +849,7 @@ character_class_data_t;
  */
 typedef struct searchlight_movement
 {
-  xy_t           xy;
+  tinyxy_t       xy;
   uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
   uint8_t        index;     /**< Index + direction in top bit. */
