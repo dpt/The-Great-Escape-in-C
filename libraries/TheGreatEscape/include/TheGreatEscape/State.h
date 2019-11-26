@@ -139,7 +139,7 @@ struct tgestate
   union
   {
     bigpos_t      pos;
-    tinypos_t     tinypos;
+    tinyuvw_t     tinypos;
   }
   saved_pos;
 
@@ -155,7 +155,7 @@ struct tgestate
    * Written by setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer, guards_follow_suspicious_character.
    */
-  tinypos_t       tinypos_stash;
+  tinyuvw_t       tinypos_stash;
 
   /** $81B5: The current visible character's (or item's) screen position.
    *
@@ -177,7 +177,7 @@ struct tgestate
   spriteindex_t   sprite_index;
 
   /** $81B8: Hero's map position. */
-  tinypos_t       hero_map_position;
+  tinyuvw_t       hero_map_position;
 
   /** $81BB: Offset into map used when drawing tiles.
    *

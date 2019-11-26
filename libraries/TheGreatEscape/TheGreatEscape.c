@@ -166,7 +166,7 @@ void invalidate_attrs(tgestate_t *state,
  * \remarks Exits using longjmp in the hero case.
  */
 void transition(tgestate_t      *state,
-                const tinypos_t *tinypos)
+                const tinyuvw_t *tinypos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
@@ -185,9 +185,9 @@ void transition(tgestate_t      *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = multiply_by_4(tinypos->x);
-    vischar->mi.pos.y      = multiply_by_4(tinypos->y);
-    vischar->mi.pos.height = multiply_by_4(tinypos->height);
+    vischar->mi.pos.x      = multiply_by_4(tinypos->u);
+    vischar->mi.pos.y      = multiply_by_4(tinypos->v);
+    vischar->mi.pos.height = multiply_by_4(tinypos->w);
   }
   else
   {
@@ -197,9 +197,9 @@ void transition(tgestate_t      *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = tinypos->x;
-    vischar->mi.pos.y      = tinypos->y;
-    vischar->mi.pos.height = tinypos->height;
+    vischar->mi.pos.x      = tinypos->u;
+    vischar->mi.pos.y      = tinypos->v;
+    vischar->mi.pos.height = tinypos->w;
   }
 
   if (vischar != &state->vischars[0])
@@ -390,9 +390,9 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->flags             = 0;
   vischar1->route.index       = routeindex_0_HALT;
   vischar1->route.step        = 0;
-  vischar1->target.x          = 0;
-  vischar1->target.y          = 0;
-  vischar1->target.height     = 0;
+  vischar1->target.u          = 0;
+  vischar1->target.v          = 0;
+  vischar1->target.w          = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
@@ -1295,7 +1295,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
 {
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
-  tinypos_t    *outpos;  /* was DE */
+  tinyuvw_t    *outpos;  /* was DE */
   bigpos_t     *inpos;   /* was HL */
 
   assert(state != NULL);
@@ -1313,7 +1313,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     inpos  = &state->vischars[0].mi.pos;
 
     pos_to_tinypos(inpos, outpos);
-    outpos->height = 0;
+    outpos->w = 0;
 
     calc_exterior_item_iso_pos(itemstr);
   }
@@ -1324,9 +1324,9 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos = &itemstr->pos;
     inpos  = &state->vischars[0].mi.pos;
 
-    outpos->x      = inpos->x; // note: narrowing
-    outpos->y      = inpos->y; // note: narrowing
-    outpos->height = 5;
+    outpos->u = inpos->x; // note: narrowing
+    outpos->v = inpos->y; // note: narrowing
+    outpos->w = 5;
 
     calc_interior_item_iso_pos(itemstr);
   }
@@ -1347,8 +1347,8 @@ void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
 
   iso_pos = &itemstr->iso_pos;
 
-  iso_pos->x = (0x40 - itemstr->pos.x + itemstr->pos.y) * 2;
-  iso_pos->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
+  iso_pos->x = (0x40 - itemstr->pos.u + itemstr->pos.v) * 2;
+  iso_pos->y = 0x100 - itemstr->pos.u - itemstr->pos.v - itemstr->pos.w; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
@@ -1373,8 +1373,8 @@ void calc_interior_item_iso_pos(itemstruct_t *itemstr)
   // This needs to go somewhere more general.
 #define divround(x) (((x) + 4) >> 3)
 
-  iso_pos->x = divround((0x200 - itemstr->pos.x + itemstr->pos.y) * 2);
-  iso_pos->y = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
+  iso_pos->x = divround((0x200 - itemstr->pos.u + itemstr->pos.v) * 2);
+  iso_pos->y = divround(0x800 - itemstr->pos.u - itemstr->pos.v - itemstr->pos.w);
 
 #undef divround
 }
@@ -1487,8 +1487,8 @@ itemstruct_t *find_nearby_item(tgestate_t *state)
       uint8_t  coorditers;  /* was B */
 
       // FUTURE: Candidate for loop unrolling.
-      structcoord = &itemstr->pos.x;
-      herocoord   = &state->hero_map_position.x;
+      structcoord = &itemstr->pos.u;
+      herocoord   = &state->hero_map_position.u;
       coorditers = 2;
       /* Range check. */
       do
@@ -1817,8 +1817,8 @@ void process_player_input(tgestate_t *state)
         /* Hero was in bed. */
         state->vischars[0].route.index   = routeindex_44_HUT2_RIGHT_TO_LEFT;
         state->vischars[0].route.step    = 1;
-        state->vischars[0].target.x      = 46;
-        state->vischars[0].target.y      = 46;
+        state->vischars[0].target.u      = 46;
+        state->vischars[0].target.v      = 46;
         state->vischars[0].mi.pos.x      = 46;
         state->vischars[0].mi.pos.y      = 46;
         state->vischars[0].mi.pos.height = 24;
@@ -1965,7 +1965,7 @@ void in_permitted_area(tgestate_t *state)
   };
 
   bigpos_t    *vcpos;      /* was HL */
-  tinypos_t   *pos;        /* was DE */
+  tinyuvw_t   *pos;        /* was DE */
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
   route_t      route;      /* was CA */
@@ -1994,9 +1994,9 @@ void in_permitted_area(tgestate_t *state)
   {
     /* Indoors. */
 
-    pos->x      = vcpos->x; // note: narrowing
-    pos->y      = vcpos->y; // note: narrowing
-    pos->height = vcpos->height; // note: narrowing
+    pos->u = vcpos->x; // note: narrowing
+    pos->v = vcpos->y; // note: narrowing
+    pos->w = vcpos->height; // note: narrowing
   }
 
   /* Red flag if picking a lock, or cutting wire. */
@@ -2185,7 +2185,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  * \return true if in permitted area.
  */
 int within_camp_bounds(uint8_t          area, // ought to be an enum
-                       const tinypos_t *pos)
+                       const tinyuvw_t *pos)
 {
   /**
    * $9F15: Bounds of the three main exterior areas.
@@ -2203,8 +2203,8 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
   assert(pos != NULL);
 
   bounds = &permitted_bounds[area];
-  return pos->x >= bounds->x0 && pos->x < bounds->x1 &&
-         pos->y >= bounds->y0 && pos->y < bounds->y1;
+  return pos->u >= bounds->x0 && pos->u < bounds->x1 &&
+         pos->v >= bounds->y0 && pos->v < bounds->y1;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3268,8 +3268,8 @@ found_on_screen:
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          get_target_result; /* was A */
-  tinypos_t       *target;            /* was DE */
-  const tinypos_t *doorpos;           /* was HL */
+  tinyuvw_t       *target;            /* was DE */
+  const tinyuvw_t *doorpos;           /* was HL */
   const tinyxy_t  *location;          /* was HL */
 
   assert(state != NULL);
@@ -3302,8 +3302,8 @@ void set_route(tgestate_t *state, vischar_t *vischar)
              location->x, location->y);
 #endif
 
-    target->x = location->x;
-    target->y = location->y;
+    target->u = location->x;
+    target->v = location->y;
   }
   else if (get_target_result == get_target_DOOR)
   {
@@ -3313,8 +3313,8 @@ void set_route(tgestate_t *state, vischar_t *vischar)
              doorpos->x, doorpos->y);
 #endif
 
-    target->x = doorpos->x;
-    target->y = doorpos->y;
+    target->u = doorpos->u;
+    target->v = doorpos->v;
   }
   else
   {
@@ -6195,11 +6195,11 @@ int door_in_range(tgestate_t *state, const door_t *door)
   assert(state != NULL);
   assert(door  != NULL);
 
-  x = multiply_by_4(door->pos.x);
+  x = multiply_by_4(door->pos.u);
   if (state->saved_pos.pos.x < x - halfdist || state->saved_pos.pos.x >= x + halfdist)
     return 1;
 
-  y = multiply_by_4(door->pos.y);
+  y = multiply_by_4(door->pos.v);
   if (state->saved_pos.pos.y < y - halfdist || state->saved_pos.pos.y >= y + halfdist)
     return 1;
 
@@ -6354,7 +6354,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   doorindex_t      current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
   const door_t    *door;           /* was HL' */
-  const tinypos_t *doorpos;        /* was HL' */
+  const tinyuvw_t *doorpos;        /* was HL' */
   bigpos_t        *pos;            /* was DE' */
   uint8_t          x;              /* was A */
   uint8_t          y;              /* was A */
@@ -6380,10 +6380,10 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     /* Skip any door which is more than three units away. */
     doorpos = &door->pos;
     pos = &state->saved_pos.pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
-    x = doorpos->x;
+    x = doorpos->u;
     if (x - 3 >= pos->x || x + 3 < pos->x) // -3 .. +2
       continue;
-    y = doorpos->y;
+    y = doorpos->v;
     if (y - 3 >= pos->y || y + 3 < pos->y) // -3 .. +2
       continue;
 
@@ -6564,7 +6564,7 @@ void action_shovel(tgestate_t *state)
 void action_wiresnips(tgestate_t *state)
 {
   const wall_t    *wall;  /* was HL */
-  const tinypos_t *pos;   /* was DE */
+  const tinyuvw_t *pos;   /* was DE */
   uint8_t          iters; /* was B */
   uint8_t          flag;  /* was A */
 
@@ -6578,10 +6578,10 @@ void action_wiresnips(tgestate_t *state)
     uint8_t coord; /* was A */
 
     // check: this is using x then y which is the wrong order, isn't it?
-    coord = pos->y;
+    coord = pos->v;
     if (coord >= wall->miny && coord < wall->maxy) /* Conv: Reversed test order. */
     {
-      coord = pos->x;
+      coord = pos->u;
       if (coord == wall->maxx)
         goto snips_crawl_tl;
       if (coord - 1 == wall->maxx)
@@ -6599,10 +6599,10 @@ void action_wiresnips(tgestate_t *state)
   {
     uint8_t coord; /* was A */
 
-    coord = pos->x;
+    coord = pos->u;
     if (coord >= wall->minx && coord < wall->maxx)
     {
-      coord = pos->y;
+      coord = pos->v;
       if (coord == wall->miny)
         goto snips_crawl_tr;
       if (coord - 1 == wall->miny)
@@ -6816,8 +6816,8 @@ found:
     /* Range check pattern (-2..+3). */
     pos = &state->saved_pos.pos; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
-    if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
-        pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
+    if (pos->x <= door->pos.u - 3 || pos->x > door->pos.u + 3 ||
+        pos->y <= door->pos.v - 3 || pos->y > door->pos.v + 3)
       goto next_locked_door;
 
     return locked_doors;
@@ -7271,9 +7271,9 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos.x       = reset->x;
-    charstr->pos.y       = reset->y;
-    charstr->pos.height  = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
+    charstr->pos.u       = reset->x;
+    charstr->pos.v       = reset->y;
+    charstr->pos.w       = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
     charstr->route.index = 0; /* Stand still */
     charstr++;
     reset++;
@@ -7566,14 +7566,14 @@ void render_mask_buffer(tgestate_t *state)
     /* CHECK: What's in state->tinypos_stash at this point? It's set by
      * setup_vischar_plotting, setup_item_plotting. */
 
-    if (state->tinypos_stash.x <= pmask->pos.x ||
-        state->tinypos_stash.y <  pmask->pos.y)
+    if (state->tinypos_stash.u <= pmask->pos.u ||
+        state->tinypos_stash.v <  pmask->pos.v)
       goto pop_next;
 
-    height = state->tinypos_stash.height;
+    height = state->tinypos_stash.w;
     if (height)
       height--; /* make inclusive */
-    if (height >= pmask->pos.height)
+    if (height >= pmask->pos.w)
       goto pop_next;
 
     /* The mask is valid: now work out clipping offsets, widths and heights. */
@@ -8255,13 +8255,13 @@ void spawn_characters(tgestate_t *state)
 
           /* Do screen Y calculation.
            * The 0x100 here is represented as zero in the original game. */
-          y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height;
+          y = 0x100 - charstr->pos.u - charstr->pos.v - charstr->pos.w;
           if (y <= map_y_clamped || // <= might need to be <
               y > MIN(map_y_clamped + GRACE + 16 + GRACE, 0xFF))
             goto skip;
 
           /* Do screen X calculation. */
-          x = (0x40 - charstr->pos.x + charstr->pos.y) * 2;
+          x = (0x40 - charstr->pos.u + charstr->pos.v) * 2;
           if (x <= map_x_clamped || // <= might need to be <
               x > MIN(map_x_clamped + GRACE + 24 + GRACE, 0xFF))
             goto skip;
@@ -8387,7 +8387,7 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   int                           Z;                  /* flag */
   room_t                        room;               /* was A */
   uint8_t                       target_type;        /* was A */
-  const tinypos_t              *doorpos;            /* was HL */
+  const tinyuvw_t              *doorpos;            /* was HL */
   const tinyxy_t               *location;           /* was HL */
   route_t                      *route;              /* was HL */
 
@@ -8421,16 +8421,16 @@ found_empty_slot:
   if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
-    saved_pos->x      = charstr2->pos.x      * 8;
-    saved_pos->y      = charstr2->pos.y      * 8;
-    saved_pos->height = charstr2->pos.height * 8;
+    saved_pos->x      = charstr2->pos.u * 8;
+    saved_pos->y      = charstr2->pos.v * 8;
+    saved_pos->height = charstr2->pos.w * 8;
   }
   else
   {
     /* Conv: Unrolled. */
-    saved_pos->x      = charstr2->pos.x;
-    saved_pos->y      = charstr2->pos.y;
-    saved_pos->height = charstr2->pos.height;
+    saved_pos->x      = charstr2->pos.u;
+    saved_pos->y      = charstr2->pos.v;
+    saved_pos->height = charstr2->pos.w;
   }
 
   Z = collision(state);
@@ -8504,8 +8504,8 @@ again:
     }
     else
     {
-      vischar->target.x = location->x;
-      vischar->target.y = location->y;
+      vischar->target.u = location->x;
+      vischar->target.v = location->y;
       /* Note: We're not assigning .height here. */
     }
   }
@@ -8565,7 +8565,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
   else
   {
     bigpos_t  *vispos_in;   /* was HL */
-    tinypos_t *charpos_out; /* was DE */
+    tinyuvw_t *charpos_out; /* was DE */
 
     /* A non-object character. */
 
@@ -8593,9 +8593,9 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     {
       /* Indoors. */
       /* Conv: Unrolled from original code. */
-      charpos_out->x      = vispos_in->x; // note: narrowing
-      charpos_out->y      = vispos_in->y; // note: narrowing
-      charpos_out->height = vispos_in->height; // note: narrowing
+      charpos_out->u = vispos_in->x; // note: narrowing
+      charpos_out->v = vispos_in->y; // note: narrowing
+      charpos_out->w = vispos_in->height; // note: narrowing
     }
 
     // character = vischar->character; /* Done in original code, but we already have this from earlier. */
@@ -8644,7 +8644,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  */
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const tinypos_t **doorpos,
+                   const tinyuvw_t **doorpos,
                    const tinyxy_t  **location)
 {
   /**
@@ -8855,13 +8855,13 @@ void move_a_character(tgestate_t *state)
   item_t             item;            /* was C */
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
-  const tinypos_t   *tinypos;         /* was HL */
+  const tinyuvw_t   *tinypos;         /* was HL */
   const tinyxy_t    *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
   uint8_t            arrived;         /* was B */
   door_t            *door;            /* was HL */
-  tinypos_t         *charstr_tinypos; /* was DE */
+  tinyuvw_t         *charstr_tinypos; /* was DE */
 
   assert(state != NULL);
 
@@ -8941,7 +8941,7 @@ trigger_event:
     {
       /* Handle the target-is-a-door case. */
 
-      const tinypos_t *tinypos2; /* was HL */
+      const tinyuvw_t *tinypos2; /* was HL */
 
       room = charstr->room;
       if (room == room_0_OUTDOORS)
@@ -8952,8 +8952,8 @@ trigger_event:
          * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_pos.tinypos.x = tinypos->x >> 1;
-        state->saved_pos.tinypos.y = tinypos->y >> 1;
+        state->saved_pos.tinypos.u = tinypos->u >> 1;
+        state->saved_pos.tinypos.v = tinypos->v >> 1;
         tinypos2 = &state->saved_pos.tinypos;
       }
       else
@@ -8970,8 +8970,8 @@ trigger_event:
       charstr_tinypos = &charstr->pos;
 
       /* args: max move, rc, second val, first val */
-      arrived = move_towards(max,       0, &tinypos2->x, &charstr_tinypos->x);
-      arrived = move_towards(max, arrived, &tinypos2->y, &charstr_tinypos->y);
+      arrived = move_towards(max,       0, &tinypos2->u, &charstr_tinypos->u);
+      arrived = move_towards(max, arrived, &tinypos2->v, &charstr_tinypos->v);
       if (arrived != 2)
         return; /* not arrived */
 
@@ -9009,9 +9009,9 @@ trigger_event:
          * dividing by two. */
 
         /* Conv: Unrolled. */
-        charstr_tinypos->x      = tinypos->x      >> 1;
-        charstr_tinypos->y      = tinypos->y      >> 1;
-        charstr_tinypos->height = tinypos->height >> 1;
+        charstr_tinypos->u = tinypos->u >> 1;
+        charstr_tinypos->v = tinypos->v >> 1;
+        charstr_tinypos->w = tinypos->w >> 1;
       }
     }
     else
@@ -9025,8 +9025,8 @@ trigger_event:
       else
         max = 6;
 
-      arrived = move_towards(max,       0, &location->x, &charstr->pos.x);
-      arrived = move_towards(max, arrived, &location->y, &charstr->pos.y);
+      arrived = move_towards(max,       0, &location->x, &charstr->pos.u);
+      arrived = move_towards(max, arrived, &location->y, &charstr->pos.v);
       if (arrived != 2)
         return; /* not arrived */
     }
@@ -9515,8 +9515,8 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
     {
 pursue_hero:
       /* Pursue the hero. */
-      vischar2->target.x = state->hero_map_position.x;
-      vischar2->target.y = state->hero_map_position.y;
+      vischar2->target.u = state->hero_map_position.u;
+      vischar2->target.v = state->hero_map_position.v;
       goto move;
     }
     /* Mode 2: Hero is chased by hostiles if under player control. */
@@ -9542,8 +9542,8 @@ pursue_hero:
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
         /* Set dog target to poisoned food. */
-        vischar2->target.x = state->item_structs[item_FOOD].pos.x;
-        vischar2->target.y = state->item_structs[item_FOOD].pos.y;
+        vischar2->target.u = state->item_structs[item_FOOD].pos.u;
+        vischar2->target.v = state->item_structs[item_FOOD].pos.v;
         goto move;
       }
       else
@@ -9588,7 +9588,7 @@ bribed_visible:
       /* Found the bribed character in vischars: hostiles target him. */
       {
         bigpos_t  *pos;    /* was HL */
-        tinypos_t *target; /* was DE */
+        tinyuvw_t *target; /* was DE */
 
         pos    = &found->mi.pos;
         target = &vischar2->target;
@@ -9600,8 +9600,8 @@ bribed_visible:
         else
         {
           /* Indoors */
-          target->x = pos->x; // note: narrowing
-          target->y = pos->y; // note: narrowing
+          target->u = pos->x; // note: narrowing
+          target->v = pos->y; // note: narrowing
         }
         goto move;
       }
@@ -9751,7 +9751,7 @@ input_t vischar_move_x(tgestate_t *state,
   // suspect that mi.pos.x is "where i am"
   // and that pos.x is "where i need to be"
 
-  delta = (int16_t) vischar->mi.pos.x - (int16_t) vischar->target.x * scale;
+  delta = (int16_t) vischar->mi.pos.x - (int16_t) vischar->target.u * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_RIGHT + input_DOWN;
@@ -9793,7 +9793,7 @@ input_t vischar_move_y(tgestate_t *state,
    * same vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = (int16_t) vischar->mi.pos.y - (int16_t) vischar->target.y * scale;
+  delta = (int16_t) vischar->mi.pos.y - (int16_t) vischar->target.v * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_LEFT + input_DOWN;
@@ -9824,7 +9824,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   uint8_t          route;                   /* was A */
   doorindex_t      doorindex;               /* was A */
   const door_t    *door;                    /* was HL */
-  const tinypos_t *tinypos;                 /* was HL */
+  const tinyuvw_t *tinypos;                 /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9947,7 +9947,7 @@ void get_target_assign_pos(tgestate_t *state,
                            route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
-  const tinypos_t *doorpos;           /* was HL */
+  const tinyuvw_t *doorpos;           /* was HL */
   const tinyxy_t  *location;          /* was HL */
 
   assert(state != NULL);
@@ -9969,13 +9969,13 @@ void get_target_assign_pos(tgestate_t *state,
      * different vars. */
     if (get_target_result == get_target_DOOR)
     {
-      vischar->target.x = doorpos->x;
-      vischar->target.y = doorpos->y;
+      vischar->target.u = doorpos->u;
+      vischar->target.v = doorpos->v;
     }
     else
     {
-      vischar->target.x = location->x;
-      vischar->target.y = location->y;
+      vischar->target.u = location->x;
+      vischar->target.v = location->y;
     }
   }
   else
@@ -10557,7 +10557,7 @@ void solitary(tgestate_t *state)
   /**
    * $7AC6: Solitary map position.
    */
-  static const tinypos_t solitary_pos =
+  static const tinyuvw_t solitary_pos =
   {
     58, 42, 24
   };
@@ -10605,7 +10605,7 @@ void solitary(tgestate_t *state)
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
       item_t     item_and_flags; /* was A */
-      tinypos_t *itempos;        /* was HL */
+      tinyuvw_t *itempos;        /* was HL */
       uint8_t    area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
@@ -10672,7 +10672,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
   character_t  character; /* was A */
-  tinypos_t   *tinypos;   /* was DE */
+  tinyuvw_t   *tinypos;   /* was DE */
   bigpos_t    *pos;       /* was HL */
 
   assert(state != NULL);
@@ -10699,7 +10699,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
-    tinypos_t *hero_map_pos;  /* was HL */
+    tinyuvw_t *hero_map_pos;  /* was HL */
     int        dir;           /* Conv: was carry */
     uint8_t    direction;     /* was A / C */
 
@@ -10716,12 +10716,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TL or BR */
 
       /* Does the hero approximately match our Y coordinate? */
-      if (tinypos->y - 1 >= hero_map_pos->y ||
-          tinypos->y + 1 <  hero_map_pos->y)
+      if (tinypos->v - 1 >= hero_map_pos->v ||
+          tinypos->v + 1 <  hero_map_pos->v)
         return;
 
       /* Are we facing the hero? */
-      dir = tinypos->x < hero_map_pos->x;
+      dir = tinypos->u < hero_map_pos->u;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -10732,12 +10732,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TR or BL */
 
       /* Does the hero approximately match our X coordinate? */
-      if (tinypos->x - 1 >= hero_map_pos->x ||
-          tinypos->x + 1 <  hero_map_pos->x)
+      if (tinypos->u - 1 >= hero_map_pos->u ||
+          tinypos->u + 1 <  hero_map_pos->u)
         return;
 
       /* Are we facing the hero? */
-      dir = tinypos->y < hero_map_pos->y;
+      dir = tinypos->v < hero_map_pos->v;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -10938,18 +10938,18 @@ void item_discovered(tgestate_t *state, item_t item)
   itemstruct = item_to_itemstruct(state, item);
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
   itemstruct->room_and_flags = default_item_location->room_and_flags;
-  itemstruct->pos.x = default_item_location->pos.x;
-  itemstruct->pos.y = default_item_location->pos.y;
+  itemstruct->pos.u = default_item_location->pos.x;
+  itemstruct->pos.v = default_item_location->pos.y;
 
   if (room == room_0_OUTDOORS)
   {
     /* Conv: The original code assigned 'room' here since it's already zero. */
-    itemstruct->pos.height = 0;
+    itemstruct->pos.w = 0;
     calc_exterior_item_iso_pos(itemstruct);
   }
   else
   {
-    itemstruct->pos.height = 5;
+    itemstruct->pos.w = 5;
     calc_interior_item_iso_pos(itemstruct);
   }
 }
@@ -11213,15 +11213,15 @@ uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
                                                  itemstruct_ROOM_FLAG_NEARBY_7;
     /* Conv: Original calls out to multiply by 8, HL' is temp. */
     if ((itemstr->room_and_flags & FLAGS) == FLAGS &&
-        (itemstr->pos.x * 8 > x) &&
-        (itemstr->pos.y * 8 > y))
+        (itemstr->pos.u * 8 > x) &&
+        (itemstr->pos.v * 8 > y))
     {
-      const tinypos_t *pos; /* was HL' */
+      const tinyuvw_t *pos; /* was HL' */
 
       pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
       /* Calculate (x,y) for the next iteration. */
-      y = pos->y * 8;
-      x = pos->x * 8;
+      y = pos->v * 8;
+      x = pos->u * 8;
       *pitemstr = (itemstruct_t *) itemstr;
 
       /* The original code has an unpaired A register exchange here. If the
@@ -12355,7 +12355,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   };
 
   bigpos_t          *pos;            /* was HL */
-  tinypos_t         *tinypos;        /* was DE */
+  tinyuvw_t         *tinypos;        /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
@@ -12384,17 +12384,17 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   if (state->room_index > room_0_OUTDOORS)
   {
     /* Indoors. */
-    tinypos->x      = pos->x; // note: narrowing
-    tinypos->y      = pos->y; // note: narrowing
-    tinypos->height = pos->height; // note: narrowing
+    tinypos->u = pos->x; // note: narrowing
+    tinypos->v = pos->y; // note: narrowing
+    tinypos->w = pos->height; // note: narrowing
   }
   else
   {
     /* Outdoors. */
     /* Conv: Unrolled, removed divide-by-8 calls. */
-    tinypos->x      = (pos->x + 4 ) >> 3; /* with rounding */
-    tinypos->y      = (pos->y     ) >> 3; /* without rounding */
-    tinypos->height = (pos->height) >> 3;
+    tinypos->u = (pos->x + 4 ) >> 3; /* with rounding */
+    tinypos->v = (pos->y     ) >> 3; /* without rounding */
+    tinypos->w = (pos->height) >> 3;
   }
 
   sprite = vischar->mi.sprite;
@@ -12560,7 +12560,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
  * \param[in]  in  Input bigpos_t.      (was HL)
  * \param[out] out Output tinypos_t. (was DE)
  */
-void pos_to_tinypos(const bigpos_t *in, tinypos_t *out)
+void pos_to_tinypos(const bigpos_t *in, tinyuvw_t *out)
 {
   const uint16_t *pcoordin;  /* was HL */
   uint8_t        *pcoordout; /* was DE */
@@ -12572,7 +12572,7 @@ void pos_to_tinypos(const bigpos_t *in, tinypos_t *out)
   /* Use knowledge of the structure layout to cast the pointers to array[3]
    * of their respective types. */
   pcoordin  = (const uint16_t *) &in->x;
-  pcoordout = (uint8_t *) &out->x;
+  pcoordout = (uint8_t *) &out->u;
 
   iters = 3;
   do
@@ -12749,7 +12749,7 @@ void event_roll_call(tgestate_t *state)
   /* Conv: Unrolled. */
   /* Range checking. X in (114..124) and Y in (106..114). */
   range = map_ROLL_CALL_X;
-  pcoord = &state->hero_map_position.x;
+  pcoord = &state->hero_map_position.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     goto not_at_roll_call;
@@ -12792,7 +12792,7 @@ void action_papers(tgestate_t *state)
   /**
    * $EFF9: Position outside the main gate.
    */
-  static const tinypos_t outside_main_gate = { 214, 138, 6 };
+  static const tinyuvw_t outside_main_gate = { 214, 138, 6 };
 
   uint16_t  range;  /* was DE */
   uint8_t  *pcoord; /* was HL */
@@ -12804,7 +12804,7 @@ void action_papers(tgestate_t *state)
   // UNROLLED
   /* Range checking. X in (105..109) and Y in (73..75). */
   range = map_MAIN_GATE_X; // note the confused coords business
-  pcoord = &state->hero_map_position.x;
+  pcoord = &state->hero_map_position.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     return;

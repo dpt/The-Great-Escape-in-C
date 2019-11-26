@@ -549,11 +549,11 @@ bigpos_t;
 /**
  * Holds a smaller scale version of bigpos_t.
  */
-typedef struct tinypos
+typedef struct tinyuvw
 {
-  uint8_t x, y, height;
+  uint8_t u, v, w;
 }
-tinypos_t;
+tinyuvw_t;
 
 /**
  * An animation frame.
@@ -615,7 +615,7 @@ typedef struct vischar
   // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
-  tinypos_t       target;
+  tinyuvw_t       target;
 
   /** ($8007) top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
@@ -717,7 +717,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  tinypos_t   pos;
+  tinyuvw_t   pos;
   route_t     route;
 }
 characterstruct_t;
@@ -746,7 +746,7 @@ typedef struct itemstruct
 {
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
-  tinypos_t pos;
+  tinyuvw_t pos;
   tinyxy_t  iso_pos;
 }
 itemstruct_t;
@@ -774,7 +774,7 @@ typedef struct door
 {
   /** The top six bits are a room_t. The bottom two bits are a direction_t. */
   uint8_t   room_and_direction;
-  tinypos_t pos;
+  tinyuvw_t pos;
 }
 door_t;
 
@@ -830,7 +830,7 @@ typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
   bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  tinypos_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  tinyuvw_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
