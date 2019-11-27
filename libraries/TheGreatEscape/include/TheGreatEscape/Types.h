@@ -538,16 +538,16 @@ typedef struct tinyxy
 tinyxy_t;
 
 /**
- * Holds an X,Y position and height.
+ * Holds a (U,V) position and a height (W) in 16 bits.
  */
-typedef struct bigpos
+typedef struct biguvw
 {
-  uint16_t x, y, height;
+  uint16_t u, v, w;
 }
-bigpos_t;
+biguvw_t;
 
 /**
- * Holds a smaller scale version of bigpos_t.
+ * Holds a (U,V) position and a height (W) in 8 bits.
  */
 typedef struct tinyuvw
 {
@@ -590,7 +590,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  bigpos_t           pos;           /**< map position */
+  biguvw_t           pos;           /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
