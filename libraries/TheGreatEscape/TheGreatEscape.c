@@ -1174,7 +1174,7 @@ void use_item_common(tgestate_t *state, item_t item)
 
   ASSERT_ITEM_VALID(item);
 
-  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(mappos16_t));
+  memcpy(&state->saved_mappos, &state->vischars[0].mi.pos, sizeof(mappos16_t));
 
   /* Conv: In the original game the action jumps to a RET for action-less
    * items. We use a NULL instead. */
@@ -5727,7 +5727,7 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   /* At this point we handle non-colliding characters and items only. */
 
   vischar->counter_and_flags &= ~vischar_BYTE7_DONT_MOVE_MAP; // clear
-  vischar->mi.pos           = state->saved_pos.pos;
+  vischar->mi.pos           = state->saved_mappos.pos16;
   vischar->mi.sprite_index  = sprite_index; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
@@ -5781,13 +5781,13 @@ int collision(tgestate_t *state)
      */
 
     u = vischar->mi.pos.u; /* Conv: Moved +4 forward. */
-    saved_u = state->saved_pos.pos.u;
+    saved_u = state->saved_mappos.pos16.u;
     if (saved_u != u + 4) /* redundant check */
       if (saved_u > u + 4 || saved_u < u - 4) /* Conv: Removed redundant reload. */
         goto next; /* no x collision */
 
     v = vischar->mi.pos.v; /* Conv: Moved +4 forward. */
-    saved_v = state->saved_pos.pos.v;
+    saved_v = state->saved_mappos.pos16.v;
     if (saved_v != v + 4) /* redundant check */
       if (saved_v > v + 4 || saved_v < v - 4) /* Conv: Removed redundant reload. */
         goto next; /* no y collision */
@@ -5795,7 +5795,7 @@ int collision(tgestate_t *state)
     /* Ensure that the heights are within 24 of each other. This will stop
      * the character colliding with any guards high up in watchtowers.
      * Note: Signed result. */
-    delta = state->saved_pos.pos.w - vischar->mi.pos.w;
+    delta = state->saved_mappos.pos16.w - vischar->mi.pos.w;
     if (delta < 0)
       delta = -delta; /* absolute value */
     if (delta >= 24)
@@ -6034,12 +6034,12 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
     minheight = wall->minheight * 8;
     maxheight = wall->maxheight * 8;
 
-    if (state->saved_pos.pos.u >= minx + 2   &&
-        state->saved_pos.pos.u <  maxx + 4   &&
-        state->saved_pos.pos.v >= miny       &&
-        state->saved_pos.pos.v <  maxy + 4   &&
-        state->saved_pos.pos.w >= minheight  &&
-        state->saved_pos.pos.w <  maxheight + 2)
+    if (state->saved_mappos.pos16.u >= minx + 2   &&
+        state->saved_mappos.pos16.u <  maxx + 4   &&
+        state->saved_mappos.pos16.v >= miny       &&
+        state->saved_mappos.pos16.v <  maxy + 4   &&
+        state->saved_mappos.pos16.w >= minheight  &&
+        state->saved_mappos.pos16.w <  maxheight + 2)
     {
       vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
       return 1; // NZ => outwith wall bounds
@@ -6195,11 +6195,11 @@ int door_in_range(tgestate_t *state, const door_t *door)
   assert(door  != NULL);
 
   u = multiply_by_4(door->pos.u);
-  if (state->saved_pos.pos.u < u - halfdist || state->saved_pos.pos.u >= u + halfdist)
+  if (state->saved_mappos.pos16.u < u - halfdist || state->saved_mappos.pos16.u >= u + halfdist)
     return 1;
 
   v = multiply_by_4(door->pos.v);
-  if (state->saved_pos.pos.v < v - halfdist || state->saved_pos.pos.v >= v + halfdist)
+  if (state->saved_mappos.pos16.v < v - halfdist || state->saved_mappos.pos16.v >= v + halfdist)
     return 1;
 
   return 0;
@@ -6271,7 +6271,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   room_bounds = &roomdef_dimensions[state->roomdef_dimensions_index];
-  saved_pos = &state->saved_pos.pos;
+  saved_pos = &state->saved_mappos.pos16;
   /* Conv: Merged conditions, flipped compares and reordered. */
   // inclusive/exclusive bounds look strange here
   if (saved_pos->u <= room_bounds->x0 + 4 || saved_pos->u > room_bounds->x1 ||
@@ -6287,7 +6287,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     uint8_t     u, v; /* was A, A */
 
     /* Conv: HL dropped. */
-    pos = &state->saved_pos.pos;
+    pos = &state->saved_mappos.pos16;
 
     /* Conv: Two-iteration loop unrolled. */
     u = pos->u; // note: narrowing // saved_pos must be 8-bit
@@ -6378,7 +6378,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     /* Skip any door which is more than three units away. */
     doorpos = &door->pos;
-    pos = &state->saved_pos.pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
+    pos = &state->saved_mappos.pos16; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of pos8 and pos types?
     u = doorpos->u;
     if (u - 3 >= pos->u || u + 3 < pos->u) // -3 .. +2
       continue;
@@ -6813,7 +6813,7 @@ next_locked_door:
 found:
     door = get_door(*interior_doors);
     /* Range check pattern (-2..+3). */
-    pos = &state->saved_pos.pos; // note: 16-bit values holding 8-bit values
+    pos = &state->saved_mappos.pos16; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
     if (pos->u <= door->pos.u - 3 || pos->u > door->pos.u + 3 ||
         pos->v <= door->pos.v - 3 || pos->v > door->pos.v + 3)
@@ -6962,9 +6962,9 @@ void animate(tgestate_t *state)
 backwards:
       SWAP(const animframe_t *, frameB, frameA);
 
-      state->saved_pos.pos.u = vischar->mi.pos.u - frameB->dx;
-      state->saved_pos.pos.v = vischar->mi.pos.v - frameB->dy;
-      state->saved_pos.pos.w = vischar->mi.pos.w - frameB->dh;
+      state->saved_mappos.pos16.u = vischar->mi.pos.u - frameB->dx;
+      state->saved_mappos.pos16.v = vischar->mi.pos.v - frameB->dy;
+      state->saved_mappos.pos16.w = vischar->mi.pos.w - frameB->dh;
 
       if (touch(state, vischar, spriteindex2))
         goto pop_next; /* don't animate if collided */
@@ -6985,9 +6985,9 @@ backwards:
 forwards:
       SWAP(const animframe_t *, frameB, frameA);
 
-      state->saved_pos.pos.u = vischar->mi.pos.u + frameB->dx;
-      state->saved_pos.pos.v = vischar->mi.pos.v + frameB->dy;
-      state->saved_pos.pos.w = vischar->mi.pos.w + frameB->dh;
+      state->saved_mappos.pos16.u = vischar->mi.pos.u + frameB->dx;
+      state->saved_mappos.pos16.v = vischar->mi.pos.v + frameB->dy;
+      state->saved_mappos.pos16.w = vischar->mi.pos.w + frameB->dh;
       spriteindex = frameB->spriteindex;
 
       SWAP(uint8_t, spriteindex, spriteindex2);
@@ -7070,7 +7070,7 @@ void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Save a copy of the vischar's position + offset. */
-  state->saved_pos.pos = vischar->mi.pos;
+  state->saved_mappos.pos16 = vischar->mi.pos;
 
   calc_vischar_iso_pos_from_state(state, vischar);
 }
@@ -7091,8 +7091,8 @@ void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->iso_pos.x = (0x200 - state->saved_pos.pos.u + state->saved_pos.pos.v) * 2;
-  vischar->iso_pos.y = 0x800 - state->saved_pos.pos.u - state->saved_pos.pos.v - state->saved_pos.pos.w;
+  vischar->iso_pos.x = (0x200 - state->saved_mappos.pos16.u + state->saved_mappos.pos16.v) * 2;
+  vischar->iso_pos.y = 0x800 - state->saved_mappos.pos16.u - state->saved_mappos.pos16.v - state->saved_mappos.pos16.w;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
@@ -8416,7 +8416,7 @@ found_empty_slot:
   charstr2 = charstr; /* Conv: Original points at charstr.room */
 
   /* Scale coords dependent on which room the character is in. */
-  saved_pos = &state->saved_pos.pos;
+  saved_pos = &state->saved_mappos.pos16;
   if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
@@ -8462,7 +8462,7 @@ found_empty_slot:
 
   vischar->animbase  = metadata->animbase;
   vischar->mi.sprite = metadata->sprite;
-  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(mappos16_t));
+  memcpy(&vischar->mi.pos, &state->saved_mappos, sizeof(mappos16_t));
 
   room = state->room_index;
   vischar->room = room;
@@ -8951,9 +8951,9 @@ trigger_event:
          * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_pos.tinypos.u = doorpos->u >> 1;
-        state->saved_pos.tinypos.v = doorpos->v >> 1;
-        doorpos2 = &state->saved_pos.tinypos;
+        state->saved_mappos.pos8.u = doorpos->u >> 1;
+        state->saved_mappos.pos8.v = doorpos->v >> 1;
+        doorpos2 = &state->saved_mappos.pos8;
       }
       else
       {
