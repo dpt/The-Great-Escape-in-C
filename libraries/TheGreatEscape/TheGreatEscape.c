@@ -5749,10 +5749,10 @@ int collision(tgestate_t *state)
 {
   vischar_t  *vischar;        /* was HL */
   uint8_t     iters;          /* was B */
-  uint16_t    x;              /* was BC */
-  uint16_t    y;              /* was BC */
-  uint16_t    saved_x;        /* was HL */
-  uint16_t    saved_y;        /* was HL */
+  uint16_t    u;              /* was BC */
+  uint16_t    v;              /* was BC */
+  uint16_t    saved_u;        /* was HL */
+  uint16_t    saved_v;        /* was HL */
   int8_t      delta;          /* was A */
   uint8_t     coord;          /* was A */
   character_t character;      /* was A */
@@ -5781,16 +5781,16 @@ int collision(tgestate_t *state)
      * axis.
      */
 
-    x = vischar->mi.pos.u; /* Conv: Moved +4 forward. */
-    saved_x = state->saved_pos.pos.u;
-    if (saved_x != x + 4) /* redundant check */
-      if (saved_x > x + 4 || saved_x < x - 4) /* Conv: Removed redundant reload. */
+    u = vischar->mi.pos.u; /* Conv: Moved +4 forward. */
+    saved_u = state->saved_pos.pos.u;
+    if (saved_u != u + 4) /* redundant check */
+      if (saved_u > u + 4 || saved_u < u - 4) /* Conv: Removed redundant reload. */
         goto next; /* no x collision */
 
-    y = vischar->mi.pos.v; /* Conv: Moved +4 forward. */
-    saved_y = state->saved_pos.pos.v;
-    if (saved_y != y + 4) /* redundant check */
-      if (saved_y > y + 4 || saved_y < y - 4) /* Conv: Removed redundant reload. */
+    v = vischar->mi.pos.v; /* Conv: Moved +4 forward. */
+    saved_v = state->saved_pos.pos.v;
+    if (saved_v != v + 4) /* redundant check */
+      if (saved_v > v + 4 || saved_v < v - 4) /* Conv: Removed redundant reload. */
         goto next; /* no y collision */
 
     /* Ensure that the heights are within 24 of each other. This will stop
