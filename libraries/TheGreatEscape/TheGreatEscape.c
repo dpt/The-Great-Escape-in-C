@@ -8848,19 +8848,19 @@ uint8_t get_target(tgestate_t       *state,
  */
 void move_a_character(tgestate_t *state)
 {
-  character_t        character;       /* was A */
-  characterstruct_t *charstr;         /* was HL/DE */
-  room_t             room;            /* was A */
-  item_t             item;            /* was C */
-  uint8_t            target_type;     /* was A */
-  route_t           *route;           /* was HL */
-  const mappos8_t   *doorpos;         /* was HL */
-  const pos8_t      *location;        /* was HL */
-  uint8_t            routeindex;      /* was A */
-  uint8_t            max;             /* was A' */
-  uint8_t            arrived;         /* was B */
-  door_t            *door;            /* was HL */
-  mappos8_t         *charstr_tinypos; /* was DE */
+  character_t        character;   /* was A */
+  characterstruct_t *charstr;     /* was HL/DE */
+  room_t             room;        /* was A */
+  item_t             item;        /* was C */
+  uint8_t            target_type; /* was A */
+  route_t           *route;       /* was HL */
+  const mappos8_t   *doorpos;     /* was HL */
+  const pos8_t      *location;    /* was HL */
+  uint8_t            routeindex;  /* was A */
+  uint8_t            max;         /* was A' */
+  uint8_t            arrived;     /* was B */
+  door_t            *door;        /* was HL */
+  mappos8_t         *charstr_pos; /* was DE */
 
   assert(state != NULL);
 
@@ -8940,7 +8940,7 @@ trigger_event:
     {
       /* Handle the target-is-a-door case. */
 
-      const mappos8_t *tinypos2; /* was HL */
+      const mappos8_t *doorpos2; /* was HL */
 
       room = charstr->room;
       if (room == room_0_OUTDOORS)
@@ -8953,12 +8953,12 @@ trigger_event:
         /* Conv: Unrolled. */
         state->saved_pos.tinypos.u = doorpos->u >> 1;
         state->saved_pos.tinypos.v = doorpos->v >> 1;
-        tinypos2 = &state->saved_pos.tinypos;
+        doorpos2 = &state->saved_pos.tinypos;
       }
       else
       {
         /* Conv: Assignment made explicit. */
-        tinypos2 = doorpos;
+        doorpos2 = doorpos;
       }
 
       if (charstr->room == room_0_OUTDOORS) /* FUTURE: Remove reload of 'room'. */
@@ -8966,11 +8966,11 @@ trigger_event:
       else
         max = 6;
 
-      charstr_tinypos = &charstr->pos;
+      charstr_pos = &charstr->pos;
 
       /* args: max move, rc, second val, first val */
-      arrived = move_towards(max,       0, &tinypos2->u, &charstr_tinypos->u);
-      arrived = move_towards(max, arrived, &tinypos2->v, &charstr_tinypos->v);
+      arrived = move_towards(max,       0, &doorpos2->u, &charstr_pos->u);
+      arrived = move_towards(max, arrived, &doorpos2->v, &charstr_pos->v);
       if (arrived != 2)
         return; /* not arrived */
 
@@ -8995,12 +8995,12 @@ trigger_event:
 
       /* Copy the door's tinypos position into the charstr. */
       room = charstr->room;
-      charstr_tinypos = &charstr->pos;
+      charstr_pos = &charstr->pos;
       if (room != room_0_OUTDOORS)
       {
         /* Indoors. Copy the door's tinypos into the charstr's tinypos. */
 
-        *charstr_tinypos = *doorpos;
+        *charstr_pos = *doorpos;
       }
       else
       {
@@ -9008,9 +9008,9 @@ trigger_event:
          * dividing by two. */
 
         /* Conv: Unrolled. */
-        charstr_tinypos->u = doorpos->u >> 1;
-        charstr_tinypos->v = doorpos->v >> 1;
-        charstr_tinypos->w = doorpos->w >> 1;
+        charstr_pos->u = doorpos->u >> 1;
+        charstr_pos->v = doorpos->v >> 1;
+        charstr_pos->w = doorpos->w >> 1;
       }
     }
     else
