@@ -160,19 +160,18 @@ void invalidate_attrs(tgestate_t *state,
  *
  * The current character (in state->IY) changes room.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] tinypos Pointer to pos. (was HL)
+ * \param[in] state Pointer to game state.
+ * \param[in] pos   Pointer to pos. (was HL)
  *
  * \remarks Exits using longjmp in the hero case.
  */
-void transition(tgestate_t   *state,
-                const mappos8_t *tinypos)
+void transition(tgestate_t *state, const mappos8_t *pos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
 
-  assert(state   != NULL);
-  assert(tinypos != NULL);
+  assert(state != NULL);
+  assert(pos   != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -185,9 +184,9 @@ void transition(tgestate_t   *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.u = multiply_by_4(tinypos->u);
-    vischar->mi.pos.v = multiply_by_4(tinypos->v);
-    vischar->mi.pos.w = multiply_by_4(tinypos->w);
+    vischar->mi.pos.u = multiply_by_4(pos->u);
+    vischar->mi.pos.v = multiply_by_4(pos->v);
+    vischar->mi.pos.w = multiply_by_4(pos->w);
   }
   else
   {
@@ -197,9 +196,9 @@ void transition(tgestate_t   *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.u = tinypos->u;
-    vischar->mi.pos.v = tinypos->v;
-    vischar->mi.pos.w = tinypos->w;
+    vischar->mi.pos.u = pos->u;
+    vischar->mi.pos.v = pos->v;
+    vischar->mi.pos.w = pos->w;
   }
 
   if (vischar != &state->vischars[0])
@@ -7566,11 +7565,11 @@ void render_mask_buffer(tgestate_t *state)
     /* CHECK: What's in state->tinypos_stash at this point? It's set by
      * setup_vischar_plotting, setup_item_plotting. */
 
-    if (state->tinypos_stash.u <= pmask->pos.u ||
-        state->tinypos_stash.v <  pmask->pos.v)
+    if (state->mappos_stash.u <= pmask->pos.u ||
+        state->mappos_stash.v <  pmask->pos.v)
       goto pop_next;
 
-    height = state->tinypos_stash.w;
+    height = state->mappos_stash.w;
     if (height)
       height--; /* make inclusive */
     if (height >= pmask->pos.w)
@@ -10696,7 +10695,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   /* Do line of sight checking when outdoors. */
 
   pos = &vischar->mi.pos; /* was HL += 15 */
-  tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
+  tinypos = &state->mappos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
     mappos8_t *hero_map_pos;  /* was HL */
@@ -11282,7 +11281,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    */
   /* $8213 = A; */
 
-  state->tinypos_stash = itemstr->pos;
+  state->mappos_stash = itemstr->pos;
   state->iso_pos       = itemstr->iso_pos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
@@ -12379,7 +12378,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   pos     = &vischar->mi.pos;
-  tinypos = &state->tinypos_stash;
+  tinypos = &state->mappos_stash;
 
   if (state->room_index > room_0_OUTDOORS)
   {

@@ -155,7 +155,7 @@ struct tgestate
    * Written by setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer, guards_follow_suspicious_character.
    */
-  mappos8_t       tinypos_stash;
+  mappos8_t       mappos_stash;
 
   /** $81B5: The current visible character's (or item's) screen position.
    *
