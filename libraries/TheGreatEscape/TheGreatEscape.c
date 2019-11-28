@@ -166,7 +166,7 @@ void invalidate_attrs(tgestate_t *state,
  * \remarks Exits using longjmp in the hero case.
  */
 void transition(tgestate_t   *state,
-                const uvw8_t *tinypos)
+                const mappos8_t *tinypos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
@@ -1175,7 +1175,7 @@ void use_item_common(tgestate_t *state, item_t item)
 
   ASSERT_ITEM_VALID(item);
 
-  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(uvw16_t));
+  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(mappos16_t));
 
   /* Conv: In the original game the action jumps to a RET for action-less
    * items. We use a NULL instead. */
@@ -1295,8 +1295,8 @@ void drop_item_tail(tgestate_t *state, item_t item)
 {
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
-  uvw8_t       *outpos;  /* was DE */
-  uvw16_t      *inpos;   /* was HL */
+  mappos8_t       *outpos;  /* was DE */
+  mappos16_t      *inpos;   /* was HL */
 
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
@@ -1341,7 +1341,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
  */
 void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy8_t *iso_pos;
+  pos8_t *iso_pos;
 
   assert(itemstr != NULL);
 
@@ -1360,7 +1360,7 @@ void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
  */
 void calc_interior_item_iso_pos(itemstruct_t *itemstr)
 {
-  xy8_t *iso_pos;
+  pos8_t *iso_pos;
 
   assert(itemstr != NULL);
 
@@ -1964,8 +1964,8 @@ void in_permitted_area(tgestate_t *state)
     { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
-  uvw16_t     *vcpos;      /* was HL */
-  uvw8_t      *pos;        /* was DE */
+  mappos16_t     *vcpos;      /* was HL */
+  mappos8_t      *pos;        /* was DE */
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
   route_t      route;      /* was CA */
@@ -2185,7 +2185,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  * \return true if in permitted area.
  */
 int within_camp_bounds(uint8_t       area, // ought to be an enum
-                       const uvw8_t *pos)
+                       const mappos8_t *pos)
 {
   /**
    * $9F15: Bounds of the three main exterior areas.
@@ -3268,9 +3268,9 @@ found_on_screen:
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t       get_target_result; /* was A */
-  uvw8_t       *target;            /* was DE */
-  const uvw8_t *doorpos;           /* was HL */
-  const xy8_t  *location;          /* was HL */
+  mappos8_t       *target;            /* was DE */
+  const mappos8_t *doorpos;           /* was HL */
+  const pos8_t  *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -3338,7 +3338,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A3ED: Store an xy8_t at the specified address.
+ * $A3ED: Store an pos8_t at the specified address.
  *
  * Used by set_character_route only.
  *
@@ -4740,7 +4740,7 @@ void move_map(tgestate_t *state)
   uint8_t        x,y;               /* was C,B */
   uint8_t       *pmove_map_y;       /* was HL */
   uint8_t       *pmove_map_y_copy;  /* was DE */
-  xy8_t       game_window_offset;  /* was HL */
+  pos8_t       game_window_offset;  /* was HL */
   // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
@@ -6264,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const uvw16_t       *saved_pos;     /* was HL */
+  const mappos16_t       *saved_pos;     /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6284,7 +6284,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   object_bounds = &state->roomdef_object_bounds[0]; /* Conv: Moved around. */
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
   {
-    uvw16_t *pos;  /* was DE */
+    mappos16_t *pos;  /* was DE */
     uint8_t  u, v; /* was A, A */
 
     /* Conv: HL dropped. */
@@ -6354,8 +6354,8 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   doorindex_t   current_door;   /* was A */
   uint8_t       room_and_flags; /* was A */
   const door_t *door;           /* was HL' */
-  const uvw8_t *doorpos;        /* was HL' */
-  uvw16_t      *pos;            /* was DE' */
+  const mappos8_t *doorpos;        /* was HL' */
+  mappos16_t      *pos;            /* was DE' */
   uint8_t       u;              /* was A */
   uint8_t       v;              /* was A */
 
@@ -6564,7 +6564,7 @@ void action_shovel(tgestate_t *state)
 void action_wiresnips(tgestate_t *state)
 {
   const wall_t *wall;  /* was HL */
-  const uvw8_t *pos;   /* was DE */
+  const mappos8_t *pos;   /* was DE */
   uint8_t       iters; /* was B */
   uint8_t       flag;  /* was A */
 
@@ -6751,7 +6751,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
   const door_t *door;                 /* was HL' */
   doorindex_t   locked_door_index;    /* was C */
   doorindex_t  *interior_doors;       /* was DE */
-  uvw16_t      *pos;                  /* was DE' */
+  mappos16_t      *pos;                  /* was DE' */
   doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
@@ -7999,7 +7999,7 @@ void restore_tiles(tgestate_t *state)
   uint8_t            clipped_width;                 /* was C */
   uint8_t            top_skip;                      /* was D */
   uint8_t            clipped_height;                /* was E */
-  const xy8_t    *map_position;                  /* was HL */
+  const pos8_t    *map_position;                  /* was HL */
   uint8_t           *windowbuf;                     /* was HL */
   uint8_t           *windowbuf2;                    /* was DE */
   uint8_t            x, y;                          /* was H', L' */
@@ -8381,14 +8381,14 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   vischar_t                    *vischar;      /* was HL/IY */
   uint8_t                       iters;        /* was B */
   characterstruct_t            *charstr2;     /* was DE */
-  uvw16_t                      *saved_pos;    /* was HL */
+  mappos16_t                      *saved_pos;    /* was HL */
   character_t                   character;    /* was A */
   const character_class_data_t *metadata;     /* was DE */
   int                           Z;            /* flag */
   room_t                        room;         /* was A */
   uint8_t                       target_type;  /* was A */
-  const uvw8_t                 *doorpos;      /* was HL */
-  const xy8_t                  *location;     /* was HL */
+  const mappos8_t                 *doorpos;      /* was HL */
+  const pos8_t                  *location;     /* was HL */
   route_t                      *route;        /* was HL */
 
   assert(state   != NULL);
@@ -8463,7 +8463,7 @@ found_empty_slot:
 
   vischar->animbase  = metadata->animbase;
   vischar->mi.sprite = metadata->sprite;
-  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(uvw16_t));
+  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(mappos16_t));
 
   room = state->room_index;
   vischar->room = room;
@@ -8526,7 +8526,7 @@ again:
 void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 {
   character_t        character; /* was A */
-  uvw16_t           *pos;       /* was DE */
+  mappos16_t           *pos;       /* was DE */
   characterstruct_t *charstr;   /* was DE */
   room_t             room;      /* was A */
 
@@ -8564,8 +8564,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
   }
   else
   {
-    uvw16_t *vispos_in;   /* was HL */
-    uvw8_t  *charpos_out; /* was DE */
+    mappos16_t *vispos_in;   /* was HL */
+    mappos8_t  *charpos_out; /* was DE */
 
     /* A non-object character. */
 
@@ -8627,7 +8627,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * $C651: Return the coordinates of the route's current target.
  *
  * Given a route_t return the coordinates the character should move to.
- * Coordinates are returned as a tinypos_t when moving to a door or a xy8_t
+ * Coordinates are returned as a tinypos_t when moving to a door or a pos8_t
  * when moving to a numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
@@ -8644,13 +8644,13 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  */
 uint8_t get_target(tgestate_t    *state,
                    route_t       *route,
-                   const uvw8_t **doorpos,
-                   const xy8_t  **location)
+                   const mappos8_t **doorpos,
+                   const pos8_t  **location)
 {
   /**
    * $783A: Table of map locations used in routes.
    */
-  static const xy8_t locations[78] =
+  static const pos8_t locations[78] =
   {
     // reset_visible_character guard dogs 1 & 2 use 0..7
     // character_behaviour uss this range also, for dog behaviour
@@ -8855,13 +8855,13 @@ void move_a_character(tgestate_t *state)
   item_t             item;            /* was C */
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
-  const uvw8_t      *tinypos;         /* was HL */
-  const xy8_t       *location;        /* was HL */
+  const mappos8_t      *tinypos;         /* was HL */
+  const pos8_t       *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
   uint8_t            arrived;         /* was B */
   door_t            *door;            /* was HL */
-  uvw8_t            *charstr_tinypos; /* was DE */
+  mappos8_t            *charstr_tinypos; /* was DE */
 
   assert(state != NULL);
 
@@ -8941,7 +8941,7 @@ trigger_event:
     {
       /* Handle the target-is-a-door case. */
 
-      const uvw8_t *tinypos2; /* was HL */
+      const mappos8_t *tinypos2; /* was HL */
 
       room = charstr->room;
       if (room == room_0_OUTDOORS)
@@ -9587,8 +9587,8 @@ pursue_hero:
 bribed_visible:
       /* Found the bribed character in vischars: hostiles target him. */
       {
-        uvw16_t *pos;    /* was HL */
-        uvw8_t  *target; /* was DE */
+        mappos16_t *pos;    /* was HL */
+        mappos8_t  *target; /* was DE */
 
         pos    = &found->mi.pos;
         target = &vischar2->target;
@@ -9824,7 +9824,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   uint8_t       route;                   /* was A */
   doorindex_t   doorindex;               /* was A */
   const door_t *door;                    /* was HL */
-  const uvw8_t *tinypos;                 /* was HL */
+  const mappos8_t *tinypos;                 /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9947,8 +9947,8 @@ void get_target_assign_pos(tgestate_t *state,
                            route_t    *route)
 {
   uint8_t       get_target_result; /* was A */
-  const uvw8_t *doorpos;           /* was HL */
-  const xy8_t  *location;          /* was HL */
+  const mappos8_t *doorpos;           /* was HL */
+  const pos8_t  *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10557,7 +10557,7 @@ void solitary(tgestate_t *state)
   /**
    * $7AC6: Solitary map position.
    */
-  static const uvw8_t solitary_pos =
+  static const mappos8_t solitary_pos =
   {
     58, 42, 24
   };
@@ -10605,7 +10605,7 @@ void solitary(tgestate_t *state)
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
       item_t  item_and_flags; /* was A */
-      uvw8_t *itempos;        /* was HL */
+      mappos8_t *itempos;        /* was HL */
       uint8_t area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
@@ -10672,8 +10672,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
   character_t character; /* was A */
-  uvw8_t     *tinypos;   /* was DE */
-  uvw16_t    *pos;       /* was HL */
+  mappos8_t     *tinypos;   /* was DE */
+  mappos16_t    *pos;       /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10699,7 +10699,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
   tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
-    uvw8_t *hero_map_pos;  /* was HL */
+    mappos8_t *hero_map_pos;  /* was HL */
     int     dir;           /* Conv: was carry */
     uint8_t direction;     /* was A / C */
 
@@ -11143,7 +11143,7 @@ const anim_t *animations[animations__LIMIT] =
 void mark_nearby_items(tgestate_t *state)
 {
   room_t        room;       /* was C */
-  xy8_t      map_xy;     /* was D, E */
+  pos8_t      map_xy;     /* was D, E */
   uint8_t       iters;      /* was B */
   itemstruct_t *itemstruct; /* was HL */
 
@@ -11159,7 +11159,7 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    const xy8_t iso_pos = itemstruct->iso_pos; /* new */
+    const pos8_t iso_pos = itemstruct->iso_pos; /* new */
 
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
         (map_xy.x - 2 >= iso_pos.x && map_xy.x + (state->columns - 1) <= iso_pos.x) &&
@@ -11216,7 +11216,7 @@ uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
         (itemstr->pos.u * 8 > u) &&
         (itemstr->pos.v * 8 > v))
     {
-      const uvw8_t *pos; /* was HL' */
+      const mappos8_t *pos; /* was HL' */
 
       pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
       /* Calculate (u,v) for the next iteration. */
@@ -11251,7 +11251,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-//  xy8_t     *HL; /* was HL */
+//  pos8_t     *HL; /* was HL */
 //  tinypos_t    *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
   uint8_t       left_skip;      /* was B */
@@ -11429,8 +11429,8 @@ uint8_t item_visible(tgestate_t *state,
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
 
-  const xy8_t *piso_pos;           /* was HL */
-  xy8_t        map_position;       /* was DE */
+  const pos8_t *piso_pos;           /* was HL */
+  pos8_t        map_position;       /* was DE */
   uint8_t         window_right_edge;  /* was A  */
   int8_t          available_right;    /* was A  */
   uint8_t         new_left;           /* was B  */
@@ -12354,8 +12354,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  uvw16_t           *pos;            /* was HL */
-  uvw8_t            *tinypos;        /* was DE */
+  mappos16_t           *pos;            /* was HL */
+  mappos8_t            *tinypos;        /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
@@ -12552,15 +12552,15 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $E542: Scale down a uvw16_t and assign result to a tinypos_t.
+ * $E542: Scale down a mappos16_t position, assigning the result to a mappos8_t.
  *
  * Divides the three input 16-bit words by 8, with rounding to nearest,
  * storing the result as bytes.
  *
- * \param[in]  in  Input uvw16_t.    (was HL)
- * \param[out] out Output tinypos_t. (was DE)
+ * \param[in]  in  Input mappos16_t. (was HL)
+ * \param[out] out Output mappos8_t. (was DE)
  */
-void pos_to_tinypos(const uvw16_t *in, uvw8_t *out)
+void pos_to_tinypos(const mappos16_t *in, mappos8_t *out)
 {
   const uint16_t *pcoordin;  /* was HL */
   uint8_t        *pcoordout; /* was DE */
@@ -12737,7 +12737,7 @@ void plot_game_window(tgestate_t *state)
  */
 void event_roll_call(tgestate_t *state)
 {
-  uint16_t   range;   /* was DE */ // xy8_t?
+  uint16_t   range;   /* was DE */ // pos8_t?
   uint8_t   *pcoord;  /* was HL */
   uint8_t    iters;   /* was B */
   uint8_t    coord;   /* was A */
@@ -12792,7 +12792,7 @@ void action_papers(tgestate_t *state)
   /**
    * $EFF9: Position outside the main gate.
    */
-  static const uvw8_t outside_main_gate = { 214, 138, 6 };
+  static const mappos8_t outside_main_gate = { 214, 138, 6 };
 
   uint16_t  range;  /* was DE */
   uint8_t  *pcoord; /* was HL */

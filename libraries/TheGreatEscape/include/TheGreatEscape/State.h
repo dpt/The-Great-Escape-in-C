@@ -138,8 +138,8 @@ struct tgestate
    * Used by various places in the code. */
   union
   {
-    uvw16_t       pos;
-    uvw8_t        tinypos;
+    mappos16_t       pos;
+    mappos8_t        tinypos;
   }
   saved_pos;
 
@@ -155,7 +155,7 @@ struct tgestate
    * Written by setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer, guards_follow_suspicious_character.
    */
-  uvw8_t          tinypos_stash;
+  mappos8_t          tinypos_stash;
 
   /** $81B5: The current visible character's (or item's) screen position.
    *
@@ -164,7 +164,7 @@ struct tgestate
    * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer.
    */
-  xy8_t           iso_pos;
+  pos8_t           iso_pos;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
@@ -177,7 +177,7 @@ struct tgestate
   spriteindex_t   sprite_index;
 
   /** $81B8: Hero's map position. */
-  uvw8_t          hero_map_position;
+  mappos8_t          hero_map_position;
 
   /** $81BB: Offset into map used when drawing tiles.
    *
@@ -189,7 +189,7 @@ struct tgestate
   // suspect that this is a centering value
   // positive x - map shown further right
   // positive y - map shown further up
-  xy8_t           map_position;
+  pos8_t           map_position;
 
   /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
   uint8_t         searchlight_state;
@@ -299,7 +299,7 @@ struct tgestate
   uint8_t         move_map_y;
 
   /** $A7C7: Game window plotting offset. */
-  xy8_t           game_window_offset;
+  pos8_t           game_window_offset;
 
   /** $AB66: Zoombox parameters. */
   struct
@@ -320,7 +320,7 @@ struct tgestate
     searchlight_movement_t states[3];
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    xy8_t         caught_coord;
+    pos8_t         caught_coord;
   }
   searchlight;
 
