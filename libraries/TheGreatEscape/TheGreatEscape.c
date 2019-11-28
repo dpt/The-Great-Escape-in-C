@@ -10938,8 +10938,8 @@ void item_discovered(tgestate_t *state, item_t item)
   itemstruct = item_to_itemstruct(state, item);
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
   itemstruct->room_and_flags = default_item_location->room_and_flags;
-  itemstruct->pos.u = default_item_location->pos.x;
-  itemstruct->pos.v = default_item_location->pos.y;
+  itemstruct->pos.u = default_item_location->pos.u;
+  itemstruct->pos.v = default_item_location->pos.v;
 
   if (room == room_0_OUTDOORS)
   {

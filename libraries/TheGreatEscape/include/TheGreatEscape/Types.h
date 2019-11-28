@@ -556,6 +556,15 @@ typedef struct uvw8
 uvw8_t;
 
 /**
+ * Holds a (U,V) position only in 8 bits.
+ */
+typedef struct uv8
+{
+  uint8_t u, v;
+}
+uv8_t;
+
+/**
  * An animation frame.
  */
 typedef struct animframe
@@ -818,8 +827,8 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
  */
 typedef struct default_item_location
 {
-  uint8_t  room_and_flags;
-  xy8_t pos;
+  uint8_t   room_and_flags;
+  uv8_t     pos;
 }
 default_item_location_t;
 
