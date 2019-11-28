@@ -6190,17 +6190,17 @@ int door_in_range(tgestate_t *state, const door_t *door)
 {
   const int halfdist = 3;
 
-  uint16_t x, y; /* was BC, BC */
+  uint16_t u, v; /* was BC, BC */
 
   assert(state != NULL);
   assert(door  != NULL);
 
-  x = multiply_by_4(door->pos.u);
-  if (state->saved_pos.pos.u < x - halfdist || state->saved_pos.pos.u >= x + halfdist)
+  u = multiply_by_4(door->pos.u);
+  if (state->saved_pos.pos.u < u - halfdist || state->saved_pos.pos.u >= u + halfdist)
     return 1;
 
-  y = multiply_by_4(door->pos.v);
-  if (state->saved_pos.pos.v < y - halfdist || state->saved_pos.pos.v >= y + halfdist)
+  v = multiply_by_4(door->pos.v);
+  if (state->saved_pos.pos.v < v - halfdist || state->saved_pos.pos.v >= v + halfdist)
     return 1;
 
   return 0;
@@ -11176,22 +11176,22 @@ void mark_nearby_items(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $DBEB: Find the next item to draw that is furthest behind (x,y).
+ * $DBEB: Find the next item to draw that is furthest behind (u,v).
  *
  * Leaf.
  *
  * \param[in]  state         Pointer to game state.
  * \param[in]  item_and_flag Initial item_and_flag, passed through if no itemstruct is found. (was A')
- * \param[in]  x             X pos? Compared to X. (was BC')
- * \param[in]  y             Y pos? Compared to Y. (was DE')
+ * \param[in]  u             U pos? Compared to U. (was BC')
+ * \param[in]  v             V pos? Compared to V. (was DE')
  * \param[out] pitemstr      Returned pointer to item struct. (was IY)
  *
  * \return item+flag. (was A')
  */
 uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
                                      item_t         item_and_flag,
-                                     uint16_t       x,
-                                     uint16_t       y,
+                                     uint16_t       u,
+                                     uint16_t       v,
                                      itemstruct_t **pitemstr)
 {
   uint8_t             iters;   /* was B */
@@ -11208,20 +11208,20 @@ uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
   do
   {
-    /* Select an item if it's behind the point (x,y). */
+    /* Select an item if it's behind the point (u,v). */
     const enum itemstruct_room_and_flags FLAGS = itemstruct_ROOM_FLAG_NEARBY_6 |
                                                  itemstruct_ROOM_FLAG_NEARBY_7;
     /* Conv: Original calls out to multiply by 8, HL' is temp. */
     if ((itemstr->room_and_flags & FLAGS) == FLAGS &&
-        (itemstr->pos.u * 8 > x) &&
-        (itemstr->pos.v * 8 > y))
+        (itemstr->pos.u * 8 > u) &&
+        (itemstr->pos.v * 8 > v))
     {
       const uvw8_t *pos; /* was HL' */
 
       pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
-      /* Calculate (x,y) for the next iteration. */
-      y = pos->v * 8;
-      x = pos->u * 8;
+      /* Calculate (u,v) for the next iteration. */
+      v = pos->v * 8;
+      u = pos->u * 8;
       *pitemstr = (itemstruct_t *) itemstr;
 
       /* The original code has an unpaired A register exchange here. If the
