@@ -713,9 +713,9 @@ wall_t;
  */
 typedef struct screenlocstring
 {
-  uint16_t  screenloc; /* screen offset (pointer in original code) */
-  uint8_t   length;
-  char     *string;    /* string pointer (embedded array in original code) */
+  uint16_t screenloc; /* screen offset (pointer in original code) */
+  uint8_t  length;
+  char    *string;    /* string pointer (embedded array in original code) */
 }
 screenlocstring_t;
 
@@ -726,7 +726,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  uvw8_t   pos;
+  uvw8_t      pos;
   route_t     route;
 }
 characterstruct_t;
@@ -753,8 +753,8 @@ timedevent_t;
  */
 typedef struct itemstruct
 {
-  item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
-  room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
+  item_t item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
+  room_t room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
   uvw8_t pos;
   xy8_t  iso_pos;
 }
@@ -827,8 +827,8 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
  */
 typedef struct default_item_location
 {
-  uint8_t   room_and_flags;
-  uv8_t     pos;
+  uint8_t room_and_flags;
+  uv8_t   pos;
 }
 default_item_location_t;
 
@@ -837,9 +837,9 @@ default_item_location_t;
  */
 typedef struct mask
 {
-  uint8_t   index;  /**< Index into mask_pointers. */
-  bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  uvw8_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  uint8_t  index;  /**< Index into mask_pointers. */
+  bounds_t bounds; /**< Isometric projected bounds of the mask. Used for culling. */
+  uvw8_t   pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
@@ -858,7 +858,7 @@ character_class_data_t;
  */
 typedef struct searchlight_movement
 {
-  xy8_t       xy;
+  xy8_t          xy;
   uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
   uint8_t        index;     /**< Index + direction in top bit. */

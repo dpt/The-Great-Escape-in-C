@@ -165,7 +165,7 @@ void invalidate_attrs(tgestate_t *state,
  *
  * \remarks Exits using longjmp in the hero case.
  */
-void transition(tgestate_t      *state,
+void transition(tgestate_t   *state,
                 const uvw8_t *tinypos)
 {
   vischar_t *vischar;    /* was IY */
@@ -1295,8 +1295,8 @@ void drop_item_tail(tgestate_t *state, item_t item)
 {
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
-  uvw8_t    *outpos;  /* was DE */
-  uvw16_t     *inpos;   /* was HL */
+  uvw8_t       *outpos;  /* was DE */
+  uvw16_t      *inpos;   /* was HL */
 
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
@@ -1964,8 +1964,8 @@ void in_permitted_area(tgestate_t *state)
     { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
-  uvw16_t    *vcpos;      /* was HL */
-  uvw8_t   *pos;        /* was DE */
+  uvw16_t     *vcpos;      /* was HL */
+  uvw8_t      *pos;        /* was DE */
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
   route_t      route;      /* was CA */
@@ -2184,7 +2184,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  *
  * \return true if in permitted area.
  */
-int within_camp_bounds(uint8_t          area, // ought to be an enum
+int within_camp_bounds(uint8_t       area, // ought to be an enum
                        const uvw8_t *pos)
 {
   /**
@@ -3267,7 +3267,7 @@ found_on_screen:
  */
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          get_target_result; /* was A */
+  uint8_t       get_target_result; /* was A */
   uvw8_t       *target;            /* was DE */
   const uvw8_t *doorpos;           /* was HL */
   const xy8_t  *location;          /* was HL */
@@ -6264,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const uvw16_t      *saved_pos;     /* was HL */
+  const uvw16_t       *saved_pos;     /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6285,7 +6285,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
   {
     uvw16_t *pos;  /* was DE */
-    uint8_t   u, v; /* was A, A */
+    uint8_t  u, v; /* was A, A */
 
     /* Conv: HL dropped. */
     pos = &state->saved_pos.pos;
@@ -6350,14 +6350,14 @@ void reset_outdoors(tgestate_t *state)
  */
 void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 {
-  doorindex_t     *pdoors;         /* was HL */
-  doorindex_t      current_door;   /* was A */
-  uint8_t          room_and_flags; /* was A */
-  const door_t    *door;           /* was HL' */
+  doorindex_t  *pdoors;         /* was HL */
+  doorindex_t   current_door;   /* was A */
+  uint8_t       room_and_flags; /* was A */
+  const door_t *door;           /* was HL' */
   const uvw8_t *doorpos;        /* was HL' */
-  uvw16_t        *pos;            /* was DE' */
-  uint8_t          u;              /* was A */
-  uint8_t          v;              /* was A */
+  uvw16_t      *pos;            /* was DE' */
+  uint8_t       u;              /* was A */
+  uint8_t       v;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6563,10 +6563,10 @@ void action_shovel(tgestate_t *state)
  */
 void action_wiresnips(tgestate_t *state)
 {
-  const wall_t    *wall;  /* was HL */
+  const wall_t *wall;  /* was HL */
   const uvw8_t *pos;   /* was DE */
-  uint8_t          iters; /* was B */
-  uint8_t          flag;  /* was A */
+  uint8_t       iters; /* was B */
+  uint8_t       flag;  /* was A */
 
   assert(state != NULL);
 
@@ -6751,7 +6751,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
   const door_t *door;                 /* was HL' */
   doorindex_t   locked_door_index;    /* was C */
   doorindex_t  *interior_doors;       /* was DE */
-  uvw16_t     *pos;                  /* was DE' */
+  uvw16_t      *pos;                  /* was DE' */
   doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
@@ -8378,18 +8378,18 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
     { &animations[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
   };
 
-  vischar_t                    *vischar;            /* was HL/IY */
-  uint8_t                       iters;              /* was B */
-  characterstruct_t            *charstr2;           /* was DE */
-  uvw16_t                     *saved_pos;          /* was HL */
-  character_t                   character;          /* was A */
-  const character_class_data_t *metadata;           /* was DE */
-  int                           Z;                  /* flag */
-  room_t                        room;               /* was A */
-  uint8_t                       target_type;        /* was A */
-  const uvw8_t              *doorpos;            /* was HL */
-  const xy8_t               *location;           /* was HL */
-  route_t                      *route;              /* was HL */
+  vischar_t                    *vischar;      /* was HL/IY */
+  uint8_t                       iters;        /* was B */
+  characterstruct_t            *charstr2;     /* was DE */
+  uvw16_t                      *saved_pos;    /* was HL */
+  character_t                   character;    /* was A */
+  const character_class_data_t *metadata;     /* was DE */
+  int                           Z;            /* flag */
+  room_t                        room;         /* was A */
+  uint8_t                       target_type;  /* was A */
+  const uvw8_t                 *doorpos;      /* was HL */
+  const xy8_t                  *location;     /* was HL */
+  route_t                      *route;        /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
@@ -8526,7 +8526,7 @@ again:
 void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 {
   character_t        character; /* was A */
-  uvw16_t          *pos;       /* was DE */
+  uvw16_t           *pos;       /* was DE */
   characterstruct_t *charstr;   /* was DE */
   room_t             room;      /* was A */
 
@@ -8564,8 +8564,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
   }
   else
   {
-    uvw16_t  *vispos_in;   /* was HL */
-    uvw8_t *charpos_out; /* was DE */
+    uvw16_t *vispos_in;   /* was HL */
+    uvw8_t  *charpos_out; /* was DE */
 
     /* A non-object character. */
 
@@ -8642,8 +8642,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * \retval get_target_DOOR       The next target is a door.
  * \retval get_target_LOCATION   The next target is a location.
  */
-uint8_t get_target(tgestate_t       *state,
-                   route_t          *route,
+uint8_t get_target(tgestate_t    *state,
+                   route_t       *route,
                    const uvw8_t **doorpos,
                    const xy8_t  **location)
 {
@@ -8855,13 +8855,13 @@ void move_a_character(tgestate_t *state)
   item_t             item;            /* was C */
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
-  const uvw8_t   *tinypos;         /* was HL */
-  const xy8_t    *location;        /* was HL */
+  const uvw8_t      *tinypos;         /* was HL */
+  const xy8_t       *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
   uint8_t            arrived;         /* was B */
   door_t            *door;            /* was HL */
-  uvw8_t         *charstr_tinypos; /* was DE */
+  uvw8_t            *charstr_tinypos; /* was DE */
 
   assert(state != NULL);
 
@@ -9587,8 +9587,8 @@ pursue_hero:
 bribed_visible:
       /* Found the bribed character in vischars: hostiles target him. */
       {
-        uvw16_t  *pos;    /* was HL */
-        uvw8_t *target; /* was DE */
+        uvw16_t *pos;    /* was HL */
+        uvw8_t  *target; /* was DE */
 
         pos    = &found->mi.pos;
         target = &vischar2->target;
@@ -9816,14 +9816,14 @@ input_t vischar_move_v(tgestate_t *state,
  */
 void target_reached(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          flags_all;               /* was C */
+  uint8_t       flags_all;               /* was C */
 
-  uint8_t          flags_lower6;            /* was A */
-  uint8_t          food_discovered_counter; /* was A */
-  uint8_t          step;                    /* was C */
-  uint8_t          route;                   /* was A */
-  doorindex_t      doorindex;               /* was A */
-  const door_t    *door;                    /* was HL */
+  uint8_t       flags_lower6;            /* was A */
+  uint8_t       food_discovered_counter; /* was A */
+  uint8_t       step;                    /* was C */
+  uint8_t       route;                   /* was A */
+  doorindex_t   doorindex;               /* was A */
+  const door_t *door;                    /* was HL */
   const uvw8_t *tinypos;                 /* was HL */
 
   assert(state != NULL);
@@ -9946,7 +9946,7 @@ void get_target_assign_pos(tgestate_t *state,
                            vischar_t  *vischar,
                            route_t    *route)
 {
-  uint8_t          get_target_result; /* was A */
+  uint8_t       get_target_result; /* was A */
   const uvw8_t *doorpos;           /* was HL */
   const xy8_t  *location;          /* was HL */
 
@@ -10604,9 +10604,9 @@ void solitary(tgestate_t *state)
     /* Is the item outdoors? */
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
-      item_t     item_and_flags; /* was A */
+      item_t  item_and_flags; /* was A */
       uvw8_t *itempos;        /* was HL */
-      uint8_t    area;           /* was A' */
+      uint8_t area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
       itempos = &pitemstruct->pos;
@@ -10671,8 +10671,8 @@ next:
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
-  character_t  character; /* was A */
-  uvw8_t   *tinypos;   /* was DE */
+  character_t character; /* was A */
+  uvw8_t     *tinypos;   /* was DE */
   uvw16_t    *pos;       /* was HL */
 
   assert(state != NULL);
@@ -10700,8 +10700,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (state->room_index == room_0_OUTDOORS)
   {
     uvw8_t *hero_map_pos;  /* was HL */
-    int        dir;           /* Conv: was carry */
-    uint8_t    direction;     /* was A / C */
+    int     dir;           /* Conv: was carry */
+    uint8_t direction;     /* was A / C */
 
     pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
 
@@ -12354,8 +12354,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  uvw16_t          *pos;            /* was HL */
-  uvw8_t         *tinypos;        /* was DE */
+  uvw16_t           *pos;            /* was HL */
+  uvw8_t            *tinypos;        /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
@@ -12557,7 +12557,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
  * Divides the three input 16-bit words by 8, with rounding to nearest,
  * storing the result as bytes.
  *
- * \param[in]  in  Input uvw16_t.      (was HL)
+ * \param[in]  in  Input uvw16_t.    (was HL)
  * \param[out] out Output tinypos_t. (was DE)
  */
 void pos_to_tinypos(const uvw16_t *in, uvw8_t *out)
