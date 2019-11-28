@@ -7562,7 +7562,7 @@ void render_mask_buffer(tgestate_t *state)
         iso_pos_y - 1 >= pmask->bounds.y1 || iso_pos_y + 4 < pmask->bounds.y0)
       goto pop_next;
 
-    /* CHECK: What's in state->tinypos_stash at this point? It's set by
+    /* CHECK: What's in state->mappos_stash at this point? It's set by
      * setup_vischar_plotting, setup_item_plotting. */
 
     if (state->mappos_stash.u <= pmask->pos.u ||
@@ -8626,7 +8626,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * $C651: Return the coordinates of the route's current target.
  *
  * Given a route_t return the coordinates the character should move to.
- * Coordinates are returned as a tinypos_t when moving to a door or a pos8_t
+ * Coordinates are returned as a mappos8_t when moving to a door or a pos8_t
  * when moving to a numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
@@ -8854,7 +8854,7 @@ void move_a_character(tgestate_t *state)
   item_t             item;            /* was C */
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
-  const mappos8_t   *tinypos;         /* was HL */
+  const mappos8_t   *doorpos;         /* was HL */
   const pos8_t      *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
@@ -8893,7 +8893,7 @@ void move_a_character(tgestate_t *state)
 
   target_type = get_target(state,
                           &charstr->route,
-                          &tinypos,
+                          &doorpos,
                           &location);
   if (target_type == get_target_ROUTE_ENDS)
   {
@@ -8951,14 +8951,14 @@ trigger_event:
          * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_pos.tinypos.u = tinypos->u >> 1;
-        state->saved_pos.tinypos.v = tinypos->v >> 1;
+        state->saved_pos.tinypos.u = doorpos->u >> 1;
+        state->saved_pos.tinypos.v = doorpos->v >> 1;
         tinypos2 = &state->saved_pos.tinypos;
       }
       else
       {
         /* Conv: Assignment made explicit. */
-        tinypos2 = tinypos;
+        tinypos2 = doorpos;
       }
 
       if (charstr->room == room_0_OUTDOORS) /* FUTURE: Remove reload of 'room'. */
@@ -8979,7 +8979,7 @@ trigger_event:
        * Our current target is a door, so change to the door's target room. */
 
       /* This unpleasant cast turns tinypos (assigned in get_target) back into a door_t. */
-      door = (door_t *)((char *) tinypos - 1);
+      door = (door_t *)((char *) doorpos - 1);
       assert(door >= &doors[0]);
       assert(door < &doors[door_MAX * 2]);
 
@@ -8988,10 +8988,10 @@ trigger_event:
       /* Determine the destination door. */
       if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
         /* The door is facing top left or top right. */
-        tinypos = &door[1].pos; /* point at the next half of door pair */
+        doorpos = &door[1].pos; /* point at the next half of door pair */
       else
         /* The door is facing bottom left or bottom right. */
-        tinypos = &door[-1].pos; /* point at the previous half of door pair */
+        doorpos = &door[-1].pos; /* point at the previous half of door pair */
 
       /* Copy the door's tinypos position into the charstr. */
       room = charstr->room;
@@ -9000,7 +9000,7 @@ trigger_event:
       {
         /* Indoors. Copy the door's tinypos into the charstr's tinypos. */
 
-        *charstr_tinypos = *tinypos;
+        *charstr_tinypos = *doorpos;
       }
       else
       {
@@ -9008,9 +9008,9 @@ trigger_event:
          * dividing by two. */
 
         /* Conv: Unrolled. */
-        charstr_tinypos->u = tinypos->u >> 1;
-        charstr_tinypos->v = tinypos->v >> 1;
-        charstr_tinypos->w = tinypos->w >> 1;
+        charstr_tinypos->u = doorpos->u >> 1;
+        charstr_tinypos->v = doorpos->v >> 1;
+        charstr_tinypos->w = doorpos->w >> 1;
       }
     }
     else
