@@ -522,38 +522,38 @@ route_t;
 /**
  * Holds an X,Y position (16-bit).
  */
-typedef struct bigxy
+typedef struct xy16
 {
   uint16_t x, y;
 }
-bigxy_t;
+xy16_t;
 
 /**
  * Holds an X,Y position (8-bit).
  */
-typedef struct tinyxy
+typedef struct xy8
 {
   uint8_t x, y;
 }
-tinyxy_t;
+xy8_t;
 
 /**
  * Holds a (U,V) position and a height (W) in 16 bits.
  */
-typedef struct biguvw
+typedef struct uvw16
 {
   uint16_t u, v, w;
 }
-biguvw_t;
+uvw16_t;
 
 /**
  * Holds a (U,V) position and a height (W) in 8 bits.
  */
-typedef struct tinyuvw
+typedef struct uvw8
 {
   uint8_t u, v, w;
 }
-tinyuvw_t;
+uvw8_t;
 
 /**
  * An animation frame.
@@ -590,7 +590,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  biguvw_t           pos;           /**< map position */
+  uvw16_t           pos;           /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
@@ -615,7 +615,7 @@ typedef struct vischar
   // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
-  tinyuvw_t       target;
+  uvw8_t       target;
 
   /** ($8007) top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
@@ -647,7 +647,7 @@ typedef struct vischar
   // with 3 bits of fixed point, not a screen coord as previously suspected.
   // setup_vischar_plotting divides it by 8
   // Same coordinate space as map_position but multiplied by 8.
-  bigxy_t         iso_pos; // scaled 13.3 format
+  xy16_t         iso_pos; // scaled 13.3 format
 
   /** ($801C) current room index */
   room_t          room;
@@ -717,7 +717,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  tinyuvw_t   pos;
+  uvw8_t   pos;
   route_t     route;
 }
 characterstruct_t;
@@ -746,8 +746,8 @@ typedef struct itemstruct
 {
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
-  tinyuvw_t pos;
-  tinyxy_t  iso_pos;
+  uvw8_t pos;
+  xy8_t  iso_pos;
 }
 itemstruct_t;
 
@@ -774,7 +774,7 @@ typedef struct door
 {
   /** The top six bits are a room_t. The bottom two bits are a direction_t. */
   uint8_t   room_and_direction;
-  tinyuvw_t pos;
+  uvw8_t pos;
 }
 door_t;
 
@@ -819,7 +819,7 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
 typedef struct default_item_location
 {
   uint8_t  room_and_flags;
-  tinyxy_t pos;
+  xy8_t pos;
 }
 default_item_location_t;
 
@@ -830,7 +830,7 @@ typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
   bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  tinyuvw_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  uvw8_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
@@ -849,7 +849,7 @@ character_class_data_t;
  */
 typedef struct searchlight_movement
 {
-  tinyxy_t       xy;
+  xy8_t       xy;
   uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
   uint8_t        index;     /**< Index + direction in top bit. */

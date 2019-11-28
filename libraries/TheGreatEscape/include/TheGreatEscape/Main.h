@@ -182,7 +182,7 @@ void invalidate_attrs(tgestate_t *state,
 /* $6000 onwards */
 
 void transition(tgestate_t      *state,
-                const tinyuvw_t *pos);
+                const uvw8_t *pos);
 void enter_room(tgestate_t *state);
 INLINE void squash_stack_goto_main(tgestate_t *state);
 
@@ -261,7 +261,7 @@ void cutting_wire(tgestate_t *state);
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
 int within_camp_bounds(uint8_t          index,
-                       const tinyuvw_t *pos);
+                       const uvw8_t *pos);
 
 /* $A000 onwards */
 
@@ -529,8 +529,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const tinyuvw_t **doorpos,
-                   const tinyxy_t  **location);
+                   const uvw8_t **doorpos,
+                   const xy8_t  **location);
 
 void move_a_character(tgestate_t *state);
 
@@ -664,7 +664,7 @@ void flip_16_masked_pixels(tgestate_t *state,
 
 int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar);
 
-void pos_to_tinypos(const biguvw_t *in, tinyuvw_t *out);
+void pos_to_tinypos(const uvw16_t *in, uvw8_t *out);
 INLINE void divide_by_8_with_rounding(uint8_t *A, uint8_t *C);
 INLINE void divide_by_8(uint8_t *A, uint8_t *C);
 
