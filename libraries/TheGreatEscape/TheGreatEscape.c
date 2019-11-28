@@ -7410,8 +7410,8 @@ int get_next_drawable(tgestate_t    *state,
                       vischar_t    **pvischar,
                       itemstruct_t **pitemstruct)
 {
-  uint16_t      prev_x;           /* was BC */
-  uint16_t      prev_y;           /* was DE */
+  uint16_t      prev_u;           /* was BC */
+  uint16_t      prev_v;           /* was DE */
   item_t        item_and_flag;    /* was A' */
   uint16_t      height;           /* was DE' */
   uint8_t       iters;            /* was B' */
@@ -7431,8 +7431,8 @@ int get_next_drawable(tgestate_t    *state,
   *pvischar    = NULL;
   *pitemstruct = NULL;
 
-  prev_x        = 0; /* previous x */
-  prev_y        = 0; /* previous y */
+  prev_u        = 0; /* previous x */
+  prev_v        = 0; /* previous y */
   item_and_flag = item_NONE; /* item_NONE used as a 'nothing found' marker */
   height        = 0; /* unused */
 
@@ -7444,15 +7444,15 @@ int get_next_drawable(tgestate_t    *state,
   {
     /* Select a vischar if it's behind the point (prev_x - 4, prev_y - 4). */
     if ((vischar->counter_and_flags & vischar_DRAWABLE) &&
-        (vischar->mi.pos.u >= prev_x - 4) &&
-        (vischar->mi.pos.v >= prev_y - 4))
+        (vischar->mi.pos.u >= prev_u - 4) &&
+        (vischar->mi.pos.v >= prev_v - 4))
     {
       item_and_flag = vischars_LENGTH - iters; /* Vischar index (never usefully used). */
       height = vischar->mi.pos.w;
 
       /* Note: The (v,u) order here matches the original code */
-      prev_y = vischar->mi.pos.v;
-      prev_x = vischar->mi.pos.u;
+      prev_v = vischar->mi.pos.v;
+      prev_u = vischar->mi.pos.u;
       state->IY = found_vischar = vischar;
     }
     vischar++;
@@ -7462,7 +7462,7 @@ int get_next_drawable(tgestate_t    *state,
   /* Is there an item behind the selected vischar? */
   item_and_flag = get_next_drawable_itemstruct(state,
                                                item_and_flag,
-                                               prev_x, prev_y,
+                                               prev_u, prev_v,
                                               &found_itemstruct);
 
   *pindex = item_and_flag; /* Conv: Added */
@@ -9650,14 +9650,14 @@ move:
   { // x dominant:
     input_t input; /* was ? */
 
-    input = vischar_move_x(state, vischar, scale);
+    input = vischar_move_u(state, vischar, scale);
     if (input)
     {
       character_behaviour_set_input(state, vischar, input);
     }
     else
     {
-      input = vischar_move_y(state, vischar, scale);
+      input = vischar_move_v(state, vischar, scale);
       if (input)
         character_behaviour_set_input(state, vischar, input);
       else
@@ -9704,14 +9704,14 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
   ASSERT_VISCHAR_VALID(vischar);
   assert(scale == 1 || scale == 4 || scale == 8);
 
-  input = vischar_move_y(state, vischar, scale);
+  input = vischar_move_v(state, vischar, scale);
   if (input)
   {
     character_behaviour_set_input(state, vischar, input);
   }
   else
   {
-    input = vischar_move_x(state, vischar, scale);
+    input = vischar_move_u(state, vischar, scale);
     if (input)
       character_behaviour_set_input(state, vischar, input);
     else
@@ -9722,17 +9722,17 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA11: Return the input_t which moves us closer to our X target.
+ * $CA11: Return the input_t which moves us closer to our U target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 8 => x >  pos.x
- *         4 => x <  pos.x
- *         0 => x == pos.x
+ * \return 8 => u >  pos.u
+ *         4 => u <  pos.u
+ *         0 => u == pos.u
  */
-input_t vischar_move_x(tgestate_t *state,
+input_t vischar_move_u(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale)
 {
@@ -9767,7 +9767,7 @@ input_t vischar_move_x(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA49: Return the input_t which moves us closer to our Y target.
+ * $CA49: Return the input_t which moves us closer to our V target.
  *
  * Nearly identical to vischar_move_x.
  *
@@ -9775,11 +9775,11 @@ input_t vischar_move_x(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 5 => y >  pos.y
- *         7 => y <  pos.y
- *         0 => y == pos.y
+ * \return 5 => v >  pos.v
+ *         7 => v <  pos.v
+ *         0 => v == pos.v
  */
-input_t vischar_move_y(tgestate_t *state,
+input_t vischar_move_v(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale)
 {

@@ -568,11 +568,11 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
                                          vischar_t  *vischar,
                                          int         scale);
 
-input_t vischar_move_x(tgestate_t *state,
+input_t vischar_move_u(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale);
 
-input_t vischar_move_y(tgestate_t *state,
+input_t vischar_move_v(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale);
 
