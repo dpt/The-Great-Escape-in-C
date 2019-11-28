@@ -8978,7 +8978,7 @@ trigger_event:
        *
        * Our current target is a door, so change to the door's target room. */
 
-      /* This unpleasant cast turns tinypos (assigned in get_target) back into a door_t. */
+      /* This unpleasant cast turns doorpos (assigned in get_target) back into a door_t. */
       door = (door_t *)((char *) doorpos - 1);
       assert(door >= &doors[0]);
       assert(door < &doors[door_MAX * 2]);
@@ -8993,19 +8993,19 @@ trigger_event:
         /* The door is facing bottom left or bottom right. */
         doorpos = &door[-1].pos; /* point at the previous half of door pair */
 
-      /* Copy the door's tinypos position into the charstr. */
+      /* Copy the door's position into the charstr. */
       room = charstr->room;
       charstr_pos = &charstr->pos;
       if (room != room_0_OUTDOORS)
       {
-        /* Indoors. Copy the door's tinypos into the charstr's tinypos. */
+        /* Indoors. Copy the door's position into the charstr. */
 
         *charstr_pos = *doorpos;
       }
       else
       {
-        /* Outdoors. Copy the door's tinypos into the charstr's tinypos,
-         * dividing by two. */
+        /* Outdoors. Copy the door's position into the charstr, dividing by
+         * two. */
 
         /* Conv: Unrolled. */
         charstr_pos->u = doorpos->u >> 1;
@@ -9823,7 +9823,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   uint8_t          route;                   /* was A */
   doorindex_t      doorindex;               /* was A */
   const door_t    *door;                    /* was HL */
-  const mappos8_t *tinypos;                 /* was HL */
+  const mappos8_t *pos;                     /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -9905,9 +9905,9 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
      * half door we find ourselves pointing at and use it to find the
      * counterpart door's position. */
     if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
-      tinypos = &door[1].pos; /* TOP_LEFT or TOP_RIGHT */
+      pos = &door[1].pos; /* TOP_LEFT or TOP_RIGHT */
     else
-      tinypos = &door[-1].pos; /* BOTTOM_RIGHT or BOTTOM_LEFT */
+      pos = &door[-1].pos; /* BOTTOM_RIGHT or BOTTOM_LEFT */
 
     if (vischar == &state->vischars[0])
     {
@@ -9916,7 +9916,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
       get_target_assign_pos(state, vischar, &vischar->route);
     }
 
-    transition(state, tinypos);
+    transition(state, pos);
 
     play_speaker(state, sound_CHARACTER_ENTERS_1);
     return;
@@ -10670,9 +10670,9 @@ next:
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
-  character_t  character; /* was A */
-  mappos8_t   *tinypos;   /* was DE */
-  mappos16_t  *pos;       /* was HL */
+  character_t  character;    /* was A */
+  mappos8_t   *mappos_stash; /* was DE */
+  mappos16_t  *pos;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10695,17 +10695,17 @@ void guards_follow_suspicious_character(tgestate_t *state,
   /* Do line of sight checking when outdoors. */
 
   pos = &vischar->mi.pos; /* was HL += 15 */
-  tinypos = &state->mappos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
+  mappos_stash = &state->mappos_stash; // TODO: Find out if this use of mappos_stash ever intersects with the use of mappos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
     mappos8_t *hero_map_pos;  /* was HL */
     int        dir;           /* Conv: was carry */
     uint8_t    direction;     /* was A / C */
 
-    scale_mappos_down(pos, tinypos); // tinypos_stash = vischar.mi.pos
+    scale_mappos_down(pos, mappos_stash); // stash_pos = vischar.mi.pos
 
     hero_map_pos = &state->hero_map_position;
-    /* Conv: Dupe tinypos ptr factored out. */
+    /* Conv: Dupe pos pointer factored out. */
 
     direction = vischar->direction; /* This character's direction. */
     /* Conv: Avoided shifting 'direction' here. Propagated shift into later ops. */
@@ -10715,12 +10715,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TL or BR */
 
       /* Does the hero approximately match our Y coordinate? */
-      if (tinypos->v - 1 >= hero_map_pos->v ||
-          tinypos->v + 1 <  hero_map_pos->v)
+      if (mappos_stash->v - 1 >= hero_map_pos->v ||
+          mappos_stash->v + 1 <  hero_map_pos->v)
         return;
 
       /* Are we facing the hero? */
-      dir = tinypos->u < hero_map_pos->u;
+      dir = mappos_stash->u < hero_map_pos->u;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -10731,12 +10731,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TR or BL */
 
       /* Does the hero approximately match our X coordinate? */
-      if (tinypos->u - 1 >= hero_map_pos->u ||
-          tinypos->u + 1 <  hero_map_pos->u)
+      if (mappos_stash->u - 1 >= hero_map_pos->u ||
+          mappos_stash->u + 1 <  hero_map_pos->u)
         return;
 
       /* Are we facing the hero? */
-      dir = tinypos->v < hero_map_pos->v;
+      dir = mappos_stash->v < hero_map_pos->v;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -11251,7 +11251,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             item_t        item)
 {
 //  pos8_t       *HL; /* was HL */
-//  tinypos_t    *DE; /* was DE */
+//  mappos_t     *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
   uint8_t       left_skip;      /* was B */
   uint8_t       clipped_width;  /* was C */
@@ -11285,7 +11285,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->iso_pos       = itemstr->iso_pos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
-//  DE = &state->tinypos_stash + 5;
+//  DE = &state->mappos_stash + 5;
 //  BC = 0;
 //
 //  // EX DE, HL
@@ -12353,8 +12353,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  mappos16_t        *pos;            /* was HL */
-  mappos8_t         *tinypos;        /* was DE */
+  mappos16_t        *vischar_pos;    /* was HL */
+  mappos8_t         *mappos_stash;   /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
@@ -12377,23 +12377,23 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  pos     = &vischar->mi.pos;
-  tinypos = &state->mappos_stash;
+  vischar_pos  = &vischar->mi.pos;
+  mappos_stash = &state->mappos_stash;
 
   if (state->room_index > room_0_OUTDOORS)
   {
     /* Indoors. */
-    tinypos->u = pos->u; // note: narrowing
-    tinypos->v = pos->v; // note: narrowing
-    tinypos->w = pos->w; // note: narrowing
+    mappos_stash->u = vischar_pos->u; // note: narrowing
+    mappos_stash->v = vischar_pos->v; // note: narrowing
+    mappos_stash->w = vischar_pos->w; // note: narrowing
   }
   else
   {
     /* Outdoors. */
     /* Conv: Unrolled, removed divide-by-8 calls. */
-    tinypos->u = (pos->u + 4) >> 3; /* with rounding */
-    tinypos->v = (pos->v    ) >> 3; /* without rounding */
-    tinypos->w = (pos->w    ) >> 3;
+    mappos_stash->u = (vischar_pos->u + 4) >> 3; /* with rounding */
+    mappos_stash->v = (vischar_pos->v    ) >> 3; /* without rounding */
+    mappos_stash->w = (vischar_pos->w    ) >> 3;
   }
 
   sprite = vischar->mi.sprite;
