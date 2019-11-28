@@ -525,10 +525,10 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 #define get_target_DOOR       128
 #define get_target_ROUTE_ENDS 255
 
-uint8_t get_target(tgestate_t    *state,
-                   route_t       *route,
+uint8_t get_target(tgestate_t       *state,
+                   route_t          *route,
                    const mappos8_t **doorpos,
-                   const pos8_t  **location);
+                   const pos8_t    **location);
 
 void move_a_character(tgestate_t *state);
 
@@ -578,7 +578,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar);
 
 void get_target_assign_pos(tgestate_t *state,
                            vischar_t  *vischar,
-                           route_t   *route);
+                           route_t    *route);
 void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);

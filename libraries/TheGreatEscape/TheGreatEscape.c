@@ -1295,8 +1295,8 @@ void drop_item_tail(tgestate_t *state, item_t item)
 {
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
-  mappos8_t       *outpos;  /* was DE */
-  mappos16_t      *inpos;   /* was HL */
+  mappos8_t    *outpos;  /* was DE */
+  mappos16_t   *inpos;   /* was HL */
 
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
@@ -1964,8 +1964,8 @@ void in_permitted_area(tgestate_t *state)
     { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
-  mappos16_t     *vcpos;      /* was HL */
-  mappos8_t      *pos;        /* was DE */
+  mappos16_t  *vcpos;      /* was HL */
+  mappos8_t   *pos;        /* was DE */
   attribute_t  attr;       /* was A */
   uint8_t      routeindex; /* was A */
   route_t      route;      /* was CA */
@@ -2184,7 +2184,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  *
  * \return true if in permitted area.
  */
-int within_camp_bounds(uint8_t       area, // ought to be an enum
+int within_camp_bounds(uint8_t          area, // ought to be an enum
                        const mappos8_t *pos)
 {
   /**
@@ -3267,10 +3267,10 @@ found_on_screen:
  */
 void set_route(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t       get_target_result; /* was A */
+  uint8_t          get_target_result; /* was A */
   mappos8_t       *target;            /* was DE */
   const mappos8_t *doorpos;           /* was HL */
-  const pos8_t  *location;          /* was HL */
+  const pos8_t    *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -4732,15 +4732,15 @@ void move_map(tgestate_t *state)
     &move_map_down_left,
   };
 
-  const anim_t  *anim;              /* was DE */
-  uint8_t        animindex;         /* was C */
-  direction_t    map_direction;     /* was A */
-  uint8_t        move_map_y;        /* was A */
-  movemapfn_t   *pmovefn;           /* was HL */
-  uint8_t        x,y;               /* was C,B */
-  uint8_t       *pmove_map_y;       /* was HL */
-  uint8_t       *pmove_map_y_copy;  /* was DE */
-  pos8_t       game_window_offset;  /* was HL */
+  const anim_t  *anim;                /* was DE */
+  uint8_t        animindex;           /* was C */
+  direction_t    map_direction;       /* was A */
+  uint8_t        move_map_y;          /* was A */
+  movemapfn_t   *pmovefn;             /* was HL */
+  uint8_t        x,y;                 /* was C,B */
+  uint8_t       *pmove_map_y;         /* was HL */
+  uint8_t       *pmove_map_y_copy;    /* was DE */
+  pos8_t         game_window_offset;  /* was HL */
   // uint16_t       HLpos;  /* was HL */
 
   assert(state != NULL);
@@ -6264,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const mappos16_t       *saved_pos;     /* was HL */
+  const mappos16_t    *saved_pos;     /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6285,7 +6285,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
   {
     mappos16_t *pos;  /* was DE */
-    uint8_t  u, v; /* was A, A */
+    uint8_t     u, v; /* was A, A */
 
     /* Conv: HL dropped. */
     pos = &state->saved_pos.pos;
@@ -6350,14 +6350,14 @@ void reset_outdoors(tgestate_t *state)
  */
 void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 {
-  doorindex_t  *pdoors;         /* was HL */
-  doorindex_t   current_door;   /* was A */
-  uint8_t       room_and_flags; /* was A */
-  const door_t *door;           /* was HL' */
+  doorindex_t     *pdoors;         /* was HL */
+  doorindex_t      current_door;   /* was A */
+  uint8_t          room_and_flags; /* was A */
+  const door_t    *door;           /* was HL' */
   const mappos8_t *doorpos;        /* was HL' */
   mappos16_t      *pos;            /* was DE' */
-  uint8_t       u;              /* was A */
-  uint8_t       v;              /* was A */
+  uint8_t          u;              /* was A */
+  uint8_t          v;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6563,10 +6563,10 @@ void action_shovel(tgestate_t *state)
  */
 void action_wiresnips(tgestate_t *state)
 {
-  const wall_t *wall;  /* was HL */
+  const wall_t    *wall;  /* was HL */
   const mappos8_t *pos;   /* was DE */
-  uint8_t       iters; /* was B */
-  uint8_t       flag;  /* was A */
+  uint8_t          iters; /* was B */
+  uint8_t          flag;  /* was A */
 
   assert(state != NULL);
 
@@ -6751,7 +6751,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
   const door_t *door;                 /* was HL' */
   doorindex_t   locked_door_index;    /* was C */
   doorindex_t  *interior_doors;       /* was DE */
-  mappos16_t      *pos;                  /* was DE' */
+  mappos16_t   *pos;                  /* was DE' */
   doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
@@ -7999,7 +7999,7 @@ void restore_tiles(tgestate_t *state)
   uint8_t            clipped_width;                 /* was C */
   uint8_t            top_skip;                      /* was D */
   uint8_t            clipped_height;                /* was E */
-  const pos8_t    *map_position;                  /* was HL */
+  const pos8_t      *map_position;                  /* was HL */
   uint8_t           *windowbuf;                     /* was HL */
   uint8_t           *windowbuf2;                    /* was DE */
   uint8_t            x, y;                          /* was H', L' */
@@ -8381,14 +8381,14 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   vischar_t                    *vischar;      /* was HL/IY */
   uint8_t                       iters;        /* was B */
   characterstruct_t            *charstr2;     /* was DE */
-  mappos16_t                      *saved_pos;    /* was HL */
+  mappos16_t                   *saved_pos;    /* was HL */
   character_t                   character;    /* was A */
   const character_class_data_t *metadata;     /* was DE */
   int                           Z;            /* flag */
   room_t                        room;         /* was A */
   uint8_t                       target_type;  /* was A */
-  const mappos8_t                 *doorpos;      /* was HL */
-  const pos8_t                  *location;     /* was HL */
+  const mappos8_t              *doorpos;      /* was HL */
+  const pos8_t                 *location;     /* was HL */
   route_t                      *route;        /* was HL */
 
   assert(state   != NULL);
@@ -8526,7 +8526,7 @@ again:
 void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 {
   character_t        character; /* was A */
-  mappos16_t           *pos;       /* was DE */
+  mappos16_t        *pos;       /* was DE */
   characterstruct_t *charstr;   /* was DE */
   room_t             room;      /* was A */
 
@@ -8642,10 +8642,10 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * \retval get_target_DOOR       The next target is a door.
  * \retval get_target_LOCATION   The next target is a location.
  */
-uint8_t get_target(tgestate_t    *state,
-                   route_t       *route,
+uint8_t get_target(tgestate_t       *state,
+                   route_t          *route,
                    const mappos8_t **doorpos,
-                   const pos8_t  **location)
+                   const pos8_t    **location)
 {
   /**
    * $783A: Table of map locations used in routes.
@@ -8855,13 +8855,13 @@ void move_a_character(tgestate_t *state)
   item_t             item;            /* was C */
   uint8_t            target_type;     /* was A */
   route_t           *route;           /* was HL */
-  const mappos8_t      *tinypos;         /* was HL */
-  const pos8_t       *location;        /* was HL */
+  const mappos8_t   *tinypos;         /* was HL */
+  const pos8_t      *location;        /* was HL */
   uint8_t            routeindex;      /* was A */
   uint8_t            max;             /* was A' */
   uint8_t            arrived;         /* was B */
   door_t            *door;            /* was HL */
-  mappos8_t            *charstr_tinypos; /* was DE */
+  mappos8_t         *charstr_tinypos; /* was DE */
 
   assert(state != NULL);
 
@@ -9816,14 +9816,14 @@ input_t vischar_move_v(tgestate_t *state,
  */
 void target_reached(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t       flags_all;               /* was C */
+  uint8_t          flags_all;               /* was C */
 
-  uint8_t       flags_lower6;            /* was A */
-  uint8_t       food_discovered_counter; /* was A */
-  uint8_t       step;                    /* was C */
-  uint8_t       route;                   /* was A */
-  doorindex_t   doorindex;               /* was A */
-  const door_t *door;                    /* was HL */
+  uint8_t          flags_lower6;            /* was A */
+  uint8_t          food_discovered_counter; /* was A */
+  uint8_t          step;                    /* was C */
+  uint8_t          route;                   /* was A */
+  doorindex_t      doorindex;               /* was A */
+  const door_t    *door;                    /* was HL */
   const mappos8_t *tinypos;                 /* was HL */
 
   assert(state != NULL);
@@ -9946,9 +9946,9 @@ void get_target_assign_pos(tgestate_t *state,
                            vischar_t  *vischar,
                            route_t    *route)
 {
-  uint8_t       get_target_result; /* was A */
+  uint8_t          get_target_result; /* was A */
   const mappos8_t *doorpos;           /* was HL */
-  const pos8_t  *location;          /* was HL */
+  const pos8_t    *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10604,9 +10604,9 @@ void solitary(tgestate_t *state)
     /* Is the item outdoors? */
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
-      item_t  item_and_flags; /* was A */
+      item_t     item_and_flags; /* was A */
       mappos8_t *itempos;        /* was HL */
-      uint8_t area;           /* was A' */
+      uint8_t    area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
       itempos = &pitemstruct->pos;
@@ -10671,9 +10671,9 @@ next:
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
-  character_t character; /* was A */
-  mappos8_t     *tinypos;   /* was DE */
-  mappos16_t    *pos;       /* was HL */
+  character_t  character; /* was A */
+  mappos8_t   *tinypos;   /* was DE */
+  mappos16_t  *pos;       /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10700,8 +10700,8 @@ void guards_follow_suspicious_character(tgestate_t *state,
   if (state->room_index == room_0_OUTDOORS)
   {
     mappos8_t *hero_map_pos;  /* was HL */
-    int     dir;           /* Conv: was carry */
-    uint8_t direction;     /* was A / C */
+    int        dir;           /* Conv: was carry */
+    uint8_t    direction;     /* was A / C */
 
     pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
 
@@ -11143,7 +11143,7 @@ const anim_t *animations[animations__LIMIT] =
 void mark_nearby_items(tgestate_t *state)
 {
   room_t        room;       /* was C */
-  pos8_t      map_xy;     /* was D, E */
+  pos8_t        map_xy;     /* was D, E */
   uint8_t       iters;      /* was B */
   itemstruct_t *itemstruct; /* was HL */
 
@@ -11251,7 +11251,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-//  pos8_t     *HL; /* was HL */
+//  pos8_t       *HL; /* was HL */
 //  tinypos_t    *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
   uint8_t       left_skip;      /* was B */
@@ -11431,18 +11431,18 @@ uint8_t item_visible(tgestate_t *state,
 
   const pos8_t *piso_pos;           /* was HL */
   pos8_t        map_position;       /* was DE */
-  uint8_t         window_right_edge;  /* was A  */
-  int8_t          available_right;    /* was A  */
-  uint8_t         new_left;           /* was B  */
-  uint8_t         new_width;          /* was C  */
-  uint8_t         item_right_edge;    /* was A  */
-  int8_t          available_left;     /* was A  */
-  uint8_t         window_bottom_edge; /* was A  */
-  int8_t          available_bottom;   /* was A  */
-  uint8_t         new_top;            /* was D  */
-  uint8_t         new_height;         /* was E  */
-  uint8_t         item_bottom_edge;   /* was A  */
-  uint8_t         available_top;      /* was A  */
+  uint8_t       window_right_edge;  /* was A  */
+  int8_t        available_right;    /* was A  */
+  uint8_t       new_left;           /* was B  */
+  uint8_t       new_width;          /* was C  */
+  uint8_t       item_right_edge;    /* was A  */
+  int8_t        available_left;     /* was A  */
+  uint8_t       window_bottom_edge; /* was A  */
+  int8_t        available_bottom;   /* was A  */
+  uint8_t       new_top;            /* was D  */
+  uint8_t       new_height;         /* was E  */
+  uint8_t       item_bottom_edge;   /* was A  */
+  uint8_t       available_top;      /* was A  */
 
   assert(state          != NULL);
   assert(clipped_width  != NULL);
@@ -12354,8 +12354,8 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  mappos16_t           *pos;            /* was HL */
-  mappos8_t            *tinypos;        /* was DE */
+  mappos16_t        *pos;            /* was HL */
+  mappos8_t         *tinypos;        /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */

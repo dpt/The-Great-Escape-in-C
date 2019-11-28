@@ -538,7 +538,7 @@ typedef struct pos8
 pos8_t;
 
 /**
- * A 16-bit position in map space. Specified as a (U,V) position and a height (W).
+ * Holds a 16-bit position (U,V) and height (W) in map space.
  */
 typedef struct mappos16
 {
@@ -547,7 +547,7 @@ typedef struct mappos16
 mappos16_t;
 
 /**
- * Holds a (U,V) position and a height (W) in 8 bits.
+ * Holds an 8-bit position (U,V) and height (W) in map space.
  */
 typedef struct mappos8
 {
@@ -556,13 +556,13 @@ typedef struct mappos8
 mappos8_t;
 
 /**
- * Holds a (U,V) position only in 8 bits.
+ * Holds an 8-bit position (U,V) only in map space.
  */
-typedef struct mappos8no_w
+typedef struct mappos8uv
 {
   uint8_t u, v;
 }
-mappos8no_w_t;
+mappos8uv_t;
 
 /**
  * An animation frame.
@@ -599,7 +599,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  mappos16_t            pos;           /**< map position */
+  mappos16_t         pos;           /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
@@ -726,7 +726,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  mappos8_t      pos;
+  mappos8_t   pos;
   route_t     route;
 }
 characterstruct_t;
@@ -753,10 +753,10 @@ timedevent_t;
  */
 typedef struct itemstruct
 {
-  item_t item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
-  room_t room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
+  item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
+  room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
   mappos8_t pos;
-  pos8_t  iso_pos;
+  pos8_t    iso_pos;
 }
 itemstruct_t;
 
@@ -827,8 +827,8 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
  */
 typedef struct default_item_location
 {
-  uint8_t       room_and_flags;
-  mappos8no_w_t pos;
+  uint8_t     room_and_flags;
+  mappos8uv_t pos;
 }
 default_item_location_t;
 
@@ -837,9 +837,9 @@ default_item_location_t;
  */
 typedef struct mask
 {
-  uint8_t  index;  /**< Index into mask_pointers. */
-  bounds_t bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  mappos8_t   pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  uint8_t   index;  /**< Index into mask_pointers. */
+  bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
+  mappos8_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
@@ -858,7 +858,7 @@ character_class_data_t;
  */
 typedef struct searchlight_movement
 {
-  pos8_t          xy;
+  pos8_t         xy;
   uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
   uint8_t        index;     /**< Index + direction in top bit. */
