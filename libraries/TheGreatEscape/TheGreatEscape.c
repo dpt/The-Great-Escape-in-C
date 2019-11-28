@@ -7184,8 +7184,8 @@ void reset_map_and_characters(tgestate_t *state)
 {
   typedef struct character_reset_partial
   {
-    room_t  room;
-    uint8_t x, y; /* partial of a tinypos_t */
+    room_t      room;
+    mappos8uv_t pos;
   }
   character_reset_partial_t;
 
@@ -7194,16 +7194,16 @@ void reset_map_and_characters(tgestate_t *state)
    */
   static const character_reset_partial_t character_reset_data[10] =
   {
-    { room_3_HUT2RIGHT, 40, 60 }, /* for character 12 Guard */
-    { room_3_HUT2RIGHT, 36, 48 }, /* for character 13 Guard */
-    { room_5_HUT3RIGHT, 40, 60 }, /* for character 14 Guard */
-    { room_5_HUT3RIGHT, 36, 34 }, /* for character 15 Guard */
-    { room_NONE,        52, 60 }, /* for character 20 Prisoner */
-    { room_NONE,        52, 44 }, /* for character 21 Prisoner */
-    { room_NONE,        52, 28 }, /* for character 22 Prisoner */
-    { room_NONE,        52, 60 }, /* for character 23 Prisoner */
-    { room_NONE,        52, 44 }, /* for character 24 Prisoner */
-    { room_NONE,        52, 28 }, /* for character 25 Prisoner */
+    { room_3_HUT2RIGHT, { 40, 60 } }, /* for character 12 Guard */
+    { room_3_HUT2RIGHT, { 36, 48 } }, /* for character 13 Guard */
+    { room_5_HUT3RIGHT, { 40, 60 } }, /* for character 14 Guard */
+    { room_5_HUT3RIGHT, { 36, 34 } }, /* for character 15 Guard */
+    { room_NONE,        { 52, 60 } }, /* for character 20 Prisoner */
+    { room_NONE,        { 52, 44 } }, /* for character 21 Prisoner */
+    { room_NONE,        { 52, 28 } }, /* for character 22 Prisoner */
+    { room_NONE,        { 52, 60 } }, /* for character 23 Prisoner */
+    { room_NONE,        { 52, 44 } }, /* for character 24 Prisoner */
+    { room_NONE,        { 52, 28 } }, /* for character 25 Prisoner */
   };
 
   uint8_t                          iters;   /* was B */
@@ -7270,8 +7270,8 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos.u       = reset->x;
-    charstr->pos.v       = reset->y;
+    charstr->pos.u       = reset->pos.u;
+    charstr->pos.v       = reset->pos.v;
     charstr->pos.w       = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
     charstr->route.index = 0; /* Stand still */
     charstr++;
