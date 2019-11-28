@@ -662,7 +662,7 @@ void flip_16_masked_pixels(tgestate_t *state,
 
 int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar);
 
-void pos_to_tinypos(const mappos16_t *in, mappos8_t *out);
+void scale_mappos_down(const mappos16_t *in, mappos8_t *out);
 INLINE void divide_by_8_with_rounding(uint8_t *A, uint8_t *C);
 INLINE void divide_by_8(uint8_t *A, uint8_t *C);
 

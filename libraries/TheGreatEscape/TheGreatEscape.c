@@ -1312,7 +1312,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos = &itemstr->pos;
     inpos  = &state->vischars[0].mi.pos;
 
-    pos_to_tinypos(inpos, outpos);
+    scale_mappos_down(inpos, outpos);
     outpos->w = 0;
 
     calc_exterior_item_iso_pos(itemstr);
@@ -1980,7 +1980,7 @@ void in_permitted_area(tgestate_t *state)
   {
     /* Outdoors. */
 
-    pos_to_tinypos(vcpos, pos);
+    scale_mappos_down(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
     if (state->vischars[0].iso_pos.x >= MAP_WIDTH  * 8 ||
@@ -8587,7 +8587,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
     if (room == room_0_OUTDOORS)
     {
       /* Outdoors. */
-      pos_to_tinypos(vispos_in, charpos_out);
+      scale_mappos_down(vispos_in, charpos_out);
     }
     else
     {
@@ -9595,7 +9595,7 @@ bribed_visible:
         if (state->room_index == room_0_OUTDOORS)
         {
           /* Outdoors */
-          pos_to_tinypos(pos, target);
+          scale_mappos_down(pos, target);
         }
         else
         {
@@ -10703,7 +10703,7 @@ void guards_follow_suspicious_character(tgestate_t *state,
     int        dir;           /* Conv: was carry */
     uint8_t    direction;     /* was A / C */
 
-    pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
+    scale_mappos_down(pos, tinypos); // tinypos_stash = vischar.mi.pos
 
     hero_map_pos = &state->hero_map_position;
     /* Conv: Dupe tinypos ptr factored out. */
@@ -12560,7 +12560,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
  * \param[in]  in  Input mappos16_t. (was HL)
  * \param[out] out Output mappos8_t. (was DE)
  */
-void pos_to_tinypos(const mappos16_t *in, mappos8_t *out)
+void scale_mappos_down(const mappos16_t *in, mappos8_t *out)
 {
   const uint16_t *pcoordin;  /* was HL */
   uint8_t        *pcoordout; /* was DE */
