@@ -620,7 +620,7 @@ typedef struct vischar
   route_t         route;
 
   /** ($8004) target position */
-  // gets set to state->hero_map_position when vischar_PURSUIT_PURSUE
+  // gets set to state->hero_mappos when vischar_PURSUIT_PURSUE
   // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.

@@ -177,7 +177,7 @@ struct tgestate
   spriteindex_t   sprite_index;
 
   /** $81B8: Hero's map position. */
-  mappos8_t       hero_map_position;
+  mappos8_t       hero_mappos;
 
   /** $81BB: Offset into map used when drawing tiles.
    *

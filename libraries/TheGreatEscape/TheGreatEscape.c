@@ -1487,7 +1487,7 @@ itemstruct_t *find_nearby_item(tgestate_t *state)
 
       // FUTURE: Candidate for loop unrolling.
       structcoord = &itemstr->pos.u;
-      herocoord   = &state->hero_map_position.u;
+      herocoord   = &state->hero_mappos.u;
       coorditers = 2;
       /* Range check. */
       do
@@ -1974,7 +1974,7 @@ void in_permitted_area(tgestate_t *state)
   assert(state != NULL);
 
   vcpos = &state->vischars[0].mi.pos;
-  pos = &state->hero_map_position;
+  pos = &state->hero_mappos;
   if (state->room_index == room_0_OUTDOORS)
   {
     /* Outdoors. */
@@ -2164,7 +2164,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   else if (room == room_0_OUTDOORS) // is outside
   {
     /* Hero is outdoors - check bounds. */
-    return within_camp_bounds(room_and_flags, &state->hero_map_position);
+    return within_camp_bounds(room_and_flags, &state->hero_mappos);
   }
   else
   {
@@ -6570,7 +6570,7 @@ void action_wiresnips(tgestate_t *state)
   assert(state != NULL);
 
   wall = &walls[12]; /* start of (vertical) fences */
-  pos = &state->hero_map_position;
+  pos = &state->hero_mappos;
   iters = 4;
   do
   {
@@ -6592,7 +6592,7 @@ void action_wiresnips(tgestate_t *state)
   while (--iters);
 
   wall = &walls[12 + 4]; /* start of (horizontal) fences */
-  pos = &state->hero_map_position;
+  pos = &state->hero_mappos;
   iters = 3;
   do
   {
@@ -9514,8 +9514,8 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
     {
 pursue_hero:
       /* Pursue the hero. */
-      vischar2->target.u = state->hero_map_position.u;
-      vischar2->target.v = state->hero_map_position.v;
+      vischar2->target.u = state->hero_mappos.u;
+      vischar2->target.v = state->hero_mappos.v;
       goto move;
     }
     /* Mode 2: Hero is chased by hostiles if under player control. */
@@ -10698,13 +10698,13 @@ void guards_follow_suspicious_character(tgestate_t *state,
   mappos_stash = &state->mappos_stash; // TODO: Find out if this use of mappos_stash ever intersects with the use of mappos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
-    mappos8_t *hero_map_pos;  /* was HL */
-    int        dir;           /* Conv: was carry */
-    uint8_t    direction;     /* was A / C */
+    mappos8_t *hero_mappos; /* was HL */
+    int        dir;         /* Conv: was carry */
+    uint8_t    direction;   /* was A / C */
 
     scale_mappos_down(pos, mappos_stash); // stash_pos = vischar.mi.pos
 
-    hero_map_pos = &state->hero_map_position;
+    hero_mappos = &state->hero_mappos;
     /* Conv: Dupe pos pointer factored out. */
 
     direction = vischar->direction; /* This character's direction. */
@@ -10715,12 +10715,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TL or BR */
 
       /* Does the hero approximately match our Y coordinate? */
-      if (mappos_stash->v - 1 >= hero_map_pos->v ||
-          mappos_stash->v + 1 <  hero_map_pos->v)
+      if (mappos_stash->v - 1 >= hero_mappos->v ||
+          mappos_stash->v + 1 <  hero_mappos->v)
         return;
 
       /* Are we facing the hero? */
-      dir = mappos_stash->u < hero_map_pos->u;
+      dir = mappos_stash->u < hero_mappos->u;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -10731,12 +10731,12 @@ void guards_follow_suspicious_character(tgestate_t *state,
       /* TR or BL */
 
       /* Does the hero approximately match our X coordinate? */
-      if (mappos_stash->u - 1 >= hero_map_pos->u ||
-          mappos_stash->u + 1 <  hero_map_pos->u)
+      if (mappos_stash->u - 1 >= hero_mappos->u ||
+          mappos_stash->u + 1 <  hero_mappos->u)
         return;
 
       /* Are we facing the hero? */
-      dir = mappos_stash->v < hero_map_pos->v;
+      dir = mappos_stash->v < hero_mappos->v;
       if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
@@ -12748,7 +12748,7 @@ void event_roll_call(tgestate_t *state)
   /* Conv: Unrolled. */
   /* Range checking. X in (114..124) and Y in (106..114). */
   range = map_ROLL_CALL_X;
-  pcoord = &state->hero_map_position.u;
+  pcoord = &state->hero_mappos.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     goto not_at_roll_call;
@@ -12803,7 +12803,7 @@ void action_papers(tgestate_t *state)
   // UNROLLED
   /* Range checking. X in (105..109) and Y in (73..75). */
   range = map_MAIN_GATE_X; // note the confused coords business
-  pcoord = &state->hero_map_position.u;
+  pcoord = &state->hero_mappos.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     return;
