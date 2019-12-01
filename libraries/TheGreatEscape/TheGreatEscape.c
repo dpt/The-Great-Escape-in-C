@@ -5689,7 +5689,8 @@ exit:
 /**
  * $AF8F: Test for characters meeting obstacles like doors and map bounds.
  *
- * Also assigns saved_pos to specified vischar's pos and sets the sprite_index.
+ * Also assigns saved_mappos to specified vischar's pos and sets the
+ * sprite_index.
  *
  * \param[in] state        Pointer to game state.
  * \param[in] vischar      Pointer to visible character. (was IY)
@@ -5772,7 +5773,7 @@ int collision(tgestate_t *state)
     if (vischar->flags & vischar_FLAGS_NO_COLLIDE)
       goto next;
 
-    /* Test for contact between the current vischar and saved_pos (which is
+    /* Test for contact between the current vischar and saved_mappos (which is
      * set on entry either from a vischar or a characterstruct).
      *
      * For contact to occur the vischar being tested must be positioned
@@ -6228,7 +6229,7 @@ uint16_t multiply_by_4(uint8_t A)
  *
  * Leaf.
  *
- * Position to be checked is passed in in state->saved_pos.
+ * Position to be checked is passed in in state->saved_mappos.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -6263,7 +6264,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const mappos16_t    *saved_pos;     /* was HL */
+  const mappos16_t    *saved_mappos;  /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6271,11 +6272,11 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   room_bounds = &roomdef_dimensions[state->roomdef_dimensions_index];
-  saved_pos = &state->saved_mappos.pos16;
+  saved_mappos = &state->saved_mappos.pos16;
   /* Conv: Merged conditions, flipped compares and reordered. */
   // inclusive/exclusive bounds look strange here
-  if (saved_pos->u <= room_bounds->x0 + 4 || saved_pos->u > room_bounds->x1 ||
-      saved_pos->v <= room_bounds->y0     || saved_pos->v > room_bounds->y1 - 4)
+  if (saved_mappos->u <= room_bounds->x0 + 4 || saved_mappos->u > room_bounds->x1 ||
+      saved_mappos->v <= room_bounds->y0     || saved_mappos->v > room_bounds->y1 - 4)
   {
     goto hit_bounds;
   }
@@ -6290,7 +6291,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
     pos = &state->saved_mappos.pos16;
 
     /* Conv: Two-iteration loop unrolled. */
-    u = pos->u; // note: narrowing // saved_pos must be 8-bit
+    u = pos->u; // note: narrowing // saved_mappos must be 8-bit
     if (u < object_bounds->x0 || u >= object_bounds->x1)
       goto next;
     v = pos->v; // note: narrowing
@@ -6378,7 +6379,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     /* Skip any door which is more than three units away. */
     doorpos = &door->pos;
-    pos = &state->saved_mappos.pos16; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of pos8 and pos types?
+    pos = &state->saved_mappos.pos16; // reusing saved_mappos as 8-bit here? a case for saved_mappos being a union of pos8 and pos types?
     u = doorpos->u;
     if (u - 3 >= pos->u || u + 3 < pos->u) // -3 .. +2
       continue;
@@ -6737,7 +6738,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
 /**
  * $B4D0: Return the door in range of the hero.
  *
- * The hero's position is expected in state->saved_pos.
+ * The hero's position is expected in state->saved_mappos.
  *
  * \param[in] state Pointer to game state.
  *
@@ -7076,7 +7077,8 @@ void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
 }
 
 /**
- * $B729: Calculate screen position for the specified vischar from state->saved_pos.
+ * $B729: Calculate screen position for the specified vischar from
+ * state->saved_mappos.
  *
  * Result has three bits of fixed point accuracy.
  *
@@ -8380,7 +8382,7 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   vischar_t                    *vischar;      /* was HL/IY */
   uint8_t                       iters;        /* was B */
   characterstruct_t            *charstr2;     /* was DE */
-  mappos16_t                   *saved_pos;    /* was HL */
+  mappos16_t                   *saved_mappos; /* was HL */
   character_t                   character;    /* was A */
   const character_class_data_t *metadata;     /* was DE */
   int                           Z;            /* flag */
@@ -8416,20 +8418,20 @@ found_empty_slot:
   charstr2 = charstr; /* Conv: Original points at charstr.room */
 
   /* Scale coords dependent on which room the character is in. */
-  saved_pos = &state->saved_mappos.pos16;
+  saved_mappos = &state->saved_mappos.pos16;
   if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
-    saved_pos->u = charstr2->pos.u * 8;
-    saved_pos->v = charstr2->pos.v * 8;
-    saved_pos->w = charstr2->pos.w * 8;
+    saved_mappos->u = charstr2->pos.u * 8;
+    saved_mappos->v = charstr2->pos.v * 8;
+    saved_mappos->w = charstr2->pos.w * 8;
   }
   else
   {
     /* Conv: Unrolled. */
-    saved_pos->u = charstr2->pos.u;
-    saved_pos->v = charstr2->pos.v;
-    saved_pos->w = charstr2->pos.w;
+    saved_mappos->u = charstr2->pos.u;
+    saved_mappos->v = charstr2->pos.v;
+    saved_mappos->w = charstr2->pos.w;
   }
 
   Z = collision(state);
@@ -8945,7 +8947,7 @@ trigger_event:
       room = charstr->room;
       if (room == room_0_OUTDOORS)
       {
-        /* The original code stores to saved_pos as if it's a pair of bytes.
+        /* The original code stores to saved_mappos as if it's a pair of bytes.
          * This is different from most, if not all, of the other locations in
          * the code which treat it as a pair of 16-bit words.
          * Given that I assume it's just being used here as scratch space. */
