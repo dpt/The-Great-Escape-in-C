@@ -181,7 +181,7 @@ void invalidate_attrs(tgestate_t *state,
 
 /* $6000 onwards */
 
-void transition(tgestate_t *state, const mappos8_t *pos);
+void transition(tgestate_t *state, const mappos8_t *mappos);
 void enter_room(tgestate_t *state);
 INLINE void squash_stack_goto_main(tgestate_t *state);
 
@@ -259,7 +259,7 @@ void cutting_wire(tgestate_t *state);
 
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
-int within_camp_bounds(uint8_t index, const mappos8_t *pos);
+int within_camp_bounds(uint8_t index, const mappos8_t *mappos);
 
 /* $A000 onwards */
 
@@ -527,7 +527,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const mappos8_t **doorpos,
+                   const mappos8_t **doormappos,
                    const pos8_t    **location);
 
 void move_a_character(tgestate_t *state);

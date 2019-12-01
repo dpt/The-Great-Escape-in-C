@@ -165,13 +165,13 @@ void invalidate_attrs(tgestate_t *state,
  *
  * \remarks Exits using longjmp in the hero case.
  */
-void transition(tgestate_t *state, const mappos8_t *pos)
+void transition(tgestate_t *state, const mappos8_t *mappos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
 
-  assert(state != NULL);
-  assert(pos   != NULL);
+  assert(state  != NULL);
+  assert(mappos != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -184,9 +184,9 @@ void transition(tgestate_t *state, const mappos8_t *pos)
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.u = multiply_by_4(pos->u);
-    vischar->mi.pos.v = multiply_by_4(pos->v);
-    vischar->mi.pos.w = multiply_by_4(pos->w);
+    vischar->mi.pos.u = multiply_by_4(mappos->u);
+    vischar->mi.pos.v = multiply_by_4(mappos->v);
+    vischar->mi.pos.w = multiply_by_4(mappos->w);
   }
   else
   {
@@ -196,9 +196,9 @@ void transition(tgestate_t *state, const mappos8_t *pos)
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.u = pos->u;
-    vischar->mi.pos.v = pos->v;
-    vischar->mi.pos.w = pos->w;
+    vischar->mi.pos.u = mappos->u;
+    vischar->mi.pos.v = mappos->v;
+    vischar->mi.pos.w = mappos->w;
   }
 
   if (vischar != &state->vischars[0])
@@ -2184,7 +2184,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
  * \return true if in permitted area.
  */
 int within_camp_bounds(uint8_t          area, // ought to be an enum
-                       const mappos8_t *pos)
+                       const mappos8_t *mappos)
 {
   /**
    * $9F15: Bounds of the three main exterior areas.
@@ -2199,11 +2199,11 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
   const bounds_t *bounds; /* was HL */
 
   assert(area < NELEMS(permitted_bounds));
-  assert(pos != NULL);
+  assert(mappos != NULL);
 
   bounds = &permitted_bounds[area];
-  return pos->u >= bounds->x0 && pos->u < bounds->x1 &&
-         pos->v >= bounds->y0 && pos->v < bounds->y1;
+  return mappos->u >= bounds->x0 && mappos->u < bounds->x1 &&
+         mappos->v >= bounds->y0 && mappos->v < bounds->y1;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8632,10 +8632,10 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * If the route specifies 'wander' then one of eight random locations is
  * chosen starting from route.step.
  *
- * \param[in]  state    Pointer to game state.
- * \param[in]  route    Pointer to route.                            (was HL)
- * \param[out] doorpos  Receives doorpos when moving to a door.      (was HL)
- * \param[out] location Receives location when moving to a location. (was HL)
+ * \param[in]  state      Pointer to game state.
+ * \param[in]  route      Pointer to route.                            (was HL)
+ * \param[out] doormappos Receives doorpos when moving to a door.      (was HL)
+ * \param[out] location   Receives location when moving to a location. (was HL)
  *
  * \retval get_target_ROUTE_ENDS The route has ended.
  * \retval get_target_DOOR       The next target is a door.
@@ -8643,7 +8643,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  */
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const mappos8_t **doorpos,
+                   const mappos8_t **doormappos,
                    const pos8_t    **location)
 {
   /**
@@ -8757,7 +8757,7 @@ uint8_t get_target(tgestate_t       *state,
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  *doorpos  = NULL; /* Conv: Added. */
+  *doormappos  = NULL; /* Conv: Added. */
   *location = NULL; /* Conv: Added. */
 
 #ifdef DEBUG_ROUTES
@@ -8820,7 +8820,7 @@ uint8_t get_target(tgestate_t       *state,
       if (route->index & routeindexflag_REVERSED)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
-      *doorpos = &door->pos;
+      *doormappos = &door->pos;
       return get_target_DOOR;
     }
     else
