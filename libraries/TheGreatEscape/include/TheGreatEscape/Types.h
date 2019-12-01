@@ -599,7 +599,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  mappos16_t         pos;           /**< map position */
+  mappos16_t         mappos;        /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
@@ -726,7 +726,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  mappos8_t   pos;
+  mappos8_t   mappos;
   route_t     route;
 }
 characterstruct_t;
@@ -755,7 +755,7 @@ typedef struct itemstruct
 {
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
-  mappos8_t pos;
+  mappos8_t mappos;
   pos8_t    iso_pos;
 }
 itemstruct_t;
@@ -783,7 +783,7 @@ typedef struct door
 {
   /** The top six bits are a room_t. The bottom two bits are a direction_t. */
   uint8_t   room_and_direction;
-  mappos8_t pos;
+  mappos8_t mappos;
 }
 door_t;
 
@@ -828,7 +828,7 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
 typedef struct default_item_location
 {
   uint8_t     room_and_flags;
-  mappos8uv_t pos;
+  mappos8uv_t mappos;
 }
 default_item_location_t;
 
@@ -839,7 +839,7 @@ typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
   bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  mappos8_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  mappos8_t mappos; /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 

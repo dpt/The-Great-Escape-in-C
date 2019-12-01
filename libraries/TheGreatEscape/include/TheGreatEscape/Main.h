@@ -196,7 +196,7 @@ void reset_nonplayer_visible_characters(tgestate_t *state);
 
 void setup_doors(tgestate_t *state);
 
-const door_t *get_door(doorindex_t door);
+const door_t *get_door(doorindex_t index);
 
 void wipe_visible_tiles(tgestate_t *state);
 
