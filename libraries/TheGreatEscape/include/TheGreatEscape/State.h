@@ -134,14 +134,14 @@ struct tgestate
   /** $81A2: Pointer into window_buf[]. Used by masked sprite plotters. */
   uint8_t        *window_buf_pointer;
 
-  /** $81A4: Scratch space for saving positions.
+  /** $81A4: Scratch space for saving map positions.
    * Used by various places in the code. */
   union
   {
-    pos_t         pos;
-    tinypos_t     tinypos;
+    mappos16_t    pos16;
+    mappos8_t     pos8;
   }
-  saved_pos;
+  saved_mappos;
 
   /** $81AC: Input bitmap pointer. Used by masked sprite plotters. */
   const uint8_t  *bitmap_pointer;
@@ -155,7 +155,7 @@ struct tgestate
    * Written by setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer, guards_follow_suspicious_character.
    */
-  tinypos_t       tinypos_stash;
+  mappos8_t       mappos_stash;
 
   /** $81B5: The current visible character's (or item's) screen position.
    *
@@ -164,7 +164,7 @@ struct tgestate
    * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer.
    */
-  xy_t            iso_pos;
+  pos8_t          isopos;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
@@ -177,7 +177,7 @@ struct tgestate
   spriteindex_t   sprite_index;
 
   /** $81B8: Hero's map position. */
-  tinypos_t       hero_map_position;
+  mappos8_t       hero_mappos;
 
   /** $81BB: Offset into map used when drawing tiles.
    *
@@ -189,7 +189,7 @@ struct tgestate
   // suspect that this is a centering value
   // positive x - map shown further right
   // positive y - map shown further up
-  xy_t            map_position;
+  pos8_t          map_position;
 
   /** $81BD: Searchlight state. Might be a counter or searchlight_STATE_SEARCHING. */
   uint8_t         searchlight_state;
@@ -299,7 +299,7 @@ struct tgestate
   uint8_t         move_map_y;
 
   /** $A7C7: Game window plotting offset. */
-  xy_t            game_window_offset;
+  pos8_t          game_window_offset;
 
   /** $AB66: Zoombox parameters. */
   struct
@@ -317,10 +317,10 @@ struct tgestate
   struct
   {
     /** $AD29: Searchlight movement data. */
-    searchlight_movement_t  states[3];
+    searchlight_movement_t states[3];
 
     /** $AE76: Coordinates of searchlight when hero is caught. */
-    xy_t                    caught_coord;
+    pos8_t        caught_coord;
   }
   searchlight;
 

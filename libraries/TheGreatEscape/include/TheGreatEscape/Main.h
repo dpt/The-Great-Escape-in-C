@@ -181,8 +181,7 @@ void invalidate_attrs(tgestate_t *state,
 
 /* $6000 onwards */
 
-void transition(tgestate_t      *state,
-                const tinypos_t *pos);
+void transition(tgestate_t *state, const mappos8_t *mappos);
 void enter_room(tgestate_t *state);
 INLINE void squash_stack_goto_main(tgestate_t *state);
 
@@ -197,7 +196,7 @@ void reset_nonplayer_visible_characters(tgestate_t *state);
 
 void setup_doors(tgestate_t *state);
 
-const door_t *get_door(doorindex_t door);
+const door_t *get_door(doorindex_t index);
 
 void wipe_visible_tiles(tgestate_t *state);
 
@@ -219,8 +218,8 @@ void use_item_common(tgestate_t *state, item_t item);
 void pick_up_item(tgestate_t *state);
 void drop_item(tgestate_t *state);
 void drop_item_tail(tgestate_t *state, item_t item);
-void calc_exterior_item_iso_pos(itemstruct_t *itemstr);
-void calc_interior_item_iso_pos(itemstruct_t *itemstr);
+void calc_exterior_item_isopos(itemstruct_t *itemstr);
+void calc_interior_item_isopos(itemstruct_t *itemstr);
 
 INLINE itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item);
 
@@ -260,8 +259,7 @@ void cutting_wire(tgestate_t *state);
 
 void in_permitted_area(tgestate_t *state);
 int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags);
-int within_camp_bounds(uint8_t          index,
-                       const tinypos_t *pos);
+int within_camp_bounds(uint8_t index, const mappos8_t *mappos);
 
 /* $A000 onwards */
 
@@ -479,8 +477,8 @@ extern const wall_t walls[24];
 
 void animate(tgestate_t *state);
 
-void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar);
-void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_isopos_from_vischar(tgestate_t *state, vischar_t *vischar);
+void calc_vischar_isopos_from_state(tgestate_t *state, vischar_t *vischar);
 
 void reset_game(tgestate_t *state);
 void reset_map_and_characters(tgestate_t *state);
@@ -529,8 +527,8 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar);
 
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const tinypos_t **doorpos,
-                   const xy_t      **location);
+                   const mappos8_t **doormappos,
+                   const pos8_t    **location);
 
 void move_a_character(tgestate_t *state);
 
@@ -568,11 +566,11 @@ void character_behaviour_move_y_dominant(tgestate_t *state,
                                          vischar_t  *vischar,
                                          int         scale);
 
-input_t vischar_move_x(tgestate_t *state,
+input_t vischar_move_u(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale);
 
-input_t vischar_move_y(tgestate_t *state,
+input_t vischar_move_v(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale);
 
@@ -580,7 +578,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar);
 
 void get_target_assign_pos(tgestate_t *state,
                            vischar_t  *vischar,
-                           route_t   *route);
+                           route_t    *route);
 void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route);
 
 //INLINE uint16_t multiply_by_1(uint8_t A);
@@ -664,7 +662,7 @@ void flip_16_masked_pixels(tgestate_t *state,
 
 int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar);
 
-void pos_to_tinypos(const pos_t *in, tinypos_t *out);
+void scale_mappos_down(const mappos16_t *in, mappos8_t *out);
 INLINE void divide_by_8_with_rounding(uint8_t *A, uint8_t *C);
 INLINE void divide_by_8(uint8_t *A, uint8_t *C);
 
