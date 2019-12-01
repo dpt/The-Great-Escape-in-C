@@ -3268,7 +3268,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          get_target_result; /* was A */
   mappos8_t       *target;            /* was DE */
-  const mappos8_t *doorpos;           /* was HL */
+  const mappos8_t *doormappos;        /* was HL */
   const pos8_t    *location;          /* was HL */
 
   assert(state != NULL);
@@ -3288,7 +3288,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
   get_target_result = get_target(state,
                                  &vischar->route,
-                                 &doorpos,
+                                 &doormappos,
                                  &location);
 
   /* Set the target coordinates. */
@@ -3312,8 +3312,8 @@ void set_route(tgestate_t *state, vischar_t *vischar)
              doorpos->x, doorpos->y);
 #endif
 
-    target->u = doorpos->u;
-    target->v = doorpos->v;
+    target->u = doormappos->u;
+    target->v = doormappos->v;
   }
   else
   {
@@ -8386,7 +8386,7 @@ void spawn_character(tgestate_t *state, characterstruct_t *charstr)
   int                           Z;            /* flag */
   room_t                        room;         /* was A */
   uint8_t                       target_type;  /* was A */
-  const mappos8_t              *doorpos;      /* was HL */
+  const mappos8_t              *doormappos;   /* was HL */
   const pos8_t                 *location;     /* was HL */
   route_t                      *route;        /* was HL */
 
@@ -8480,7 +8480,7 @@ again:
   if (route->index != routeindex_0_HALT) /* if not stood still */
   {
     state->entered_move_a_character = 0;
-    target_type = get_target(state, route, &doorpos, &location);
+    target_type = get_target(state, route, &doormappos, &location);
     if (target_type == get_target_ROUTE_ENDS)
     {
       route_ended(state, vischar, &vischar->route);
@@ -8499,7 +8499,7 @@ again:
     }
     if (target_type == get_target_DOOR)
     {
-      vischar->target = *doorpos;
+      vischar->target = *doormappos;
     }
     else
     {
@@ -8854,7 +8854,7 @@ void move_a_character(tgestate_t *state)
   item_t             item;        /* was C */
   uint8_t            target_type; /* was A */
   route_t           *route;       /* was HL */
-  const mappos8_t   *doorpos;     /* was HL */
+  const mappos8_t   *doormappos;  /* was HL */
   const pos8_t      *location;    /* was HL */
   uint8_t            routeindex;  /* was A */
   uint8_t            max;         /* was A' */
@@ -8893,7 +8893,7 @@ void move_a_character(tgestate_t *state)
 
   target_type = get_target(state,
                           &charstr->route,
-                          &doorpos,
+                          &doormappos,
                           &location);
   if (target_type == get_target_ROUTE_ENDS)
   {
@@ -8951,14 +8951,14 @@ trigger_event:
          * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_mappos.pos8.u = doorpos->u >> 1;
-        state->saved_mappos.pos8.v = doorpos->v >> 1;
+        state->saved_mappos.pos8.u = doormappos->u >> 1;
+        state->saved_mappos.pos8.v = doormappos->v >> 1;
         doorpos2 = &state->saved_mappos.pos8;
       }
       else
       {
         /* Conv: Assignment made explicit. */
-        doorpos2 = doorpos;
+        doorpos2 = doormappos;
       }
 
       if (charstr->room == room_0_OUTDOORS) /* FUTURE: Remove reload of 'room'. */
@@ -8979,7 +8979,7 @@ trigger_event:
        * Our current target is a door, so change to the door's target room. */
 
       /* This unpleasant cast turns doorpos (assigned in get_target) back into a door_t. */
-      door = (door_t *)((char *) doorpos - 1);
+      door = (door_t *)((char *) doormappos - 1);
       assert(door >= &doors[0]);
       assert(door < &doors[door_MAX * 2]);
 
@@ -8988,10 +8988,10 @@ trigger_event:
       /* Determine the destination door. */
       if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
         /* The door is facing top left or top right. */
-        doorpos = &door[1].pos; /* point at the next half of door pair */
+        doormappos = &door[1].pos; /* point at the next half of door pair */
       else
         /* The door is facing bottom left or bottom right. */
-        doorpos = &door[-1].pos; /* point at the previous half of door pair */
+        doormappos = &door[-1].pos; /* point at the previous half of door pair */
 
       /* Copy the door's position into the charstr. */
       room = charstr->room;
@@ -9000,7 +9000,7 @@ trigger_event:
       {
         /* Indoors. Copy the door's position into the charstr. */
 
-        *charstr_pos = *doorpos;
+        *charstr_pos = *doormappos;
       }
       else
       {
@@ -9008,9 +9008,9 @@ trigger_event:
          * two. */
 
         /* Conv: Unrolled. */
-        charstr_pos->u = doorpos->u >> 1;
-        charstr_pos->v = doorpos->v >> 1;
-        charstr_pos->w = doorpos->w >> 1;
+        charstr_pos->u = doormappos->u >> 1;
+        charstr_pos->v = doormappos->v >> 1;
+        charstr_pos->w = doormappos->w >> 1;
       }
     }
     else
@@ -9946,7 +9946,7 @@ void get_target_assign_pos(tgestate_t *state,
                            route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
-  const mappos8_t *doorpos;           /* was HL */
+  const mappos8_t *doormappos;        /* was HL */
   const pos8_t    *location;          /* was HL */
 
   assert(state != NULL);
@@ -9954,7 +9954,7 @@ void get_target_assign_pos(tgestate_t *state,
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  get_target_result = get_target(state, route, &doorpos, &location);
+  get_target_result = get_target(state, route, &doormappos, &location);
   if (get_target_result != get_target_ROUTE_ENDS)
   {
     /* "Didn't hit end of list" case. */
@@ -9968,8 +9968,8 @@ void get_target_assign_pos(tgestate_t *state,
      * different vars. */
     if (get_target_result == get_target_DOOR)
     {
-      vischar->target.u = doorpos->u;
-      vischar->target.v = doorpos->v;
+      vischar->target.u = doormappos->u;
+      vischar->target.v = doormappos->v;
     }
     else
     {
