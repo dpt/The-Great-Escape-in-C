@@ -253,7 +253,7 @@ void enter_room(tgestate_t *state)
   state->map_position.x = 116;
   state->map_position.y = 234;
   set_hero_sprite_for_room(state);
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
+  calc_vischar_isopos_from_vischar(state, &state->vischars[0]);
   setup_movable_items(state);
   zoombox(state);
   increase_score(state, 1);
@@ -400,7 +400,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
   vischar1->room              = state->room_index;
-  calc_vischar_iso_pos_from_vischar(state, vischar1);
+  calc_vischar_isopos_from_vischar(state, vischar1);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1238,8 +1238,8 @@ void pick_up_item(tgestate_t *state)
   }
 
   itemstr->room_and_flags = 0;
-  itemstr->iso_pos.x      = 0;
-  itemstr->iso_pos.y      = 0;
+  itemstr->isopos.x       = 0;
+  itemstr->isopos.y       = 0;
 
   draw_all_items(state);
   play_speaker(state, sound_PICK_UP_ITEM);
@@ -1316,7 +1316,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     scale_mappos_down(inpos, outpos);
     outpos->w = 0;
 
-    calc_exterior_item_iso_pos(itemstr);
+    calc_exterior_item_isopos(itemstr);
   }
   else
   {
@@ -1329,7 +1329,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
     outpos->v = inpos->v; // note: narrowing
     outpos->w = 5;
 
-    calc_interior_item_iso_pos(itemstr);
+    calc_interior_item_isopos(itemstr);
   }
 }
 
@@ -1340,16 +1340,16 @@ void drop_item_tail(tgestate_t *state, item_t item)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
+void calc_exterior_item_isopos(itemstruct_t *itemstr)
 {
-  pos8_t *iso_pos;
+  pos8_t *isopos;
 
   assert(itemstr != NULL);
 
-  iso_pos = &itemstr->iso_pos;
+  isopos = &itemstr->isopos;
 
-  iso_pos->x = (0x40 - itemstr->mappos.u + itemstr->mappos.v) * 2;
-  iso_pos->y = 0x100 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w; /* Conv: 0x100 is 0 in the original. */
+  isopos->x = (0x40 - itemstr->mappos.u + itemstr->mappos.v) * 2;
+  isopos->y = 0x100 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
@@ -1359,13 +1359,13 @@ void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_interior_item_iso_pos(itemstruct_t *itemstr)
+void calc_interior_item_isopos(itemstruct_t *itemstr)
 {
-  pos8_t *iso_pos;
+  pos8_t *isopos;
 
   assert(itemstr != NULL);
 
-  iso_pos = &itemstr->iso_pos;
+  isopos = &itemstr->isopos;
 
   // This was a call to divide_by_8_with_rounding, but that expects
   // separate hi and lo arguments, which is not worth the effort of
@@ -1374,8 +1374,8 @@ void calc_interior_item_iso_pos(itemstruct_t *itemstr)
   // This needs to go somewhere more general.
 #define divround(x) (((x) + 4) >> 3)
 
-  iso_pos->x = divround((0x200 - itemstr->mappos.u + itemstr->mappos.v) * 2);
-  iso_pos->y = divround(0x800 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w);
+  isopos->x = divround((0x200 - itemstr->mappos.u + itemstr->mappos.v) * 2);
+  isopos->y = divround(0x800 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w);
 
 #undef divround
 }
@@ -1984,8 +1984,8 @@ void in_permitted_area(tgestate_t *state)
     scale_mappos_down(vcpos, pos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].iso_pos.x >= MAP_WIDTH  * 8 ||
-        state->vischars[0].iso_pos.y >= MAP_HEIGHT * 8)
+    if (state->vischars[0].isopos.x >= MAP_WIDTH  * 8 ||
+        state->vischars[0].isopos.y >= MAP_HEIGHT * 8)
     {
       escaped(state);
       return;
@@ -3666,7 +3666,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
   state->vischars[0].mi.mappos.u = 0;
   state->vischars[0].mi.mappos.v = 0;
 
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
+  calc_vischar_isopos_from_vischar(state, &state->vischars[0]);
 
   setup_room_and_plot(state);
 }
@@ -6327,12 +6327,12 @@ void reset_outdoors(tgestate_t *state)
   assert(state != NULL);
 
   /* Reset hero. */
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
+  calc_vischar_isopos_from_vischar(state, &state->vischars[0]);
 
   /* Centre the map position on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position.x = (state->vischars[0].iso_pos.x >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[0].iso_pos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.x = (state->vischars[0].isopos.x >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[0].isopos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
   state->room_index = room_0_OUTDOORS;
@@ -7001,7 +7001,7 @@ forwards:
       vischar->animindex++;
     }
 
-    calc_vischar_iso_pos_from_state(state, vischar);
+    calc_vischar_isopos_from_state(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -7067,7 +7067,7 @@ init:
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_isopos_from_vischar(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -7075,7 +7075,7 @@ void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
   /* Save a copy of the vischar's position + offset. */
   state->saved_mappos.pos16 = vischar->mi.mappos;
 
-  calc_vischar_iso_pos_from_state(state, vischar);
+  calc_vischar_isopos_from_state(state, vischar);
 }
 
 /**
@@ -7089,21 +7089,21 @@ void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_isopos_from_state(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->iso_pos.x = (0x200 - state->saved_mappos.pos16.u + state->saved_mappos.pos16.v) * 2;
-  vischar->iso_pos.y = 0x800 - state->saved_mappos.pos16.u - state->saved_mappos.pos16.v - state->saved_mappos.pos16.w;
+  vischar->isopos.x = (0x200 - state->saved_mappos.pos16.u + state->saved_mappos.pos16.v) * 2;
+  vischar->isopos.y = 0x800 - state->saved_mappos.pos16.u - state->saved_mappos.pos16.v - state->saved_mappos.pos16.w;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
-  assert((int16_t) vischar->iso_pos.x >= -3000);
-  assert((int16_t) vischar->iso_pos.x <   7000);
-  assert((int16_t) vischar->iso_pos.y >= -3000);
-  assert((int16_t) vischar->iso_pos.y <   4000);
+  assert((int16_t) vischar->isopos.x >= -3000);
+  assert((int16_t) vischar->isopos.x <   7000);
+  assert((int16_t) vischar->isopos.y >= -3000);
+  assert((int16_t) vischar->isopos.y <   4000);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7545,13 +7545,13 @@ void render_mask_buffer(tgestate_t *state)
   /* Fill the mask buffer with the union of all matching masks. */
   do
   {
-    uint8_t iso_pos_x, iso_pos_y, height; /* was A/C, A, A */
-    uint8_t mask_left_skip;               /* was $B837 */
-    uint8_t mask_top_skip;                /* was $B838 */
-    uint8_t mask_run_height;              /* was $B839 */
-    uint8_t mask_run_width;               /* was $B83A */
-    uint8_t mask_row_skip;                /* was $BA90 - self modified */
-    uint8_t buf_row_skip;                 /* was $BABA - self modified */
+    uint8_t isopos_x, isopos_y, height; /* was A/C, A, A */
+    uint8_t mask_left_skip;             /* was $B837 */
+    uint8_t mask_top_skip;              /* was $B838 */
+    uint8_t mask_run_height;            /* was $B839 */
+    uint8_t mask_run_width;             /* was $B83A */
+    uint8_t mask_row_skip;              /* was $BA90 - self modified */
+    uint8_t buf_row_skip;               /* was $BABA - self modified */
 
     /* Skip any masks which don't overlap the character.
      *
@@ -7560,10 +7560,10 @@ void render_mask_buffer(tgestate_t *state)
      * so we can cull masks if not on-screen and we can cull masks if behind play
      */
 
-    iso_pos_x = state->iso_pos.x;
-    iso_pos_y = state->iso_pos.y; /* Conv: Reordered */
-    if (iso_pos_x - 1 >= pmask->bounds.x1 || iso_pos_x + 3 < pmask->bounds.x0 ||
-        iso_pos_y - 1 >= pmask->bounds.y1 || iso_pos_y + 4 < pmask->bounds.y0)
+    isopos_x = state->isopos.x;
+    isopos_y = state->isopos.y; /* Conv: Reordered */
+    if (isopos_x - 1 >= pmask->bounds.x1 || isopos_x + 3 < pmask->bounds.x0 ||
+        isopos_y - 1 >= pmask->bounds.y1 || isopos_y + 4 < pmask->bounds.y0)
       goto pop_next;
 
     /* CHECK: What's in state->mappos_stash at this point? It's set by
@@ -7581,30 +7581,30 @@ void render_mask_buffer(tgestate_t *state)
 
     /* The mask is valid: now work out clipping offsets, widths and heights. */
 
-    /* Conv: Removed dupe of earlier load of iso_pos_x. */
-    if (iso_pos_x >= pmask->bounds.x0)
+    /* Conv: Removed dupe of earlier load of isopos_x. */
+    if (isopos_x >= pmask->bounds.x0)
     {
-      mask_left_skip  = iso_pos_x - pmask->bounds.x0; /* left edge skip for mask */
-      mask_run_width  = MIN(pmask->bounds.x1 - iso_pos_x, 3) + 1;
+      mask_left_skip  = isopos_x - pmask->bounds.x0; /* left edge skip for mask */
+      mask_run_width  = MIN(pmask->bounds.x1 - isopos_x, 3) + 1;
     }
     else
     {
       /* Conv: Removed pmask->bounds.x0 cached in x0 (was B). */
       mask_left_skip  = 0; /* no left edge skip */
-      mask_run_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - iso_pos_x));
+      mask_run_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - isopos_x));
     }
 
-    /* Conv: Removed dupe of earlier load of iso_pos_y. */
-    if (iso_pos_y >= pmask->bounds.y0)
+    /* Conv: Removed dupe of earlier load of isopos_y. */
+    if (isopos_y >= pmask->bounds.y0)
     {
-      mask_top_skip   = iso_pos_y - pmask->bounds.y0; /* top edge skip for mask */
-      mask_run_height = MIN(pmask->bounds.y1 - iso_pos_y, 4) + 1;
+      mask_top_skip   = isopos_y - pmask->bounds.y0; /* top edge skip for mask */
+      mask_run_height = MIN(pmask->bounds.y1 - isopos_y, 4) + 1;
     }
     else
     {
       /* Conv: Removed pmask->bounds.y0 cached in x0 (was B). */
       mask_top_skip   = 0; /* no top edge skip */
-      mask_run_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - iso_pos_y));
+      mask_run_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - isopos_y));
     }
 
     /* Note: In the original code, HL is here decremented to point at member
@@ -7618,9 +7618,9 @@ void render_mask_buffer(tgestate_t *state)
       /* When the mask has a top or left hand gap, calculate that. */
       buf_top_skip = buf_left_skip = 0;
       if (mask_top_skip == 0)
-        buf_top_skip  = pmask->bounds.y0 - state->iso_pos.y; /* FUTURE: Could avoid this reload of iso_pos.y. */
+        buf_top_skip  = pmask->bounds.y0 - state->isopos.y; /* FUTURE: Could avoid this reload of isopos.y. */
       if (mask_left_skip == 0)
-        buf_left_skip = pmask->bounds.x0 - state->iso_pos.x;
+        buf_left_skip = pmask->bounds.x0 - state->isopos.x;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
@@ -7872,8 +7872,8 @@ int vischar_visible(tgestate_t      *state,
   /* Subtracting vischar's x gives the space available between vischar's
    * left edge and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  // state->iso_pos is iso_pos / 8.
-  available_right = window_right_edge - state->iso_pos.x;
+  // state->isopos is isopos / 8.
+  available_right = window_right_edge - state->isopos.x;
   if (available_right <= 0)
     /* Case (E): Vischar is beyond the window's right edge. */
     goto not_visible;
@@ -7888,7 +7888,7 @@ int vischar_visible(tgestate_t      *state,
   else
   {
     /* Calculate the right edge of the vischar. */
-    vischar_right_edge = state->iso_pos.x + vischar->width_bytes;
+    vischar_right_edge = state->isopos.x + vischar->width_bytes;
 
     /* Subtracting the map position's x gives the space available between
      * vischar's right edge and the left edge of the window (in bytes).
@@ -7917,8 +7917,8 @@ int vischar_visible(tgestate_t      *state,
    * Handle vertical cases.
    */
 
-  /* Note: this uses vischar->iso_pos not state->iso_pos as above.
-   * state->iso_pos.x/y is vischar->iso_pos.x/y >> 3. */
+  /* Note: this uses vischar->isopos not state->isopos as above.
+   * state->isopos.x/y is vischar->isopos.x/y >> 3. */
 
   /* Calculate the bottom edge of the window in map space. */
   /* Conv: Rows was constant 17; replaced with state var. */
@@ -7926,7 +7926,7 @@ int vischar_visible(tgestate_t      *state,
 
   /* Subtracting the vischar's y gives the space available between window's
    * bottom edge and the vischar's top. */
-  available_bottom = window_bottom_edge * 8 - vischar->iso_pos.y;
+  available_bottom = window_bottom_edge * 8 - vischar->isopos.y;
   // FUTURE: The second test here can be gotten rid of if available_bottom is
   //         made signed.
   if (available_bottom <= 0 || available_bottom >= 256)
@@ -7943,7 +7943,7 @@ int vischar_visible(tgestate_t      *state,
   else
   {
     /* Calculate the bottom edge of the vischar. */
-    vischar_bottom_edge = vischar->iso_pos.y + vischar->height;
+    vischar_bottom_edge = vischar->isopos.y + vischar->height;
 
     /* Subtracting the map position's y (scaled) gives the space available
      * between vischar's bottom edge and the top edge of the window (in
@@ -8024,8 +8024,8 @@ void restore_tiles(tgestate_t *state)
       goto next;
 
     /* Get the visible character's position in screen space. */
-    state->iso_pos.y = vischar->iso_pos.y >> 3; /* divide by 8 (16-to-8) */
-    state->iso_pos.x = vischar->iso_pos.x >> 3; /* divide by 8 (16-to-8) */
+    state->isopos.y = vischar->isopos.y >> 3; /* divide by 8 (16-to-8) */
+    state->isopos.x = vischar->isopos.x >> 3; /* divide by 8 (16-to-8) */
 
     if (vischar_visible(state,
                         vischar,
@@ -8043,10 +8043,10 @@ void restore_tiles(tgestate_t *state)
      * duplicates the work done by vischar_visible. I can't see any benefit to
      * it. */
 
-    /* Compute bottom = height + iso_pos_y - map_position_y. This is the
+    /* Compute bottom = height + isopos_y - map_position_y. This is the
      * distance of the (clipped) bottom edge of the vischar from the top of the
      * window. */
-    bottom = height + state->iso_pos.y - state->map_position.y;
+    bottom = height + state->isopos.y - state->map_position.y;
     if (bottom >= 0)
     {
       /* Bottom edge is on-screen, or off the bottom of the screen. */
@@ -8093,12 +8093,12 @@ clamp_height:
     /* Work out x,y offsets into the tile buffer. */
 
     if (left_skip == 0)
-      x = state->iso_pos.x - map_position->x;
+      x = state->isopos.x - map_position->x;
     else
       x = 0; /* was interleaved */
 
     if (top_skip == 0)
-      y = state->iso_pos.y - map_position->y;
+      y = state->isopos.y - map_position->y;
     else
       y = 0; /* was interleaved */
 
@@ -8325,26 +8325,26 @@ void purge_invisible_characters(tgestate_t *state)
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
     // maxy = MIN(miny + EDGE + (state->rows - 1) + EDGE, 255);
     //
-    // t = (vischar->iso_pos.y + 4) / 8 / 256; // round
+    // t = (vischar->isopos.y + 4) / 8 / 256; // round
     // if (t <= miny || t > maxy)
     //   goto reset;
-    // t = (vischar->iso_pos.x) / 8 / 256;
+    // t = (vischar->isopos.x) / 8 / 256;
     // if (t <= minx || t > maxx)
     //   goto reset;
 
     /* Conv: Replaced screen dimension constants with state->columns/rows. */
 
     /* Handle Y part */
-    hi = vischar->iso_pos.y >> 8;
-    lo = vischar->iso_pos.y & 0xFF;
+    hi = vischar->isopos.y >> 8;
+    lo = vischar->isopos.y & 0xFF;
     divide_by_8_with_rounding(&lo, &hi);
     /* The original code uses 16 instead of 17 for 'rows' so match that. */
     if (lo <= miny || lo > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
       goto reset;
 
     /* Handle X part */
-    hi = vischar->iso_pos.x >> 8;
-    lo = vischar->iso_pos.x & 0xFF;
+    hi = vischar->isopos.x >> 8;
+    lo = vischar->isopos.x & 0xFF;
     divide_by_8(&lo, &hi);
     if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255))
       goto reset;
@@ -8514,7 +8514,7 @@ again:
   }
 
   vischar->counter_and_flags = 0;
-  calc_vischar_iso_pos_from_vischar(state, vischar);
+  calc_vischar_isopos_from_vischar(state, vischar);
   character_behaviour(state, vischar); /* (was) exit via */
 }
 
@@ -10948,12 +10948,12 @@ void item_discovered(tgestate_t *state, item_t item)
   {
     /* Conv: The original code assigned 'room' here since it's already zero. */
     itemstruct->mappos.w = 0;
-    calc_exterior_item_iso_pos(itemstruct);
+    calc_exterior_item_isopos(itemstruct);
   }
   else
   {
     itemstruct->mappos.w = 5;
-    calc_interior_item_iso_pos(itemstruct);
+    calc_interior_item_isopos(itemstruct);
   }
 }
 
@@ -11162,11 +11162,11 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    const pos8_t iso_pos = itemstruct->iso_pos; /* new */
+    const pos8_t isopos = itemstruct->isopos; /* new */
 
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (map_xy.x - 2 >= iso_pos.x && map_xy.x + (state->columns - 1) <= iso_pos.x) &&
-        (map_xy.y - 1 >= iso_pos.y && map_xy.y + (state->rows    - 1) <= iso_pos.y))
+        (map_xy.x - 2 >= isopos.x && map_xy.x + (state->columns - 1) <= isopos.x) &&
+        (map_xy.y - 1 >= isopos.y && map_xy.y + (state->rows    - 1) <= isopos.y))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
@@ -11286,7 +11286,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   /* $8213 = A; */
 
   state->mappos_stash = itemstr->mappos;
-  state->iso_pos       = itemstr->iso_pos;
+  state->isopos       = itemstr->isopos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
 //  DE = &state->mappos_stash + 5;
@@ -11342,15 +11342,15 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
   if (top_skip == 0) /* no rows to skip */
-    y = (state->iso_pos.y - state->map_position.y) * state->window_buf_stride;
+    y = (state->isopos.y - state->map_position.y) * state->window_buf_stride;
 
-  // (state->iso_pos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
-  // state->iso_pos.y seems to match, but state->map_position.y is 2 bigger
+  // (state->isopos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
+  // state->isopos.y seems to match, but state->map_position.y is 2 bigger
 
   /* Calculate X plotting offset. */
 
   // Conv: Assigns to signed var.
-  x = state->iso_pos.x - state->map_position.x;
+  x = state->isopos.x - state->map_position.x;
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 3);
@@ -11432,7 +11432,7 @@ uint8_t item_visible(tgestate_t *state,
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
 
-  const pos8_t *piso_pos;           /* was HL */
+  const pos8_t *pisopos;            /* was HL */
   pos8_t        map_position;       /* was DE */
   uint8_t       window_right_edge;  /* was A  */
   int8_t        available_right;    /* was A  */
@@ -11470,7 +11470,7 @@ uint8_t item_visible(tgestate_t *state,
    * Handle horizontal intersections.
    */
 
-  piso_pos = &state->iso_pos;
+  pisopos = &state->isopos;
   map_position = state->map_position;
 
   /* Conv: Columns was constant 24; replaced with state var. */
@@ -11479,7 +11479,7 @@ uint8_t item_visible(tgestate_t *state,
   /* Subtracting item's x gives the space available between item's left edge
    * and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  available_right = window_right_edge - piso_pos->x;
+  available_right = window_right_edge - pisopos->x;
   if (available_right <= 0)
     /* Case (E): Item is beyond the window's right edge. */
     goto invisible;
@@ -11494,7 +11494,7 @@ uint8_t item_visible(tgestate_t *state,
   else
   {
     /* Calculate the right edge of the item. */
-    item_right_edge = piso_pos->x + WIDTH_BYTES;
+    item_right_edge = pisopos->x + WIDTH_BYTES;
 
     /* Subtracting the map position's x gives the space available between
      * item's right edge and the left edge of the window (in bytes).
@@ -11534,7 +11534,7 @@ uint8_t item_visible(tgestate_t *state,
 
   /* Subtracting the item's y gives the space available between window's
    * bottom edge and the item's top. */
-  available_bottom = window_bottom_edge - piso_pos->y;
+  available_bottom = window_bottom_edge - pisopos->y;
   if (available_bottom <= 0)
     /* Case (E): Item is beyond the window's bottom edge. */
     goto invisible;
@@ -11549,7 +11549,7 @@ uint8_t item_visible(tgestate_t *state,
   else
   {
     /* Calculate the bottom edge of the item. */
-    item_bottom_edge = piso_pos->y + HEIGHT;
+    item_bottom_edge = pisopos->y + HEIGHT;
 
     /* Subtracting the map position's y (scaled) gives the space available
      * between item's bottom edge and the top edge of the window (in UDGs).
@@ -11656,7 +11656,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->iso_pos.x & 7)) < 4)
+  if ((x = (vischar->isopos.x & 7)) < 4)
   {
     /* Shift right? */
 
@@ -11944,7 +11944,7 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  x = vischar->iso_pos.x & 7;
+  x = vischar->isopos.x & 7;
   if (x < 4)
     masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
   else
@@ -12405,13 +12405,13 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // banked in A'
   state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
-  // HL now points after sprite_index, at iso_pos
-  // DE now points to state->iso_pos.x
+  // HL now points after sprite_index, at isopos
+  // DE now points to state->isopos.x
 
   // unrolled versus original
-  state->iso_pos.x = vischar->iso_pos.x >> 3;
-  state->iso_pos.y = vischar->iso_pos.y >> 3;
-  // 'iso_pos' here is now a scaled-down projected map coordinate
+  state->isopos.x = vischar->isopos.x >> 3;
+  state->isopos.y = vischar->isopos.y >> 3;
+  // 'isopos' here is now a scaled-down projected map coordinate
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
@@ -12489,20 +12489,20 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   // EXX
 
-  assert(vischar->iso_pos.y / 8 - state->map_position.y < state->rows);
-  assert(vischar->iso_pos.y / 8 - state->map_position.y + clipped_height / 8 <= state->rows);
+  assert(vischar->isopos.y / 8 - state->map_position.y < state->rows);
+  assert(vischar->isopos.y / 8 - state->map_position.y + clipped_height / 8 <= state->rows);
 
   /* Calculate Y plotting offset.
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
   if (top_skip == 0) /* no rows to skip */
-    y = (vischar->iso_pos.y - state->map_position.y * 8) * state->columns;
+    y = (vischar->isopos.y - state->map_position.y * 8) * state->columns;
 
   assert(y / 8 / state->columns < state->rows);
 
   /* Calculate X plotting offset. */
-  x = state->iso_pos.x - state->map_position.x; // signed subtract + extend to 16-bit
+  x = state->isopos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
   assert(x >= -3 && x <= state->columns - 1); // found empirically
 
@@ -12523,9 +12523,9 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // POP DE_clipped_height
   // PUSH DE
 
-  assert((top_skip * 4 + (vischar->iso_pos.y & 7) * 4) < 255);
+  assert((top_skip * 4 + (vischar->isopos.y & 7) * 4) < 255);
 
-  maskbuf += top_skip * 4 + (vischar->iso_pos.y & 7) * 4;
+  maskbuf += top_skip * 4 + (vischar->isopos.y & 7) * 4;
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 

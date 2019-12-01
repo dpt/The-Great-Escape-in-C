@@ -164,7 +164,7 @@ struct tgestate
    * Written by restore_tiles, setup_item_plotting, setup_vischar_plotting.
    * Read by render_mask_buffer.
    */
-  pos8_t          iso_pos;
+  pos8_t          isopos;
 
   /** $81B7: Used by masked sprite plotters to flip characters left/right.
    *
