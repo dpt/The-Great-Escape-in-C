@@ -11165,8 +11165,8 @@ void mark_nearby_items(tgestate_t *state)
     const pos8_t isopos = itemstruct->isopos; /* new */
 
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (map_xy.x - 2 >= isopos.x && map_xy.x + (state->columns - 1) <= isopos.x) &&
-        (map_xy.y - 1 >= isopos.y && map_xy.y + (state->rows    - 1) <= isopos.y))
+        (map_xy.x - 2 <= isopos.x && map_xy.x + (state->columns - 1) >= isopos.x) &&
+        (map_xy.y - 1 <= isopos.y && map_xy.y + (state->rows    - 1) >= isopos.y))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
