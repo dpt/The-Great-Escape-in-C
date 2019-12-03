@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		551D73791D7775A0002F5E0B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 551D73781D7775A0002F5E0B /* Images.xcassets */; };
 		552049381B16831C0075ED47 /* Masks.c in Sources */ = {isa = PBXBuildFile; fileRef = 552049361B16831C0075ED47 /* Masks.c */; };
+		5541CD4423971113006FC753 /* Debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4323971113006FC753 /* Debug.c */; };
 		554808D617E117CF00387328 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808D517E117CF00387328 /* Cocoa.framework */; };
 		554808E017E117CF00387328 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 554808DE17E117CF00387328 /* InfoPlist.strings */; };
 		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
@@ -69,6 +70,9 @@
 		551E16A31F2955E4006FC753 /* Pixels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Pixels.h; path = TheGreatEscape/Pixels.h; sourceTree = "<group>"; };
 		552049361B16831C0075ED47 /* Masks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Masks.c; sourceTree = "<group>"; };
 		552049371B16831C0075ED47 /* Masks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Masks.h; path = TheGreatEscape/Masks.h; sourceTree = "<group>"; };
+		5541CD412395E470006FC753 /* Asserts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Asserts.h; path = TheGreatEscape/Asserts.h; sourceTree = "<group>"; };
+		5541CD4223971113006FC753 /* Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Debug.h; path = TheGreatEscape/Debug.h; sourceTree = "<group>"; };
+		5541CD4323971113006FC753 /* Debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Debug.c; sourceTree = "<group>"; };
 		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		554808D517E117CF00387328 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		554808DA17E117CF00387328 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -284,6 +288,7 @@
 				558FC67F1A0EE15B00A4F50F /* include (public) */,
 				558FC6851A0EE15B00A4F50F /* include (private) */,
 				558FC6821A0EE15B00A4F50F /* Create.c */,
+				5541CD4323971113006FC753 /* Debug.c */,
 				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
 				558FC6841A0EE15B00A4F50F /* Font.c */,
 				556D1A191B135D900036AED0 /* Input.c */,
@@ -312,6 +317,8 @@
 		558FC6851A0EE15B00A4F50F /* include (private) */ = {
 			isa = PBXGroup;
 			children = (
+				5541CD412395E470006FC753 /* Asserts.h */,
+				5541CD4223971113006FC753 /* Debug.h */,
 				55C068B01AEAFD3700C2AA88 /* Doors.h */,
 				558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */,
 				558FC6891A0EE15B00A4F50F /* Font.h */,
@@ -415,6 +422,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 554808C917E117CF00387328;
@@ -479,6 +487,7 @@
 				558FC6AF1A0EE15B00A4F50F /* ItemBitmaps.c in Sources */,
 				556D1A251B137A4C0036AED0 /* Messages.c in Sources */,
 				55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */,
+				5541CD4423971113006FC753 /* Debug.c in Sources */,
 				AEF1A6991F33470900A33C89 /* ZXGameWindowController.m in Sources */,
 				55AF25C51D363695002F5E0B /* Keyboard.c in Sources */,
 				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,

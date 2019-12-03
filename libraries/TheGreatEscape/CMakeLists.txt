@@ -1,5 +1,6 @@
 add_library(LibTheGreatEscape
   Create.c
+  Debug.c
   ExteriorTiles.c
   Font.c
   Input.c

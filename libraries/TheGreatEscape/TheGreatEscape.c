@@ -38,7 +38,7 @@
  * - "Conv:"
  *   -- Code which has required adjustment.
  * - A call marked "exit via"
- *   -- The original code branched directly to its target and exited via it.
+ *   -- The original code branched directly to its target to exit.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -55,6 +55,8 @@
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
+#include "TheGreatEscape/Asserts.h"
+#include "TheGreatEscape/Debug.h"
 #include "TheGreatEscape/Doors.h"
 #include "TheGreatEscape/ExteriorTiles.h"
 #include "TheGreatEscape/Input.h"
@@ -83,16 +85,6 @@
 #include "TheGreatEscape/Utils.h"
 
 #include "TheGreatEscape/Main.h"
-
-// debug
-static void check_map_buf(tgestate_t *state)
-{
-  for (int i = 0; i < state->st_columns * state->st_rows; i++)
-  {
-    assert(state->map_buf[i] < supertileindex__LIMIT);
-  }
-}
-
 
 /* ----------------------------------------------------------------------- */
 
