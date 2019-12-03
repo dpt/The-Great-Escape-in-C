@@ -2023,7 +2023,7 @@ void in_permitted_area(tgestate_t *state)
   // puzzling - look at the /next/ step?
   route = state->vischars[0].route;
   ASSERT_ROUTE_VALID(route);
-  if (route.index & routeindexflag_REVERSED)
+  if (route.index & ROUTEINDEX_REVERSE_FLAG)
     route.step++;
 
   if (route.index == routeindex_255_WANDER)
@@ -2048,7 +2048,7 @@ void in_permitted_area(tgestate_t *state)
     uint8_t                     iters;     /* was B */
     const uint8_t              *permitted; /* was HL */
 
-    routeindex = route.index & ~routeindexflag_REVERSED;
+    routeindex = route.index & ~ROUTEINDEX_REVERSE_FLAG;
     tab = &route_to_permitted[0];
     iters = NELEMS(route_to_permitted);
     do
@@ -2074,7 +2074,7 @@ found:
     // POP HL = permitted
     {
       // FUTURE: The route index is already in 'route.index'.
-      if (state->vischars[0].route.index & routeindexflag_REVERSED)
+      if (state->vischars[0].route.index & ROUTEINDEX_REVERSE_FLAG)
         permitted++; // puzzling - see above
 
       i = 0;
@@ -2870,7 +2870,7 @@ void event_time_for_bed(tgestate_t *state)
 
   // Reverse route of below.
 
-  static const route_t t = { routeindex_38_GUARD_12_BED | routeindexflag_REVERSED, 3 }; /* was C,A */
+  static const route_t t = { routeindex_38_GUARD_12_BED | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was C,A */
   set_guards_route(state, t);
 }
 
@@ -3024,7 +3024,7 @@ void end_of_breakfast(tgestate_t *state)
     state->hero_in_breakfast = 0; /* Conv: Moved into if block. */
   }
 
-  static const route_t t = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was BC */
+  static const route_t t = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was BC */
   set_hero_route(state, &t);
 
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -3043,7 +3043,7 @@ void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  route_t t2 = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was A',C */
+  route_t t2 = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t2);
 
   /* Update all the benches to be empty. */
@@ -3115,10 +3115,10 @@ void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t5 = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was BC */
+  static const route_t t5 = { routeindex_5_EXIT_HUT2 | ROUTEINDEX_REVERSE_FLAG, 2 }; /* was BC */
   set_hero_route(state, &t5);
 
-  route_t t5_also = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was A',C */
+  route_t t5_also = { routeindex_5_EXIT_HUT2 | ROUTEINDEX_REVERSE_FLAG, 2 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5_also);
 }
 
@@ -3283,8 +3283,8 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 #ifdef DEBUG_ROUTES
   printf("(%s) set_route > get_target(route=%d%s step=%d)\n",
          (vischar == &state->vischars[0]) ? "hero" : "non-hero",
-         vischar->route.index & ~routeindexflag_REVERSED,
-         (vischar->route.index & routeindexflag_REVERSED) ? " reversed" : "",
+         vischar->route.index & ~ROUTEINDEX_REVERSE_FLAG,
+         (vischar->route.index & ROUTEINDEX_REVERSE_FLAG) ? " reversed" : "",
          vischar->route.step);
 #endif
 
@@ -3447,7 +3447,7 @@ void character_bed_common(tgestate_t *state,
     {
       /* reverse route */
       route->step = 1;
-      routeindex |= routeindexflag_REVERSED;
+      routeindex |= ROUTEINDEX_REVERSE_FLAG;
     }
   }
 
@@ -3698,10 +3698,10 @@ void set_route_go_to_yard_reversed(tgestate_t *state)
 {
   assert(state != NULL);
 
-  static const route_t t14 = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 };
+  static const route_t t14 = { routeindex_14_GO_TO_YARD | ROUTEINDEX_REVERSE_FLAG, 4 };
   set_hero_route(state, &t14);
 
-  route_t t14_also = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 }; /* was A',C */
+  route_t t14_also = { routeindex_14_GO_TO_YARD | ROUTEINDEX_REVERSE_FLAG, 4 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t14_also);
 }
 
@@ -8821,7 +8821,7 @@ uint8_t get_target(tgestate_t       *state,
     {
       /* Route byte < 40: A door */
       routebyte = routebytes[step];
-      if (route->index & routeindexflag_REVERSED)
+      if (route->index & ROUTEINDEX_REVERSE_FLAG)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
       *doormappos = &door->mappos;
@@ -8915,10 +8915,10 @@ void move_a_character(tgestate_t *state)
 
       /* Characters 1..11. */
 reverse_route:
-      route->index = routeindex = route->index ^ routeindexflag_REVERSED;
+      route->index = routeindex = route->index ^ ROUTEINDEX_REVERSE_FLAG;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
-      if (routeindex & routeindexflag_REVERSED)
+      if (routeindex & ROUTEINDEX_REVERSE_FLAG)
         route->step--;
       else
         route->step++;
@@ -8927,7 +8927,7 @@ reverse_route:
     {
       /* Commandant only. */
 
-      routeindex = route->index & ~routeindexflag_REVERSED;
+      routeindex = route->index & ~ROUTEINDEX_REVERSE_FLAG;
       if (routeindex != routeindex_36_GO_TO_SOLITARY)
         goto reverse_route;
 
@@ -9039,7 +9039,7 @@ trigger_event:
     if (routeindex == routeindex_255_WANDER)
       return;
 
-    if ((routeindex & routeindexflag_REVERSED) == 0)
+    if ((routeindex & ROUTEINDEX_REVERSE_FLAG) == 0)
       charstr->route.step++;
     else
       charstr->route.step--;
@@ -9129,7 +9129,7 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  */
 void character_event(tgestate_t *state, route_t *route)
 {
-#define REVERSE routeindexflag_REVERSED
+#define REVERSE ROUTEINDEX_REVERSE_FLAG
 
   /* $C7F9 */
   static const route2event_t eventmap[24] =
@@ -9254,7 +9254,7 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 void charevnt_hero_release(tgestate_t *state, route_t *route)
 {
   /* Reverse the commandant's route. */
-  route->index = routeindex_36_GO_TO_SOLITARY | routeindexflag_REVERSED;
+  route->index = routeindex_36_GO_TO_SOLITARY | ROUTEINDEX_REVERSE_FLAG;
   route->step  = 3;
 
   state->automatic_player_counter = 0; /* Force automatic control */
@@ -9889,11 +9889,11 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     route = vischar->route.index;
 
     doorindex = get_route(route)[step];
-    if (route & routeindexflag_REVERSED) /* Conv: Avoid needless reload */
+    if (route & ROUTEINDEX_REVERSE_FLAG) /* Conv: Avoid needless reload */
       doorindex ^= door_REVERSE;
 
     /* Conv: This is the [-2]+1 pattern which works out -1/+1. */
-    if (route & routeindexflag_REVERSED) /* Conv: Avoid needless reload */
+    if (route & ROUTEINDEX_REVERSE_FLAG) /* Conv: Avoid needless reload */
       vischar->route.step--;
     else
       vischar->route.step++;
@@ -9929,7 +9929,7 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
   route = vischar->route.index;
   if (route != routeindex_255_WANDER)
   {
-    if (route & routeindexflag_REVERSED)
+    if (route & ROUTEINDEX_REVERSE_FLAG)
       vischar->route.step--;
     else
       vischar->route.step++;
@@ -10017,7 +10017,7 @@ void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 
     /* Call character_event at the end of commandant route 36. */
     if (character == character_0_COMMANDANT)
-      if ((route->index & ~routeindexflag_REVERSED) == routeindex_36_GO_TO_SOLITARY)
+      if ((route->index & ~ROUTEINDEX_REVERSE_FLAG) == routeindex_36_GO_TO_SOLITARY)
         goto do_character_event;
 
     /* Reverse the route for guards 1..11. */
@@ -10045,9 +10045,9 @@ reverse_route:
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
-  route->index ^= routeindexflag_REVERSED; /* toggle route direction */
+  route->index ^= ROUTEINDEX_REVERSE_FLAG; /* toggle route direction */
   // Conv: Removed [-2]+1 pattern.
-  if (route->index & routeindexflag_REVERSED)
+  if (route->index & ROUTEINDEX_REVERSE_FLAG)
     route->step--;
   else
     route->step++;
@@ -10453,7 +10453,7 @@ const uint8_t *get_route(routeindex_t index)
 
   /* Conv: The index may have its reverse flag set so mask it off. The
    * original game gets this for free when scaling the index. */
-  index &= ~routeindexflag_REVERSED;
+  index &= ~ROUTEINDEX_REVERSE_FLAG;
 
   assert(index < NELEMS(routes));
 

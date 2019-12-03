@@ -128,7 +128,7 @@ do {                                                          \
 do                                                            \
 {                                                             \
   assert((r).index == routeindex_255_WANDER ||                \
-        ((r).index & ~routeindexflag_REVERSED) < routeindex__LIMIT); \
+        ((r).index & ~ROUTEINDEX_REVERSE_FLAG) < routeindex__LIMIT); \
 }                                                             \
 while (0)
 

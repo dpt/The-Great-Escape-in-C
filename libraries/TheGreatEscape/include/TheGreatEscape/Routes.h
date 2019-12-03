@@ -23,7 +23,7 @@
 typedef uint8_t routeindex_t;
 
 /* Flag set to reverse a route. */
-#define routeindexflag_REVERSED (1 << 7)
+#define ROUTEINDEX_REVERSE_FLAG (1 << 7)
 
 enum
 {
