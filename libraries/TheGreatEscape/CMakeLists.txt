@@ -7,19 +7,20 @@ add_library(LibTheGreatEscape
   InteriorObjectDefs.c
   InteriorTiles.c
   ItemBitmaps.c
+  Main.c
   Map.c
   Masks.c
   Menu.c
   Messages.c
   Music.c
   RoomDefs.c
+  Screen.c
   SpriteBitmaps.c
   Sprites.c
   StaticGraphics.c
   StaticTiles.c
   SuperTiles.c
   Text.c
-  TheGreatEscape.c
 )
 
 target_include_directories(LibTheGreatEscape

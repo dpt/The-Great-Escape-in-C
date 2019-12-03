@@ -1,5 +1,5 @@
 /**
- * TheGreatEscape.c
+ * Main.c
  *
  * This file is part of "The Great Escape in C".
  *
