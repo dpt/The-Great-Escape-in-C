@@ -1,26 +1,26 @@
 add_library(LibTheGreatEscape
-  Create.c
-  Debug.c
-  ExteriorTiles.c
-  Font.c
-  Input.c
-  InteriorObjectDefs.c
-  InteriorTiles.c
-  ItemBitmaps.c
-  Main.c
-  Map.c
-  Masks.c
-  Menu.c
-  Messages.c
-  Music.c
-  RoomDefs.c
-  Screen.c
-  SpriteBitmaps.c
-  Sprites.c
-  StaticGraphics.c
-  StaticTiles.c
-  SuperTiles.c
-  Text.c
+  Data/ExteriorTiles.c
+  Data/Font.c
+  Data/InteriorObjectDefs.c
+  Data/InteriorTiles.c
+  Data/ItemBitmaps.c
+  Data/Map.c
+  Data/Masks.c
+  Data/Music.c
+  Data/RoomDefs.c
+  Data/SpriteBitmaps.c
+  Data/Sprites.c
+  Data/StaticGraphics.c
+  Data/StaticTiles.c
+  Data/SuperTiles.c
+  Engine/Create.c
+  Engine/Debug.c
+  Engine/Input.c
+  Engine/Main.c
+  Engine/Menu.c
+  Engine/Messages.c
+  Engine/Screen.c
+  Engine/Text.c
 )
 
 target_include_directories(LibTheGreatEscape

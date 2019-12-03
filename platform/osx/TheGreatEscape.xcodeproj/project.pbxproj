@@ -177,6 +177,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5541CD48239727D9006FC753 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
+				558FC6841A0EE15B00A4F50F /* Font.c */,
+				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
+				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
+				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
+				558FC6A01A0EE15B00A4F50F /* Map.c */,
+				552049361B16831C0075ED47 /* Masks.c */,
+				558FC6A11A0EE15B00A4F50F /* Music.c */,
+				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
+				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
+				558FC6A41A0EE15B00A4F50F /* Sprites.c */,
+				558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */,
+				558FC6A61A0EE15B00A4F50F /* StaticTiles.c */,
+				558FC6A71A0EE15B00A4F50F /* SuperTiles.c */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		5541CD4923972887006FC753 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6821A0EE15B00A4F50F /* Create.c */,
+				5541CD4323971113006FC753 /* Debug.c */,
+				556D1A191B135D900036AED0 /* Input.c */,
+				558FC6A81A0EE15B00A4F50F /* Main.c */,
+				556D1A1D1B13617B0036AED0 /* Menu.c */,
+				556D1A241B137A4C0036AED0 /* Messages.c */,
+				5541CD4623971BF0006FC753 /* Screen.c */,
+				556D1A211B1379CF0036AED0 /* Text.c */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
 		554808C917E117CF00387328 = {
 			isa = PBXGroup;
 			children = (
@@ -290,28 +326,8 @@
 			children = (
 				558FC67F1A0EE15B00A4F50F /* include (public) */,
 				558FC6851A0EE15B00A4F50F /* include (private) */,
-				558FC6821A0EE15B00A4F50F /* Create.c */,
-				5541CD4323971113006FC753 /* Debug.c */,
-				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
-				558FC6841A0EE15B00A4F50F /* Font.c */,
-				556D1A191B135D900036AED0 /* Input.c */,
-				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
-				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
-				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
-				558FC6A81A0EE15B00A4F50F /* Main.c */,
-				558FC6A01A0EE15B00A4F50F /* Map.c */,
-				552049361B16831C0075ED47 /* Masks.c */,
-				556D1A1D1B13617B0036AED0 /* Menu.c */,
-				556D1A241B137A4C0036AED0 /* Messages.c */,
-				558FC6A11A0EE15B00A4F50F /* Music.c */,
-				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
-				5541CD4623971BF0006FC753 /* Screen.c */,
-				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
-				558FC6A41A0EE15B00A4F50F /* Sprites.c */,
-				558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */,
-				558FC6A61A0EE15B00A4F50F /* StaticTiles.c */,
-				558FC6A71A0EE15B00A4F50F /* SuperTiles.c */,
-				556D1A211B1379CF0036AED0 /* Text.c */,
+				5541CD4923972887006FC753 /* Engine */,
+				5541CD48239727D9006FC753 /* Data */,
 				551D73781D7775A0002F5E0B /* Images.xcassets */,
 			);
 			name = TheGreatEscape;
