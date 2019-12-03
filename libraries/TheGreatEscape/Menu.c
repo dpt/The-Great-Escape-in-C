@@ -21,6 +21,7 @@
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Music.h"
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
 

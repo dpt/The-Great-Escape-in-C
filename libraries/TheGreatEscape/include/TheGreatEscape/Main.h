@@ -31,38 +31,6 @@
 
 /* ----------------------------------------------------------------------- */
 
-/* Invalidate (signal to redraw) the specified screen area where bitmap data
- * has changed.
- *
- * Conv: This helper function was added over the original game.
- *
- * \param[in] state  Pointer to game state.
- * \param[in] addr   Pointer to screen pixels written to.
- * \param[in] width  Width in pixels of rectangle to invalidate.
- * \param[in] height Height in pixels of rectangle to invalidate.
- */
-void invalidate_bitmap(tgestate_t *state,
-                       uint8_t    *addr,
-                       int         width,
-                       int         height);
-
-/* Invalidate (signal to redraw) the specified screen area where attribute
- * data has changed.
- *
- * Conv: This helper function was added over the original game.
- *
- * \param[in] state  Pointer to game state.
- * \param[in] addr   Pointer to screen attributes written to.
- * \param[in] width  Width in pixels of rectangle to invalidate.
- * \param[in] height Height in pixels of rectangle to invalidate.
- */
-void invalidate_attrs(tgestate_t *state,
-                      uint8_t    *addr,
-                      int         width,
-                      int         height);
-
-/* ----------------------------------------------------------------------- */
-
 // FORWARD REFERENCES
 //
 // (in original file order)

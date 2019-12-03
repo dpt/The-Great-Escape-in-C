@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/StaticGraphics.h"
 #include "TheGreatEscape/StaticTiles.h"

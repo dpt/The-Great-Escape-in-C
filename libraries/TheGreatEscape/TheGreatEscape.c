@@ -74,6 +74,7 @@
 #include "TheGreatEscape/RoomDefs.h"
 #include "TheGreatEscape/Rooms.h"
 #include "TheGreatEscape/Routes.h"
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/SpriteBitmaps.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/State.h"
@@ -85,63 +86,6 @@
 #include "TheGreatEscape/Utils.h"
 
 #include "TheGreatEscape/Main.h"
-
-/* ----------------------------------------------------------------------- */
-
-void invalidate_bitmap(tgestate_t *state,
-                       uint8_t    *start,
-                       int         width,
-                       int         height)
-{
-  uint8_t   *base = &state->speccy->screen.pixels[0];
-  ptrdiff_t  offset;
-  int        x,y;
-  zxbox_t    dirty;
-
-  offset = start - base;
-
-  /* Convert screen offset to cartesian for the interface. */
-  x = (offset & 31) * 8;
-  y = ((offset & 0x0700) >> 8) |
-      ((offset & 0x00E0) >> 2) |
-      ((offset & 0x1800) >> 5);
-  y = 191 - y;    /* flip */
-  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
-  y = y - height; /* get min-y */
-
-  dirty.x0 = x;
-  dirty.y0 = y;
-  dirty.x1 = x + width;
-  dirty.y1 = y + height;
-  state->speccy->draw(state->speccy, &dirty);
-}
-
-void invalidate_attrs(tgestate_t *state,
-                      uint8_t    *start,
-                      int         width,
-                      int         height)
-{
-  uint8_t   *base = &state->speccy->screen.pixels[SCREEN_BITMAP_LENGTH];
-  ptrdiff_t  offset;
-  int        x,y;
-  zxbox_t    dirty;
-
-  offset = start - base;
-
-  /* Convert attribute offset to cartesian for the interface. */
-  x = (offset & 31) * 8;
-  y = (int) offset >> 5;
-  y = 23 - y;     /* flip */
-  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
-  y = y * 8;      /* scale */
-  y = y - height; /* get min-y */
-
-  dirty.x0 = x;
-  dirty.y0 = y;
-  dirty.x1 = x + width;
-  dirty.y1 = y + height;
-  state->speccy->draw(state->speccy, &dirty);
-}
 
 /* ----------------------------------------------------------------------- */
 

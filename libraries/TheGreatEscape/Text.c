@@ -19,6 +19,7 @@
 
 #include "TheGreatEscape/Font.h"
 #include "TheGreatEscape/Main.h"
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
 
