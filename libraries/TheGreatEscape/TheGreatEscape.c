@@ -24,8 +24,6 @@
 
 /* LATER
  *
- * - Hoist out constant sizes to variables in the state structure (required
- *   for variably-sized screens).
  * - Move screen memory to a linear format (again, required for
  *   variably-sized screen).
  * - Replace uint8_t counters, and other types which are smaller than int,
