@@ -89,6 +89,14 @@
 
 /* ----------------------------------------------------------------------- */
 
+/* Divide x by 8, with rounding to nearest.
+ *
+ * This replaces calls to divide_by_8_with_rounding in the original code.
+ */
+#define divround(x) (((x) + 4) >> 3)
+
+/* ----------------------------------------------------------------------- */
+
 /**
  * $68A2: Transition.
  *
@@ -1301,17 +1309,8 @@ void calc_interior_item_isopos(itemstruct_t *itemstr)
 
   isopos = &itemstr->isopos;
 
-  // This was a call to divide_by_8_with_rounding, but that expects
-  // separate hi and lo arguments, which is not worth the effort of
-  // mimicing the original code.
-  //
-  // This needs to go somewhere more general.
-#define divround(x) (((x) + 4) >> 3)
-
   isopos->x = divround((0x200 - itemstr->mappos.u + itemstr->mappos.v) * 2);
   isopos->y = divround(0x800 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w);
-
-#undef divround
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8164,7 +8163,8 @@ void purge_invisible_characters(tgestate_t *state)
   uint8_t    miny, minx;  /* was D, E */
   uint8_t    iters;       /* was B */
   vischar_t *vischar;     /* was HL */
-  uint8_t    lo, hi;      /* was C, A */
+  uint8_t    y;           /* was C */
+  uint8_t    x;           /* was C */
 
   assert(state != NULL);
 
@@ -8200,18 +8200,14 @@ void purge_invisible_characters(tgestate_t *state)
     /* Conv: Replaced screen dimension constants with state->columns/rows. */
 
     /* Handle Y part */
-    hi = vischar->isopos.y >> 8;
-    lo = vischar->isopos.y & 0xFF;
-    divide_by_8_with_rounding(&lo, &hi);
+    y = divround(vischar->isopos.y);
     /* The original code uses 16 instead of 17 for 'rows' so match that. */
-    if (lo <= miny || lo > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
+    if (y <= miny || y > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
       goto reset;
 
     /* Handle X part */
-    hi = vischar->isopos.x >> 8;
-    lo = vischar->isopos.x & 0xFF;
-    divide_by_8(&lo, &hi);
-    if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255))
+    x = vischar->isopos.x / 8; /* round down */
+    if (x <= minx || x > MIN(minx + GRACE + state->columns + GRACE, 255))
       goto reset;
 
     goto next;
@@ -12409,53 +12405,8 @@ void scale_mappos_down(const mappos16_t *in, mappos8_t *out)
 
   iters = 3;
   do
-  {
-    uint16_t coord; // Conv: added
-    uint8_t  low, high; /* was A, C */
-
-    coord = *pcoordin++;
-    low  = coord & 0xFF;
-    high = coord >> 8;
-    divide_by_8_with_rounding(&low, &high);
-    *pcoordout++ = low;
-  }
+    *pcoordout++ = divround(*pcoordin++);
   while (--iters);
-}
-
-/**
- * $E550: Divide AC by 8, with rounding to nearest.
- *
- * \param[in,out] plow Pointer to low. (was A)
- * \param[in,out] phigh Pointer to high. (was C)
- */
-void divide_by_8_with_rounding(uint8_t *plow, uint8_t *phigh)
-{
-  int t; /* Conv: Added. */
-
-  assert(plow  != NULL);
-  assert(phigh != NULL);
-
-  t = *plow + 4; /* Like adding 0.5. */
-  *plow = (uint8_t) t; /* Store modulo 256. */
-  if (t >= 256)
-    (*phigh)++; /* Carry. */
-
-  divide_by_8(plow, phigh);
-}
-
-/**
- * $E555: Divide AC by 8.
- *
- * \param[in,out] plow Pointer to low. (was A)
- * \param[in,out] phigh Pointer to high. (was C)
- */
-void divide_by_8(uint8_t *plow, uint8_t *phigh)
-{
-  assert(plow  != NULL);
-  assert(phigh != NULL);
-
-  *plow = (*plow >> 3) | (*phigh << 5);
-  *phigh >>= 3;
 }
 
 /* ----------------------------------------------------------------------- */
