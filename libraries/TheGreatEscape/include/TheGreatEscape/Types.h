@@ -269,7 +269,7 @@ enum vischar_counter_and_flags_values
 
   /** Bit 5 is set when vischar_move_v() should run in preference to
    * vischar_move_u(). */
-  vischar_BYTE7_Y_DOMINANT             = 1 << 5,
+  vischar_BYTE7_V_DOMINANT             = 1 << 5,
 
   /** Bit 6 is set when map movement should be inhibited. (Hero only)
    * Set in touch(). */

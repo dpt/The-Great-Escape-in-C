@@ -404,9 +404,6 @@ void character_behaviour(tgestate_t *state,
 void character_behaviour_set_input(tgestate_t *state,
                                    vischar_t  *vischar,
                                    uint8_t     new_input);
-void character_behaviour_move_y_dominant(tgestate_t *state,
-                                         vischar_t  *vischar,
-                                         int         scale);
 
 input_t vischar_move_u(tgestate_t *state,
                        vischar_t  *vischar,

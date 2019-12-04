@@ -5826,9 +5826,9 @@ collided_set_delay:
     state->IY->input = new_inputs[new_direction];
     assert((state->IY->input & ~input_KICK) < 9);
     if ((new_direction & 1) == 0) /* if was facing TL or BR */
-      state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
+      state->IY->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
     else
-      state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
+      state->IY->counter_and_flags |= vischar_BYTE7_V_DOMINANT;
 
     goto collided_set_delay;
 
@@ -5932,7 +5932,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
         state->saved_mappos.pos16.w >= minheight  &&
         state->saved_mappos.pos16.w <  maxheight + 2)
     {
-      vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
+      vischar->counter_and_flags ^= vischar_BYTE7_V_DOMINANT;
       return 1; // NZ => outwith wall bounds
     }
 
@@ -6166,7 +6166,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
 
 hit_bounds:
     /* Toggle movement direction preference. */
-    vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags ^= vischar_BYTE7_V_DOMINANT;
     return 1; /* return NZ */
 
 next:
@@ -9475,18 +9475,39 @@ move:
   else
     scale = 8; /* Outdoors. */
 
-  /* If the vischar_BYTE7_Y_DOMINANT flag is set then
-   * character_behaviour_move_y_dominant is used instead of the code below,
-   * which is x dominant. ie. It means "try moving y then x, rather than x
-   * then y". This is the code which makes characters alternate left/right
-   * when navigating. */
-  if (vischar->counter_and_flags & vischar_BYTE7_Y_DOMINANT)
+  /* If the vischar_BYTE7_V_DOMINANT flag is set then we try moving on the v
+   * axis then the u axis, rather than u then v. This is the code which makes
+   * characters alternate left/right when navigating. */
+  if (vischar->counter_and_flags & vischar_BYTE7_V_DOMINANT)
   {
-    // FUTURE: inline it here
-    character_behaviour_move_y_dominant(state, vischar, scale); // exit via
+    /* V dominant case */
+
+    /* Conv: Inlined the chunk from $C9FF here. */
+
+    input_t input; /* was ? */
+
+    assert(state != NULL);
+    ASSERT_VISCHAR_VALID(vischar);
+    assert(scale == 1 || scale == 4 || scale == 8);
+
+    input = vischar_move_v(state, vischar, scale);
+    if (input)
+    {
+      character_behaviour_set_input(state, vischar, input);
+    }
+    else
+    {
+      input = vischar_move_u(state, vischar, scale);
+      if (input)
+        character_behaviour_set_input(state, vischar, input);
+      else
+        target_reached(state, vischar); // exit via
+    }
   }
   else
-  { // x dominant:
+  {
+    /* U dominant case */
+
     input_t input; /* was ? */
 
     input = vischar_move_u(state, vischar, scale);
@@ -9523,39 +9544,6 @@ void character_behaviour_set_input(tgestate_t *state,
   if (new_input != vischar->input)
     vischar->input = new_input | input_KICK;
   assert((vischar->input & ~input_KICK) < 9);
-}
-
-/**
- * $C9FF: This is the same as the end of character_behaviour above but the
- * movement order is reversed to be y-x rather than x-y.
- *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character.   (was IY)
- * \param[in] scale   Scale factor (replaces self-modifying code in original).
- */
-void character_behaviour_move_y_dominant(tgestate_t *state,
-                                         vischar_t  *vischar,
-                                         int         scale)
-{
-  input_t input; /* was ? */
-
-  assert(state != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
-  assert(scale == 1 || scale == 4 || scale == 8);
-
-  input = vischar_move_v(state, vischar, scale);
-  if (input)
-  {
-    character_behaviour_set_input(state, vischar, input);
-  }
-  else
-  {
-    input = vischar_move_u(state, vischar, scale);
-    if (input)
-      character_behaviour_set_input(state, vischar, input);
-    else
-      target_reached(state, vischar); // exit via
-  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -9598,7 +9586,7 @@ input_t vischar_move_u(tgestate_t *state,
     return input_LEFT + input_UP;
   else
   {
-    vischar->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags |= vischar_BYTE7_V_DOMINANT;
     return input_NONE;
   }
 }
@@ -9640,7 +9628,7 @@ input_t vischar_move_v(tgestate_t *state,
     return input_RIGHT + input_UP;
   else
   {
-    vischar->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
     return input_NONE;
   }
 }
