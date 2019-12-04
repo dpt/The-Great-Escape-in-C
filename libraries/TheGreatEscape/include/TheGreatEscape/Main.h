@@ -298,15 +298,11 @@ void accept_bribe(tgestate_t *state);
 
 int bounds_check(tgestate_t *state, vischar_t *vischar);
 
-//INLINE uint16_t multiply_by_8(uint8_t A);
-
 int is_door_locked(tgestate_t *state);
 
 void door_handling(tgestate_t *state, vischar_t *vischar);
 
 int door_in_range(tgestate_t *state, const door_t *door);
-
-INLINE uint16_t multiply_by_4(uint8_t A);
 
 int interior_bounds_check(tgestate_t *state, vischar_t *vischar);
 
@@ -436,8 +432,6 @@ void get_target_assign_pos(tgestate_t *state,
                            vischar_t  *vischar,
                            route_t    *route);
 void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route);
-
-//INLINE uint16_t multiply_by_1(uint8_t A);
 
 /** Byte which terminates a route. */
 #define routebyte_END 255

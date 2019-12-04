@@ -118,9 +118,9 @@ void transition(tgestate_t *state, const mappos8_t *mappos)
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.mappos.u = multiply_by_4(mappos->u);
-    vischar->mi.mappos.v = multiply_by_4(mappos->v);
-    vischar->mi.mappos.w = multiply_by_4(mappos->w);
+    vischar->mi.mappos.u = mappos->u * 4;
+    vischar->mi.mappos.v = mappos->v * 4;
+    vischar->mi.mappos.w = mappos->w * 4;
   }
   else
   {
@@ -5991,19 +5991,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
 
 /* ----------------------------------------------------------------------- */
 
-///**
-// * $B1C7: Multiplies A by 8, returning the result in BC.
-// *
-// * Leaf.
-// *
-// * \param[in] A to be multiplied and widened.
-// *
-// * \return 'A' * 8 widened to a uint16_t. (was BC)
-// */
-//uint16_t multiply_by_8(uint8_t A)
-//{
-//  return A * 8;
-//}
+/* Conv: $B1C7/multiply_by_8 was removed. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -6131,11 +6119,11 @@ int door_in_range(tgestate_t *state, const door_t *door)
   assert(state != NULL);
   assert(door  != NULL);
 
-  u = multiply_by_4(door->mappos.u);
+  u = door->mappos.u * 4;
   if (state->saved_mappos.pos16.u < u - halfdist || state->saved_mappos.pos16.u >= u + halfdist)
     return 1;
 
-  v = multiply_by_4(door->mappos.v);
+  v = door->mappos.v * 4;
   if (state->saved_mappos.pos16.v < v - halfdist || state->saved_mappos.pos16.v >= v + halfdist)
     return 1;
 
@@ -6144,19 +6132,7 @@ int door_in_range(tgestate_t *state, const door_t *door)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $B295: Multiplies A by 4, returning the result in BC.
- *
- * Leaf.
- *
- * \param[in] A to be multiplied and widened.
- *
- * \return 'A' * 4 widened to a uint16_t.
- */
-uint16_t multiply_by_4(uint8_t A)
-{
-  return A * 4;
-}
+/* Conv: $B295/multiply_by_4 was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -9554,18 +9530,8 @@ bribed_visible:
 move:
   vischar2flags = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-  /* The original code self modifies the vischar_move_x/y routines. */
-//  if (state->room_index > room_0_OUTDOORS)
-//    HLdash = &multiply_by_1;
-//  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
-//    HLdash = &multiply_by_4;
-//  else
-//    HLdash = &multiply_by_8;
-//
-//  self_CA13 = HLdash; // self-modify vischar_move_x:$CA13
-//  self_CA4B = HLdash; // self-modify vischar_move_y:$CA4B
-
-  /* Replacement code passes down a scale factor. */
+  /* Conv: The original code here self modifies the vischar_move_u/v routines.
+  /*       The replacement code passes in a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
   else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
@@ -9991,17 +9957,7 @@ reverse_route:
 
 /* ----------------------------------------------------------------------- */
 
-///**
-// * $CB75: Widen A to BC.
-// *
-// * \param[in] A 'A' to be widened.
-// *
-// * \return 'A' widened to a uint16_t.
-// */
-//uint16_t multiply_by_1(uint8_t A)
-//{
-//  return A;
-//}
+/* Conv: $CB75/multiply_by_1 was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
