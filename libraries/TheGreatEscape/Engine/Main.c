@@ -3157,7 +3157,7 @@ void set_character_route(tgestate_t *state,
   ASSERT_CHARACTER_VALID(character);
   ASSERT_ROUTE_VALID(route);
 
-  charstr = get_character_struct(state, character);
+  charstr = &state->character_structs[character];
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
   {
     assert(character == (charstr->character_and_flags & characterstruct_CHARACTER_MASK));
@@ -8467,7 +8467,7 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 
     /* A non-object character. */
 
-    charstr = get_character_struct(state, character);
+    charstr = &state->character_structs[character];
 
     /* Re-enable the character. */
     charstr->character_and_flags &= ~characterstruct_FLAG_ON_SCREEN;
@@ -8774,7 +8774,7 @@ void move_a_character(tgestate_t *state)
   state->character_index = character;
 
   /* Get its chararacter struct and exit if the character is on-screen. */
-  charstr = get_character_struct(state, character);
+  charstr = &state->character_structs[character];
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
     return;
 
@@ -8993,22 +8993,7 @@ int move_towards(int8_t         max,
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $C7B9: Get character struct.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] character Character index. (was A)
- *
- * \return Pointer to character struct. (was HL)
- */
-characterstruct_t *get_character_struct(tgestate_t *state,
-                                        character_t character)
-{
-  assert(state != NULL);
-  ASSERT_CHARACTER_VALID(character);
-
-  return &state->character_structs[character];
-}
+/* Conv: $C7B9/get_character_struct was inlined. */
 
 /* ----------------------------------------------------------------------- */
 

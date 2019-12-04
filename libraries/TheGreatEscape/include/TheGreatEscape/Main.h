@@ -387,10 +387,6 @@ int move_towards(int8_t         max,
                  const uint8_t *second,
                  uint8_t       *first);
 
-// this is small enough to INLINE
-characterstruct_t *get_character_struct(tgestate_t *state,
-                                        character_t character);
-
 void character_event(tgestate_t *state, route_t *route);
 
 charevnt_handler_t charevnt_solitary_ends;

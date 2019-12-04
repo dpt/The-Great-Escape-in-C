@@ -79,7 +79,7 @@ struct tgestate
   /** $7612: Character structures.
    *
    * Used by wake_up, end_of_breakfast, reset_map_and_characters,
-   * spawn_characters, get_character_struct and solitary.
+   * spawn_characters and solitary.
    */
   characterstruct_t character_structs[character_structs__LIMIT];
 
