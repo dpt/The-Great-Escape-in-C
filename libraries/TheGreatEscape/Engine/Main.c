@@ -3782,7 +3782,6 @@ void escaped(tgestate_t *state)
 
   const screenlocstring_t *message;   /* was HL */
   escapeitem_t             itemflags; /* was C */
-  const item_t            *pitem;     /* was HL */
   uint8_t                  keys;      /* was A */
 
   assert(state != NULL);
@@ -3796,10 +3795,8 @@ void escaped(tgestate_t *state)
   (void) screenlocstring_plot(state, message);    /* FROM THE CAMP */
 
   /* Form escape items bitfield. */
-  itemflags = 0;
-  pitem = &state->items_held[0];
-  itemflags = join_item_to_escapeitem(pitem++, itemflags);
-  itemflags = join_item_to_escapeitem(pitem,   itemflags);
+  itemflags = item_to_escapeitem(state->items_held[0]) |
+              item_to_escapeitem(state->items_held[1]);
 
   /*         Items                     Message
    *    Unf Pur Ppr Cmp                -------
@@ -3910,21 +3907,7 @@ uint8_t keyscan_all(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $A59C: Call item_to_escapeitem then merge result with a previous escapeitem.
- *
- * \param[in] pitem    Pointer to item.              (was HL)
- * \param[in] previous Previous escapeitem bitfield. (was C)
- *
- * \return Merged escapeitem bitfield. (was C)
- */
-escapeitem_t join_item_to_escapeitem(const item_t *pitem, escapeitem_t previous)
-{
-  assert(pitem != NULL);
-  // assert(previous);
-
-  return item_to_escapeitem(*pitem) | previous;
-}
+/* Conv: $A59C/join_item_to_escapeitem was inlined. */
 
 /**
  * $A5A3: Return a bitmask indicating the presence of items required for escape.

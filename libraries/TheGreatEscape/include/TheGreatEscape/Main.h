@@ -216,8 +216,6 @@ void escaped(tgestate_t *state);
 
 uint8_t keyscan_all(tgestate_t *state);
 
-INLINE escapeitem_t join_item_to_escapeitem(const item_t *pitem,
-                                            escapeitem_t  previous);
 INLINE escapeitem_t item_to_escapeitem(item_t item);
 
 const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
