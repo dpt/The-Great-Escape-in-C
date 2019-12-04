@@ -25,6 +25,8 @@
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
 
+/* ----------------------------------------------------------------------- */
+
 /* When enabled will start the game immediately in Kempston input mode. */
 // #define IMMEDIATE_START
 
@@ -605,6 +607,8 @@ int menu_screen(tgestate_t *state)
 
   return 0;
 }
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
 

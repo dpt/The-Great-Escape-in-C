@@ -20,6 +20,8 @@
 #include "TheGreatEscape/Debug.h"
 #include "TheGreatEscape/State.h"
 
+/* ----------------------------------------------------------------------- */
+
 void check_map_buf(tgestate_t *state)
 {
   for (int i = 0; i < state->st_columns * state->st_rows; i++)
@@ -27,3 +29,7 @@ void check_map_buf(tgestate_t *state)
     assert(state->map_buf[i] < supertileindex__LIMIT);
   }
 }
+
+/* ----------------------------------------------------------------------- */
+
+// vim: ts=8 sts=2 sw=2 et

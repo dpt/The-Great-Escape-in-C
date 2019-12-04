@@ -330,6 +330,8 @@ static const uint16_t semitone_to_frequency[] =
    *       of the trailing zero entries. */
 };
 
+/* ----------------------------------------------------------------------- */
+
 /**
  * $F52C: Return the frequency to play at to generate the given semitone.
  *

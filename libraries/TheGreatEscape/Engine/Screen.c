@@ -20,6 +20,8 @@
 #include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
 
+/* ----------------------------------------------------------------------- */
+
 /* Conv: These helper functions were added over the original game. */
 
 void invalidate_bitmap(tgestate_t *state,
@@ -76,3 +78,7 @@ void invalidate_attrs(tgestate_t *state,
   dirty.y1 = y + height;
   state->speccy->draw(state->speccy, &dirty);
 }
+
+/* ----------------------------------------------------------------------- */
+
+// vim: ts=8 sts=2 sw=2 et

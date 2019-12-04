@@ -326,4 +326,6 @@ input_t input_routine(tgestate_t *state)
   return inputroutines[state->chosen_input_device](state);
 }
 
+/* ----------------------------------------------------------------------- */
+
 // vim: ts=8 sts=2 sw=2 et
