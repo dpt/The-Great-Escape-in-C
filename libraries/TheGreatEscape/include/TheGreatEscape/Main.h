@@ -175,8 +175,6 @@ void set_character_route(tgestate_t *state,
                          route_t     route);
 void set_route(tgestate_t *state, vischar_t *vischar);
 
-INLINE void store_route(route_t route, route_t *proute);
-
 void character_bed_state(tgestate_t *state,
                          route_t    *route);
 void character_bed_vischar(tgestate_t *state,

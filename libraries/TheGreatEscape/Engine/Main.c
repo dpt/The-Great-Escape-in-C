@@ -3181,13 +3181,13 @@ void set_character_route(tgestate_t *state,
   }
 
   /* Store to characterstruct only. */
-  store_route(route, &charstr->route);
+  charstr->route = route;
   return;
 
   // FUTURE: Move this chunk into the body of the loop above.
 found_on_screen:
   vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
-  store_route(route, &vischar->route);
+  vischar->route = route;
 
   set_route(state, vischar); // was fallthrough
 }
@@ -3272,22 +3272,7 @@ void set_route(tgestate_t *state, vischar_t *vischar)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $A3ED: Store an pos8_t at the specified address.
- *
- * Used by set_character_route only.
- *
- * \param[in]  route  Route. (was A' lo + C hi)
- * \param[out] proute Pointer to vischar->route, or characterstruct->route. (was HL)
- */
-void store_route(route_t route, route_t *proute)
-{
-  ASSERT_ROUTE_VALID(route);
-  assert(proute != NULL);
-
-  // FUTURE: inline into set_character_route.
-  *proute = route;
-}
+/* Conv: $A3ED/store_route was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -9531,7 +9516,7 @@ move:
   vischar2flags = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
   /* Conv: The original code here self modifies the vischar_move_u/v routines.
-  /*       The replacement code passes in a scale factor. */
+   *       The replacement code passes in a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
   else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
