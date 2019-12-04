@@ -77,8 +77,6 @@ void drop_item_tail(tgestate_t *state, item_t item);
 void calc_exterior_item_isopos(itemstruct_t *itemstr);
 void calc_interior_item_isopos(itemstruct_t *itemstr);
 
-INLINE itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item);
-
 void draw_all_items(tgestate_t *state);
 void draw_item(tgestate_t *state, item_t item, size_t dstoff);
 

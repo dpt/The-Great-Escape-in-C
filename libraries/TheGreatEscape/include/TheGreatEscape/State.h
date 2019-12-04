@@ -85,7 +85,7 @@ struct tgestate
 
   /** $76C8: Item structs.
    *
-   * Used by item_to_itemstruct, find_nearby_item, event_new_red_cross_parcel,
+   * Used by find_nearby_item, event_new_red_cross_parcel,
    * accept_bribe, action_red_cross_parcel, action_poison,
    * follow_suspicious_character, character_behaviour, target_reached,
    * solitary, is_item_discoverable, is_item_discoverable_interior,

@@ -1236,7 +1236,7 @@ void drop_item_tail(tgestate_t *state, item_t item)
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
 
-  itemstr = item_to_itemstruct(state, item);
+  itemstr = &state->item_structs[item];
   room = state->room_index;
   itemstr->room_and_flags = room; /* Set object's room index. */
   if (room == room_0_OUTDOORS)
@@ -1316,20 +1316,7 @@ void calc_interior_item_isopos(itemstruct_t *itemstr)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $7C26: Convert an item to an itemstruct pointer.
- *
- * \param[in] item Item index. (was A)
- *
- * \return Pointer to itemstruct.
- */
-itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item)
-{
-  assert(state != NULL);
-  ASSERT_ITEM_VALID(item);
-
-  return &state->item_structs[item];
-}
+/* Conv: $7C26/item_to_itemstruct was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -2780,7 +2767,7 @@ void event_new_red_cross_parcel(tgestate_t *state)
   {
     itemstruct_t *itemstruct; /* was HL */
 
-    itemstruct = item_to_itemstruct(state, *item);
+    itemstruct = &state->item_structs[*item];
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == itemstruct_ROOM_NONE)
       goto found; /* FUTURE: Remove goto. */
 
@@ -10798,7 +10785,7 @@ void item_discovered(tgestate_t *state, item_t item)
   default_item_location = &default_item_locations[item];
   room = default_item_location->room_and_flags;
 
-  itemstruct = item_to_itemstruct(state, item);
+  itemstruct = &state->item_structs[item];
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
   itemstruct->room_and_flags = default_item_location->room_and_flags;
   itemstruct->mappos.u = default_item_location->mappos.u;
