@@ -310,9 +310,9 @@ void action_poison(tgestate_t *state);
 void action_uniform(tgestate_t *state);
 void action_shovel(tgestate_t *state);
 void action_lockpick(tgestate_t *state);
-INLINE void action_red_key(tgestate_t *state);
-INLINE void action_yellow_key(tgestate_t *state);
-INLINE void action_green_key(tgestate_t *state);
+void action_red_key(tgestate_t *state);
+void action_yellow_key(tgestate_t *state);
+void action_green_key(tgestate_t *state);
 void action_key(tgestate_t *state, room_t room_of_key);
 
 doorindex_t *get_nearest_door(tgestate_t *state);
