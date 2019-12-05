@@ -36,9 +36,11 @@
 /* GLOSSARY
  *
  * - "Conv:"
- *   -- Code which has required adjustment.
- * - A call marked "exit via"
- *   -- The original code branched directly to its target to exit.
+ *   -- Code which has required adjustment or has otherwise been changed during
+ *      the conversion from Z80 into C.
+ * - "was tail call"
+ *   -- In the original Z80 a call marked with this would have branched directly
+ *      to its target to exit.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -147,7 +149,7 @@ void transition(tgestate_t *state, const mappos8_t *mappos)
   {
     /* Not the hero. */
 
-    reset_visible_character(state, vischar); // was exit via
+    reset_visible_character(state, vischar); /* was tail call */
   }
   else
   {
@@ -3861,9 +3863,9 @@ void escaped(tgestate_t *state)
 
   /* Reset the game, or send the hero to solitary. */
   if (itemflags == 0xFF || itemflags >= escapeitem_UNIFORM)
-    reset_game(state); // exit via
+    reset_game(state); /* was tail call */
   else
-    solitary(state); // exit via
+    solitary(state); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -5404,7 +5406,7 @@ void searchlight_caught(tgestate_t                   *state,
 
   state->bell = bell_RING_PERPETUAL;
 
-  decrease_morale(state, 10); // exit via
+  decrease_morale(state, 10); /* was tail call */
 }
 
 /**
@@ -6006,7 +6008,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   /* Interior doors are handled by another routine. */
   if (state->room_index > room_0_OUTDOORS)
   {
-    door_handling_interior(state, vischar); // exit via
+    door_handling_interior(state, vischar); /* was tail call */
     return;
   }
 
@@ -6262,7 +6264,7 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
     if (state->current_door & door_REVERSE)
       doormappos = &door[-1].mappos;
 
-    transition(state, doormappos); // exit via
+    transition(state, doormappos); /* was tail call */
     NEVER_RETURNS; // check
   }
 }
@@ -8376,7 +8378,7 @@ again:
 
   vischar->counter_and_flags = 0;
   calc_vischar_isopos_from_vischar(state, vischar);
-  character_behaviour(state, vischar); /* (was) exit via */
+  character_behaviour(state, vischar); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8796,7 +8798,7 @@ trigger_event:
       /* We arrive here if the character index is character_12_GUARD_12, or
        * higher, or if it's the commandant on route 36 ("go to solitary"). */
 
-      character_event(state, route); /* exit via */
+      character_event(state, route); /* was tail call */
     }
   }
   else
@@ -9460,7 +9462,7 @@ bribed_visible:
   if (vischar2->route.index == routeindex_0_HALT) /* Stand still */
   {
     character_behaviour_set_input(state, vischar, 0 /* new_input */);
-    return; // exit via
+    return; /* was tail call */
   }
 
 move:
@@ -9497,7 +9499,7 @@ move:
       if (input)
         character_behaviour_set_input(state, vischar, input);
       else
-        target_reached(state, vischar); // exit via
+        target_reached(state, vischar); /* was tail call */
     }
   }
   else
@@ -9517,7 +9519,7 @@ move:
       if (input)
         character_behaviour_set_input(state, vischar, input);
       else
-        target_reached(state, vischar); // exit via
+        target_reached(state, vischar); /* was tail call */
     }
   }
 }
@@ -9667,10 +9669,10 @@ void target_reached(tgestate_t *state, vischar_t *vischar)
     {
       /* Handle 'pursue' mode. */
       if (vischar->character == state->bribed_character)
-        accept_bribe(state); /* exit via */
+        accept_bribe(state); /* was tail call */
       else
         /* The pursuing character caught its target. */ // this bit needs work
-        solitary(state); /* exit via */
+        solitary(state); /* was tail call */
     }
     else if (flags_lower6 == vischar_PURSUIT_HASSLE ||
              flags_lower6 == vischar_PURSUIT_SAW_BRIBE)
@@ -12543,7 +12545,7 @@ void event_roll_call(tgestate_t *state)
 not_at_roll_call:
   state->bell = bell_RING_PERPETUAL;
   queue_message(state, message_MISSED_ROLL_CALL);
-  hostiles_pursue(state); // exit via
+  hostiles_pursue(state); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
