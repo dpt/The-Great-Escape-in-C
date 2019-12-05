@@ -9486,7 +9486,7 @@ move:
 
     /* Conv: Inlined the chunk from $C9FF here. */
 
-    input_t input; /* was ? */
+    input_t input; /* was A */
 
     input = vischar_move_v(state, vischar, scale);
     if (input)
@@ -9506,7 +9506,7 @@ move:
   {
     /* U dominant case */
 
-    input_t input; /* was ? */
+    input_t input; /* was A */
 
     input = vischar_move_u(state, vischar, scale);
     if (input)
