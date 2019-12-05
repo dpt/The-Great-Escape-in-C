@@ -9486,10 +9486,6 @@ move:
 
     input_t input; /* was ? */
 
-    assert(state != NULL);
-    ASSERT_VISCHAR_VALID(vischar);
-    assert(scale == 1 || scale == 4 || scale == 8);
-
     input = vischar_move_v(state, vischar, scale);
     if (input)
     {
