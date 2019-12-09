@@ -4610,56 +4610,42 @@ void shunt_map_down_left(tgestate_t *state)
  */
 void move_map(tgestate_t *state)
 {
-  typedef void (movemapfn_t)(tgestate_t *, uint8_t *);
-
-  static movemapfn_t *const movemapfns[] =
-  {
-    &move_map_up_left,
-    &move_map_up_right,
-    &move_map_down_right,
-    &move_map_down_left,
-  };
-
-  const anim_t  *anim;                /* was DE */
-  uint8_t        animindex;           /* was C */
-  direction_t    map_direction;       /* was A */
-  uint8_t        move_map_y;          /* was A */
-  movemapfn_t   *pmovefn;             /* was HL */
-  uint8_t        x,y;                 /* was C,B */
-  uint8_t       *pmove_map_y;         /* was HL */
-  uint8_t       *pmove_map_y_copy;    /* was DE */
-  pos8_t         game_window_offset;  /* was HL */
-  // uint16_t       HLpos;  /* was HL */
+  const anim_t *anim;               /* was DE */
+  uint8_t       animindex;          /* was C */
+  direction_t   map_direction;      /* was A */
+  uint8_t       move_map_y;         /* was A */
+  uint8_t       x,y;                /* was C,B */
+  pos8_t        game_window_offset; /* was HL */
 
   assert(state != NULL);
 
   if (state->room_index > room_0_OUTDOORS)
-    return; /* Can't move the map when indoors. */
+    return; /* Don't move the map when indoors. */
 
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_DONT_MOVE_MAP)
-    return; /* Can't move the map when touch() saw contact. */
+    return; /* Don't move the map when touch() saw contact. */
 
   anim      = state->vischars[0].anim;
   animindex = state->vischars[0].animindex;
   map_direction = anim->map_direction;
   if (map_direction == 255)
-    return; /* Don't move. */
+    return; /* Don't move the map if the current animation inhibits it. */
 
   if (animindex & vischar_ANIMINDEX_REVERSE)
-    map_direction ^= 2; /* Exchange up and down. */
+    map_direction ^= 2; /* Exchange up and down directions when reversed. */
 
-  pmovefn = movemapfns[map_direction];
-  // PUSH HL // pushes move_map routine to stack
-  // PUSH AF
+  /* Clamp the map position to (0..192,0..124). */
 
-  /* Map clamping stuff. */
   if (/* DISABLES CODE */ (0))
   {
-    /* FUTURE: Equivalent. */
-         if (map_direction == direction_TOP_LEFT)     { y = 124; x = 192; }
-    else if (map_direction == direction_TOP_RIGHT)    { y = 124; x =   0; }
-    else if (map_direction == direction_BOTTOM_RIGHT) { y =   0; x =   0; }
-    else if (map_direction == direction_BOTTOM_LEFT)  { y =   0; x = 192; }
+    /* Equivalent to: */
+    switch (map_direction)
+    {
+      case direction_TOP_LEFT:     x = 192; y = 124; break;
+      case direction_TOP_RIGHT:    x =   0; y = 124; break;
+      case direction_BOTTOM_RIGHT: x =   0; y =   0; break;
+      case direction_BOTTOM_LEFT:  x = 192; y =   0; break;
+    }
   }
   else
   {
@@ -4677,138 +4663,71 @@ void move_map(tgestate_t *state)
   if (state->map_position.x == x || state->map_position.y == y)
     return; /* Don't move. */
 
-  // POP AF
-
-  // Is this a screen offset of some sort?
-  // It gets passed into the move functions.
-  // Is this a vertical index/offset only?
-  pmove_map_y = &state->move_map_y;
   if (map_direction <= direction_TOP_RIGHT)
-    /* direction_TOP_* */
-    move_map_y = *pmove_map_y + 1;
+    /* Either direction_TOP_* */
+    state->move_map_y++;
   else
-    /* direction_BOTTOM_* */
-    move_map_y = *pmove_map_y - 1;
-  move_map_y &= 3;
-  *pmove_map_y = move_map_y;
+    /* Either direction_BOTTOM_* */
+    state->move_map_y--;
+  state->move_map_y &= 3;
 
-  // FUTURE: Drop this copy.
-  pmove_map_y_copy = pmove_map_y; // was EX DE,HL
-
+  move_map_y = state->move_map_y;
   assert(move_map_y <= 3);
 
-  // used by plot_game_window (which masks off top and bottom separately)
-  if (0)
+  /* Set the game_window_offset. This is used by plot_game_window (which masks
+   * off the top and bottom separately). */
+  /* Conv: Simplified. */
+  switch (move_map_y)
   {
-    // Equivalent:
-//         if (move_map_y == 0) game_window_offset = 0x0000;
-//    else if (move_map_y == 1) game_window_offset = 0xFF30;
-//    else if (move_map_y == 2) game_window_offset = 0x0060;
-//    else if (move_map_y == 3) game_window_offset = 0xFF90;
-  }
-  else
-  {
-    game_window_offset.x = 0;
-    game_window_offset.y = 0;
-    if (move_map_y != 0)
-    {
-      game_window_offset.x = 96;
-      if (move_map_y != 2)
-      {
-        game_window_offset.x = 48;
-        game_window_offset.y = 255;
-        if (move_map_y != 1)
-        {
-          game_window_offset.x = 144;
-        }
-      }
-    }
+    case 0: game_window_offset = (pos8_t) {0x00, 0x00}; break;
+    case 1: game_window_offset = (pos8_t) {0x30, 0xFF}; break;
+    case 2: game_window_offset = (pos8_t) {0x60, 0x00}; break;
+    case 3: game_window_offset = (pos8_t) {0x90, 0xFF}; break;
   }
 
   state->game_window_offset = game_window_offset;
-  // HLpos = state->map_position; // passing map_position in HL omitted in this version
 
-  // pops and calls move_map_* routine pushed at $AAE0
-  pmovefn(state, pmove_map_y_copy);
-}
+  /* These cases check the move_map_y counter to decide when to shunt up/down,
+   * and left/right. */
+  /* Conv: Inlined. */
+  switch (map_direction)
+  {
+    case direction_TOP_LEFT:
+      /* Used when player moves down-right (map is shifted up-left).
+       * Pattern: 0..3 => up/left/none/left. */
+      if (move_map_y == 0)
+        shunt_map_up(state);
+      else if (move_map_y & 1)
+        shunt_map_left(state);
+      break;
 
-// FUTURE: Pass move_map_y directly instead of fetching it from state.
-// FUTURE: And fold these functions in to the parent above. (e.g. in a switch).
+    case direction_TOP_RIGHT:
+      /* Used when player moves down-left (map is shifted up-right).
+       * Pattern: 0..3 => up-right/none/right/none. */
+      if (move_map_y == 0)
+        shunt_map_up_right(state);
+      else if (move_map_y == 2)
+        shunt_map_right(state);
+      break;
 
-/* Called when player moves down-right (map is shifted up-left). */
-void move_map_up_left(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
+    case direction_BOTTOM_RIGHT:
+      /* Used when player moves up-left (map is shifted down-right).
+       * Pattern: 0..3 => right/none/right/down. */
+      if (move_map_y == 3)
+        shunt_map_down(state);
+      else if ((move_map_y & 1) == 0)
+        shunt_map_right(state);
+      break;
 
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => up/left/none/left
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 0)
-    shunt_map_up(state);
-  else if (move_map_y & 1) // 1 or 3
-    shunt_map_left(state);
-  // else 2
-}
-
-/* Called when player moves down-left (map is shifted up-right). */
-void move_map_up_right(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => up-right/none/right/none
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 0)
-    shunt_map_up_right(state);
-  else if (move_map_y == 2)
-    shunt_map_right(state);
-  // else 1 or 3
-}
-
-/* Called when player moves up-left (map is shifted down-right). */
-void move_map_down_right(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => right/none/right/down
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 3)
-    shunt_map_down(state);
-  else if ((move_map_y & 1) == 0) // 0 or 2
-    shunt_map_right(state);
-  // else 1
-}
-
-/* Called when player moves up-right (map is shifted down-left). */
-void move_map_down_left(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => none/left/none/down-left
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 1)
-    shunt_map_left(state);
-  else if (move_map_y == 3)
-    shunt_map_down_left(state);
-  // else 0 or 2
+    case direction_BOTTOM_LEFT:
+      /* Used when player moves up-right (map is shifted down-left).
+       * Pattern: 0..3 => none/left/none/down-left. */
+      if (move_map_y == 1)
+        shunt_map_left(state);
+      else if (move_map_y == 3)
+        shunt_map_down_left(state);
+      break;
+  }
 }
 
 /* ----------------------------------------------------------------------- */
