@@ -141,7 +141,7 @@ void zoombox(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void zoombox_fill(tgestate_t *state)
+static void zoombox_fill(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -208,7 +208,7 @@ void zoombox_fill(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void zoombox_draw_border(tgestate_t *state)
+static void zoombox_draw_border(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -286,9 +286,9 @@ void zoombox_draw_border(tgestate_t *state)
  * \param[in] tile    Tile to draw.   (was A)
  * \param[in] addr_in Screen address. (was HL)
  */
-void zoombox_draw_tile(tgestate_t     *state,
-                       zoombox_tile_t  tile,
-                       uint8_t        *addr_in)
+static void zoombox_draw_tile(tgestate_t     *state,
+                              zoombox_tile_t  tile,
+                              uint8_t        *addr_in)
 {
   /**
    * $AF5E: Zoombox tiles.
