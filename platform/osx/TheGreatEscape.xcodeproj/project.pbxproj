@@ -25,6 +25,7 @@
 		552049381B16831C0075ED47 /* Masks.c in Sources */ = {isa = PBXBuildFile; fileRef = 552049361B16831C0075ED47 /* Masks.c */; };
 		5541CD4423971113006FC753 /* Debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4323971113006FC753 /* Debug.c */; };
 		5541CD4723971BF0006FC753 /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4623971BF0006FC753 /* Screen.c */; };
+		5541CD4C239F1123006FC753 /* Zoombox.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4B239F1123006FC753 /* Zoombox.c */; };
 		554808D617E117CF00387328 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808D517E117CF00387328 /* Cocoa.framework */; };
 		554808E017E117CF00387328 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 554808DE17E117CF00387328 /* InfoPlist.strings */; };
 		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
@@ -76,6 +77,8 @@
 		5541CD4323971113006FC753 /* Debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Debug.c; sourceTree = "<group>"; };
 		5541CD4523971BF0006FC753 /* Screen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Screen.h; path = TheGreatEscape/Screen.h; sourceTree = "<group>"; };
 		5541CD4623971BF0006FC753 /* Screen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Screen.c; sourceTree = "<group>"; };
+		5541CD4A239F1123006FC753 /* Zoombox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Zoombox.h; path = TheGreatEscape/Zoombox.h; sourceTree = "<group>"; };
+		5541CD4B239F1123006FC753 /* Zoombox.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Zoombox.c; sourceTree = "<group>"; };
 		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		554808D517E117CF00387328 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		554808DA17E117CF00387328 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -209,6 +212,7 @@
 				556D1A241B137A4C0036AED0 /* Messages.c */,
 				5541CD4623971BF0006FC753 /* Screen.c */,
 				556D1A211B1379CF0036AED0 /* Text.c */,
+				5541CD4B239F1123006FC753 /* Zoombox.c */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -370,6 +374,7 @@
 				558FC69A1A0EE15B00A4F50F /* Tiles.h */,
 				558FC69B1A0EE15B00A4F50F /* Types.h */,
 				558FC69C1A0EE15B00A4F50F /* Utils.h */,
+				5541CD4A239F1123006FC753 /* Zoombox.h */,
 			);
 			name = "include (private)";
 			path = include;
@@ -525,6 +530,7 @@
 				558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */,
 				558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */,
 				558FC6B81A0EE15B00A4F50F /* Main.c in Sources */,
+				5541CD4C239F1123006FC753 /* Zoombox.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

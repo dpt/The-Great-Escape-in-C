@@ -267,12 +267,7 @@ void move_map_down_left(tgestate_t *state, uint8_t *pmove_map_y);
 
 attribute_t choose_game_window_attributes(tgestate_t *state);
 
-void zoombox(tgestate_t *state);
-void zoombox_fill(tgestate_t *state);
-void zoombox_draw_border(tgestate_t *state);
-void zoombox_draw_tile(tgestate_t     *state,
-                       zoombox_tile_t  index,
-                       uint8_t        *addr);
+/* zoombox routines would be placed here but are now in zoombox.[ch]. */
 
 void nighttime(tgestate_t *state);
 void searchlight_movement(searchlight_movement_t *slstate);
