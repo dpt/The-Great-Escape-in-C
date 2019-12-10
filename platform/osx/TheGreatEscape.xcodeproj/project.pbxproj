@@ -58,6 +58,7 @@
 		55AF25C71D363695002F5E0B /* Spectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C41D363695002F5E0B /* Spectrum.c */; };
 		55DD2D1D1FA550A8006FC753 /* bitfifo.c in Sources */ = {isa = PBXBuildFile; fileRef = 55DD2D1C1FA550A7006FC753 /* bitfifo.c */; };
 		55DD2D221FA68DB3006FC753 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55DD2D211FA68DB3006FC753 /* AudioUnit.framework */; };
+		55DE102523A04F86006FC753 /* Events.c in Sources */ = {isa = PBXBuildFile; fileRef = 55DE102423A04F86006FC753 /* Events.c */; };
 		55E492E42064595A00C8AA4A /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE7F13E91FBF5D1F004D102D /* CoreImage.framework */; };
 		55E492E52064595E00C8AA4A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808DA17E117CF00387328 /* Foundation.framework */; };
 		55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */ = {isa = PBXBuildFile; fileRef = 55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */; };
@@ -152,6 +153,8 @@
 		55DD2D1B1FA550A7006FC753 /* bitfifo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitfifo.h; sourceTree = "<group>"; };
 		55DD2D1C1FA550A7006FC753 /* bitfifo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bitfifo.c; sourceTree = "<group>"; };
 		55DD2D211FA68DB3006FC753 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		55DE102323A04F86006FC753 /* Events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Events.h; path = TheGreatEscape/Events.h; sourceTree = "<group>"; };
+		55DE102423A04F86006FC753 /* Events.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Events.c; sourceTree = "<group>"; };
 		55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZXGameView.m; sourceTree = "<group>"; };
 		55F0CA5E19E9E24D0033FC17 /* ZXGameView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameView.h; sourceTree = "<group>"; };
 		55F0CA5F19E9E3640033FC17 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
@@ -206,6 +209,7 @@
 			children = (
 				558FC6821A0EE15B00A4F50F /* Create.c */,
 				5541CD4323971113006FC753 /* Debug.c */,
+				55DE102423A04F86006FC753 /* Events.c */,
 				556D1A191B135D900036AED0 /* Input.c */,
 				558FC6A81A0EE15B00A4F50F /* Main.c */,
 				556D1A1D1B13617B0036AED0 /* Menu.c */,
@@ -344,6 +348,7 @@
 				5541CD412395E470006FC753 /* Asserts.h */,
 				5541CD4223971113006FC753 /* Debug.h */,
 				55C068B01AEAFD3700C2AA88 /* Doors.h */,
+				55DE102323A04F86006FC753 /* Events.h */,
 				558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */,
 				558FC6891A0EE15B00A4F50F /* Font.h */,
 				556D1A1B1B135E3C0036AED0 /* Input.h */,
@@ -500,6 +505,7 @@
 			files = (
 				558FC6B01A0EE15B00A4F50F /* Map.c in Sources */,
 				558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */,
+				55DE102523A04F86006FC753 /* Events.c in Sources */,
 				55AF25C61D363695002F5E0B /* Screen.c in Sources */,
 				558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */,
 				55AF25C71D363695002F5E0B /* Spectrum.c in Sources */,

@@ -847,6 +847,16 @@ typedef struct searchlight_movement
 }
 searchlight_movement_t;
 
+/**
+ * Holds a mapping of room index to offset.
+ */
+typedef struct
+{
+  room_t  room_index;
+  uint8_t offset;
+}
+roomdef_address_t;
+
 /* ----------------------------------------------------------------------- */
 
 #endif /* TYPES_H */
