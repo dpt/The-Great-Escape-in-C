@@ -38,6 +38,9 @@
  * - "Conv:"
  *   -- Code which has required adjustment or has otherwise been changed during
  *      the conversion from Z80 into C.
+ * - "was fallthrough"
+ *   -- In the original code there was no call here but instead the code
+ *      continued through to the adjacent function.
  * - "was tail call"
  *   -- In the original Z80 a call marked with this would have branched directly
  *      to its target to exit.
@@ -172,7 +175,7 @@ void transition(tgestate_t *state, const mappos8_t *mappos)
     {
       /* Indoors */
 
-      enter_room(state); // was fallthrough
+      enter_room(state); /* was fallthrough */
     }
     NEVER_RETURNS;
   }
@@ -204,7 +207,7 @@ void enter_room(tgestate_t *state)
   zoombox(state);
   increase_score(state, 1);
 
-  squash_stack_goto_main(state); // (was fallthrough to following)
+  squash_stack_goto_main(state); /* was fallthrough */
   NEVER_RETURNS;
 }
 
