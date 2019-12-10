@@ -27,6 +27,56 @@
 
 /* ----------------------------------------------------------------------- */
 
+static timedevent_handler_t event_night_time;
+static timedevent_handler_t event_another_day_dawns;
+static void set_day_or_night(tgestate_t *state, uint8_t day_night);
+static timedevent_handler_t event_wake_up;
+static timedevent_handler_t event_go_to_roll_call;
+static timedevent_handler_t event_go_to_breakfast_time;
+static timedevent_handler_t event_end_of_breakfast;
+static timedevent_handler_t event_go_to_exercise_time;
+static timedevent_handler_t event_exercise_time;
+static timedevent_handler_t event_go_to_time_for_bed;
+static timedevent_handler_t event_new_red_cross_parcel;
+static timedevent_handler_t event_time_for_bed;
+static timedevent_handler_t event_search_light;
+static void set_guards_route(tgestate_t *state, route_t route);
+
+static void wake_up(tgestate_t *state);
+static void end_of_breakfast(tgestate_t *state);
+
+static void go_to_time_for_bed(tgestate_t *state);
+
+static void set_prisoners_and_guards_route(tgestate_t *state, route_t *route);
+static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *route);
+static void set_character_route(tgestate_t *state,
+                                character_t character,
+                                route_t     route);
+static void set_route(tgestate_t *state, vischar_t *vischar);
+
+static void character_bed_common(tgestate_t *state,
+                                 character_t character,
+                                 route_t    *route);
+
+static void character_sit_sleep_common(tgestate_t *state,
+                                       room_t      room,
+                                       route_t    *route);
+static void setup_room_and_plot(tgestate_t *state);
+
+static void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag);
+
+static void set_route_go_to_yard(tgestate_t *state);
+static void set_route_go_to_yard_reversed(tgestate_t *state);
+static void set_route_go_to_breakfast(tgestate_t *state);
+
+static void charevnt_breakfast_common(tgestate_t  *state,
+                                      character_t  character,
+                                      route_t     *route);
+
+static void go_to_roll_call(tgestate_t *state);
+
+/* ----------------------------------------------------------------------- */
+
 /**
  * $A1A0: Dispatch timed events.
  *
@@ -87,7 +137,7 @@ found:
   event->handler(state);
 }
 
-void event_night_time(tgestate_t *state)
+static void event_night_time(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -99,7 +149,7 @@ void event_night_time(tgestate_t *state)
   set_day_or_night(state, 255);
 }
 
-void event_another_day_dawns(tgestate_t *state)
+static void event_another_day_dawns(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -114,7 +164,7 @@ void event_another_day_dawns(tgestate_t *state)
  * \param[in] state     Pointer to game state.
  * \param[in] day_night Day or night flag. (was A)
  */
-void set_day_or_night(tgestate_t *state, uint8_t day_night)
+static void set_day_or_night(tgestate_t *state, uint8_t day_night)
 {
   attribute_t attrs;
 
@@ -126,7 +176,7 @@ void set_day_or_night(tgestate_t *state, uint8_t day_night)
   set_game_window_attributes(state, attrs);
 }
 
-void event_wake_up(tgestate_t *state)
+static void event_wake_up(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -135,7 +185,7 @@ void event_wake_up(tgestate_t *state)
   wake_up(state);
 }
 
-void event_go_to_roll_call(tgestate_t *state)
+static void event_go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -144,7 +194,7 @@ void event_go_to_roll_call(tgestate_t *state)
   go_to_roll_call(state);
 }
 
-void event_go_to_breakfast_time(tgestate_t *state)
+static void event_go_to_breakfast_time(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -153,7 +203,7 @@ void event_go_to_breakfast_time(tgestate_t *state)
   set_route_go_to_breakfast(state);
 }
 
-void event_end_of_breakfast(tgestate_t *state)
+static void event_end_of_breakfast(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -161,7 +211,7 @@ void event_end_of_breakfast(tgestate_t *state)
   end_of_breakfast(state);
 }
 
-void event_go_to_exercise_time(tgestate_t *state)
+static void event_go_to_exercise_time(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -175,7 +225,7 @@ void event_go_to_exercise_time(tgestate_t *state)
   set_route_go_to_yard(state);
 }
 
-void event_exercise_time(tgestate_t *state) // end of exercise time?
+static void event_exercise_time(tgestate_t *state) // end of exercise time?
 {
   assert(state != NULL);
 
@@ -183,7 +233,7 @@ void event_exercise_time(tgestate_t *state) // end of exercise time?
   set_route_go_to_yard_reversed(state);
 }
 
-void event_go_to_time_for_bed(tgestate_t *state)
+static void event_go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -197,7 +247,7 @@ void event_go_to_time_for_bed(tgestate_t *state)
   go_to_time_for_bed(state);
 }
 
-void event_new_red_cross_parcel(tgestate_t *state)
+static void event_new_red_cross_parcel(tgestate_t *state)
 {
   static const itemstruct_t red_cross_parcel_reset_data =
   {
@@ -251,7 +301,7 @@ found:
   queue_message(state, message_RED_CROSS_PARCEL);
 }
 
-void event_time_for_bed(tgestate_t *state)
+static void event_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -261,7 +311,7 @@ void event_time_for_bed(tgestate_t *state)
   set_guards_route(state, t);
 }
 
-void event_search_light(tgestate_t *state)
+static void event_search_light(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -276,7 +326,7 @@ void event_search_light(tgestate_t *state)
  * \param[in] state Pointer to game state.
  * \param[in] route Route.                 (was C,A (hi,lo))
  */
-void set_guards_route(tgestate_t *state, route_t route)
+static void set_guards_route(tgestate_t *state, route_t route)
 {
   character_t index; /* was A' */
   uint8_t     iters; /* was B */
@@ -324,7 +374,7 @@ static const character_t prisoners_and_guards[10] =
  *
  * \param[in] state Pointer to game state.
  */
-void wake_up(tgestate_t *state)
+static void wake_up(tgestate_t *state)
 {
   characterstruct_t       *charstr; /* was HL */
   uint8_t                  iters;   /* was B */
@@ -397,7 +447,7 @@ void wake_up(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void end_of_breakfast(tgestate_t *state)
+static void end_of_breakfast(tgestate_t *state)
 {
   characterstruct_t *charstr;  /* was HL */
   uint8_t            iters;    /* was B */
@@ -498,7 +548,7 @@ void set_hero_route_force(tgestate_t *state, const route_t *route)
  *
  * \param[in] state Pointer to game state.
  */
-void go_to_time_for_bed(tgestate_t *state)
+static void go_to_time_for_bed(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -521,7 +571,7 @@ void go_to_time_for_bed(tgestate_t *state)
  * \param[in]     state  Pointer to game state.
  * \param[in,out] proute Pointer to route. (was C,A')
  */
-void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
+static void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
 {
   route_t            route;  /* new var */
   const character_t *pchars; /* was HL */
@@ -557,7 +607,7 @@ void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
  * \param[in]     state  Pointer to game state.
  * \param[in,out] proute Pointer to route. (was C,A')
  */
-void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
+static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
 {
   route_t            route; /* new var */
   const character_t *pchars; /* was HL */
@@ -598,9 +648,9 @@ void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
  * \param[in] character Character index.       (was A)
  * \param[in] route     Route.                 (was A' lo + C hi)
  */
-void set_character_route(tgestate_t *state,
-                         character_t character,
-                         route_t     route)
+static void set_character_route(tgestate_t *state,
+                                character_t character,
+                                route_t     route)
 {
   characterstruct_t *charstr; /* was HL */
   vischar_t         *vischar; /* was HL */
@@ -653,7 +703,7 @@ found_on_screen:
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL) (e.g. $8003 in original)
  */
-void set_route(tgestate_t *state, vischar_t *vischar)
+static void set_route(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t          get_target_result; /* was A */
   mappos8_t       *target;            /* was DE */
@@ -789,9 +839,9 @@ void character_bed_vischar(tgestate_t *state, route_t *route)
  * \param[in] character Character index.  (was A)
  * \param[in] route     Pointer to route. (was HL)
  */
-void character_bed_common(tgestate_t *state,
-                          character_t character,
-                          route_t    *route)
+static void character_bed_common(tgestate_t *state,
+                                 character_t character,
+                                 route_t    *route)
 {
   uint8_t routeindex; /* was A */
 
@@ -922,9 +972,9 @@ void character_sleeps(tgestate_t *state,
  * \param[in] room  Room index.            (was C)
  * \param[in] route Route - used to determine either a vischar or a characterstruct depending on if the room specified is the current room. (was DE/HL)
  */
-void character_sit_sleep_common(tgestate_t *state,
-                                room_t      room,
-                                route_t    *route)
+static void character_sit_sleep_common(tgestate_t *state,
+                                       room_t      room,
+                                       route_t    *route)
 {
   /* This receives a pointer to a route structure which is within either a
    * characterstruct or a vischar. */
@@ -975,7 +1025,7 @@ void character_sit_sleep_common(tgestate_t *state,
  *
  * \param[in] state Pointer to game state.
  */
-void setup_room_and_plot(tgestate_t *state)
+static void setup_room_and_plot(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -1023,7 +1073,7 @@ void hero_sleeps(tgestate_t *state)
  * \param[in] state Pointer to game state.
  * \param[in] pflag Pointer to hero_in_breakfast or hero_in_bed. (was HL)
  */
-void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
+static void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
 {
   assert(state != NULL);
   assert(pflag != NULL);
@@ -1050,7 +1100,7 @@ void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_go_to_yard(tgestate_t *state)
+static void set_route_go_to_yard(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -1066,7 +1116,7 @@ void set_route_go_to_yard(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_go_to_yard_reversed(tgestate_t *state)
+static void set_route_go_to_yard_reversed(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -1082,7 +1132,7 @@ void set_route_go_to_yard_reversed(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  */
-void set_route_go_to_breakfast(tgestate_t *state)
+static void set_route_go_to_breakfast(tgestate_t *state)
 {
   assert(state != NULL);
 
@@ -1151,9 +1201,9 @@ void charevnt_breakfast_vischar(tgestate_t *state, route_t *route)
  * \param[in] character Character index.       (was A)
  * \param[in] route     Pointer to route.      (was HL)
  */
-void charevnt_breakfast_common(tgestate_t *state,
-                               character_t character,
-                               route_t    *route)
+static void charevnt_breakfast_common(tgestate_t *state,
+                                      character_t character,
+                                      route_t    *route)
 {
   uint8_t routeindex; /* was A */
 
@@ -1187,7 +1237,7 @@ void charevnt_breakfast_common(tgestate_t *state,
  *
  * \param[in] state Pointer to game state.
  */
-void go_to_roll_call(tgestate_t *state)
+static void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
