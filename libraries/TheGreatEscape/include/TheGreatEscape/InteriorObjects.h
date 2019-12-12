@@ -26,6 +26,9 @@
  *
  * A double suffix like SW_NE means that an object goes south-west to
  * north-east in screen space (or vice versa).
+ *
+ * The "UNUSED_xx" entries are not used by the game and will draw as per the
+ * entry in interior_object_defs[].
  */
 enum interior_object
 {
@@ -50,14 +53,14 @@ enum interior_object
   interiorobject_TUNNEL_ENTRANCE,
   interiorobject_PRISONER_SAT_END_TABLE,
   interiorobject_COLLAPSED_TUNNEL_SW_NE,
-  interiorobject_UNUSED_21, // unused by game, draws as interiorobject_ROOM_OUTLINE_22x12_A
+  interiorobject_UNUSED_21, /* draws as interiorobject_ROOM_OUTLINE_22x12_A */
   interiorobject_CHAIR_FACING_SE,
   interiorobject_OCCUPIED_BED,
   interiorobject_ORNATE_WARDROBE_FACING_SW,
   interiorobject_CHAIR_FACING_SW,
   interiorobject_CUPBOARD_FACING_SE,
   interiorobject_ROOM_OUTLINE_18x10_A,
-  interiorobject_UNUSED_28, // unused by game, draws as interiorobject_TABLE
+  interiorobject_UNUSED_28, /* draws as interiorobject_TABLE */
   interiorobject_TABLE,
   interiorobject_STOVE_PIPE,
   interiorobject_PAPERS_ON_FLOOR,
@@ -65,10 +68,10 @@ enum interior_object
   interiorobject_SMALL_SHELF_FACING_SE,
   interiorobject_SMALL_CRATE,
   interiorobject_SMALL_WINDOW_WITH_BARS_FACING_SE,
-  interiorobject_TINY_DOOR_FRAME_NE,  // tunnel entrance
+  interiorobject_TINY_DOOR_FRAME_NE, /* == small tunnel entrance */
   interiorobject_NOTICEBOARD_FACING_SE,
   interiorobject_DOOR_FRAME_NW,
-  interiorobject_UNUSED_39, // unused by game, draws as interiorobject_END_DOOR_FRAME_NW_SE
+  interiorobject_UNUSED_39, /* draws as interiorobject_END_DOOR_FRAME_NW_SE */
   interiorobject_DOOR_FRAME_NE,
   interiorobject_ROOM_OUTLINE_15x8,
   interiorobject_CUPBOARD_FACING_SW,
