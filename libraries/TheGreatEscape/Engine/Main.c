@@ -38,6 +38,9 @@
  * - "Conv:"
  *   -- Code which has required adjustment or has otherwise been changed during
  *      the conversion from Z80 into C.
+ * - "was <register>/<address>"
+ *   -- Records which register, registers or address the original code used to
+ *      hold this variable.
  * - "was fallthrough"
  *   -- In the original code there was no call here but instead the code
  *      continued through to the adjacent function.
