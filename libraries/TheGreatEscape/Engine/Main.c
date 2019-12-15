@@ -172,7 +172,7 @@ void transition(tgestate_t *state, const mappos8_t *mappos)
       vischar->input = input_KICK;
       vischar->direction &= vischar_DIRECTION_MASK; /* clear crawl flag */
       reset_outdoors(state);
-      squash_stack_goto_main(state); // exit
+      squash_stack_goto_main(state); /* was tail call */
     }
     else
     {
