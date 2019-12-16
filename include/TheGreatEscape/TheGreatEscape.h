@@ -48,14 +48,6 @@ extern "C"
 /* Exports go here... */
 
 /**
- */
-typedef struct tgeconfig
-{
-  int width, height;
-}
-tgeconfig_t;
-
-/**
  * Holds the current state of the game.
  */
 typedef struct tgestate tgestate_t;
@@ -63,8 +55,7 @@ typedef struct tgestate tgestate_t;
 /**
  * Create a game instance.
  */
-TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
-                               const tgeconfig_t *config);
+TGE_API tgestate_t *tge_create(zxspectrum_t *speccy);
 
 /**
  * Destroy a game instance.

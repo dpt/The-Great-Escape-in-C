@@ -2,7 +2,7 @@
  *
  * SDL front-end for The Great Escape.
  *
- * (c) David Thomas, 2017.
+ * (c) David Thomas, 2017-2019.
  */
 
 #include <stdio.h>
@@ -305,6 +305,7 @@ int main(void)
   state_t         state;
   zxconfig_t      zxconfig =
   {
+    GAMEWIDTH / 8, GAMEHEIGHT / 8,
     &state, /* opaque */
     &draw_handler,
     &stamp_handler,
@@ -313,16 +314,12 @@ int main(void)
     &border_handler,
     &speaker_handler
   };
-  tgeconfig_t     config;
   SDL_Window     *window;
 
   printf("THE GREAT ESCAPE\n");
   printf("================\n");
 
   printf("Initialising...\n");
-
-  config.width  = GAMEWIDTH  / 8;
-  config.height = GAMEHEIGHT / 8;
 
   state.keys      = 0ULL;
   state.kempston  = 0;
@@ -377,7 +374,7 @@ int main(void)
     goto failure;
   }
 
-  state.game = tge_create(state.zx, &config);
+  state.game = tge_create(state.zx);
   if (state.game == NULL)
     goto failure;
 

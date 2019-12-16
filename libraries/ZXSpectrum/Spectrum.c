@@ -196,7 +196,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
   if (dirty == NULL || zxbox_exceeds(dirty, SCREEN_WIDTH, SCREEN_HEIGHT))
   {
     /* Entire screen has been modified - copy it all. */
-    memcpy(&prv->screen_copy, &prv->pub.screen, SCREEN_LENGTH);
+    memcpy(&prv->screen_copy, &prv->pub.screen, sizeof(prv->screen_copy));
 
     /* Maximise the overall dirty box that zxspectrum_claim_screen() will
      * use. */
@@ -284,11 +284,13 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
   if (prv == NULL)
     return NULL;
 
-  prv->pub.in    = zx_in;
-  prv->pub.out   = zx_out;
-  prv->pub.draw  = zx_draw;
-  prv->pub.stamp = zx_stamp;
-  prv->pub.sleep = zx_sleep;
+  prv->pub.in            = zx_in;
+  prv->pub.out           = zx_out;
+  prv->pub.draw          = zx_draw;
+  prv->pub.stamp         = zx_stamp;
+  prv->pub.sleep         = zx_sleep;
+  prv->pub.screen.width  = config->width;
+  prv->pub.screen.height = config->height;
 
   prv->config = *config;
 

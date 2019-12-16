@@ -108,6 +108,7 @@ zxbox_t;
  */
 typedef struct zxscreen
 {
+  int         width, height;
   uint8_t     pixels[SCREEN_BITMAP_LENGTH];
   attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
 }
@@ -155,6 +156,9 @@ struct zxspectrum
  */
 typedef struct zxconfig
 {
+  /** Screen dimensions. */
+  int width, height;
+
   /** An opaque pointer passed into callbacks. */
   void *opaque;
 

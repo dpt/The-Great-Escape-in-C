@@ -11275,7 +11275,9 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
   assert(state != NULL);
   assert(state->speccy != NULL);
 
-  memset(&state->speccy->screen.pixels, 0, SCREEN_BITMAP_LENGTH);
+  memset(&state->speccy->screen.pixels,
+         0,
+         SCREEN_BITMAP_LENGTH);
   memset(&state->speccy->screen.attributes,
          attribute_WHITE_OVER_BLACK,
          SCREEN_ATTRIBUTES_LENGTH);

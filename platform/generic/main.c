@@ -2,7 +2,7 @@
  *
  * Minimal front-end for The Great Escape.
  *
- * (c) David Thomas, 2017.
+ * (c) David Thomas, 2017-2019.
  */
 
 #include <stdio.h>
@@ -86,6 +86,7 @@ int main(void)
 {
     static const zxconfig_t zxconfig =
     {
+        DEFAULTWIDTH / 8, DEFAULTHEIGHT / 8,
         NULL, /* opaque */
         &draw_handler,
         &stamp_handler,
@@ -94,7 +95,6 @@ int main(void)
         &border_handler,
         &speaker_handler
     };
-    tgeconfig_t config;
     zxspectrum_t *zx;
     tgestate_t *game;
     int quit = 0;
@@ -106,14 +106,11 @@ int main(void)
 
     printf("Initialising...\n");
 
-    config.width  = DEFAULTWIDTH  / 8;
-    config.height = DEFAULTHEIGHT / 8;
-
     zx = zxspectrum_create(&zxconfig);
     if (zx == NULL)
         goto failure;
 
-    game = tge_create(zx, &config);
+    game = tge_create(zx);
     if (game == NULL)
         goto failure;
 

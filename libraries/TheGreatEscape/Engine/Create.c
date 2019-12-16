@@ -440,8 +440,7 @@ static void tge_initialise(tgestate_t *state)
  * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
-TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
-                               const tgeconfig_t *config)
+TGE_API tgestate_t *tge_create(zxspectrum_t *speccy)
 {
   tgestate_t       *state                     = NULL;
   size_t            game_window_start_offsets_size;
@@ -454,11 +453,6 @@ TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
   uint8_t          *window_buf                = NULL;
   supertileindex_t *map_buf                   = NULL;
 
-  assert(config);
-
-  if (!config)
-    goto failure;
-
   /* Allocate state structure. */
 
   state = calloc(1, sizeof(*state));
@@ -467,12 +461,12 @@ TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
 
   /* Configure. */
 
-  state->width      = config->width;
-  state->height     = config->height;
-
   // Until we can resize...
-  assert(state->width  == 32);
-  assert(state->height == 24);
+  assert(speccy->screen.width  == 32);
+  assert(speccy->screen.height == 24);
+
+  state->width      = speccy->screen.width;
+  state->height     = speccy->screen.height;
 
   /* Set the dimensions of the window buffer. When painted onto the game
    * screen the window is one unit smaller in both dimensions. That is a

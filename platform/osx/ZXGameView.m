@@ -53,8 +53,6 @@
 
 @interface ZXGameView()
 {
-  tgeconfig_t     config;
-
   zxspectrum_t   *zx;
   tgestate_t     *game;
 
@@ -128,6 +126,7 @@
 {
   const zxconfig_t zxconfig =
   {
+    DEFAULTWIDTH / 8, DEFAULTHEIGHT / 8, // screen dimensions in UDGs
     (__bridge void *)(self),
     &draw_handler,
     &stamp_handler,
@@ -136,9 +135,6 @@
     &border_handler,
     &speaker_handler
   };
-
-  config.width  = DEFAULTWIDTH  / 8;
-  config.height = DEFAULTHEIGHT / 8;
 
   zx              = NULL;
   game            = NULL;
@@ -169,7 +165,7 @@
   if (zx == NULL)
     goto failure;
 
-  game = tge_create(zx, &config);
+  game = tge_create(zx);
   if (game == NULL)
     goto failure;
 
@@ -449,8 +445,8 @@ failure:
   GLsizei xOffset, yOffset;
   GLsizei drawWidth, drawHeight;
 
-  gameSize.width  = config.width  * 8;
-  gameSize.height = config.height * 8;
+  gameSize.width  = zx->screen.width  * 8;
+  gameSize.height = zx->screen.height * 8;
 
   // Convert up to window space, which is in pixel units
   baseRect = [self bounds];
@@ -475,8 +471,8 @@ failure:
       gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
   }
 
-  drawWidth  = (config.width  * 8) * gamesPerView;
-  drawHeight = (config.height * 8) * gamesPerView;
+  drawWidth  = gameSize.width  * gamesPerView;
+  drawHeight = gameSize.height * gamesPerView;
   _scale = gamesPerView;
 
   // Centre the game within the view (note that conversion to int floors the values)
@@ -742,8 +738,10 @@ static void speaker_handler(int on_off, void *opaque)
 
 - (void)getGameWidth:(int *)width height:(int *)height border:(int *)border
 {
-  *width  = config.width  * 8;
-  *height = config.height * 8;
+  assert(zx);
+
+  *width  = zx->screen.width  * 8;
+  *height = zx->screen.height * 8;
   *border = borderSize;
 }
 
