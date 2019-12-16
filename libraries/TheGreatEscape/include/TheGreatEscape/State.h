@@ -30,17 +30,32 @@
  */
 struct tgestate
 {
-  /* ADDITIONAL VARIABLES (those not in the original game) */
+  /* ------------------------------------------------------------------------
+   * State variables in addition to the original game
+   * --------------------------------------------------------------------- */
 
-  int             width;      /* real screen width in UDGs e.g. 32 */
-  int             height;     /* real screen height in UDGs e.g. 24 */
+  /**
+   * Dimensions of the ZX Spectrum screen in UDGs, e.g. 32x24.
+   */
+  int             width, height;
+//
+  /**
+   * Dimensions of the game window in UDGs, e.g. 24x17.
+   */
+  int             columns, rows;
 
-  int             columns;    /* game buffer width in UDGs e.g. 24 */
-  int             rows;       /* game buffer height in UDGs e.g. 17 */
+  /**
+   * Dimensions of the game window in supertiles, e.g. 7x5.
+   *
+   * This is rounded up (e.g. 7x5 supertiles would become 28x20 UDGs, which
+   * is larger than the game window) to allow for a buffer region around the
+   * edge.
+   */
+  int             st_columns, st_rows;
 
-  int             st_columns; /* supertiles columns (normally 7) */
-  int             st_rows;    /* supertiles rows (normally 5) */
-
+  /**
+   * Virtual ZX Spectrum.
+   */
   zxspectrum_t   *speccy;
 
   jmp_buf         jmpbuf_main;
@@ -50,16 +65,14 @@ struct tgestate
   size_t          window_buf_size; /* byte length of window_buf */
   size_t          map_buf_size; /* byte length of map_buf */
 
+  vischar_t      *IY;         /* replaces register IY in the original game */
 
-  /* REGISTER VARIABLES */
-  vischar_t      *IY;
-
-
-  /* NEW VARIABLES */
   uint8_t         roomdef_shadow_bytes[16];
 
 
-  /* ORIGINAL VARIABLES (ordered by original game memory location) */
+  /* ------------------------------------------------------------------------
+   * Original variables ordered by original game memory location
+   * ------------------------------------------------------------------------ */
 
   /** $68A0: Index of the current room, or 0 when outside. */
   room_t          room_index;
