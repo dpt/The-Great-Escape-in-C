@@ -564,7 +564,7 @@ void setup_room(tgestate_t *state)
 
   /* Copy boundaries into state. */
   state->roomdef_object_bounds_count = count = get_roomdef(state, room_index, offset); /* count of boundaries */
-  assert(count <= 4);
+  assert(count <= MAX_ROOMDEF_OBJECT_BOUNDS);
   pbounds = &state->roomdef_object_bounds[0]; /* Conv: Moved */
   if (count == 0) /* no boundaries */
   {

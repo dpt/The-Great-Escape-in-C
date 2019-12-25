@@ -25,6 +25,20 @@
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
+/* -------------------------------------------------------------------------- */
+
+#define MASK_BUFFER_WIDTHBYTES 4
+#define MASK_BUFFER_ROWBYTES   (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
+#define MASK_BUFFER_HEIGHT     5
+#define MASK_BUFFER_LENGTH     (MASK_BUFFER_ROWBYTES * MASK_BUFFER_HEIGHT)
+
+#define MAX_ROOMDEF_OBJECT_BOUNDS 4
+
+// 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
+#define MAX_INTERIOR_MASK_REFS 7
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * Holds the current state of the game.
  */
@@ -188,11 +202,6 @@ struct tgestate
    */
   vischar_t       vischars[vischars_LENGTH];
 
-#define MASK_BUFFER_WIDTHBYTES 4
-#define MASK_BUFFER_ROWBYTES   (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
-#define MASK_BUFFER_HEIGHT     5
-#define MASK_BUFFER_LENGTH     (MASK_BUFFER_ROWBYTES * MASK_BUFFER_HEIGHT)
-
   /**
    * $8100: A buffer used when plotting to cut away foreground layers from
    * visible characters and items.
@@ -297,7 +306,7 @@ struct tgestate
   uint8_t         searchlight_state;
 
   /**
-   * $81BE: The current room definition's dimensions index.
+   * $81BE: The current room definition's dimensions.
    *
    * This is an index into roomdef_dimensions[].
    *
@@ -306,7 +315,7 @@ struct tgestate
   uint8_t         roomdef_dimensions_index;
 
   /**
-   * $81BF: The current room definition's count of bounds.
+   * $81BF: The number of bounds used by the current room definition.
    *
    * Written only by setup_room.
    */
@@ -319,111 +328,130 @@ struct tgestate
    *
    * Written only by setup_room.
    */
-  bounds_t        roomdef_object_bounds[4];
+  bounds_t        roomdef_object_bounds[MAX_ROOMDEF_OBJECT_BOUNDS];
 
   /**
-   * $81D6: Indices of interior doors.
+   * $81D6: Holds the indices of the current room's doors.
+   *
+   * Written only by setup_doors.
    */
   doorindex_t     interior_doors[4];
 
-  // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
-#define MAX_INTERIOR_MASK_REFS 7
-
   /**
-   * $81DA: Interior mask data count.
+   * $81DA: The number of masks used by the current room definition.
+   *
+   * Written only by setup_room.
    */
   uint8_t         interior_mask_data_count;
 
   /**
-   * $81DB: Interior mask data copies.
+   * $81DB: A copy of the current room definition's masks.
+   *
+   * Written only by setup_room.
    */
   mask_t          interior_mask_data[MAX_INTERIOR_MASK_REFS];
 
   /**
-   * $8214: Item bitmap height.
+   * $8214: The current item's bitmap height.
    *
    * Used by setup_item_plotting() and item_visible().
    */
   uint8_t         item_height;
 
   /**
-   * $8215: Items which the hero is holding.
+   * $8215: The two items which the hero is holding.
    */
   item_t          items_held[2];
 
   /**
-   * $8217: Current character index.
+   * $8217: The index of the current character.
    */
   character_t     character_index;
 
   /**
-   * $A12F: Game counter.
+   * $A12F: The game counter.
    *
-   * Used to wave flag, time lock picking and wire cutting lockouts.
+   * Incremented on every call to wave_morale_flag. This is used to animate the
+   * morale flag and to time the lock picking and wire cutting player lockouts.
+   * Also every time the game counter hits a multiple of 64, main_loop calls
+   * dispatch_timed_event which moves the event clock onwards.
    */
   gametime_t      game_counter;
 
   /**
-   * $A130: Bell ringing.
+   * $A130: The number of rings of the bell remaining.
+   *
+   * Set to 0 for perpetual ringing, or 255 to stop ringing.
+   *
+   * Used by various event routines.
    */
   bellring_t      bell;
 
   /**
-   * $A132: Score digits.
+   * $A132: The digits of the player's current score.
    */
   char            score_digits[5];
 
   /**
-   * $A137: The hero is in breakfast (flag: 0 or 255).
+   * $A137: A flag (0 or 255) set if the hero is at breakfast.
    */
   uint8_t         hero_in_breakfast;
 
   /**
-   * $A138: Set by in_permitted_area.
+   * $A138: A flag (0 or 255) set if the hero goes out of bounds or off-route.
    *
-   * Used by follow_suspicious_character.
+   * This causes the hero to be followed by hostiles and disables automatic
+   * behaviour.
+   *
+   * Writen by in_permitted_area and reset_game.
+   * Read by automatics and guards_follow_suspicious_character.
    */
   uint8_t         red_flag;
 
   /**
-   * $A139: Countdown until CPU control of the hero is assumed.
+   * $A139: A countdown until CPU control of the hero is assumed.
    *
-   * When it becomes zero, control is assumed. It's usually set to 31 by input
-   * events.
+   * When it becomes zero control is assumed. It's reset to 31 by any input
+   * event.
    */
   uint8_t         automatic_player_counter;
 
   /**
-   * $A13A: Set to 0xFF when sent to solitary, inhibiting player control. Zero
-   * otherwise.
+   * $A13A: A flag (0 or 255) set when the hero is sent to solitary.
    *
    * If nonzero then player control is inhibited (process_player_input,
    * set_hero_route).
+   *
+   * Set by solitary.
+   * Reset by charevnt_solitary_ends.
    */
   uint8_t         in_solitary;
 
   /**
-   * $A13B: Set to 0xFF when morale hits zero, inhibiting player control. Zero
-   * otherwise.
+   * $A13B: A flag (0 or 255) set when morale hits zero.
+   *
+   * If nonzero then player control is inhibited (process_player_input).
    */
   uint8_t         morale_exhausted;
 
   /**
-   * $A13C: Morale 'score'. Ranges morale_MIN..morale_MAX.
+   * $A13C: The current morale level (0 to 112).
    */
   uint8_t         morale;
 
   /**
-   * $A13D: Clock. Incremented once every 64 ticks of game_counter.
+   * $A13D: The game clock (0..139).
+   *
+   * Incremented once every 64 ticks of game_counter. 100+ is night time.
    */
   eventtime_t     clock;
 
   /**
-   * $A13E: Set to 0xFF when character_index is to be used for character events.
-   * Zero for vischar events.
+   * $A13E: A flag (0 or 255) set when character_index is to be used for
+   * character events. Zero for vischar events.
    *
-   * Set to 0xFF only when move_a_character is entered.
-   * Set to 0x00 in set_route, follow_suspicious_character and spawn_character.
+   * Set to 255 only when move_a_character is entered.
+   * Set to 0 in set_route, follow_suspicious_character and spawn_character.
    *
    * Causes character events to use character_index, not IY (vischar). This
    * needs to get set ahead of anything which causes a character event.
@@ -431,43 +459,42 @@ struct tgestate
   uint8_t         entered_move_a_character;
 
   /**
-   * $A13F: The hero is in bed (flag: 0 or 255).
+   * $A13F: A flag (0 or 255) set when the hero is in bed.
    */
   uint8_t         hero_in_bed;
 
   /**
-   * $A140: Displayed morale.
+   * $A140: The currently displayed morale level.
    *
-   * The displayed morale lags behind actual morale as the flag moves towards
-   * its target.
+   * The displayed morale lags behind actual morale since the flag moves slowly
+   * towards its target.
    */
   uint8_t         displayed_morale;
 
   /**
-   * $A141: Pointer to the screen address where the morale flag was last
+   * $A141: A pointer to the screen address where the morale flag was last
    * plotted.
    */
   uint8_t        *moraleflag_screen_address;
 
   /**
-   * $A143: Pointer to a door in locked_doors[] in which door_LOCKED is
+   * $A143: A pointer to a door in locked_doors[] in which door_LOCKED is
    * cleared when picked.
    */
   doorindex_t    *ptr_to_door_being_lockpicked;
 
   /**
-   * $A145: Game time when player control is restored.
-   * e.g. when picking a lock or cutting wire.
+   * $A145: The game time when player control is restored when picking a lock or cutting wire.
    */
   gametime_t      player_locked_out_until;
 
   /**
-   * $A146: Day or night time (flag: day is 0, night is 255).
+   * $A146: A flag (0 or 255) set when it's night time.
    */
   uint8_t         day_or_night;
 
   /**
-   * $A263: Current contents of red cross parcel.
+   * $A263: The current contents of the red cross parcel.
    */
   item_t          red_cross_parcel_current_contents;
 
@@ -477,12 +504,12 @@ struct tgestate
   uint8_t         move_map_y;
 
   /**
-   * $A7C7: Game window plotting offset.
+   * $A7C7: The game window plotting offset.
    */
   pos8_t          game_window_offset;
 
   /**
-   * $AB66: Zoombox parameters.
+   * $AB66: Holds zoombox parameters.
    */
   struct
   {
@@ -494,31 +521,31 @@ struct tgestate
   zoombox;
 
   /**
-   * $AB6A: Stored copy of game screen attribute, used to draw zoombox.
+   * $AB6A: A stored copy of game screen attribute, used to draw the zoombox.
    */
   attribute_t     game_window_attribute;
 
   struct
   {
     /**
-     * $AD29: Searchlight movement data.
+     * $AD29: Holds searchlight movement data.
      */
     searchlight_movement_t states[3];
 
     /**
-     * $AE76: Coordinates of searchlight when hero is caught.
+     * $AE76: The coordinates of the searchlight when hero is caught.
      */
     pos8_t        caught_coord;
   }
   searchlight;
 
   /**
-   * $AF8E: Bribed character.
+   * $AF8E: The current bribed character.
    */
   character_t     bribed_character;
 
   /**
-   * $C41A: Pseudo-random number generator index.
+   * $C41A: A pseudo-random number generator index.
    */
   uint8_t         prng_index;
 
@@ -528,51 +555,51 @@ struct tgestate
   uint8_t         food_discovered_counter;
 
   /**
-   * $DD69: Item attributes.
+   * $DD69: Holds item attributes.
    */
   attribute_t     item_attributes[item__LIMIT];
 
   /**
-   * $E121..$E363: Self-modified locations in masked sprite plotters.
+   * $E121..$E363: The formerly self-modified locations used by masked sprite plotters.
    */
-  uint8_t         self_E121; // masked_sprite_plotter_24_wide_vischar: height loop (in right shift case) = clipped_height & 0xFF
-  uint8_t         self_E1E2; // masked_sprite_plotter_24_wide_vischar: height loop (in left shift case)  = clipped_height & 0xFF
-  uint8_t         self_E2C2; // masked_sprite_plotter_16_wide_left:    height loop                       = clipped_height & 0xFF
-  uint8_t         self_E363; // masked_sprite_plotter_16_wide_right:   height loop                       = clipped_height & 0xFF
+  uint8_t         self_E121; /* masked_sprite_plotter_24_wide_vischar: height loop (in right shift case) = clipped_height & 0xFF */
+  uint8_t         self_E1E2; /* masked_sprite_plotter_24_wide_vischar: height loop (in left shift case)  = clipped_height & 0xFF */
+  uint8_t         self_E2C2; /* masked_sprite_plotter_16_wide_left:    height loop                       = clipped_height & 0xFF */
+  uint8_t         self_E363; /* masked_sprite_plotter_16_wide_right:   height loop                       = clipped_height & 0xFF */
 
   /* Note that these adjacent chunks actually overlap in the original game
    * but I've divided them here for clarity. */
 
   /**
-   * $E188..$E3EC: Sprite clipping control.
+   * $E188..$E3EC: Sprite clipping controls.
    *
    * In the original game these were self-modified instructions.
    */
-  uint8_t         enable_24_right_1; // was $E188 - 24 case, rotate right, first  clip
-  uint8_t         enable_24_right_2; // was $E259 - 24 case, rotate right, second clip
-  uint8_t         enable_24_right_3; // was $E199 - 24 case, rotate right, third  clip
-  uint8_t         enable_24_right_4; // was $E26A - 24 case, rotate right, fourth clip
+  uint8_t         enable_24_right_1; /* was $E188 - 24 case, rotate right, first  clip */
+  uint8_t         enable_24_right_2; /* was $E259 - 24 case, rotate right, second clip */
+  uint8_t         enable_24_right_3; /* was $E199 - 24 case, rotate right, third  clip */
+  uint8_t         enable_24_right_4; /* was $E26A - 24 case, rotate right, fourth clip */
 
-  uint8_t         enable_24_left_1;  // was $E1AA - 24 case, rotate left,  first  clip
-  uint8_t         enable_24_left_2;  // was $E27B - 24 case, rotate left,  second clip
-  uint8_t         enable_24_left_3;  // was $E1BF - 24 case, rotate left,  third  clip
-  uint8_t         enable_24_left_4;  // was $E290 - 24 case, rotate left,  fourth clip
+  uint8_t         enable_24_left_1;  /* was $E1AA - 24 case, rotate left,  first  clip */
+  uint8_t         enable_24_left_2;  /* was $E27B - 24 case, rotate left,  second clip */
+  uint8_t         enable_24_left_3;  /* was $E1BF - 24 case, rotate left,  third  clip */
+  uint8_t         enable_24_left_4;  /* was $E290 - 24 case, rotate left,  fourth clip */
 
-  uint8_t         enable_16_left_1;  // was $E319 - 16 case, rotate left,  first  clip
-  uint8_t         enable_16_left_2;  // was $E32A - 16 case, rotate left,  second clip
-  uint8_t         enable_16_left_3;  // was $E340 - 16 case, rotate left,  third  clip
+  uint8_t         enable_16_left_1;  /* was $E319 - 16 case, rotate left,  first  clip */
+  uint8_t         enable_16_left_2;  /* was $E32A - 16 case, rotate left,  second clip */
+  uint8_t         enable_16_left_3;  /* was $E340 - 16 case, rotate left,  third  clip */
 
-  uint8_t         enable_16_right_1; // was $E3C5 - 16 case, rotate right, first  clip
-  uint8_t         enable_16_right_2; // was $E3D6 - 16 case, rotate right, second clip
-  uint8_t         enable_16_right_3; // was $E3EC - 16 case, rotate right, third  clip
+  uint8_t         enable_16_right_1; /* was $E3C5 - 16 case, rotate right, first  clip */
+  uint8_t         enable_16_right_2; /* was $E3D6 - 16 case, rotate right, second clip */
+  uint8_t         enable_16_right_3; /* was $E3EC - 16 case, rotate right, third  clip */
 
   /**
-   * $EDD3: Start addresses for game screen (usually 128).
+   * $EDD3: Points to an array of start addresses for game screen (usually 128).
    */
   uint16_t       *game_window_start_offsets;
 
   /**
-   * $F05D: Initially locked gates and doors.
+   * $F05D: Holds the gates and doors which are initially locked.
    *
    * Each entry can have door_LOCKED set to indicate that it's locked.
    * The first five locked doors are exterior doors.
@@ -581,33 +608,64 @@ struct tgestate
   doorindex_t     locked_doors[11];
 
   /**
-   * $F06B: Key definitions.
+   * $F06B: Holds key definitions.
    */
   keydefs_t       keydefs;
 
-  /* $F075: static_tiles_plot_direction - removed. */
+  /* Conv: $F075: static_tiles_plot_direction was removed. */
 
   /**
-   * $F445: Chosen input device.
+   * $F0F8..$F28F: Holds the tile buffer.
+   *
+   * The tile buffer holds one tile index per 8x8 pixel area (UDG) of the
+   * window buffer. Tile indices index either into interior_tiles[] or
+   * exterior_tiles[]. In the case of exterior_tiles[], which needs indices
+   * larger than a byte, the tile buffer's indices only make sense when
+   * considered in conjunction with their respective parent supertile (held
+   * in map_buf).
+   *
+   * Its dimensions are 24x17 = 408 total tiles in the buffer.
+   *
+   * Written by plot_*_tiles and expand_object.
+   */
+  tileindex_t    *tile_buf;
+
+  /**
+   * $F445: The chosen input device.
+   *
+   * Note: This gets overwritten by window_buf in the original game.
    */
   inputdevice_t   chosen_input_device;
 
   /**
-   * $F541: Music channel indices.
+   * $F541: Holds music channel indices.
+   *
+   * Note: This gets overwritten by window_buf in the original game.
    */
   uint16_t        music_channel0_index;
   uint16_t        music_channel1_index;
 
+  /**
+   * $F290..$FF4F: Holds the window buffer.
+   *
+   * The window buffer holds the expanded-out version of the tile_buf. It is
+   * stored in linear/progressive order unlike the native ZX Spectrum screen.
+   * Later it is plotted into the game window area of the native screen with
+   * a possible 4-bit shift.
+   *
+   * Its dimensions are 24x17x8 bytes = 3,264 total bytes in the buffer.
+   */
+  uint8_t        *window_buf; // should this be a tilerow_t?
 
-  /* replacing direct access to $F0F8 .. $F28F. 24 x 17 = 408 */
-  tileindex_t    *tile_buf;
-
-  /* replacing direct access to $F290 .. $FF4F. 24 x 17 x 8 = 3,264 */
-  uint8_t        *window_buf; // tilerow_t?
-
-  // $FF50 - 8 bytes unaccounted for .. or that's plotter slack space?
-
-  /* replacing direct access to $FF58 .. $FF7A. 7 x 5 = 35 */
+  /**
+   * $FF58..$FF7A: Holds the map buffer.
+   *
+   * The map buffer holds one supertile index per 32x32 pixel area of the
+   * window buffer. This tells us which tiles to place in tile_buf. Later
+   * it's used to decide which offset into exterior_tiles we should use.
+   *
+   * Its dimensions are 7x5 = 35 total supertiles in the buffer.
+   */
   supertileindex_t *map_buf;
 };
 
