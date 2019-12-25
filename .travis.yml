@@ -18,6 +18,7 @@ env:
         - CURL_MAX_TIME=300
         - CURL_CONNECT_TIMEOUT=5
 script:
+    - xcodebuild -showsdks
     - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData clean build analyze
     - pushd DerivedData/Build/Products/Debug
     - zip -9r TheGreatEscape-debug.zip TheGreatEscape.app
