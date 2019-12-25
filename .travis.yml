@@ -1,6 +1,6 @@
 language: objective-c
 os: osx
-osx_image: xcode8.3
+osx_image: xcode11.3
 before_script:
     - KEYCHAIN=macos-build.keychain
     - security create-keychain -p travis $KEYCHAIN
