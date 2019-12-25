@@ -18,12 +18,12 @@ env:
         - CURL_MAX_TIME=300
         - CURL_CONNECT_TIMEOUT=5
 script:
-    - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -sdk macosx10.14 -derivedDataPath DerivedData clean build analyze
+    - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData clean build analyze
     - pushd DerivedData/Build/Products/Debug
     - zip -9r TheGreatEscape-debug.zip TheGreatEscape.app
     - curl --max-time $CURL_MAX_TIME --connect-timeout $CURL_CONNECT_TIMEOUT --upload-file TheGreatEscape-debug.zip https://transfer.sh/TheGreatEscape-debug.zip -o link && cat link && echo || echo "Failed transfer.sh upload"
     - popd
-    - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Release -sdk macosx10.14 -derivedDataPath DerivedData clean build analyze
+    - xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Release -derivedDataPath DerivedData clean build analyze
     - pushd DerivedData/Build/Products/Release
     - zip -9r TheGreatEscape-release.zip TheGreatEscape.app
     - curl --max-time $CURL_MAX_TIME --connect-timeout $CURL_CONNECT_TIMEOUT --upload-file TheGreatEscape-release.zip https://transfer.sh/TheGreatEscape-release.zip -o link && cat link && echo || echo "Failed transfer.sh upload"
