@@ -601,14 +601,14 @@ void setup_room(tgestate_t *state)
   while (iters--)
   {
     uint8_t object_index;
-    uint8_t row;
     uint8_t column;
+    uint8_t row;
 
     object_index = get_roomdef(state, room_index, offset++);
-    row          = get_roomdef(state, room_index, offset++);
     column       = get_roomdef(state, room_index, offset++);
+    row          = get_roomdef(state, room_index, offset++);
 
-    expand_object(state, object_index, &state->tile_buf[column * state->columns + row]);  // row/column look mixed up
+    expand_object(state, object_index, &state->tile_buf[row * state->columns + column]);
   }
 }
 
