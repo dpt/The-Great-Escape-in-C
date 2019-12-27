@@ -18,150 +18,78 @@
     <ClInclude Include="..\..\..\include\TheGreatEscape\TheGreatEscape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Doors.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\ExteriorTiles.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Font.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Input.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorObjectDefs.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorObjects.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorTiles.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\ItemBitmaps.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Items.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Map.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Masks.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Menu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Messages.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Music.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\RoomDefs.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Rooms.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\SpriteBitmaps.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Sprites.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\State.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\StaticGraphics.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\StaticTiles.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\SuperTiles.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Text.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\TGEObject.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Tiles.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Types.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Create.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Create.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\ExteriorTiles.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Font.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Events.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Input.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Input.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\InteriorObjectDefs.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\InteriorTiles.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Menu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\ItemBitmaps.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Messages.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Map.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Masks.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Text.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Menu.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Zoombox.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Messages.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\ExteriorTiles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Music.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Font.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\RoomDefs.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\InteriorObjectDefs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\SpriteBitmaps.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\InteriorTiles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Sprites.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\ItemBitmaps.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\StaticGraphics.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Map.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\StaticTiles.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Masks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\SuperTiles.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Music.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Text.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\RoomDefs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\TheGreatEscape.c">
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\SpriteBitmaps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Sprites.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\StaticGraphics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\StaticTiles.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\SuperTiles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

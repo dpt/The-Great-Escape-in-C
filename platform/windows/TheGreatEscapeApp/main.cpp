@@ -2,7 +2,7 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2019. <dave@davespace.co.uk>
 //
 
 #include <cassert>
@@ -41,7 +41,6 @@ typedef struct gamewin
   HWND            window;
   BITMAPINFO      bitmapinfo;
 
-  tgeconfig_t     config;
   zxspectrum_t   *zx;
   tgestate_t     *tge;
 
@@ -197,6 +196,8 @@ static int CreateGame(gamewin_t *gamewin)
   DWORD             threadId;
   BITMAPINFOHEADER *bmih;
 
+  zxconfig.width  = DEFAULTWIDTH / 8;
+  zxconfig.height = DEFAULTHEIGHT / 8;
   zxconfig.opaque = gamewin;
   zxconfig.draw   = draw_handler;
   zxconfig.stamp  = stamp_handler;
@@ -209,10 +210,7 @@ static int CreateGame(gamewin_t *gamewin)
   if (zx == NULL)
     goto failure;
 
-  gamewin->config.width  = DEFAULTWIDTH  / 8;
-  gamewin->config.height = DEFAULTHEIGHT / 8;
-
-  tge = tge_create(zx, &gamewin->config);
+  tge = tge_create(zx);
   if (tge == NULL)
     goto failure;
 
@@ -321,8 +319,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         int           drawWidth, drawHeight;
         int           xOffset, yOffset;
 
-        gameWidth  = gamewin->config.width  * 8;
-        gameHeight = gamewin->config.height * 8;
+        gameWidth  = gamewin->zx->screen.width  * 8;
+        gameHeight = gamewin->zx->screen.height * 8;
 
         pixels = zxspectrum_claim_screen(gamewin->zx);
 
