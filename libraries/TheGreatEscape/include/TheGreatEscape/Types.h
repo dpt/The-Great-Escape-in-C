@@ -643,7 +643,7 @@ typedef struct vischar
   room_t          room;
 
   /** ($801D) unused */
-  uint8_t         unused; // FUTURE: Remove
+  uint8_t         unused;
 
   /** ($801E,$801F) copy of sprite width, height from spritedef_t */
   uint8_t         width_bytes, height;

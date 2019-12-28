@@ -285,7 +285,7 @@ static void event_new_red_cross_parcel(tgestate_t *state)
 
     itemstruct = &state->item_structs[*item];
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == itemstruct_ROOM_NONE)
-      goto found; /* FUTURE: Remove goto. */
+      goto found;
 
     item++;
   }
@@ -434,7 +434,7 @@ static void wake_up(tgestate_t *state)
               interiorobject_EMPTY_BED_FACING_SE);
   if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
   {
-    /* FUTURE: Could replace with call to setup_room_and_plot. */
+    /* Note: These two lines could be replaced by a setup_room_and_plot call. */
     setup_room(state);
     plot_interior_tiles(state);
   }
@@ -496,7 +496,7 @@ static void end_of_breakfast(tgestate_t *state)
   if (state->room_index >= room_1_HUT1RIGHT &&
       state->room_index <= room_28_HUT1LEFT)
   {
-    // FUTURE: Replace this with a call to setup_room_and_plot.
+    /* Note: These two lines could be replaced by a setup_room_and_plot call. */
     setup_room(state);
     plot_interior_tiles(state);
   }
