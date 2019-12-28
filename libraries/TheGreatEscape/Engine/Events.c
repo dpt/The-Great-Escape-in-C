@@ -47,8 +47,10 @@ static void end_of_breakfast(tgestate_t *state);
 
 static void go_to_time_for_bed(tgestate_t *state);
 
-static void set_prisoners_and_guards_route(tgestate_t *state, route_t *route);
-static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *route);
+static void set_prisoners_and_guards_route(tgestate_t *state,
+                                     const route_t    *route);
+static void set_prisoners_and_guards_route_B(tgestate_t *state,
+                                       const route_t    *route);
 static void set_character_route(tgestate_t *state,
                                 character_t character,
                                 route_t     route);
@@ -411,7 +413,7 @@ static void wake_up(tgestate_t *state)
   }
   while (--iters);
 
-  route_t t5 = { routeindex_5_EXIT_HUT2, 0 }; /* was A',C */
+  static const route_t t5 = { routeindex_5_EXIT_HUT2, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5);
 
   /* Update all the bed objects to be empty. */
@@ -480,7 +482,7 @@ static void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
-  route_t t2 = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was A',C */
+  static const route_t t2 = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t2);
 
   /* Update all the benches to be empty. */
@@ -554,9 +556,7 @@ static void go_to_time_for_bed(tgestate_t *state)
 
   static const route_t t5 = { routeindex_5_EXIT_HUT2 | ROUTEINDEX_REVERSE_FLAG, 2 }; /* was BC */
   set_hero_route(state, &t5);
-
-  route_t t5_also = { routeindex_5_EXIT_HUT2 | ROUTEINDEX_REVERSE_FLAG, 2 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t5_also);
+  set_prisoners_and_guards_route_B(state, &t5);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -571,7 +571,8 @@ static void go_to_time_for_bed(tgestate_t *state)
  * \param[in]     state  Pointer to game state.
  * \param[in,out] proute Pointer to route. (was C,A')
  */
-static void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
+static void set_prisoners_and_guards_route(tgestate_t *state,
+                                     const route_t    *proute)
 {
   route_t            route;  /* new var */
   const character_t *pchars; /* was HL */
@@ -580,7 +581,7 @@ static void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
   assert(state != NULL);
   ASSERT_ROUTE_VALID(*proute);
 
-  route = *proute; /* Conv: Keep a local copy of counter. */
+  route = *proute; /* Conv: Keep a local copy of route. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
@@ -591,8 +592,6 @@ static void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
     pchars++;
   }
   while (--iters);
-
-  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -607,7 +606,8 @@ static void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
  * \param[in]     state  Pointer to game state.
  * \param[in,out] proute Pointer to route. (was C,A')
  */
-static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
+static void set_prisoners_and_guards_route_B(tgestate_t *state,
+                                       const route_t    *proute)
 {
   route_t            route; /* new var */
   const character_t *pchars; /* was HL */
@@ -616,7 +616,7 @@ static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
   assert(state != NULL);
   ASSERT_ROUTE_VALID(*proute);
 
-  route = *proute; /* Conv: Keep a local copy of counter. */
+  route = *proute; /* Conv: Keep a local copy of route. */
 
   pchars = &prisoners_and_guards[0];
   iters = NELEMS(prisoners_and_guards);
@@ -633,8 +633,6 @@ static void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
     pchars++;
   }
   while (--iters);
-
-  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1106,9 +1104,7 @@ static void set_route_go_to_yard(tgestate_t *state)
 
   static const route_t t14 = { routeindex_14_GO_TO_YARD, 0 };
   set_hero_route(state, &t14);
-
-  route_t t14_also = { routeindex_14_GO_TO_YARD, 0 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t14_also);
+  set_prisoners_and_guards_route_B(state, &t14);
 }
 
 /**
@@ -1122,9 +1118,7 @@ static void set_route_go_to_yard_reversed(tgestate_t *state)
 
   static const route_t t14 = { routeindex_14_GO_TO_YARD | ROUTEINDEX_REVERSE_FLAG, 4 };
   set_hero_route(state, &t14);
-
-  route_t t14_also = { routeindex_14_GO_TO_YARD | ROUTEINDEX_REVERSE_FLAG, 4 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t14_also);
+  set_prisoners_and_guards_route_B(state, &t14);
 }
 
 /**
@@ -1138,9 +1132,7 @@ static void set_route_go_to_breakfast(tgestate_t *state)
 
   static const route_t t16 = { routeindex_16_BREAKFAST_25, 0 };
   set_hero_route(state, &t16);
-
-  route_t t16_also = { routeindex_16_BREAKFAST_25, 0 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t16_also);
+  set_prisoners_and_guards_route_B(state, &t16);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1241,7 +1233,7 @@ static void go_to_roll_call(tgestate_t *state)
 {
   assert(state != NULL);
 
-  route_t t26 = { routeindex_26_GUARD_12_ROLL_CALL, 0 }; /* was C,A' */
+  static const route_t t26 = { routeindex_26_GUARD_12_ROLL_CALL, 0 }; /* was C,A' */
   set_prisoners_and_guards_route(state, &t26);
 
   static const route_t t45 = { routeindex_45_HERO_ROLL_CALL, 0 };
