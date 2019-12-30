@@ -5737,7 +5737,6 @@ int get_next_drawable(tgestate_t    *state,
   uint16_t      prev_u;           /* was BC */
   uint16_t      prev_v;           /* was DE */
   item_t        item_and_flag;    /* was A' */
-  uint16_t      height;           /* was DE' */
   uint8_t       iters;            /* was B' */
   vischar_t    *vischar;          /* was HL' */
   vischar_t    *found_vischar;    /* was IY */
@@ -5758,7 +5757,9 @@ int get_next_drawable(tgestate_t    *state,
   prev_u        = 0; /* previous x */
   prev_v        = 0; /* previous y */
   item_and_flag = item_NONE; /* item_NONE used as a 'nothing found' marker */
-  height        = 0; /* unused */
+
+  /* Conv: The original code maintains a previous height variable (in DE'), but
+   * it's ultimately never used, so has been removed here. */
 
   /* Find the rearmost vischar that is flagged for drawing. */
 
@@ -5772,7 +5773,6 @@ int get_next_drawable(tgestate_t    *state,
         (vischar->mi.mappos.v >= prev_v - 4))
     {
       item_and_flag = vischars_LENGTH - iters; /* Vischar index (never usefully used). */
-      height = vischar->mi.mappos.w;
 
       /* Note: The (v,u) order here matches the original code */
       prev_v = vischar->mi.mappos.v;
