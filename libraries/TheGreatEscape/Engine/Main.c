@@ -2048,10 +2048,9 @@ flag_select:
 
   /* Red flag code path. */
 set_flag_red:
-  attr = attribute_BRIGHT_RED_OVER_BLACK;
   /* Conv: Original game tests the attributes directly here, instead we test
    * the red_flag. */
-  // was: if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attr)
+  // was: if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attribute_BRIGHT_RED_OVER_BLACK)
   if (state->red_flag == 255)
     return; /* flag is already red */
 
