@@ -18,6 +18,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "TheGreatEscape/TheGreatEscape.h"
+
 /* ----------------------------------------------------------------------- */
 
 /** Used to specify variable-length arrays. */
@@ -106,6 +108,30 @@ do {                \
   a = b;            \
   b = tmp;          \
 } while (0)
+
+/* ----------------------------------------------------------------------- */
+
+/**
+ * Performs an on-the-spot delay of the specified duration.
+ *
+ * Use this in the menu code when you don't care about accuracy
+ * (e.g. when waiting inbetween key presses).
+ *
+ * If the sleep() callback returns 'terminate game thread', this returns that
+ * value.
+ */
+int menudelay(tgestate_t *state, int duration);
+
+/**
+ * Performs an on-the-spot delay of the specified duration.
+ *
+ * Use this in the body of the game code when you don't care about accuracy
+ * (e.g. when waiting inbetween key presses).
+ *
+ * If the sleep() callback returns 'terminate game thread', this handles it by
+ * exiting from tge_main().
+ */
+void gamedelay(tgestate_t *state, int duration);
 
 /* ----------------------------------------------------------------------- */
 

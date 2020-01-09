@@ -36,7 +36,7 @@
 //static
 //void wipe_game_window(tgestate_t *state);
 
-static void choose_keys(tgestate_t *state);
+static int choose_keys(tgestate_t *state);
 
 static uint8_t menu_keyscan(tgestate_t *state);
 
@@ -52,7 +52,10 @@ static uint8_t menu_keyscan(tgestate_t *state);
  *
  * \param[in] state Pointer to game state.
  *
- * \return 0 => no keypress, 1 => keypress handled, -1 => start the game
+ * \return 0 => no key pressed,
+ *         1 => keypress handled,
+ *         2 => start the game,
+ *        -1 => terminate the game thread
  */
 static int check_menu_keys(tgestate_t *state)
 {
@@ -85,7 +88,7 @@ static int check_menu_keys(tgestate_t *state)
                              attribute_BRIGHT_YELLOW_OVER_BLACK);
 
 #ifdef IMMEDIATE_START
-    return -1;
+    return 2; /* Start the game */
 #else
     return 1;
 #endif
@@ -98,9 +101,16 @@ static int check_menu_keys(tgestate_t *state)
      * routine to $F075. */
 
     if (state->chosen_input_device == inputdevice_KEYBOARD)
-      choose_keys(state); /* Keyboard was selected. */
+      /* Keyboard was selected. */
+      switch (choose_keys(state)) /* could also return terminate thread */
+      {
+        case 1:
+          return 2; /* Start the game */
+        case -1:
+          return -1; // term game thrd
+      }
 
-    return -1; /* Start the game */
+    return 2; /* Start the game */
   }
 }
 
@@ -144,8 +154,11 @@ static void wipe_game_window(tgestate_t *state)
  * $F350: Choose keys.
  *
  * \param[in] state Pointer to game state.
+ *
+ * \return 1 => Start the game,
+ *        -1 => Terminate the game thread
  */
-static void choose_keys(tgestate_t *state)
+static int choose_keys(tgestate_t *state)
 {
   /** $F2AD: Key choice prompt strings. */
   static const screenlocstring_t choose_key_prompts[6] =
@@ -215,7 +228,7 @@ static void choose_keys(tgestate_t *state)
   uint8_t *const screen = &state->speccy->screen.pixels[0]; /* Conv: Added */
 
   /* Loop while the user does not confirm. */
-  for (;;) // FIXME: Loop which doesn't check the quit flag.
+  for (;;)
   {
     uint8_t                  prompt_iters; /* was B */
     const screenlocstring_t *prompt;       /* was HL */
@@ -281,6 +294,11 @@ static void choose_keys(tgestate_t *state)
 for_loop:
           for (;;)
           {
+            /* Conv: Timing: The original game keyscans as fast as it can. We
+             * can't have that so instead we introduce a short delay. */
+            if (menudelay(state, 3500000 / 50)) /* 50/sec */
+                return -1; /* Terminate the game thread */
+
             SWAP(uint8_t, A, Adash);
             hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
             index = 0xFF;
@@ -328,10 +346,6 @@ key_loop:
             }
             while (A != port || keydef->mask != mask);
 
-            /* Conv: Timing: The original game keyscans as fast as it can. We
-             * can't have that so instead we introduce a short delay. */
-            state->speccy->stamp(state->speccy);
-            state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
           } // for_loop
         }
 
@@ -388,12 +402,12 @@ assign_keydef:
     }
 
     /* Conv: Timing: This was a delay loop counting to 0xFFFF. */
-    state->speccy->stamp(state->speccy);
-    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
+    if (menudelay(state, 3500000 / 10)) /* 10/sec */
+        return -1; /* Terminate the game thread */
 
     /* Wait for user's input */
     if (user_confirm(state) == 0) /* Confirmed - return */
-      return; /* Start the game */
+      return 1; /* Start the game */
   }
 }
 
@@ -486,7 +500,9 @@ static uint8_t menu_keyscan(tgestate_t *state)
  *
  * \param[in] state Pointer to game state.
  *
- * \return Non-zero when the game should begin, zero otherwise.
+ * \return +ve when the game should begin,
+ *         -ve when the thread should terminate,
+ *         zero otherwise.
  */
 int menu_screen(tgestate_t *state)
 {
@@ -513,12 +529,10 @@ int menu_screen(tgestate_t *state)
 
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
-  if (check_menu_keys(state) < 0)
-  {
-    /* Cancel the above stamp. */
-    state->speccy->sleep(state->speccy, 0);
-    return 1; /* Start the game */
-  }
+  int rc;
+  rc = check_menu_keys(state);
+  if (rc < 0 || rc >= 2)
+    return rc; /* Start the game, or terminate the thread */
 
   wave_morale_flag(state);
 
@@ -603,9 +617,11 @@ int menu_screen(tgestate_t *state)
   while (--major_delay);
 
   /* Conv: Timing: Calibrated to original game. */
-  state->speccy->sleep(state->speccy, 300365);
+  int quit = state->speccy->sleep(state->speccy, 300365);
+  if (quit)
+    return -1; /* Terminate the thread */
 
-  return 0;
+  return 0; /* Don't start the game */
 }
 
 /* ----------------------------------------------------------------------- */

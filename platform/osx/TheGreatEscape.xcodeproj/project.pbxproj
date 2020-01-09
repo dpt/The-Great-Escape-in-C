@@ -52,6 +52,7 @@
 		558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A71A0EE15B00A4F50F /* SuperTiles.c */; };
 		558FC6B81A0EE15B00A4F50F /* Main.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* Main.c */; };
 		559B69731F1C30B2006FC753 /* Kempston.c in Sources */ = {isa = PBXBuildFile; fileRef = 559B69721F1C30B2006FC753 /* Kempston.c */; };
+		55A22D4523C40C6B006FC753 /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 55A22D4423C40C6B006FC753 /* Utils.c */; };
 		55A827851F8D63F6006FC753 /* ZXGameWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 55A827841F8D63F6006FC753 /* ZXGameWindow.m */; };
 		55AF25C51D363695002F5E0B /* Keyboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C21D363695002F5E0B /* Keyboard.c */; };
 		55AF25C61D363695002F5E0B /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C31D363695002F5E0B /* Screen.c */; };
@@ -140,6 +141,7 @@
 		558FC6A81A0EE15B00A4F50F /* Main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = Main.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		559B69711F1C2FE6006FC753 /* Kempston.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Kempston.h; sourceTree = "<group>"; };
 		559B69721F1C30B2006FC753 /* Kempston.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Kempston.c; path = ../../libraries/ZXSpectrum/Kempston.c; sourceTree = "<group>"; };
+		55A22D4423C40C6B006FC753 /* Utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
 		55A827831F8D63F6006FC753 /* ZXGameWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameWindow.h; sourceTree = "<group>"; };
 		55A827841F8D63F6006FC753 /* ZXGameWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindow.m; sourceTree = "<group>"; };
 		55AB651E207D764600A45AC9 /* Macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = ../../libraries/ZXSpectrum/include/ZXSpectrum/Macros.h; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 				5541CD4623971BF0006FC753 /* Screen.c */,
 				556D1A211B1379CF0036AED0 /* Text.c */,
 				5541CD4B239F1123006FC753 /* Zoombox.c */,
+				55A22D4423C40C6B006FC753 /* Utils.c */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -506,6 +509,7 @@
 				558FC6B01A0EE15B00A4F50F /* Map.c in Sources */,
 				558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */,
 				55DE102523A04F86006FC753 /* Events.c in Sources */,
+				55A22D4523C40C6B006FC753 /* Utils.c in Sources */,
 				55AF25C61D363695002F5E0B /* Screen.c in Sources */,
 				558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */,
 				55AF25C71D363695002F5E0B /* Spectrum.c in Sources */,

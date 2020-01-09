@@ -541,26 +541,34 @@ static void *tge_thread(void *arg)
 
   tge_setup(game);
 
-  // While in menu state
+  // Run the menu
+  //
+
   for (;;)
   {
-    @synchronized(view)
+    int proceed;
+
+    proceed = tge_menu(game);
+    if (proceed < 0) // game quit was signalled during menu
     {
-      quit = view->quit;
-    }
-
-    if (quit)
+      quit = TRUE;
       break;
-
-    if (tge_menu(game) > 0)
-      break; // game begins
+    }
+    else if (proceed > 0) // begin the game
+    {
+      quit = FALSE;
+      break;
+    }
+    // otherwise loop
   }
+
+  // Run the game
+  //
 
   if (!quit)
   {
     tge_setup2(game);
 
-    // While in game state
     for (;;)
     {
       @synchronized(view)
@@ -605,7 +613,7 @@ static void stamp_handler(void *opaque)
   gettimeofday(&view->stamps[view->nstamps++], NULL);
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
   BOOL paused;
@@ -615,8 +623,12 @@ static void sleep_handler(int durationTStates, void *opaque)
     // Unstack timestamps (even if we're paused)
     assert(view->nstamps > 0);
     if (view->nstamps <= 0)
-      return;
+      return view->quit;
     --view->nstamps;
+
+    // Quit straight away if signalled
+    if (view->quit)
+      return TRUE;
 
     paused = view->paused;
   }
@@ -677,6 +689,8 @@ static void sleep_handler(int durationTStates, void *opaque)
       usleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)

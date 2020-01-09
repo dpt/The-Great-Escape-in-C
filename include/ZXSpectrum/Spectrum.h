@@ -148,14 +148,16 @@ struct zxspectrum
    * The game calls this when a timed segment ends, to sleep if required.
    *
    * \param[in] duration Sleep duration in T-states.
+   *
+   * \return Non-zero if the thread should terminate, zero otherwise.
    */
-  void (*sleep)(zxspectrum_t *state, int duration);
+  int (*sleep)(zxspectrum_t *state, int duration);
 
   zxscreen_t screen;
 };
 
 /**
- * A configuration and handler specifier for app code.
+ * A configuration and handler specifier for app (host environment) code.
  */
 typedef struct zxconfig
 {
@@ -171,8 +173,8 @@ typedef struct zxconfig
   /** App callback called at the start of a timed segment. */
   void (*stamp)(void *opaque);
 
-  void (*sleep)(int duration, void *opaque);
   /** App callback called when a timed segment ends, to sleep if required. */
+  int (*sleep)(int duration, void *opaque);
 
   /** App callback called to test a key. */
   int (*key)(uint16_t port, void *opaque);
