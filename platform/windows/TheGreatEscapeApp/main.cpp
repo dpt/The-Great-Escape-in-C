@@ -87,15 +87,19 @@ static void stamp_handler(void *opaque)
   gamewin->stamps[gamewin->nstamps++] = GetTickCount64();
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
 
   // Unstack timestamps (even if we're paused)
   assert(gamewin->nstamps > 0);
   if (gamewin->nstamps <= 0)
-    return;
+    return gamewin->quit;
   --gamewin->nstamps;
+
+  // Quit straight away if signalled
+  if (gamewin->quit)
+    return TRUE;
 
   if (gamewin->paused)
   {
@@ -140,6 +144,8 @@ static void sleep_handler(int durationTStates, void *opaque)
       Sleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)
