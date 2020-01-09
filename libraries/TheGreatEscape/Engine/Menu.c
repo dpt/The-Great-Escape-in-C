@@ -431,7 +431,7 @@ void set_menu_item_attributes(tgestate_t *state,
   assert(attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
   assert(state->speccy != NULL);
 
-  pattr = &state->speccy->screen.attributes[(0x590D - SCREEN_ATTRIBUTES_START_ADDRESS)];
+  pattr = &state->speccy->screen.attributes[0x590D - SCREEN_ATTRIBUTES_START_ADDRESS];
 
   /* Skip to the item's row */
   pattr += index * 2 * state->width; /* two rows */

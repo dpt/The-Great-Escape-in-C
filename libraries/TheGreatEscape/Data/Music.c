@@ -342,7 +342,7 @@ static const uint16_t semitone_to_frequency[] =
  *                      but the table is larger). (was A)
  * \param[out] beep     Beeper bit (always reset to zero). (was L)
  *
- * \returns Frequency. (was DE)
+ * \return Frequency. (was DE)
  */
 uint16_t frequency_for_semitone(uint8_t semitone, uint8_t *beep)
 {
