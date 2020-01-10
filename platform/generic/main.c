@@ -1,8 +1,11 @@
 /* main.c
  *
- * Minimal front-end for The Great Escape.
+ * Headless front-end for The Great Escape.
  *
- * (c) David Thomas, 2017-2019.
+ * This does nothing more than run the game a fast as possible for a specified
+ * number of iterations with no display or sound output.
+ *
+ * (c) David Thomas, 2017-2020.
  */
 
 #include <stdio.h>
@@ -38,9 +41,10 @@ static void stamp_handler(void *opaque)
 {
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   // return immediately: run the game as fast as possible
+  return 0;
 }
 
 static int key_handler(uint16_t port, void *opaque)
