@@ -52,10 +52,10 @@ static uint8_t menu_keyscan(tgestate_t *state);
  *
  * \param[in] state Pointer to game state.
  *
- * \return 0 => no key pressed,
- *         1 => keypress handled,
- *         2 => start the game,
- *        -1 => terminate the game thread
+ * \return 0 => No key pressed,
+ *         1 => Keypress handled,
+ *         2 => Start the game,
+ *        -1 => Terminate the game thread.
  */
 static int check_menu_keys(tgestate_t *state)
 {
@@ -102,13 +102,8 @@ static int check_menu_keys(tgestate_t *state)
 
     if (state->chosen_input_device == inputdevice_KEYBOARD)
       /* Keyboard was selected. */
-      switch (choose_keys(state)) /* could also return terminate thread */
-      {
-        case 1:
-          return 2; /* Start the game */
-        case -1:
-          return -1; // term game thrd
-      }
+      if (choose_keys(state) < 0)
+          return -1; /* Terminate the game thread */
 
     return 2; /* Start the game */
   }
@@ -506,6 +501,7 @@ static uint8_t menu_keyscan(tgestate_t *state)
  */
 int menu_screen(tgestate_t *state)
 {
+  int      menukeystate;
   uint16_t counter_0;       /* was BC */
   uint16_t counter_1;       /* was BC' */
   uint16_t frequency_0;     /* was DE */
@@ -529,10 +525,9 @@ int menu_screen(tgestate_t *state)
 
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
-  int rc;
-  rc = check_menu_keys(state);
-  if (rc < 0 || rc >= 2)
-    return rc; /* Start the game, or terminate the thread */
+  menukeystate = check_menu_keys(state);
+  if (menukeystate < 0 || menukeystate >= 2)
+    return menukeystate; /* Start the game, or terminate the game thread */
 
   wave_morale_flag(state);
 
@@ -617,9 +612,8 @@ int menu_screen(tgestate_t *state)
   while (--major_delay);
 
   /* Conv: Timing: Calibrated to original game. */
-  int quit = state->speccy->sleep(state->speccy, 300365);
-  if (quit)
-    return -1; /* Terminate the thread */
+  if (state->speccy->sleep(state->speccy, 300365))
+    return -1; /* Terminate the game thread */
 
   return 0; /* Don't start the game */
 }
