@@ -267,11 +267,11 @@ static void zx_stamp(zxspectrum_t *state)
   prv->config.stamp(prv->config.opaque);
 }
 
-static void zx_sleep(zxspectrum_t *state, int duration)
+static int zx_sleep(zxspectrum_t *state, int duration)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  prv->config.sleep(duration, prv->config.opaque);
+  return prv->config.sleep(duration, prv->config.opaque);
 }
 
 /* ----------------------------------------------------------------------- */

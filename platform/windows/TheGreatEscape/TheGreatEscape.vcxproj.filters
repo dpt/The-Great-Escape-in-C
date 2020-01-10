@@ -92,5 +92,8 @@
     <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\SuperTiles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

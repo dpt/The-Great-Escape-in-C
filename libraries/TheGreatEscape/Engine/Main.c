@@ -217,9 +217,13 @@ void enter_room(tgestate_t *state)
 /**
  * $691A: Squash stack, then goto main.
  *
+ * In the original code this squashed the stack then jumped to the start of
+ * main_loop(). In this version it uses longjmp() to exit from tge_main() to
+ * permit cooperation with the host environment.
+ *
  * \param[in] state Pointer to game state.
  *
- * \remarks Exits using longjmp.
+ * \remarks Exits using longjmp().
  */
 void squash_stack_goto_main(tgestate_t *state)
 {
@@ -1596,7 +1600,7 @@ void main_loop(tgestate_t *state)
    * The original game is not dependent on accurate timing: it is much slower
    * in outdoor scenes and especially when multiple characters are on the
    * screen simultaneously. */
-  state->speccy->sleep(state->speccy, 367731);
+  (void) state->speccy->sleep(state->speccy, 367731);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2679,11 +2683,11 @@ void escaped(tgestate_t *state)
   message = &messages[10]; /* PRESS ANY KEY */
   (void) screenlocstring_plot(state, message);
 
-  // FIXME: Loops which won't check the quit flag.
-  /* Wait for a keypress. */
+  /* Debounce: First wait for any already-held key to be released. */
   do
     keys = keyscan_all(state);
   while (keys != 0); /* Down press */
+  /* Then wait for any key to be pressed. */
   do
     keys = keyscan_all(state);
   while (keys == 0); /* Up press */
@@ -2721,7 +2725,7 @@ uint8_t keyscan_all(tgestate_t *state)
     /* Invert bits and mask off key bits. */
     keys = ~keys & 0x1F;
     if (keys)
-      return keys; /* Key(s) pressed */
+      goto exit; /* Key(s) pressed */
 
     /* Rotate the top byte of the port number to get the next port. */
     // Conv: Was RLC B
@@ -2730,7 +2734,16 @@ uint8_t keyscan_all(tgestate_t *state)
   }
   while (carry);
 
-  return 0; /* No keys pressed */
+  keys = 0; /* No keys pressed */
+
+exit:
+
+  /* Conv: Timing: The original game keyscans as fast as it can. We can't
+   * have that so instead we introduce a short delay and handle game thread
+   * termination. */
+  gamedelay(state, 3500000 / 50); /* 50/sec */
+
+  return keys;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -11080,10 +11093,8 @@ int user_confirm(tgestate_t *state)
   screenlocstring_plot(state, &screenlocstring_confirm_y_or_n);
 
   /* Keyscan. */
-  for (;;) // FIXME: Loop which doesn't check the quit flag.
+  for (;;)
   {
-    state->speccy->stamp(state->speccy);
-
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_POIUY);
     if ((keymask & (1 << 4)) == 0)
     {
@@ -11100,13 +11111,12 @@ int user_confirm(tgestate_t *state)
     }
 
     /* Conv: Timing: The original game keyscans as fast as it can. We can't
-     * have that so instead we introduce a short delay. */
-    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
+     * have that so instead we introduce a short delay and handle game thread
+     * termination. */
+    gamedelay(state, 3500000 / 50); /* 50/sec */
   }
 
 exit:
-   /* Undo the stamp at the start of the loop. */
-  state->speccy->sleep(state->speccy, 0);
   return flags;
 }
 
@@ -11132,13 +11142,17 @@ TGE_API void tge_setup(tgestate_t *state)
 }
 
 /**
- * $F17A: Run the main menu until the game is ready to run.
+ * $F17A: Run the main menu until the game is ready to start.
  *
  * \param[in] state Pointer to game state.
+ *
+ * \return +ve when the game should begin,
+ *         -ve when the game thread should terminate,
+ *         zero otherwise.
  */
 TGE_API int tge_menu(tgestate_t *state)
 {
-  // Note: that game will sit in this function while the menu screen runs.
+  /* Note: The game will sit in this function while the menu screen runs. */
   return menu_screen(state);
 }
 
@@ -11252,14 +11266,22 @@ TGE_API void tge_setup2(tgestate_t *state)
   // we arrive here once the game is initialised and the initial bedroom scene is drawn and zoomboxed onto the screen
 }
 
-// missing prologue here - is this new code?
+/**
+ * Entry point for the main game loop (in addition to original game code).
+ *
+ * This sets up a jump buffer so that various point in the game code can long
+ * jump to the exit.
+ *
+ * \param[in] state Pointer to game state.
+ */
 TGE_API void tge_main(tgestate_t *state)
 {
-  // Conv: Need to get main loop to setjmp so we call it from here.
   if (setjmp(state->jmpbuf_main) == 0)
-  {
+    /* On entry we run the main loop. */
     main_loop(state);
-  }
+  else
+    /* If something wanted to exit quickly we arrive here. */
+    ;
 }
 
 /* ----------------------------------------------------------------------- */

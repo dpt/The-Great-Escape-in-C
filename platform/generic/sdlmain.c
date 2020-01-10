@@ -74,7 +74,7 @@ static void stamp_handler(void *opaque)
   // TODO: Save timestamps.
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   state_t *state = opaque;
 
@@ -88,6 +88,8 @@ static void sleep_handler(int durationTStates, void *opaque)
   // them in the main_loop. Though that would still create lumpy effects due
   // to the way the game does not currently yield to its caller during
   // periods when it wants to sleep.
+
+  return 0;
 }
 
 static int key_handler(uint16_t port, void *opaque)

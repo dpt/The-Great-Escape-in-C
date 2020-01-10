@@ -44,3 +44,5 @@ build.ninja
 *.sync-conflict*
 *.orig
 
+libraries/*/o/*
+libraries/*/odf/*

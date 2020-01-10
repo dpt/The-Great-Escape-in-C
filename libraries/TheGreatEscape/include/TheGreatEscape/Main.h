@@ -39,7 +39,7 @@
 
 void transition(tgestate_t *state, const mappos8_t *mappos);
 void enter_room(tgestate_t *state);
-INLINE void squash_stack_goto_main(tgestate_t *state);
+void squash_stack_goto_main(tgestate_t *state);
 
 void set_hero_sprite_for_room(tgestate_t *state);
 
