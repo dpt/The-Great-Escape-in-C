@@ -15,12 +15,15 @@ add_library(LibTheGreatEscape
   Data/SuperTiles.c
   Engine/Create.c
   Engine/Debug.c
+  Engine/Events.c
   Engine/Input.c
   Engine/Main.c
   Engine/Menu.c
   Engine/Messages.c
   Engine/Screen.c
   Engine/Text.c
+  Engine/Utils.c
+  Engine/Zoombox.c
 )
 
 target_include_directories(LibTheGreatEscape
