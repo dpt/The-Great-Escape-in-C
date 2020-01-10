@@ -501,7 +501,7 @@ static uint8_t menu_keyscan(tgestate_t *state)
  */
 int menu_screen(tgestate_t *state)
 {
-  int      menukeystate;
+  int      menu_keys_state;
   uint16_t counter_0;       /* was BC */
   uint16_t counter_1;       /* was BC' */
   uint16_t frequency_0;     /* was DE */
@@ -525,9 +525,9 @@ int menu_screen(tgestate_t *state)
 
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
-  menukeystate = check_menu_keys(state);
-  if (menukeystate < 0 || menukeystate >= 2)
-    return menukeystate; /* Start the game, or terminate the game thread */
+  menu_keys_state = check_menu_keys(state);
+  if (menu_keys_state < 0 || menu_keys_state >= 2)
+    return menu_keys_state; /* Start the game, or terminate the game thread */
 
   wave_morale_flag(state);
 

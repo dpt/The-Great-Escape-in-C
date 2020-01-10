@@ -542,29 +542,26 @@ static void *tge_thread(void *arg)
   tge_setup(game);
 
   // Run the menu
-  //
-
   for (;;)
   {
     int proceed;
 
     proceed = tge_menu(game);
-    if (proceed < 0) // game quit was signalled during menu
+    if (proceed > 0)
     {
-      quit = TRUE;
-      break;
-    }
-    else if (proceed > 0) // begin the game
-    {
+      // Begin the game
       quit = FALSE;
       break;
     }
-    // otherwise loop
+    else if (proceed < 0)
+    {
+      // Game thread termination was signalled
+      quit = TRUE;
+      break;
+    }
   }
 
   // Run the game
-  //
-
   if (!quit)
   {
     tge_setup2(game);
@@ -580,7 +577,7 @@ static void *tge_thread(void *arg)
         break;
 
       tge_main(game);
-      view->nstamps = 0; // reset all timing info
+      view->nstamps = 0; // Reset all timing info
     }
   }
 
