@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #include <assert.h>
@@ -25,6 +25,8 @@
 #include "TheGreatEscape/Messages.h"
 #include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/TheGreatEscape.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * Initialise the game state.
@@ -345,25 +347,6 @@ static void tge_initialise(tgestate_t *state)
 
   /* Initialise in structure order. */
 
-  // FUTURE: Table drive this initialisation copying:
-  //
-  //  static const struct
-  //  {
-  //    ptrdiff_t   offset;
-  //    const void *src;
-  //    size_t      len;
-  //  }
-  //  inittab[] =
-  //  {
-  //    /* $69AE */ { offsetof(tgestate_t, movable_items), &movable_items, sizeof(movable_items) },
-  //    /* $7612 */ { offsetof(tgestate_t, character_structs), &character_structs, sizeof(character_structs) },
-  //    /* $76C8 */ { offsetof(tgestate_t, item_structs), &item_structs, sizeof(item_structs) },
-  //    /* $AD29 */ { offsetof(tgestate_t, searchlight.states), searchlight_states, sizeof(searchlight_states) },
-  //    /* $DD69 */ { offsetof(tgestate_t, item_attributes), item_attributes, sizeof(item_attributes) },
-  //    /* $EDD3 */ { offsetof(tgestate_t, game_window_start_offsets), game_window_start_offsets, sizeof(game_window_start_offsets) },
-  //    /* $F05D */ { offsetof(tgestate_t, locked_doors), locked_doors, sizeof(locked_doors) },
-  //  };
-
   /* $69AE */
   memcpy(state->movable_items, movable_items, sizeof(movable_items));
 
@@ -380,7 +363,7 @@ static void tge_initialise(tgestate_t *state)
   state->messages.queue[0] = message_QUEUE_END;
   state->messages.queue[1] = message_QUEUE_END;
   state->messages.queue[message_queue_LENGTH - 1] = message_QUEUE_END;
-  state->messages.display_index = 1 << 7; // message_NEXT
+  state->messages.display_index = MESSAGE_NEXT_FLAG;
   state->messages.queue_pointer = &state->messages.queue[2];
 
   /* $A130 */
@@ -410,7 +393,6 @@ static void tge_initialise(tgestate_t *state)
          sizeof(item_attributes));
 
   /* $EDD3 */
-  // FUTURE: Recalculate these for the selected screen layout.
   memcpy(state->game_window_start_offsets,
          game_window_start_offsets,
          sizeof(game_window_start_offsets));
@@ -438,8 +420,7 @@ static void tge_initialise(tgestate_t *state)
  * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
-TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
-                               const tgeconfig_t *config)
+TGE_API tgestate_t *tge_create(zxspectrum_t *speccy)
 {
   tgestate_t       *state                     = NULL;
   size_t            game_window_start_offsets_size;
@@ -452,11 +433,6 @@ TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
   uint8_t          *window_buf                = NULL;
   supertileindex_t *map_buf                   = NULL;
 
-  assert(config);
-
-  if (!config)
-    goto failure;
-
   /* Allocate state structure. */
 
   state = calloc(1, sizeof(*state));
@@ -465,12 +441,12 @@ TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
 
   /* Configure. */
 
-  state->width      = config->width;
-  state->height     = config->height;
-
   // Until we can resize...
-  assert(state->width  == 32);
-  assert(state->height == 24);
+  assert(speccy->screen.width  == 32);
+  assert(speccy->screen.height == 24);
+
+  state->width      = speccy->screen.width;
+  state->height     = speccy->screen.height;
 
   /* Set the dimensions of the window buffer. When painted onto the game
    * screen the window is one unit smaller in both dimensions. That is a
@@ -553,5 +529,7 @@ TGE_API void tge_destroy(tgestate_t *state)
 
   free(state);
 }
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

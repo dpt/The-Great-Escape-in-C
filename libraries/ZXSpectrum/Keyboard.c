@@ -59,8 +59,8 @@ static zxkey_t char_to_key(int c)
   {
   case ' ':
     return zxkey_SPACE;
-//  case XXX:
-//    return zxkey_SYMBOL_SHIFT;
+  case '/':
+    return zxkey_SYMBOL_SHIFT;
   case 'M':
     return zxkey_M;
   case 'N':
@@ -135,8 +135,8 @@ static zxkey_t char_to_key(int c)
   case 'G':
     return zxkey_G;
 
-//  case XXX:
-//    return zxkey_CAPS_SHIFT;
+  case '\\':
+    return zxkey_CAPS_SHIFT;
   case 'Z':
     return zxkey_Z;
   case 'X':

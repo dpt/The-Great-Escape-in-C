@@ -108,6 +108,7 @@ zxbox_t;
  */
 typedef struct zxscreen
 {
+  int         width, height;
   uint8_t     pixels[SCREEN_BITMAP_LENGTH];
   attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
 }
@@ -115,65 +116,73 @@ zxscreen_t;
 
 /**
  * The current state of the machine.
+ *
+ * FIXME: Ought to make this structure private and expose .screen via an
+ *        accessor function.
  */
 struct zxspectrum
 {
   /**
-   * IN
+   * The game calls this to simulate an IN instruction.
    */
   uint8_t (*in)(zxspectrum_t *state, uint16_t address);
 
   /**
-   * OUT
+   * The game calls this to simulate an OUT instruction.
    */
   void (*out)(zxspectrum_t *state, uint16_t address, uint8_t byte);
 
   /**
-   * Call the implementer when screen or attributes have changed.
+   * The game calls this when screen memory has changed.
    *
    * \param[in] dirty Dirty region.
    */
   void (*draw)(zxspectrum_t *state, const zxbox_t *dirty);
 
   /**
-   * Call the implementer when we need to save a timestamp.
+   * The game calls this at the start of a timed segment.
    */
   void (*stamp)(zxspectrum_t *state);
 
   /**
-   * Call the implementer when we need to sleep.
+   * The game calls this when a timed segment ends, to sleep if required.
    *
    * \param[in] duration Sleep duration in T-states.
+   *
+   * \return Non-zero if the thread should terminate, zero otherwise.
    */
-  void (*sleep)(zxspectrum_t *state, int duration);
+  int (*sleep)(zxspectrum_t *state, int duration);
 
   zxscreen_t screen;
 };
 
 /**
- * The configuration of the machine.
+ * A configuration and handler specifier for app (host environment) code.
  */
 typedef struct zxconfig
 {
-  /** An opaque pointer passed into callbacks. */
+  /** Screen dimensions. */
+  int width, height;
+
+  /** An opaque pointer passed into app callbacks. */
   void *opaque;
 
-  /** Called when there's a new frame to draw. */
+  /** App callback called when screen updates are ready. */
   void (*draw)(const zxbox_t *dirty, void *opaque);
 
-  /** Called to reset the sleep clock. */
+  /** App callback called at the start of a timed segment. */
   void (*stamp)(void *opaque);
 
-  /** Called when there's nothing to do. */
-  void (*sleep)(int duration, void *opaque);
+  /** App callback called when a timed segment ends, to sleep if required. */
+  int (*sleep)(int duration, void *opaque);
 
-  /** Called when a key is tested. */
+  /** App callback called to test a key. */
   int (*key)(uint16_t port, void *opaque);
 
-  /** Called when the border colour is changed. */
+  /** App callback called to set the border colour. */
   void (*border)(int colour, void *opaque);
 
-  /** Called when the speaker is sounded. */
+  /** App callback called to sound the speaker. */
   void (*speaker)(int on_off, void *opaque);
 }
 zxconfig_t;

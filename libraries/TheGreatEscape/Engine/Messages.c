@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #include <assert.h>
@@ -29,10 +29,6 @@
 static void wipe_message(tgestate_t *state);
 /* $7D99 */
 static void next_message(tgestate_t *state);
-
-/* ----------------------------------------------------------------------- */
-
-#define message_NEXT (1 << 7)
 
 /* ----------------------------------------------------------------------- */
 
@@ -91,11 +87,11 @@ void message_display(tgestate_t *state)
   }
 
   index = state->messages.display_index;
-  if (index == message_NEXT)
+  if (index == MESSAGE_NEXT_FLAG)
   {
     next_message(state);
   }
-  else if (index > message_NEXT)
+  else if (index > MESSAGE_NEXT_FLAG)
   {
     wipe_message(state);
   }
@@ -111,7 +107,7 @@ void message_display(tgestate_t *state)
     {
       /* Leave the message for 31 turns, then wipe it. */
       state->messages.display_delay = 31;
-      state->messages.display_index |= message_NEXT;
+      state->messages.display_index |= MESSAGE_NEXT_FLAG;
     }
     else
     {
@@ -140,8 +136,8 @@ void wipe_message(tgestate_t *state)
 
   state->messages.display_index = --index;
 
-  /* Conv: Must remove message_NEXT from index to keep screen address sane. */
-  index -= message_NEXT;
+  /* Conv: Must mask off MESSAGE_NEXT_FLAG to keep the screen address sane. */
+  index &= ~MESSAGE_NEXT_FLAG;
   assert(index < 128);
 
   scr = &state->speccy->screen.pixels[screen_text_start_address + index];

@@ -31,7 +31,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>10.7</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2018 David Thomas &lt;dave@davespace.co.uk&gt; (this version).</string>
+	<string>Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2019 David Thomas &lt;dave@davespace.co.uk&gt; (this version).</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

@@ -13,9 +13,10 @@
 #include "ZXSpectrum/Macros.h"
 
 /* Define to highlight dirty rectangles when they're drawn. */
-// #define SHOW_DIRTY_RECTS
+//#define SHOW_DIRTY_RECTS
 
-#if defined(_WIN32) || defined(TGE_SDL) // ick
+/* Ideally, hoist this test out. */
+#if defined(_WIN32) || defined(TGE_SDL)
 #define RGB
 #endif
 
@@ -44,7 +45,7 @@
 #define NORMAL(C) (C * 0xCD)
 #define BRIGHT(C) (C * 0xFF)
 
-// BRIGHT 0
+/* BRIGHT 0 */
 #define BKd NORMAL(BK_)
 #define RDd NORMAL(RD_)
 #define GRd NORMAL(GR_)
@@ -53,7 +54,7 @@
 #define MGd NORMAL(MG_)
 #define CYd NORMAL(CY_)
 #define WHd NORMAL(WH_)
-// BRIGHT 1
+/* BRIGHT 1 */
 #define BKb BRIGHT(BK_)
 #define RDb BRIGHT(RD_)
 #define GRb BRIGHT(GR_)
@@ -63,29 +64,19 @@
 #define CYb BRIGHT(CY_)
 #define WHb BRIGHT(WH_)
 
-/* Given a set of tokens: A, B, C
- *
- * Which have permutations:
- * (AA, AB, AC,
- *  BA, BB, BC,
- *  CA, CB, CC)
- *
- * They can be written out contiguously:
- * AAABACBABBBCCACBCC
- *
+/* Given a set of tokens: A, B, C, which have permutations:
+ *   (AA, AB, AC, BA, BB, BC, CA, CB, CC)
+ * They can be written out contiguously as:
+ *   AAABACBABBBCCACBCC
  * We can remove and index the redundant overlaps:
- * AABACBBCACC
- *
- * And produce a mapping:
- * (0, 1, 3,
- *  2, 5, 6,
- *  7, 4, 9)
- *
+ *   AABACBBCACC
+ * (Note that 'AC' occurs twice in the sequence).
+ * Producing a mapping:
+ *   (0, 1, 3, 2, 5, 6, 7, 4, 9)
  * This is a De Bruijn sequence.
  *
- * Note that 'AC' occurs twice in the reduced output...
- *
- * The following palette is also a De Bruijn sequence.
+ * The following palette is laid out in a De Bruijn sequence in a vain attempt
+ * to improve performance.
  */
 static const unsigned int palette[66 + 65] =
 {
@@ -99,7 +90,7 @@ static const unsigned int palette[66 + 65] =
   CYd, YLd, CYd, WHd, YLd, YLd, WHd, BKd,
   WHd, WHd,
 
-  /* Zeroth bright entry is shared. */
+  /* The zeroth bright entry is shared. */
        BKb, BLb, BKb, RDb, BKb, MGb, BKb,
   GRb, BKb, CYb, BKb, YLb, BKb, WHb, BLb,
   BLb, RDb, BLb, MGb, BLb, GRb, BLb, CYb,
@@ -131,17 +122,17 @@ static const unsigned char offsets[66 + 65] =
   127,  79,  92, 103, 112, 119, 124, 129,
 };
 
-#define WRITE8PIX(shift) \
-do { \
+#define WRITE8PIX(shift)                            \
+do {                                                \
   pal = &palette[offsets[(attrs >> shift) & 0x7F]]; \
-  *poutput++ = pal[(input >> (shift + 7)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 6)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 5)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 4)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 3)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 2)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 1)) & 1]; \
-  *poutput++ = pal[(input >> (shift + 0)) & 1]; \
+  *poutput++ = pal[(input >> (shift + 7)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 6)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 5)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 4)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 3)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 2)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 1)) & 1];     \
+  *poutput++ = pal[(input >> (shift + 0)) & 1];     \
 } while (0)
 
 /* For reference:
@@ -170,8 +161,8 @@ void zxscreen_convert(const void    *vscr,
   assert(dirty);
 
 #ifdef SHOW_DIRTY_RECTS
-  static int foo;
-  foo = 0x20202020 - foo;
+  static int dirtybits;
+  dirtybits = 0x20202020 - dirtybits;
 #endif
 
   /* Clamp the dirty rectangle to the screen dimensions. */
@@ -180,8 +171,8 @@ void zxscreen_convert(const void    *vscr,
   box.x1 = CLAMP(dirty->x1, 1, 256);
   box.y1 = CLAMP(dirty->y1, 1, 192);
 
-  /* The inner loop processes 32 pixels at a time so we convert x coordinates
-   * into chunks four attributes wide while rounding up and down as
+  /* The inner loop processes 32 pixels at a time, so we need to convert x
+   * coordinates into chunks four attributes wide while rounding up and down as
    * required. */
   box.x0 = (box.x0     ) / 32; /* divide to 0..7 rounding down */
   box.x1 = (box.x1 + 31) / 32; /* divide to 0..7 rounding up */
@@ -215,7 +206,7 @@ void zxscreen_convert(const void    *vscr,
       input = *pinput++;
       attrs = *pattrs++;
 #ifdef SHOW_DIRTY_RECTS
-      attrs ^= foo; /* force colour attrs to show redrawn areas */
+      attrs ^= dirtybits; /* force colour attrs to show redrawn areas */
 #endif
 
       WRITE8PIX(0);

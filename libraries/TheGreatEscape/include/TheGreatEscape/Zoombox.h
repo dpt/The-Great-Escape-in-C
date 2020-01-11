@@ -1,5 +1,5 @@
 /**
- * Items.h
+ * Zoombox.h
  *
  * This file is part of "The Great Escape in C".
  *
@@ -15,41 +15,13 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#ifndef ITEMS_H
-#define ITEMS_H
+#ifndef ZOOMBOX_H
+#define ZOOMBOX_H
 
-#include <stdint.h>
+#include "TheGreatEscape/TheGreatEscape.h"
 
-/**
- * Identifiers of game items.
- */
-enum item
-{
-  item_WIRESNIPS,
-  item_SHOVEL,
-  item_LOCKPICK,
-  item_PAPERS,
-  item_TORCH,
-  item_BRIBE,
-  item_UNIFORM,
-  item_FOOD,
-  item_POISON,
-  item_RED_KEY,
-  item_YELLOW_KEY,
-  item_GREEN_KEY,
-  item_RED_CROSS_PARCEL,
-  item_RADIO,
-  item_PURSE,
-  item_COMPASS,
-  item__LIMIT,
-  item_NONE = 255
-};
+void zoombox(tgestate_t *state);
 
-/**
- * A game item.
- */
-typedef uint8_t item_t;
-
-#endif /* ITEMS_H */
+#endif /* ZOOMBOX_H */
 
 // vim: ts=8 sts=2 sw=2 et

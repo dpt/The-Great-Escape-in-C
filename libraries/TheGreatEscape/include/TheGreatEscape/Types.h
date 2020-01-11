@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef TYPES_H
@@ -135,25 +135,6 @@ typedef enum inputdevice
 inputdevice_t;
 
 /**
- * Identifiers of zoombox tiles.
- */
-enum zoombox_tile
-{
-  zoombox_tile_TL,
-  zoombox_tile_HZ,
-  zoombox_tile_TR,
-  zoombox_tile_VT,
-  zoombox_tile_BR,
-  zoombox_tile_BL,
-  zoombox_tile__LIMIT
-};
-
-/**
- * Holds a zoombox tile.
- */
-typedef uint8_t zoombox_tile_t;
-
-/**
  * Identifiers of character facing direction.
  *
  * Used by vischar->direction.
@@ -267,17 +248,17 @@ enum vischar_counter_and_flags_values
 
   /* Bit 4 is unused */
 
-  /** Bit 5 is set when vischar_move_y() should run in preference to
-   * vischar_move_x(). */
-  vischar_BYTE7_Y_DOMINANT             = 1 << 5,
+  /** Bit 5 is set when vischar_move_v() should run in preference to
+   * vischar_move_u(). */
+  vischar_BYTE7_V_DOMINANT             = 1 << 5,
 
   /** Bit 6 is set when map movement should be inhibited. (Hero only)
    * Set in touch(). */
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6,
 
-  /** Bit 7 is set when touch() was entered, implying that vischar->mi etc.
-   * are setup. Set by touch(). */
-  vischar_TOUCH_ENTERED                = 1 << 7
+  /** Bit 7 is set when touch() is entered, implying that vischar->mi etc.
+   * are setup.*/
+  vischar_DRAWABLE                     = 1 << 7
 };
 
 /**
@@ -336,10 +317,10 @@ enum itemstruct_room_and_flags
 
   /** Indicates that the item is nowhere. This is (item_NONE &
    * itemstruct_ROOM_MASK). */
-  itemstruct_ROOM_NONE                 = 0x3F,
+  itemstruct_ROOM_NONE                 = 0x3F,  // can probably go
 
   /** Bit 6 is set when the item is nearby.
-   * Cleared by mark_nearby_items() and locate_vischar_or_itemstruct(). */
+   * Cleared by mark_nearby_items() and get_next_drawable(). */
   itemstruct_ROOM_FLAG_NEARBY_6        = 1 << 6,
 
   /** Bit 7 is set when the item is nearby.
@@ -405,7 +386,7 @@ enum door_flags
  */
 enum searchlight_state
 {
-  /** Number of turns before the spotlight gives up looking when the hero
+  /** Number of turns before the searchlight gives up looking when the hero
    * hides behind something. */
   searchlight_STATE_CAUGHT             = 0x1F,
 
@@ -520,40 +501,49 @@ typedef struct route
 route_t;
 
 /**
- * Holds an X,Y position (16-bit).
+ * Holds an (X,Y) position in 16 bits.
  */
-typedef struct bigxy
+typedef struct pos16
 {
   uint16_t x, y;
 }
-bigxy_t;
+pos16_t;
 
 /**
- * Holds an X,Y position.
+ * Holds an (X,Y) position in 8 bits.
  */
-typedef struct xy
+typedef struct pos8
 {
   uint8_t x, y;
 }
-xy_t;
+pos8_t;
 
 /**
- * Holds an X,Y position and height.
+ * Holds a 16-bit position (U,V) and height (W) in map space.
  */
-typedef struct pos
+typedef struct mappos16
 {
-  uint16_t x, y, height;
+  uint16_t u, v, w;
 }
-pos_t;
+mappos16_t;
 
 /**
- * Holds a smaller scale version of pos_t.
+ * Holds an 8-bit position (U,V) and height (W) in map space.
  */
-typedef struct tinypos
+typedef struct mappos8
 {
-  uint8_t x, y, height;
+  uint8_t u, v, w;
 }
-tinypos_t;
+mappos8_t;
+
+/**
+ * Holds an 8-bit position (U,V) only in map space.
+ */
+typedef struct mappos8uv
+{
+  uint8_t u, v;
+}
+mappos8uv_t;
 
 /**
  * An animation frame.
@@ -590,7 +580,7 @@ typedef uint8_t spriteindex_t;
  */
 typedef struct movableitem
 {
-  pos_t              pos;           /**< map position */
+  mappos16_t         mappos;        /**< map position */
   const spritedef_t *sprite;        /**< sprite definition base - points to the first sprite definition in sprites[] (prisoner or guard) */
   spriteindex_t      sprite_index;  /**< index into sprite[] */
 }
@@ -611,11 +601,11 @@ typedef struct vischar
   route_t         route;
 
   /** ($8004) target position */
-  // gets set to state->hero_map_position when vischar_PURSUIT_PURSUE
+  // gets set to state->hero_mappos when vischar_PURSUIT_PURSUE
   // gets set to state->item_structs[item_FOOD].pos when vischar_PURSUIT_DOG_FOOD
   // used in vischar_move_x/y
   // The .height member of this is never used.
-  tinypos_t       target;
+  mappos8_t       target;
 
   /** ($8007) top nibble = flags, bottom nibble = counter used by character_behaviour only */
   uint8_t         counter_and_flags;
@@ -647,13 +637,13 @@ typedef struct vischar
   // with 3 bits of fixed point, not a screen coord as previously suspected.
   // setup_vischar_plotting divides it by 8
   // Same coordinate space as map_position but multiplied by 8.
-  bigxy_t         iso_pos; // scaled 13.3 format
+  pos16_t         isopos; // scaled 13.3 format
 
   /** ($801C) current room index */
   room_t          room;
 
   /** ($801D) unused */
-  uint8_t         unused; // FUTURE: Remove
+  uint8_t         unused;
 
   /** ($801E,$801F) copy of sprite width, height from spritedef_t */
   uint8_t         width_bytes, height;
@@ -704,9 +694,9 @@ wall_t;
  */
 typedef struct screenlocstring
 {
-  uint16_t  screenloc; /* screen offset (pointer in original code) */
-  uint8_t   length;
-  char     *string;    /* string pointer (embedded array in original code) */
+  uint16_t screenloc; /* screen offset (pointer in original code) */
+  uint8_t  length;
+  char    *string;    /* string pointer (embedded array in original code) */
 }
 screenlocstring_t;
 
@@ -717,7 +707,7 @@ typedef struct characterstruct
 {
   character_t character_and_flags;
   room_t      room;
-  tinypos_t   pos;
+  mappos8_t   mappos;
   route_t     route;
 }
 characterstruct_t;
@@ -746,8 +736,8 @@ typedef struct itemstruct
 {
   item_t    item_and_flags; /* bits 0..3 = item, bits 4..7 = flags */
   room_t    room_and_flags; /* bits 0..5 = room, bits 6..7 = flags */
-  tinypos_t pos;
-  xy_t      iso_pos;
+  mappos8_t mappos;
+  pos8_t    isopos;
 }
 itemstruct_t;
 
@@ -774,7 +764,7 @@ typedef struct door
 {
   /** The top six bits are a room_t. The bottom two bits are a direction_t. */
   uint8_t   room_and_direction;
-  tinypos_t pos;
+  mappos8_t mappos;
 }
 door_t;
 
@@ -818,8 +808,8 @@ typedef input_t (*inputroutine_t)(tgestate_t *state);
  */
 typedef struct default_item_location
 {
-  uint8_t room_and_flags;
-  xy_t    pos;
+  uint8_t     room_and_flags;
+  mappos8uv_t mappos;
 }
 default_item_location_t;
 
@@ -830,7 +820,7 @@ typedef struct mask
 {
   uint8_t   index;  /**< Index into mask_pointers. */
   bounds_t  bounds; /**< Isometric projected bounds of the mask. Used for culling. */
-  tinypos_t pos;    /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
+  mappos8_t mappos; /**< If a character is behind this point then the mask is enabled. ("Behind" here means when character coord x is greater and y is greater-or-equal). */
 }
 mask_t;
 
@@ -849,13 +839,23 @@ character_class_data_t;
  */
 typedef struct searchlight_movement
 {
-  xy_t           xy;
+  pos8_t         xy;
   uint8_t        counter;   /**< Counts down. */
   direction_t    direction;
   uint8_t        index;     /**< Index + direction in top bit. */
   const uint8_t *ptr;       /**< Points into searchlight movement data. */
 }
 searchlight_movement_t;
+
+/**
+ * Holds a mapping of room index to offset.
+ */
+typedef struct
+{
+  room_t  room_index;
+  uint8_t offset;
+}
+roomdef_address_t;
 
 /* ----------------------------------------------------------------------- */
 

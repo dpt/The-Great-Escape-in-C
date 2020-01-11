@@ -2,7 +2,7 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2019. <dave@davespace.co.uk>
 //
 
 #include <cassert>
@@ -41,7 +41,6 @@ typedef struct gamewin
   HWND            window;
   BITMAPINFO      bitmapinfo;
 
-  tgeconfig_t     config;
   zxspectrum_t   *zx;
   tgestate_t     *tge;
 
@@ -88,15 +87,19 @@ static void stamp_handler(void *opaque)
   gamewin->stamps[gamewin->nstamps++] = GetTickCount64();
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
 
   // Unstack timestamps (even if we're paused)
   assert(gamewin->nstamps > 0);
   if (gamewin->nstamps <= 0)
-    return;
+    return gamewin->quit;
   --gamewin->nstamps;
+
+  // Quit straight away if signalled
+  if (gamewin->quit)
+    return TRUE;
 
   if (gamewin->paused)
   {
@@ -141,6 +144,8 @@ static void sleep_handler(int durationTStates, void *opaque)
       Sleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -197,6 +202,8 @@ static int CreateGame(gamewin_t *gamewin)
   DWORD             threadId;
   BITMAPINFOHEADER *bmih;
 
+  zxconfig.width  = DEFAULTWIDTH / 8;
+  zxconfig.height = DEFAULTHEIGHT / 8;
   zxconfig.opaque = gamewin;
   zxconfig.draw   = draw_handler;
   zxconfig.stamp  = stamp_handler;
@@ -209,10 +216,7 @@ static int CreateGame(gamewin_t *gamewin)
   if (zx == NULL)
     goto failure;
 
-  gamewin->config.width  = DEFAULTWIDTH  / 8;
-  gamewin->config.height = DEFAULTHEIGHT / 8;
-
-  tge = tge_create(zx, &gamewin->config);
+  tge = tge_create(zx);
   if (tge == NULL)
     goto failure;
 
@@ -321,8 +325,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         int           drawWidth, drawHeight;
         int           xOffset, yOffset;
 
-        gameWidth  = gamewin->config.width  * 8;
-        gameHeight = gamewin->config.height * 8;
+        gameWidth  = gamewin->zx->screen.width  * 8;
+        gameHeight = gamewin->zx->screen.height * 8;
 
         pixels = zxspectrum_claim_screen(gamewin->zx);
 

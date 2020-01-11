@@ -2,7 +2,7 @@
  *
  * SDL front-end for The Great Escape.
  *
- * (c) David Thomas, 2017.
+ * (c) David Thomas, 2017-2019.
  */
 
 #include <stdio.h>
@@ -74,7 +74,7 @@ static void stamp_handler(void *opaque)
   // TODO: Save timestamps.
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   state_t *state = opaque;
 
@@ -88,6 +88,8 @@ static void sleep_handler(int durationTStates, void *opaque)
   // them in the main_loop. Though that would still create lumpy effects due
   // to the way the game does not currently yield to its caller during
   // periods when it wants to sleep.
+
+  return 0;
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -305,6 +307,7 @@ int main(void)
   state_t         state;
   zxconfig_t      zxconfig =
   {
+    GAMEWIDTH / 8, GAMEHEIGHT / 8,
     &state, /* opaque */
     &draw_handler,
     &stamp_handler,
@@ -313,16 +316,12 @@ int main(void)
     &border_handler,
     &speaker_handler
   };
-  tgeconfig_t     config;
   SDL_Window     *window;
 
   printf("THE GREAT ESCAPE\n");
   printf("================\n");
 
   printf("Initialising...\n");
-
-  config.width  = GAMEWIDTH  / 8;
-  config.height = GAMEHEIGHT / 8;
 
   state.keys      = 0ULL;
   state.kempston  = 0;
@@ -377,7 +376,7 @@ int main(void)
     goto failure;
   }
 
-  state.game = tge_create(state.zx, &config);
+  state.game = tge_create(state.zx);
   if (state.game == NULL)
     goto failure;
 

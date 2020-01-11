@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #include "TheGreatEscape/Music.h"
@@ -330,6 +330,8 @@ static const uint16_t semitone_to_frequency[] =
    *       of the trailing zero entries. */
 };
 
+/* ----------------------------------------------------------------------- */
+
 /**
  * $F52C: Return the frequency to play at to generate the given semitone.
  *
@@ -340,7 +342,7 @@ static const uint16_t semitone_to_frequency[] =
  *                      but the table is larger). (was A)
  * \param[out] beep     Beeper bit (always reset to zero). (was L)
  *
- * \returns Frequency. (was DE)
+ * \return Frequency. (was DE)
  */
 uint16_t frequency_for_semitone(uint8_t semitone, uint8_t *beep)
 {

@@ -35,5 +35,8 @@
     <ClCompile Include="..\..\..\libraries\ZXSpectrum\Spectrum.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\libraries\ZXSpectrum\Kempston.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

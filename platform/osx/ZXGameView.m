@@ -53,8 +53,6 @@
 
 @interface ZXGameView()
 {
-  tgeconfig_t     config;
-
   zxspectrum_t   *zx;
   tgestate_t     *game;
 
@@ -128,6 +126,7 @@
 {
   const zxconfig_t zxconfig =
   {
+    DEFAULTWIDTH / 8, DEFAULTHEIGHT / 8, // screen dimensions in UDGs
     (__bridge void *)(self),
     &draw_handler,
     &stamp_handler,
@@ -136,9 +135,6 @@
     &border_handler,
     &speaker_handler
   };
-
-  config.width  = DEFAULTWIDTH  / 8;
-  config.height = DEFAULTHEIGHT / 8;
 
   zx              = NULL;
   game            = NULL;
@@ -169,7 +165,7 @@
   if (zx == NULL)
     goto failure;
 
-  game = tge_create(zx, &config);
+  game = tge_create(zx);
   if (game == NULL)
     goto failure;
 
@@ -190,6 +186,7 @@ failure:
 
 - (void)reshape
 {
+  [super reshape];
   doSetupDrawing = YES;
 }
 
@@ -448,8 +445,8 @@ failure:
   GLsizei xOffset, yOffset;
   GLsizei drawWidth, drawHeight;
 
-  gameSize.width  = config.width  * 8;
-  gameSize.height = config.height * 8;
+  gameSize.width  = zx->screen.width  * 8;
+  gameSize.height = zx->screen.height * 8;
 
   // Convert up to window space, which is in pixel units
   baseRect = [self bounds];
@@ -474,8 +471,8 @@ failure:
       gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
   }
 
-  drawWidth  = (config.width  * 8) * gamesPerView;
-  drawHeight = (config.height * 8) * gamesPerView;
+  drawWidth  = gameSize.width  * gamesPerView;
+  drawHeight = gameSize.height * gamesPerView;
   _scale = gamesPerView;
 
   // Centre the game within the view (note that conversion to int floors the values)
@@ -544,26 +541,31 @@ static void *tge_thread(void *arg)
 
   tge_setup(game);
 
-  // While in menu state
+  // Run the menu
   for (;;)
   {
-    @synchronized(view)
+    int proceed;
+
+    proceed = tge_menu(game);
+    if (proceed > 0)
     {
-      quit = view->quit;
-    }
-
-    if (quit)
+      // Begin the game
+      quit = FALSE;
       break;
-
-    if (tge_menu(game) > 0)
-      break; // game begins
+    }
+    else if (proceed < 0)
+    {
+      // Game thread termination was signalled
+      quit = TRUE;
+      break;
+    }
   }
 
+  // Run the game
   if (!quit)
   {
     tge_setup2(game);
 
-    // While in game state
     for (;;)
     {
       @synchronized(view)
@@ -575,7 +577,7 @@ static void *tge_thread(void *arg)
         break;
 
       tge_main(game);
-      view->nstamps = 0; // reset all timing info
+      view->nstamps = 0; // Reset all timing info
     }
   }
 
@@ -608,7 +610,7 @@ static void stamp_handler(void *opaque)
   gettimeofday(&view->stamps[view->nstamps++], NULL);
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
   BOOL paused;
@@ -618,8 +620,12 @@ static void sleep_handler(int durationTStates, void *opaque)
     // Unstack timestamps (even if we're paused)
     assert(view->nstamps > 0);
     if (view->nstamps <= 0)
-      return;
+      return view->quit;
     --view->nstamps;
+
+    // Quit straight away if signalled
+    if (view->quit)
+      return TRUE;
 
     paused = view->paused;
   }
@@ -680,6 +686,8 @@ static void sleep_handler(int durationTStates, void *opaque)
       usleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -741,8 +749,10 @@ static void speaker_handler(int on_off, void *opaque)
 
 - (void)getGameWidth:(int *)width height:(int *)height border:(int *)border
 {
-  *width  = config.width  * 8;
-  *height = config.height * 8;
+  assert(zx);
+
+  *width  = zx->screen.width  * 8;
+  *height = zx->screen.height * 8;
   *border = borderSize;
 }
 
@@ -768,7 +778,7 @@ static void speaker_handler(int on_off, void *opaque)
 // 318181.81 recurring OUTs/s theoretical max
 
 
-// This is a AURenderCallback except that type is a pointer.
+// This is the same as a AURenderCallback except it's not a pointer type.
 static OSStatus playbackCallback(void                       *inRefCon,
                                  AudioUnitRenderActionFlags *ioActionFlags,
                                  const AudioTimeStamp       *inTimeStamp,

@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #include <assert.h>
@@ -21,8 +21,11 @@
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Music.h"
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
+
+/* ----------------------------------------------------------------------- */
 
 /* When enabled will start the game immediately in Kempston input mode. */
 // #define IMMEDIATE_START
@@ -33,7 +36,7 @@
 //static
 //void wipe_game_window(tgestate_t *state);
 
-static void choose_keys(tgestate_t *state);
+static int choose_keys(tgestate_t *state);
 
 static uint8_t menu_keyscan(tgestate_t *state);
 
@@ -49,7 +52,10 @@ static uint8_t menu_keyscan(tgestate_t *state);
  *
  * \param[in] state Pointer to game state.
  *
- * \return 0 => no keypress, 1 => keypress handled, -1 => start the game
+ * \return 0 => No key pressed,
+ *         1 => Keypress handled,
+ *         2 => Start the game,
+ *        -1 => Terminate the game thread.
  */
 static int check_menu_keys(tgestate_t *state)
 {
@@ -82,7 +88,7 @@ static int check_menu_keys(tgestate_t *state)
                              attribute_BRIGHT_YELLOW_OVER_BLACK);
 
 #ifdef IMMEDIATE_START
-    return -1;
+    return 2; /* Start the game */
 #else
     return 1;
 #endif
@@ -95,9 +101,11 @@ static int check_menu_keys(tgestate_t *state)
      * routine to $F075. */
 
     if (state->chosen_input_device == inputdevice_KEYBOARD)
-      choose_keys(state); /* Keyboard was selected. */
+      /* Keyboard was selected. */
+      if (choose_keys(state) < 0)
+          return -1; /* Terminate the game thread */
 
-    return -1; /* Start the game */
+    return 2; /* Start the game */
   }
 }
 
@@ -141,8 +149,11 @@ static void wipe_game_window(tgestate_t *state)
  * $F350: Choose keys.
  *
  * \param[in] state Pointer to game state.
+ *
+ * \return 1 => Start the game,
+ *        -1 => Terminate the game thread
  */
-static void choose_keys(tgestate_t *state)
+static int choose_keys(tgestate_t *state)
 {
   /** $F2AD: Key choice prompt strings. */
   static const screenlocstring_t choose_key_prompts[6] =
@@ -212,7 +223,7 @@ static void choose_keys(tgestate_t *state)
   uint8_t *const screen = &state->speccy->screen.pixels[0]; /* Conv: Added */
 
   /* Loop while the user does not confirm. */
-  for (;;) // FIXME: Loop which doesn't check the quit flag.
+  for (;;)
   {
     uint8_t                  prompt_iters; /* was B */
     const screenlocstring_t *prompt;       /* was HL */
@@ -221,7 +232,7 @@ static void choose_keys(tgestate_t *state)
     wipe_game_window(state);
     set_game_window_attributes(state, attribute_WHITE_OVER_BLACK);
 
-    /* Draw key choice prompt strings. */
+    /* Draw key choice prompts. */
     prompt_iters = NELEMS(choose_key_prompts);
     prompt = &choose_key_prompts[0];
     do
@@ -245,7 +256,7 @@ static void choose_keys(tgestate_t *state)
     }
     while (--prompt_iters);
 
-    /* Wipe keydefs. */
+    /* Wipe key definitions. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
 
     uint8_t Adash = 0; /* was A' */ // initialised to zero
@@ -257,7 +268,7 @@ static void choose_keys(tgestate_t *state)
       do
       {
         uint16_t  screenoff;  /* was $F3E9 */
-        uint8_t   A; /* was A */ // seems to be a row count
+        uint8_t   A; /* was A */
 
         // this block moved up for scope
         keydef_t *keydef;  /* was HL */
@@ -265,7 +276,7 @@ static void choose_keys(tgestate_t *state)
         uint8_t   mask;    /* was C */
 
         screenoff = *poffset++; // self modify screen addr
-        A = 0xFF;
+        A = 0xFF; /* debounce */
 
         {
           const uint8_t *hi_bytes;    /* was HL */
@@ -278,9 +289,12 @@ static void choose_keys(tgestate_t *state)
 for_loop:
           for (;;)
           {
+            /* Conv: Timing: The original game keyscans as fast as it can. We
+             * can't have that so instead we introduce a short delay. */
+            if (menudelay(state, 3500000 / 50)) /* 50/sec */
+                return -1; /* Terminate the game thread */
 
             SWAP(uint8_t, A, Adash);
-
             hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
             index = 0xFF;
 try_next_port:
@@ -299,17 +313,17 @@ key_loop:
             if (carry)
               goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
 
-            A = mask;
-            A = A & keyflags;
+            A = mask & keyflags;
             if (A == 0) // temps: A'
               goto key_loop; /* Key was not pressed. Move to next key. */
 
             SWAP(uint8_t, A, Adash);
 
+            /* Keep looping until we've done a full keyscan with no result - debounce */
             if (A)
               goto for_loop;
 
-            /* Draw the pressed key. */
+            /* ... */
 
             A = index;
 
@@ -327,10 +341,6 @@ key_loop:
             }
             while (A != port || keydef->mask != mask);
 
-            /* Conv: Timing: The original game keyscans as fast as it can. We
-             * can't have that so instead we introduce a short delay. */
-            state->speccy->stamp(state->speccy);
-            state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
           } // for_loop
         }
 
@@ -338,6 +348,7 @@ assign_keydef:
         keydef->port = port;
         keydef->mask = mask;
 
+        /* Plot */
         {
           const unsigned char *pglyph;          /* was HL */
           const char          *pkeyname;        /* was HL */
@@ -364,7 +375,8 @@ assign_keydef:
 
           if (glyph_and_flags & (1 << 7))
           {
-            /* If the top bit was set then it's a modifier key. */
+            /* If the top bit was set then it's a special key,
+             * like BREAK or ENTER. */
             pkeyname = &special_key_names[glyph_and_flags & ~(1 << 7)];
             length = *pkeyname++;
           }
@@ -385,12 +397,12 @@ assign_keydef:
     }
 
     /* Conv: Timing: This was a delay loop counting to 0xFFFF. */
-    state->speccy->stamp(state->speccy);
-    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
+    if (menudelay(state, 3500000 / 10)) /* 10/sec */
+        return -1; /* Terminate the game thread */
 
     /* Wait for user's input */
     if (user_confirm(state) == 0) /* Confirmed - return */
-      return; /* Start the game */
+      return 1; /* Start the game */
   }
 }
 
@@ -414,7 +426,7 @@ void set_menu_item_attributes(tgestate_t *state,
   assert(attrs <= attribute_BRIGHT_WHITE_OVER_BLACK);
   assert(state->speccy != NULL);
 
-  pattr = &state->speccy->screen.attributes[(0x590D - SCREEN_ATTRIBUTES_START_ADDRESS)];
+  pattr = &state->speccy->screen.attributes[0x590D - SCREEN_ATTRIBUTES_START_ADDRESS];
 
   /* Skip to the item's row */
   pattr += index * 2 * state->width; /* two rows */
@@ -476,24 +488,27 @@ static uint8_t menu_keyscan(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $F4B7: Runs the menu screen.
+ * $F4B7: Run the menu screen.
  *
  * Waits for user to select an input device, waves the morale flag and plays
  * the title tune.
  *
  * \param[in] state Pointer to game state.
  *
- * \return Non-zero when the game should begin, zero otherwise.
+ * \return +ve when the game should begin,
+ *         -ve when the thread should terminate,
+ *         zero otherwise.
  */
 int menu_screen(tgestate_t *state)
 {
+  int      menu_keys_state;
   uint16_t counter_0;       /* was BC */
   uint16_t counter_1;       /* was BC' */
   uint16_t frequency_0;     /* was DE */
   uint16_t frequency_1;     /* was DE' */
   uint8_t  datum;           /* was A */
-  uint8_t  overall_delay;   /* was A */
-  uint8_t  iters;           /* was H */
+  uint8_t  major_delay;     /* was A */
+  uint8_t  minor_delay;     /* was H */
   uint16_t channel0_index;  /* was HL */
   uint16_t channel1_index;  /* was HL' */
   uint8_t  speaker0;        /* was L */
@@ -510,18 +525,15 @@ int menu_screen(tgestate_t *state)
 
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
-  if (check_menu_keys(state) < 0)
-  {
-    /* Cancel the above stamp. */
-    state->speccy->sleep(state->speccy, 0);
-    return 1; /* Start the game */
-  }
+  menu_keys_state = check_menu_keys(state);
+  if (menu_keys_state < 0 || menu_keys_state >= 2)
+    return menu_keys_state; /* Start the game, or terminate the game thread */
 
   wave_morale_flag(state);
 
   /* Play music */
+
   channel0_index = state->music_channel0_index + 1;
-  /* Loop until the end marker is encountered. */
   for (;;)
   {
     state->music_channel0_index = channel0_index;
@@ -533,7 +545,6 @@ int menu_screen(tgestate_t *state)
   frequency_0 = counter_0 = frequency_for_semitone(datum, &speaker0);
 
   channel1_index = state->music_channel1_index + 1;
-  /* Loop until the end marker is encountered. */
   for (;;)
   {
     state->music_channel1_index = channel1_index;
@@ -544,13 +555,14 @@ int menu_screen(tgestate_t *state)
   }
   frequency_1 = counter_1 = frequency_for_semitone(datum, &speaker1);
 
+  /* When the second channel is silent use the first channel's frequency. */
   if ((counter_1 >> 8) == 0xFF) // (BCdash >> 8) was Bdash;
     frequency_1 = counter_1 = counter_0;
 
-  overall_delay = 24; /* overall tune speed (a delay: lower values are faster) */
+  major_delay = 24; /* overall tune speed (a delay: lower values are faster) */
   do
   {
-    iters = 255;
+    minor_delay = 255;
     do
     {
       int to_emit = 3; // Conv: Whatever we do always emit this many bits
@@ -595,15 +607,18 @@ int menu_screen(tgestate_t *state)
       while (to_emit-- > 0)
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, bit);
     }
-    while (--iters);
+    while (--minor_delay);
   }
-  while (--overall_delay);
+  while (--major_delay);
 
   /* Conv: Timing: Calibrated to original game. */
-  state->speccy->sleep(state->speccy, 300365);
+  if (state->speccy->sleep(state->speccy, 300365))
+    return -1; /* Terminate the game thread */
 
-  return 0;
+  return 0; /* Don't start the game */
 }
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
 

@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #include <assert.h>
@@ -56,8 +56,8 @@ static const uint8_t roomdef_2_hut2_left[] =
 {
   1, /* room dimensions index */
   2, /* number of boundaries */
-  48, 64, 43, 56, /* boundary */
-  24, 38, 26, 40, /* boundary */
+  48, 64, 43, 56, /* boundary */ // bed boundary
+  24, 38, 26, 40, /* boundary */ // table boundary
   2, /* number of mask bytes */
   13, 8, /* mask */
   8, /* nobjects */
@@ -729,7 +729,7 @@ static INLINE int get_roomdef_shadow(int room_index, int offset)
       }
       break;
 
-    case room_23_BREAKFAST:
+    case room_23_MESS_HALL:
       switch (offset)
       {
         case roomdef_23_BENCH_A:
@@ -741,7 +741,7 @@ static INLINE int get_roomdef_shadow(int room_index, int offset)
       }
       break;
 
-    case room_25_BREAKFAST:
+    case room_25_MESS_HALL:
       switch (offset)
       {
         case roomdef_25_BENCH_D:

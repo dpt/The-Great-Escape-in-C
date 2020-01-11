@@ -1,5 +1,5 @@
 /**
- * TheGreatEscape.c
+ * Main.c
  *
  * This file is part of "The Great Escape in C".
  *
@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 /* ----------------------------------------------------------------------- */
@@ -20,14 +20,10 @@
 /* TODO
  *
  * - Some enums might be wider than expected (int vs uint8_t).
- * - Decode foreground masks.
- * - Naming: "breakfast" room ought to be "mess hall".
  */
 
 /* LATER
  *
- * - Hoist out constant sizes to variables in the state structure (required
- *   for variably-sized screens).
  * - Move screen memory to a linear format (again, required for
  *   variably-sized screen).
  * - Replace uint8_t counters, and other types which are smaller than int,
@@ -40,9 +36,17 @@
 /* GLOSSARY
  *
  * - "Conv:"
- *   -- Code which has required adjustment.
- * - A call marked "exit via"
- *   -- The original code branched directly to its target and exited via it.
+ *   -- Code which has required adjustment or has otherwise been changed during
+ *      the conversion from Z80 into C.
+ * - "was <register>/<address>"
+ *   -- Records which register, registers or address the original code used to
+ *      hold this variable.
+ * - "was fallthrough"
+ *   -- In the original code there was no call here but instead the code
+ *      continued through to the adjacent function.
+ * - "was tail call"
+ *   -- In the original Z80 a call marked with this would have branched directly
+ *      to its target to exit.
  */
 
 /* ----------------------------------------------------------------------- */
@@ -59,7 +63,10 @@
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
+#include "TheGreatEscape/Asserts.h"
+#include "TheGreatEscape/Debug.h"
 #include "TheGreatEscape/Doors.h"
+#include "TheGreatEscape/Events.h"
 #include "TheGreatEscape/ExteriorTiles.h"
 #include "TheGreatEscape/Input.h"
 #include "TheGreatEscape/InteriorObjectDefs.h"
@@ -76,6 +83,7 @@
 #include "TheGreatEscape/RoomDefs.h"
 #include "TheGreatEscape/Rooms.h"
 #include "TheGreatEscape/Routes.h"
+#include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/SpriteBitmaps.h"
 #include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/State.h"
@@ -85,75 +93,17 @@
 #include "TheGreatEscape/Text.h"
 #include "TheGreatEscape/Tiles.h"
 #include "TheGreatEscape/Utils.h"
+#include "TheGreatEscape/Zoombox.h"
 
 #include "TheGreatEscape/Main.h"
 
-// debug
-static void check_map_buf(tgestate_t *state)
-{
-  for (int i = 0; i < state->st_columns * state->st_rows; i++)
-  {
-    assert(state->map_buf[i] < supertileindex__LIMIT);
-  }
-}
-
-
 /* ----------------------------------------------------------------------- */
 
-void invalidate_bitmap(tgestate_t *state,
-                       uint8_t    *start,
-                       int         width,
-                       int         height)
-{
-  uint8_t   *base = &state->speccy->screen.pixels[0];
-  ptrdiff_t  offset;
-  int        x,y;
-  zxbox_t    dirty;
-
-  offset = start - base;
-
-  /* Convert screen offset to cartesian for the interface. */
-  x = (offset & 31) * 8;
-  y = ((offset & 0x0700) >> 8) |
-      ((offset & 0x00E0) >> 2) |
-      ((offset & 0x1800) >> 5);
-  y = 191 - y;    /* flip */
-  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
-  y = y - height; /* get min-y */
-
-  dirty.x0 = x;
-  dirty.y0 = y;
-  dirty.x1 = x + width;
-  dirty.y1 = y + height;
-  state->speccy->draw(state->speccy, &dirty);
-}
-
-void invalidate_attrs(tgestate_t *state,
-                      uint8_t    *start,
-                      int         width,
-                      int         height)
-{
-  uint8_t   *base = &state->speccy->screen.pixels[SCREEN_BITMAP_LENGTH];
-  ptrdiff_t  offset;
-  int        x,y;
-  zxbox_t    dirty;
-
-  offset = start - base;
-
-  /* Convert attribute offset to cartesian for the interface. */
-  x = (offset & 31) * 8;
-  y = (int) offset >> 5;
-  y = 23 - y;     /* flip */
-  y = y + 1;      /* inclusive lower bound becomes exclusive upper */
-  y = y * 8;      /* scale */
-  y = y - height; /* get min-y */
-
-  dirty.x0 = x;
-  dirty.y0 = y;
-  dirty.x1 = x + width;
-  dirty.y1 = y + height;
-  state->speccy->draw(state->speccy, &dirty);
-}
+/* Divide x by 8, with rounding to nearest.
+ *
+ * This replaces calls to divide_by_8_with_rounding in the original code.
+ */
+#define divround(x) (((x) + 4) >> 3)
 
 /* ----------------------------------------------------------------------- */
 
@@ -162,19 +112,18 @@ void invalidate_attrs(tgestate_t *state,
  *
  * The current character (in state->IY) changes room.
  *
- * \param[in] state   Pointer to game state.
- * \param[in] tinypos Pointer to pos. (was HL)
+ * \param[in] state  Pointer to game state.
+ * \param[in] mappos Pointer to pos. (was HL)
  *
  * \remarks Exits using longjmp in the hero case.
  */
-void transition(tgestate_t      *state,
-                const tinypos_t *tinypos)
+void transition(tgestate_t *state, const mappos8_t *mappos)
 {
   vischar_t *vischar;    /* was IY */
   room_t     room_index; /* was A */
 
-  assert(state   != NULL);
-  assert(tinypos != NULL);
+  assert(state  != NULL);
+  assert(mappos != NULL);
 
   vischar = state->IY;
   ASSERT_VISCHAR_VALID(vischar);
@@ -183,13 +132,13 @@ void transition(tgestate_t      *state,
   {
     /* Outdoors */
 
-    /* Set position on X axis, Y axis and height (dividing by 4). */
+    /* Set position on X axis, Y axis and height (multiplying by 4). */
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = multiply_by_4(tinypos->x);
-    vischar->mi.pos.y      = multiply_by_4(tinypos->y);
-    vischar->mi.pos.height = multiply_by_4(tinypos->height);
+    vischar->mi.mappos.u = mappos->u * 4;
+    vischar->mi.mappos.v = mappos->v * 4;
+    vischar->mi.mappos.w = mappos->w * 4;
   }
   else
   {
@@ -199,16 +148,16 @@ void transition(tgestate_t      *state,
 
     /* Conv: This was unrolled (compared to the original) to avoid having to
      * access the structure as an array. */
-    vischar->mi.pos.x      = tinypos->x;
-    vischar->mi.pos.y      = tinypos->y;
-    vischar->mi.pos.height = tinypos->height;
+    vischar->mi.mappos.u = mappos->u;
+    vischar->mi.mappos.v = mappos->v;
+    vischar->mi.mappos.w = mappos->w;
   }
 
   if (vischar != &state->vischars[0])
   {
     /* Not the hero. */
 
-    reset_visible_character(state, vischar); // was exit via
+    reset_visible_character(state, vischar); /* was tail call */
   }
   else
   {
@@ -221,15 +170,15 @@ void transition(tgestate_t      *state,
       /* Outdoors */
 
       vischar->input = input_KICK;
-      vischar->direction &= vischar_DIRECTION_MASK;
+      vischar->direction &= vischar_DIRECTION_MASK; /* clear crawl flag */
       reset_outdoors(state);
-      squash_stack_goto_main(state); // exit
+      squash_stack_goto_main(state); /* was tail call */
     }
     else
     {
       /* Indoors */
 
-      enter_room(state); // was fallthrough
+      enter_room(state); /* was fallthrough */
     }
     NEVER_RETURNS;
   }
@@ -256,21 +205,25 @@ void enter_room(tgestate_t *state)
   state->map_position.x = 116;
   state->map_position.y = 234;
   set_hero_sprite_for_room(state);
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
+  calc_vischar_isopos_from_vischar(state, &state->vischars[0]);
   setup_movable_items(state);
   zoombox(state);
   increase_score(state, 1);
 
-  squash_stack_goto_main(state); // (was fallthrough to following)
+  squash_stack_goto_main(state); /* was fallthrough */
   NEVER_RETURNS;
 }
 
 /**
  * $691A: Squash stack, then goto main.
  *
+ * In the original code this squashed the stack then jumped to the start of
+ * main_loop(). In this version it uses longjmp() to exit from tge_main() to
+ * permit cooperation with the host environment.
+ *
  * \param[in] state Pointer to game state.
  *
- * \remarks Exits using longjmp.
+ * \remarks Exits using longjmp().
  */
 void squash_stack_goto_main(tgestate_t *state)
 {
@@ -392,9 +345,9 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->flags             = 0;
   vischar1->route.index       = routeindex_0_HALT;
   vischar1->route.step        = 0;
-  vischar1->target.x          = 0;
-  vischar1->target.y          = 0;
-  vischar1->target.height     = 0;
+  vischar1->target.u          = 0;
+  vischar1->target.v          = 0;
+  vischar1->target.w          = 0;
   vischar1->counter_and_flags = 0;
   vischar1->animbase          = &animations[0];
   vischar1->anim              = animations[8]; /* -> anim_wait_tl animation */
@@ -403,7 +356,7 @@ void setup_movable_item(tgestate_t          *state,
   vischar1->direction         = direction_TOP_LEFT; /* == 0 */
 
   vischar1->room              = state->room_index;
-  calc_vischar_iso_pos_from_vischar(state, vischar1);
+  calc_vischar_isopos_from_vischar(state, vischar1);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -447,36 +400,36 @@ void setup_doors(tgestate_t *state)
 
   assert(state != NULL);
 
-  /* Wipe state->interior_doors[] with interiordoor_NONE. */
-  // Alternative: memset(&state->interior_doors[0], interiordoor_NONE, 4);
+  /* Wipe state->interior_doors[] with interiordoor_NONE.
+   * Alternative: memset(&state->interior_doors[0], interiordoor_NONE, 4); */
   pdoorindex = &state->interior_doors[3];
   iters = 4;
   do
     *pdoorindex-- = interiordoor_NONE;
   while (--iters);
 
-  pdoorindex++;
+  pdoorindex++; /* Reset to first byte of interior_doors[]. */
   ASSERT_DOORS_VALID(pdoorindex);
 
   /* Ensure that no flag bits remain. */
   assert(state->room_index < room__LIMIT);
 
-  room       = state->room_index << 2; /* Shunt left to match comparison in loop. */
+  room       = state->room_index << 2; /* Shift left to match comparison in loop. */
   door_index = 0;
   door       = &doors[0];
-  door_iters = NELEMS(doors); /* Iterate over every individual door in doors[]. */
+  door_iters = NELEMS(doors); /* Iterate over every door in doors[]. */
   do
   {
-    /* Save any door index which matches the current room. */
-    // Rooms are always rectangular so should have no more than four doors but that is unchecked by this code.
+    /* Save the door index (and current reverse flag) whenever we match the
+     * current room. Rooms are always rectangular so should have no more than
+     * four doors present but that is unchecked by this code. */
     if ((door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) == room)
-      /* Current room. */
-      *pdoorindex++ = door_index ^ door_REVERSE; // Store the index and the reverse flag.
+      *pdoorindex++ = door_index ^ door_REVERSE;
 
-    /* On each step toggle the reverse flag. */
+    /* On every iteration toggle the reverse flag. */
     door_index ^= door_REVERSE;
 
-    /* Increment door_index once every two steps through the array. */
+    /* Increment door_index once every two iterations. */
     if (door_index < door_REVERSE) /* Conv: was JP M. */
       door_index++;
 
@@ -490,22 +443,22 @@ void setup_doors(tgestate_t *state)
 /**
  * $6A12: Turn a door index into a door_t pointer.
  *
- * \param[in] door Index of door + lock flag in bit 7. (was A)
+ * \param[in] index Index of door + lock flag in bit 7. (was A)
  *
  * \return Pointer to door_t. (was HL)
  */
-const door_t *get_door(doorindex_t door)
+const door_t *get_door(doorindex_t index)
 {
-  const door_t *pos; /* was HL */
+  const door_t *door; /* was HL */
 
-  assert((door & ~door_REVERSE) < door_MAX);
+  assert((index & ~door_REVERSE) < door_MAX);
 
   /* Conv: Mask before multiplication to avoid overflow. */
-  pos = &doors[(door & ~door_REVERSE) * 2];
-  if (door & door_REVERSE)
-    pos++;
+  door = &doors[(index & ~door_REVERSE) * 2];
+  if (index & door_REVERSE)
+    door++;
 
-  return pos;
+  return door;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -615,7 +568,7 @@ void setup_room(tgestate_t *state)
 
   /* Copy boundaries into state. */
   state->roomdef_object_bounds_count = count = get_roomdef(state, room_index, offset); /* count of boundaries */
-  assert(count <= 4);
+  assert(count <= MAX_ROOMDEF_OBJECT_BOUNDS);
   pbounds = &state->roomdef_object_bounds[0]; /* Conv: Moved */
   if (count == 0) /* no boundaries */
   {
@@ -652,14 +605,14 @@ void setup_room(tgestate_t *state)
   while (iters--)
   {
     uint8_t object_index;
-    uint8_t row;
     uint8_t column;
+    uint8_t row;
 
     object_index = get_roomdef(state, room_index, offset++);
-    row          = get_roomdef(state, room_index, offset++);
     column       = get_roomdef(state, room_index, offset++);
+    row          = get_roomdef(state, room_index, offset++);
 
-    expand_object(state, object_index, &state->tile_buf[column * state->columns + row]);  // row/column look mixed up
+    expand_object(state, object_index, &state->tile_buf[row * state->columns + column]);
   }
 }
 
@@ -865,20 +818,14 @@ void plot_interior_tiles(tgestate_t *state)
 
 /* ----------------------------------------------------------------------- */
 
-typedef struct
-{
-  room_t  room_index;
-  uint8_t offset;
-}
-roomdef_address_t;
-
 /**
  * $6B79: Locations of beds.
  *
  * Used by wake_up, character_sleeps and reset_map_and_characters.
  */
-static const roomdef_address_t beds[beds_LENGTH] =
+const roomdef_address_t beds[beds_LENGTH] =
 {
+  /* Conv: The original game uses pointers here. */
   { room_3_HUT2RIGHT, roomdef_3_BED_A },
   { room_3_HUT2RIGHT, roomdef_3_BED_B },
   { room_3_HUT2RIGHT, roomdef_3_BED_C },
@@ -908,6 +855,7 @@ const door_t doors[door_MAX * 2] =
   // room is a *destination* room index
   // direction is the direction of the door in the current room
   // pos is the position of the door in the current room
+  // outdoor targets are divided by 4
 
   // 0 - gate - initially locked
   { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 138,  6 } },
@@ -916,10 +864,10 @@ const door_t doors[door_MAX * 2] =
   { ROOMDIR(room_0_OUTDOORS,              TR), { 178, 122,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), { 178, 126,  6 } },
   // 2
-  { ROOMDIR(room_34,                      TL), { 138, 179,  6 } },
+  { ROOMDIR(room_34,                      TL), { 138, 179,  6 } },  // tunnels 2 (end)
   { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 3
-  { ROOMDIR(room_48,                      TL), { 204, 121,  6 } },
+  { ROOMDIR(room_48,                      TL), { 204, 121,  6 } },  // tunnels 1 (end)
   { ROOMDIR(room_0_OUTDOORS,              BR), {  16,  52, 12 } },
   // 4
   { ROOMDIR(room_28_HUT1LEFT,             TR), { 217, 163,  6 } },
@@ -927,7 +875,7 @@ const door_t doors[door_MAX * 2] =
   // 5
   { ROOMDIR(room_1_HUT1RIGHT,             TL), { 212, 189,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BR), {  30,  46, 24 } },
-  // 6
+  // 6 - home room - door to outside
   { ROOMDIR(room_2_HUT2LEFT,              TR), { 193, 163,  6 } },
   { ROOMDIR(room_0_OUTDOORS,              BL), {  42,  28, 24 } },
   // 7
@@ -960,21 +908,21 @@ const door_t doors[door_MAX * 2] =
   // 16
   { ROOMDIR(room_1_HUT1RIGHT,             TR), {  44,  52, 24 } },
   { ROOMDIR(room_28_HUT1LEFT,             BL), {  38,  26, 24 } },
-  // 17 - top right door in HUT2LEFT
+  // 17 - home room - top right door in HUT2LEFT
   { ROOMDIR(room_3_HUT2RIGHT,             TR), {  36,  54, 24 } },
   { ROOMDIR(room_2_HUT2LEFT,              BL), {  38,  26, 24 } },
   // 18
   { ROOMDIR(room_5_HUT3RIGHT,             TR), {  36,  54, 24 } },
   { ROOMDIR(room_4_HUT3LEFT,              BL), {  38,  26, 24 } },
   // 19
-  { ROOMDIR(room_23_BREAKFAST,            TR), {  40,  66, 24 } },
-  { ROOMDIR(room_25_BREAKFAST,            BL), {  38,  24, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            TR), {  40,  66, 24 } },
+  { ROOMDIR(room_25_MESS_HALL,            BL), {  38,  24, 24 } },
   // 20 -
-  { ROOMDIR(room_23_BREAKFAST,            TL), {  62,  36, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            TL), {  62,  36, 24 } },
   { ROOMDIR(room_21_CORRIDOR,             BR), {  32,  46, 24 } },
   // 21
   { ROOMDIR(room_19_FOOD,                 TR), {  34,  66, 24 } },
-  { ROOMDIR(room_23_BREAKFAST,            BL), {  34,  28, 24 } },
+  { ROOMDIR(room_23_MESS_HALL,            BL), {  34,  28, 24 } },
   // 22 - initially locked
   { ROOMDIR(room_18_RADIO,                TR), {  36,  54, 24 } },
   { ROOMDIR(room_19_FOOD,                 BL), {  56,  34, 24 } },
@@ -1175,7 +1123,9 @@ void use_item_common(tgestate_t *state, item_t item)
 
   ASSERT_ITEM_VALID(item);
 
-  memcpy(&state->saved_pos, &state->vischars[0].mi.pos, sizeof(pos_t));
+  memcpy(&state->saved_mappos,
+         &state->vischars[0].mi.mappos,
+          sizeof(mappos16_t));
 
   /* Conv: In the original game the action jumps to a RET for action-less
    * items. We use a NULL instead. */
@@ -1237,8 +1187,8 @@ void pick_up_item(tgestate_t *state)
   }
 
   itemstr->room_and_flags = 0;
-  itemstr->iso_pos.x      = 0;
-  itemstr->iso_pos.y      = 0;
+  itemstr->isopos.x       = 0;
+  itemstr->isopos.y       = 0;
 
   draw_all_items(state);
   play_speaker(state, sound_PICK_UP_ITEM);
@@ -1295,13 +1245,13 @@ void drop_item_tail(tgestate_t *state, item_t item)
 {
   itemstruct_t *itemstr; /* was HL */
   room_t        room;    /* was A */
-  tinypos_t    *outpos;  /* was DE */
-  pos_t        *inpos;   /* was HL */
+  mappos8_t    *outpos;  /* was DE */
+  mappos16_t   *inpos;   /* was HL */
 
   assert(state != NULL);
   ASSERT_ITEM_VALID(item);
 
-  itemstr = item_to_itemstruct(state, item);
+  itemstr = &state->item_structs[item];
   room = state->room_index;
   itemstr->room_and_flags = room; /* Set object's room index. */
   if (room == room_0_OUTDOORS)
@@ -1309,26 +1259,26 @@ void drop_item_tail(tgestate_t *state, item_t item)
     /* Outdoors. */
 
     // TODO: Hoist common code.
-    outpos = &itemstr->pos;
-    inpos  = &state->vischars[0].mi.pos;
+    outpos = &itemstr->mappos;
+    inpos  = &state->vischars[0].mi.mappos;
 
-    pos_to_tinypos(inpos, outpos);
-    outpos->height = 0;
+    scale_mappos_down(inpos, outpos);
+    outpos->w = 0;
 
-    calc_exterior_item_iso_pos(itemstr);
+    calc_exterior_item_isopos(itemstr);
   }
   else
   {
     /* $7BE4: Drop item, interior part. */
 
-    outpos = &itemstr->pos;
-    inpos  = &state->vischars[0].mi.pos;
+    outpos = &itemstr->mappos;
+    inpos  = &state->vischars[0].mi.mappos;
 
-    outpos->x      = inpos->x; // note: narrowing
-    outpos->y      = inpos->y; // note: narrowing
-    outpos->height = 5;
+    outpos->u = inpos->u; // note: narrowing
+    outpos->v = inpos->v; // note: narrowing
+    outpos->w = 5;
 
-    calc_interior_item_iso_pos(itemstr);
+    calc_interior_item_isopos(itemstr);
   }
 }
 
@@ -1339,16 +1289,16 @@ void drop_item_tail(tgestate_t *state, item_t item)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
+void calc_exterior_item_isopos(itemstruct_t *itemstr)
 {
-  xy_t *iso_pos;
+  pos8_t *isopos;
 
   assert(itemstr != NULL);
 
-  iso_pos = &itemstr->iso_pos;
+  isopos = &itemstr->isopos;
 
-  iso_pos->x = (0x40 - itemstr->pos.x + itemstr->pos.y) * 2;
-  iso_pos->y = 0x100 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height; /* Conv: 0x100 is 0 in the original. */
+  isopos->x = (0x40 - itemstr->mappos.u + itemstr->mappos.v) * 2;
+  isopos->y = 0x100 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w; /* Conv: 0x100 is 0 in the original. */
 }
 
 /**
@@ -1358,43 +1308,21 @@ void calc_exterior_item_iso_pos(itemstruct_t *itemstr)
  *
  * \param[in] itemstr Pointer to item struct. (was HL)
  */
-void calc_interior_item_iso_pos(itemstruct_t *itemstr)
+void calc_interior_item_isopos(itemstruct_t *itemstr)
 {
-  xy_t *iso_pos;
+  pos8_t *isopos;
 
   assert(itemstr != NULL);
 
-  iso_pos = &itemstr->iso_pos;
+  isopos = &itemstr->isopos;
 
-  // This was a call to divide_by_8_with_rounding, but that expects
-  // separate hi and lo arguments, which is not worth the effort of
-  // mimicing the original code.
-  //
-  // This needs to go somewhere more general.
-#define divround(x) (((x) + 4) >> 3)
-
-  iso_pos->x = divround((0x200 - itemstr->pos.x + itemstr->pos.y) * 2);
-  iso_pos->y = divround(0x800 - itemstr->pos.x - itemstr->pos.y - itemstr->pos.height);
-
-#undef divround
+  isopos->x = divround((0x200 - itemstr->mappos.u + itemstr->mappos.v) * 2);
+  isopos->y = divround(0x800 - itemstr->mappos.u - itemstr->mappos.v - itemstr->mappos.w);
 }
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $7C26: Convert an item to an itemstruct pointer.
- *
- * \param[in] item Item index. (was A)
- *
- * \return Pointer to itemstruct.
- */
-itemstruct_t *item_to_itemstruct(tgestate_t *state, item_t item)
-{
-  assert(state != NULL);
-  ASSERT_ITEM_VALID(item);
-
-  return &state->item_structs[item];
-}
+/* Conv: $7C26/item_to_itemstruct was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -1487,8 +1415,8 @@ itemstruct_t *find_nearby_item(tgestate_t *state)
       uint8_t  coorditers;  /* was B */
 
       // FUTURE: Candidate for loop unrolling.
-      structcoord = &itemstr->pos.x;
-      herocoord   = &state->hero_map_position.x;
+      structcoord = &itemstr->mappos.u;
+      herocoord   = &state->hero_mappos.u;
       coorditers = 2;
       /* Range check. */
       do
@@ -1644,7 +1572,7 @@ void main_loop(tgestate_t *state)
   process_player_input(state);
   in_permitted_area(state);
   restore_tiles(state);
-  move_characters(state);
+  move_a_character(state);
   automatics(state);
   purge_invisible_characters(state);
   spawn_characters(state);
@@ -1672,7 +1600,7 @@ void main_loop(tgestate_t *state)
    * The original game is not dependent on accurate timing: it is much slower
    * in outdoor scenes and especially when multiple characters are on the
    * screen simultaneously. */
-  state->speccy->sleep(state->speccy, 367731);
+  (void) state->speccy->sleep(state->speccy, 367731);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1804,10 +1732,10 @@ void process_player_input(tgestate_t *state)
         /* Hero was at breakfast. */
         state->vischars[0].route.index = routeindex_43_7833;
         state->vischars[0].route.step  = 0;
-        state->vischars[0].mi.pos.x    = 52;
-        state->vischars[0].mi.pos.y    = 62;
+        state->vischars[0].mi.mappos.u = 52;
+        state->vischars[0].mi.mappos.v = 62;
         set_roomdef(state,
-                    room_25_BREAKFAST,
+                    room_25_MESS_HALL,
                     roomdef_25_BENCH_G,
                     interiorobject_EMPTY_BENCH);
         state->hero_in_breakfast = 0;
@@ -1815,13 +1743,13 @@ void process_player_input(tgestate_t *state)
       else
       {
         /* Hero was in bed. */
-        state->vischars[0].route.index   = routeindex_44_HUT2_RIGHT_TO_LEFT;
-        state->vischars[0].route.step    = 1;
-        state->vischars[0].target.x      = 46;
-        state->vischars[0].target.y      = 46;
-        state->vischars[0].mi.pos.x      = 46;
-        state->vischars[0].mi.pos.y      = 46;
-        state->vischars[0].mi.pos.height = 24;
+        state->vischars[0].route.index = routeindex_44_HUT2_RIGHT_TO_LEFT;
+        state->vischars[0].route.step  = 1;
+        state->vischars[0].target.u    = 46;
+        state->vischars[0].target.v    = 46;
+        state->vischars[0].mi.mappos.u = 46;
+        state->vischars[0].mi.mappos.v = 46;
+        state->vischars[0].mi.mappos.w = 24;
         set_roomdef(state,
                     room_2_HUT2LEFT,
                     roomdef_2_BED,
@@ -1908,7 +1836,7 @@ void cutting_wire(tgestate_t *state)
      * We fix that here. */
     hero->direction = hero->direction & vischar_DIRECTION_MASK;
     hero->input = input_KICK;
-    hero->mi.pos.height = 24;
+    hero->mi.mappos.w = 24;
 
     /* Conv: The original code jumps into the tail end of picking_lock()
      * above to do this. */
@@ -1949,7 +1877,7 @@ void in_permitted_area(tgestate_t *state)
 #undef R
 
   /**
-   * $9EE4: Maps route indicies to pointers to the above arrays.
+   * $9EE4: Maps route indices to pointers to the above arrays.
    *
    * Suspect that this means "if you're in <this> route you can be in <these> places."
    */
@@ -1964,27 +1892,27 @@ void in_permitted_area(tgestate_t *state)
     { routeindex_45_HERO_ROLL_CALL,     &permitted_route45[0] },
   };
 
-  pos_t       *vcpos;      /* was HL */
-  tinypos_t   *pos;        /* was DE */
-  attribute_t  attr;       /* was A */
-  uint8_t      routeindex; /* was A */
-  route_t      route;      /* was CA */
-  uint16_t     i;          /* was BC */
-  uint8_t      red_flag;   /* was A */
+  mappos16_t  *hero_vischar_mappos; /* was HL */
+  mappos8_t   *hero_state_mappos;   /* was DE */
+  attribute_t  attr;                /* was A */
+  uint8_t      routeindex;          /* was A */
+  route_t      route;               /* was CA */
+  uint16_t     i;                   /* was BC */
+  uint8_t      red_flag;            /* was A */
 
   assert(state != NULL);
 
-  vcpos = &state->vischars[0].mi.pos;
-  pos = &state->hero_map_position;
+  hero_vischar_mappos = &state->vischars[0].mi.mappos;
+  hero_state_mappos   = &state->hero_mappos;
   if (state->room_index == room_0_OUTDOORS)
   {
     /* Outdoors. */
 
-    pos_to_tinypos(vcpos, pos);
+    scale_mappos_down(hero_vischar_mappos, hero_state_mappos);
 
     /* (217 * 8, 137 * 8) */
-    if (state->vischars[0].iso_pos.x >= MAP_WIDTH  * 8 ||
-        state->vischars[0].iso_pos.y >= MAP_HEIGHT * 8)
+    if (state->vischars[0].isopos.x >= MAP_WIDTH  * 8 ||
+        state->vischars[0].isopos.y >= MAP_HEIGHT * 8)
     {
       escaped(state);
       return;
@@ -1994,9 +1922,9 @@ void in_permitted_area(tgestate_t *state)
   {
     /* Indoors. */
 
-    pos->x      = vcpos->x; // note: narrowing
-    pos->y      = vcpos->y; // note: narrowing
-    pos->height = vcpos->height; // note: narrowing
+    hero_state_mappos->u = hero_vischar_mappos->u; // note: narrowing
+    hero_state_mappos->v = hero_vischar_mappos->v; // note: narrowing
+    hero_state_mappos->w = hero_vischar_mappos->w; // note: narrowing
   }
 
   /* Red flag if picking a lock, or cutting wire. */
@@ -2019,30 +1947,36 @@ void in_permitted_area(tgestate_t *state)
   if (state->in_solitary)
     goto set_flag_green;
 
+  // puzzling - look at the /next/ step?
   route = state->vischars[0].route;
   ASSERT_ROUTE_VALID(route);
-  if (route.index & routeindexflag_REVERSED)
+  if (route.index & ROUTEINDEX_REVERSE_FLAG)
     route.step++;
 
   if (route.index == routeindex_255_WANDER)
   {
+    /* Hero is wandering */
+
     uint8_t area; /* was A */
 
-    // 1 => Hut area
-    // 2 => Yard area
-    area = ((state->vischars[0].route.step & ~7) == 8) ? 1 : 2; // NOT using route.step
+    /* Note that this does NOT using route.step which is possibly modified. */
+    /* 1 => Hut area, 2 => Yard area */
+    area = ((state->vischars[0].route.step & ~7) == 8) ? 1 : 2;
     if (!in_permitted_area_end_bit(state, area))
       goto set_flag_red;
+    else
+      goto set_flag_green; /* This happens naturally anyway */
   }
-  else // en route
+  else
   {
+    /* Hero is en route */
+
     const route_to_permitted_t *tab;       /* was HL */
     uint8_t                     iters;     /* was B */
     const uint8_t              *permitted; /* was HL */
 
-    // A is a route index
-    routeindex = route.index & ~routeindexflag_REVERSED; // added to coax A back from route
-    tab = &route_to_permitted[0]; // table mapping bytes to offsets
+    routeindex = route.index & ~ROUTEINDEX_REVERSE_FLAG;
+    tab = &route_to_permitted[0];
     iters = NELEMS(route_to_permitted);
     do
     {
@@ -2052,25 +1986,31 @@ void in_permitted_area(tgestate_t *state)
     }
     while (--iters);
 
-    // anything not found in route_to_permitted => green flag
+    /* If the route is not found in route_to_permitted assume a green flag */
     goto set_flag_green;
 
 found:
-    // route index was found in route_to_permitted
+    /* Route index was found in route_to_permitted[] */
 
     permitted = tab->permitted;
+    // PUSH permitted(DE)
+    // POP HL
+    // HL = permitted + route.step(C)
+    // PUSH permitted(DE)
     if (!in_permitted_area_end_bit(state, permitted[route.step]))
+    // POP HL = permitted
     {
-      if (state->vischars[0].route.index & routeindexflag_REVERSED) // FUTURE: route index is already in 'route.index'
-        permitted++;
+      // FUTURE: The route index is already in 'route.index'.
+      if (state->vischars[0].route.index & ROUTEINDEX_REVERSE_FLAG)
+        permitted++; // puzzling - see above
 
       i = 0;
       for (;;)
       {
         uint8_t room_or_area; /* was A */
 
-        room_or_area = permitted[i]; // likely; A is room_and_flags
-        if (room_or_area == 255) /* hit end of list */
+        room_or_area = permitted[i];
+        if (room_or_area == 255) /* end of list */
           goto set_flag_red; /* Conv: Jump adjusted */
         if (in_permitted_area_end_bit(state, room_or_area))
           break; /* green */
@@ -2112,10 +2052,9 @@ flag_select:
 
   /* Red flag code path. */
 set_flag_red:
-  attr = attribute_BRIGHT_RED_OVER_BLACK;
   /* Conv: Original game tests the attributes directly here, instead we test
    * the red_flag. */
-  // was: if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attr)
+  // was: if (state->speccy->screen.attributes[morale_flag_attributes_offset] == attribute_BRIGHT_RED_OVER_BLACK)
   if (state->red_flag == 255)
     return; /* flag is already red */
 
@@ -2128,6 +2067,8 @@ set_flag_red:
 
 /**
  * $A007: In permitted area (end bit).
+ *
+ * Checks that the hero is in the specified room or camp bounds.
  *
  * \param[in] state          Pointer to game state.
  * \param[in] room_and_flags If bit 7 is set then bits 0..6 contain a room index. Otherwise it's an area index as passed into within_camp_bounds. (was A)
@@ -2151,7 +2092,7 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
   else if (room == room_0_OUTDOORS) // is outside
   {
     /* Hero is outdoors - check bounds. */
-    return within_camp_bounds(room_and_flags, &state->hero_map_position);
+    return within_camp_bounds(room_and_flags, &state->hero_mappos);
   }
   else
   {
@@ -2165,13 +2106,13 @@ int in_permitted_area_end_bit(tgestate_t *state, uint8_t room_and_flags)
 /**
  * $A01A: For outdoor areas is the specified position within the bounds of the area?
  *
- * \param[in] area Index (0..2) into permitted_bounds[] table. (was A)
- * \param[in] pos  Pointer to position. (was HL)
+ * \param[in] area   Index (0..2) into permitted_bounds[] table. (was A)
+ * \param[in] mappos Pointer to position. (was HL)
  *
  * \return true if in permitted area.
  */
 int within_camp_bounds(uint8_t          area, // ought to be an enum
-                       const tinypos_t *pos)
+                       const mappos8_t *mappos)
 {
   /**
    * $9F15: Bounds of the three main exterior areas.
@@ -2186,11 +2127,11 @@ int within_camp_bounds(uint8_t          area, // ought to be an enum
   const bounds_t *bounds; /* was HL */
 
   assert(area < NELEMS(permitted_bounds));
-  assert(pos != NULL);
+  assert(mappos != NULL);
 
   bounds = &permitted_bounds[area];
-  return pos->x >= bounds->x0 && pos->x < bounds->x1 &&
-         pos->y >= bounds->y0 && pos->y < bounds->y1;
+  return mappos->u >= bounds->x0 && mappos->u < bounds->x1 &&
+         mappos->v >= bounds->y0 && mappos->v < bounds->y1;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2626,1194 +2567,6 @@ void set_game_window_attributes(tgestate_t *state, attribute_t attrs)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $A1A0: Dispatch timed events.
- *
- * \param[in] state Pointer to game state.
- */
-void dispatch_timed_event(tgestate_t *state)
-{
-  /**
-   * $A173: Timed events.
-   */
-  static const timedevent_t timed_events[15] =
-  {
-    {   0, &event_another_day_dawns    },
-    {   8, &event_wake_up              },
-    {  12, &event_new_red_cross_parcel },
-    {  16, &event_go_to_roll_call      },
-    {  20, &event_roll_call            },
-    {  21, &event_go_to_breakfast_time },
-    {  36, &event_end_of_breakfast     },
-    {  46, &event_go_to_exercise_time  },
-    {  64, &event_exercise_time        },
-    {  74, &event_go_to_roll_call      },
-    {  78, &event_roll_call            },
-    {  79, &event_go_to_time_for_bed   },
-    {  98, &event_time_for_bed         },
-    { 100, &event_night_time           },
-    { 130, &event_search_light         },
-  };
-
-  eventtime_t        *pcounter; /* was HL */
-  eventtime_t         time;     /* was A */
-  const timedevent_t *event;    /* was HL */
-  uint8_t             iters;    /* was B */
-
-  assert(state != NULL);
-
-  /* Increment the clock, wrapping at 140. */
-  pcounter = &state->clock;
-  time = *pcounter + 1;
-  if (time == 140) // hoist 140 out to time_MAX or somesuch
-    time = 0;
-  *pcounter = time;
-
-  /* Dispatch the event for that time. */
-  event = &timed_events[0];
-  iters = NELEMS(timed_events);
-  do
-  {
-    if (time == event->time)
-      goto found; // in future rewrite to avoid the goto
-    event++;
-  }
-  while (--iters);
-
-  return;
-
-found:
-  event->handler(state);
-}
-
-void event_night_time(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  if (state->hero_in_bed == 0)
-  {
-    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 1 }; /* was BC */
-    set_hero_route(state, &t);
-  }
-  set_day_or_night(state, 255);
-}
-
-void event_another_day_dawns(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  queue_message(state, message_ANOTHER_DAY_DAWNS);
-  decrease_morale(state, 25);
-  set_day_or_night(state, 0x00);
-}
-
-/**
- * $A1DE: Tail end of above two routines.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] day_night Day or night flag. (was A)
- */
-void set_day_or_night(tgestate_t *state, uint8_t day_night)
-{
-  attribute_t attrs;
-
-  assert(state != NULL);
-  assert(day_night == 0 || day_night == 255);
-
-  state->day_or_night = day_night; // night=255, day=0
-  attrs = choose_game_window_attributes(state);
-  set_game_window_attributes(state, attrs);
-}
-
-void event_wake_up(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  queue_message(state, message_TIME_TO_WAKE_UP);
-  wake_up(state);
-}
-
-void event_go_to_roll_call(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  queue_message(state, message_ROLL_CALL);
-  go_to_roll_call(state);
-}
-
-void event_go_to_breakfast_time(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  queue_message(state, message_BREAKFAST_TIME);
-  set_route_go_to_breakfast(state);
-}
-
-void event_end_of_breakfast(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  end_of_breakfast(state);
-}
-
-void event_go_to_exercise_time(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  queue_message(state, message_EXERCISE_TIME);
-
-  /* Unlock the gates. */
-  state->locked_doors[0] = 0; /* Index into doors + clear locked flag. */
-  state->locked_doors[1] = 1;
-
-  set_route_go_to_yard(state);
-}
-
-void event_exercise_time(tgestate_t *state) // end of exercise time?
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-  set_route_go_to_yard_reversed(state);
-}
-
-void event_go_to_time_for_bed(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  state->bell = bell_RING_40_TIMES;
-
-  /* Lock the gates. */
-  state->locked_doors[0] = 0 | door_LOCKED; /* Index into doors + set locked flag. */
-  state->locked_doors[1] = 1 | door_LOCKED;
-
-  queue_message(state, message_TIME_FOR_BED);
-  go_to_time_for_bed(state);
-}
-
-void event_new_red_cross_parcel(tgestate_t *state)
-{
-  static const itemstruct_t red_cross_parcel_reset_data =
-  {
-    0, /* never used */
-    room_20_REDCROSS,
-    { 44, 44, 12 },
-    { 128, 244 }
-  };
-
-  static const item_t red_cross_parcel_contents_list[4] =
-  {
-    item_PURSE,
-    item_WIRESNIPS,
-    item_BRIBE,
-    item_COMPASS,
-  };
-
-  const item_t *item;  /* was DE */
-  uint8_t       iters; /* was B */
-
-  assert(state != NULL);
-
-  /* Don't deliver a new red cross parcel while the previous one still
-   * exists. */
-  if ((state->item_structs[item_RED_CROSS_PARCEL].room_and_flags & itemstruct_ROOM_MASK) != itemstruct_ROOM_NONE)
-    return;
-
-  /* Select the contents of the next parcel; choosing the first item from the
-   * list which does not already exist. */
-  item = &red_cross_parcel_contents_list[0];
-  iters = NELEMS(red_cross_parcel_contents_list);
-  do
-  {
-    itemstruct_t *itemstruct; /* was HL */
-
-    itemstruct = item_to_itemstruct(state, *item);
-    if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == itemstruct_ROOM_NONE)
-      goto found; /* FUTURE: Remove goto. */
-
-    item++;
-  }
-  while (--iters);
-
-  return;
-
-found:
-  state->red_cross_parcel_current_contents = *item;
-  memcpy(&state->item_structs[item_RED_CROSS_PARCEL].room_and_flags,
-         &red_cross_parcel_reset_data.room_and_flags,
-         6);
-  queue_message(state, message_RED_CROSS_PARCEL);
-}
-
-void event_time_for_bed(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  // Reverse route of below.
-
-  static const route_t t = { routeindex_38_GUARD_12_BED | routeindexflag_REVERSED, 3 }; /* was C,A */
-  set_guards_route(state, t);
-}
-
-void event_search_light(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  static const route_t t = { routeindex_38_GUARD_12_BED, 0 }; /* was C,A */
-  set_guards_route(state, t);
-}
-
-/**
- * Common end of event_time_for_bed and event_search_light.
- * Sets the location of guards 12..15 (the guards from prisoners_and_guards).
- *
- * \param[in] state Pointer to game state.
- * \param[in] route Route.                 (was C,A (hi,lo))
- */
-void set_guards_route(tgestate_t *state, route_t route)
-{
-  character_t index; /* was A' */
-  uint8_t     iters; /* was B */
-
-  assert(state != NULL);
-  ASSERT_ROUTE_VALID(route);
-
-  index = character_12_GUARD_12;
-  iters = 4;
-  do
-  {
-    set_character_route(state, index, route);
-    index++;
-    route.index++;
-  }
-  while (--iters);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A27F: List of non-player characters: six prisoners and four guards.
- *
- * Used by set_prisoners_and_guards_route and
- * set_prisoners_and_guards_route_B.
- */
-static const character_t prisoners_and_guards[10] =
-{
-  character_12_GUARD_12,
-  character_13_GUARD_13,
-  character_20_PRISONER_1,
-  character_21_PRISONER_2,
-  character_22_PRISONER_3,
-  character_14_GUARD_14,
-  character_15_GUARD_15,
-  character_23_PRISONER_4,
-  character_24_PRISONER_5,
-  character_25_PRISONER_6
-};
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A289: Wake up.
- *
- * \param[in] state Pointer to game state.
- */
-void wake_up(tgestate_t *state)
-{
-  characterstruct_t       *charstr; /* was HL */
-  uint8_t                  iters;   /* was B */
-  const roomdef_address_t *rda;     /* Conv: new */
-
-  assert(state != NULL);
-
-  if (state->hero_in_bed)
-  {
-    /* Hero gets out of bed. */
-    state->vischars[0].mi.pos.x = 46;
-    state->vischars[0].mi.pos.y = 46;
-  }
-
-  state->hero_in_bed = 0;
-
-  static const route_t t42 = { routeindex_42_HUT2_LEFT_TO_RIGHT, 0 }; /* was BC */
-  set_hero_route(state, &t42);
-
-  /* Position all six prisoners. */
-  charstr = &state->character_structs[character_20_PRISONER_1];
-  iters = 3;
-  do
-  {
-    charstr->room = room_3_HUT2RIGHT;
-    charstr++;
-  }
-  while (--iters);
-  iters = 3;
-  do
-  {
-    charstr->room = room_5_HUT3RIGHT;
-    charstr++;
-  }
-  while (--iters);
-
-  route_t t5 = { routeindex_5_EXIT_HUT2, 0 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t5);
-
-  /* Update all the bed objects to be empty. */
-  rda = &beds[0];
-  iters = beds_LENGTH; /* BUG: Conv: Original code uses 7 which is wrong. */
-  do
-  {
-    set_roomdef(state,
-                rda->room_index,
-                rda->offset,
-                interiorobject_EMPTY_BED_FACING_SE);
-    rda++;
-  }
-  while (--iters);
-
-  /* Update the hero's bed object to be empty and redraw if required. */
-  set_roomdef(state,
-              room_2_HUT2LEFT,
-              roomdef_2_BED,
-              interiorobject_EMPTY_BED_FACING_SE);
-  if (state->room_index != room_0_OUTDOORS && state->room_index < room_6)
-  {
-    // FUTURE: replace with call to setup_room_and_plot
-    setup_room(state);
-    plot_interior_tiles(state);
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A2E2: End of breakfast time.
- *
- * \param[in] state Pointer to game state.
- */
-void end_of_breakfast(tgestate_t *state)
-{
-  characterstruct_t *charstr;  /* was HL */
-  uint8_t            iters;    /* was B */
-
-  assert(state != NULL);
-
-  if (state->hero_in_breakfast)
-  {
-    state->vischars[0].mi.pos.x = 52;
-    state->vischars[0].mi.pos.y = 62;
-    state->hero_in_breakfast = 0; /* Conv: Moved into if block. */
-  }
-
-  static const route_t t = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was BC */
-  set_hero_route(state, &t);
-
-  charstr = &state->character_structs[character_20_PRISONER_1];
-  iters = 3;
-  do
-  {
-    charstr->room = room_25_BREAKFAST;
-    charstr++;
-  }
-  while (--iters);
-  iters = 3;
-  do
-  {
-    charstr->room = room_23_BREAKFAST;
-    charstr++;
-  }
-  while (--iters);
-
-  route_t t2 = { routeindex_16_BREAKFAST_25 | routeindexflag_REVERSED, 3 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t2);
-
-  /* Update all the benches to be empty. */
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
-
-  /* Redraw current room if the game is showing an affected scene. */
-  if (state->room_index >= room_1_HUT1RIGHT &&
-      state->room_index <= room_28_HUT1LEFT)
-  {
-    // FUTURE: Replace this with a call to setup_room_and_plot.
-    setup_room(state);
-    plot_interior_tiles(state);
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A33F: Set the hero's route, unless in solitary.
- *
- * \param[in] state  Pointer to game state.
- * \param[in] route  Route.                (was BC)
- */
-void set_hero_route(tgestate_t *state, const route_t *route)
-{
-  assert(state != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  if (state->in_solitary)
-    return; /* Ignore. */
-
-  set_hero_route_force(state, route);
-}
-
-/**
- * $A344: Set the hero's route, even if solitary.
- *
- * \param[in] state  Pointer to game state.
- * \param[in] route  Route.                (was BC)
- */
-void set_hero_route_force(tgestate_t *state, const route_t *route)
-{
-  vischar_t *vischar; /* was HL */
-
-  assert(state != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  vischar = &state->vischars[0];
-
-  vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
-  vischar->route = *route;
-  set_route(state, vischar);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A351: Go to time for bed.
- *
- * \param[in] state Pointer to game state.
- */
-void go_to_time_for_bed(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  static const route_t t5 = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was BC */
-  set_hero_route(state, &t5);
-
-  route_t t5_also = { routeindex_5_EXIT_HUT2 | routeindexflag_REVERSED, 2 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t5_also);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A35F: Set the route for all prisoners and guards.
- *
- * Set a different route for each character.
- *
- * Called by go_to_roll_call.
- *
- * \param[in]     state  Pointer to game state.
- * \param[in,out] proute Pointer to route. (was C,A')
- */
-void set_prisoners_and_guards_route(tgestate_t *state, route_t *proute)
-{
-  route_t            route;  /* new var */
-  const character_t *pchars; /* was HL */
-  uint8_t            iters;  /* was B */
-
-  assert(state != NULL);
-  ASSERT_ROUTE_VALID(*proute);
-
-  route = *proute; /* Conv: Keep a local copy of counter. */
-
-  pchars = &prisoners_and_guards[0];
-  iters = NELEMS(prisoners_and_guards);
-  do
-  {
-    set_character_route(state, *pchars, route);
-    route.index++;
-    pchars++;
-  }
-  while (--iters);
-
-  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A373: Set the route for all prisoners and guards.
- *
- * Set the same route for each half of the group.
- *
- * Called by the set_route routines.
- *
- * \param[in]     state  Pointer to game state.
- * \param[in,out] proute Pointer to route. (was C,A')
- */
-void set_prisoners_and_guards_route_B(tgestate_t *state, route_t *proute)
-{
-  route_t            route; /* new var */
-  const character_t *pchars; /* was HL */
-  uint8_t            iters;  /* was B */
-
-  assert(state != NULL);
-  ASSERT_ROUTE_VALID(*proute);
-
-  route = *proute; /* Conv: Keep a local copy of counter. */
-
-  pchars = &prisoners_and_guards[0];
-  iters = NELEMS(prisoners_and_guards);
-  do
-  {
-    set_character_route(state, *pchars, route);
-
-    /* When this is 6, the character being processed is
-     * character_22_PRISONER_3 and the next is character_14_GUARD_14: the
-     * start of the second half of the list. */
-    if (iters == 6)
-      route.index++;
-
-    pchars++;
-  }
-  while (--iters);
-
-  *proute = route; // FUTURE: Discard. This passes a route back but none of the callers ever use it.
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A38C: Set the route for a character.
- *
- * Finds a charstruct, or a vischar, and stores a route.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] character Character index.       (was A)
- * \param[in] route     Route.                 (was A' lo + C hi)
- */
-void set_character_route(tgestate_t *state,
-                         character_t character,
-                         route_t     route)
-{
-  characterstruct_t *charstr; /* was HL */
-  vischar_t         *vischar; /* was HL */
-  uint8_t            iters;   /* was B */
-
-  assert(state != NULL);
-  ASSERT_CHARACTER_VALID(character);
-  ASSERT_ROUTE_VALID(route);
-
-  charstr = get_character_struct(state, character);
-  if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
-  {
-    assert(character == (charstr->character_and_flags & characterstruct_CHARACTER_MASK));
-
-    // Why fetch this copy of character index, is it not the same as the passed-in character?
-    // might just be a re-fetch when the original code clobbers register A.
-    character = charstr->character_and_flags & characterstruct_CHARACTER_MASK;
-
-    /* Search non-player characters to see if this character is already on-screen. */
-    iters = vischars_LENGTH - 1;
-    vischar = &state->vischars[1];
-    do
-    {
-      if (character == vischar->character)
-        goto found_on_screen; /* Character is on-screen: store to vischar. */
-      vischar++;
-    }
-    while (--iters);
-
-    return; /* Conv: Was goto exit; */
-  }
-
-  /* Store to characterstruct only. */
-  store_route(route, &charstr->route);
-  return;
-
-  // FUTURE: Move this chunk into the body of the loop above.
-found_on_screen:
-  vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
-  store_route(route, &vischar->route);
-
-  set_route(state, vischar); // was fallthrough
-}
-
-/**
- * $A3BB: set_route.
- *
- * Called by set_character_route, set_hero_route.
- *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character. (was HL) (e.g. $8003 in original)
- */
-void set_route(tgestate_t *state, vischar_t *vischar)
-{
-  uint8_t          get_target_result; /* was A */
-  tinypos_t       *target;            /* was DE */
-  const tinypos_t *doorpos;           /* was HL */
-  const xy_t      *location;          /* was HL */
-
-  assert(state != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
-
-  state->entered_move_characters = 0;
-
-  // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
-
-#ifdef DEBUG_ROUTES
-  if (vischar == &state->vischars[0])
-    printf("(hero) get_target(route=%d%s step=%d)\n",
-           vischar->route.index & ~routeindexflag_REVERSED,
-           (vischar->route.index & routeindexflag_REVERSED) ? " reversed" : "",
-           vischar->route.step);
-#endif
-
-  get_target_result = get_target(state,
-                                 &vischar->route,
-                                 &doorpos,
-                                 &location);
-
-  /* Set the target coordinates. */
-  target = &vischar->target;
-  if (get_target_result == get_target_LOCATION)
-  {
-#ifdef DEBUG_ROUTES
-    if (vischar == &state->vischars[0])
-      printf("(hero) get_target returned location (%d,%d)\n",
-             location->x, location->y);
-#endif
-
-    target->x = location->x;
-    target->y = location->y;
-  }
-  else if (get_target_result == get_target_DOOR)
-  {
-#ifdef DEBUG_ROUTES
-    if (vischar == &state->vischars[0])
-      printf("(hero) get_target returned door (%d,%d)\n",
-             doorpos->x, doorpos->y);
-#endif
-
-    target->x = doorpos->x;
-    target->y = doorpos->y;
-  }
-  else
-  {
-#ifdef DEBUG_ROUTES
-    if (vischar == &state->vischars[0])
-      printf("(hero) get_target returned route ends\n");
-#endif
-  }
-
-  if (get_target_result == get_target_ROUTE_ENDS)
-  {
-    state->IY = vischar;
-    (void) get_target_assign_pos(state, vischar, &vischar->route);
-  }
-  else if (get_target_result == get_target_DOOR)
-  {
-    vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
-  }
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A3ED: Store an xy_t at the specified address.
- *
- * Used by set_character_route only.
- *
- * \param[in]  route  Route. (was A' lo + C hi)
- * \param[out] proute Pointer to vischar->route, or characterstruct->route. (was HL)
- */
-void store_route(route_t route, route_t *proute)
-{
-  ASSERT_ROUTE_VALID(route);
-  assert(proute != NULL);
-
-  // FUTURE: inline into set_character_route.
-  *proute = route;
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A3F3: Send a character to bed.
- *
- * (entered_move_characters is non-zero.)
- *
- * \param[in] state Pointer to game state.
- * \param[in] route Pointer to route. (was HL)
- */
-void character_bed_state(tgestate_t *state, route_t *route)
-{
-  assert(state != NULL);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  character_bed_common(state, state->character_index, route);
-}
-
-/**
- * $A3F8: entered_move_characters is zero.
- *
- * Gets hit when hero enters hut at end of day.
- *
- * \param[in] state Pointer to game state.
- * \param[in] route Pointer to route. (was HL)
- */
-void character_bed_vischar(tgestate_t *state, route_t *route)
-{
-  character_t character;
-  vischar_t  *vischar;
-
-  assert(state != NULL);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  vischar = state->IY;
-  ASSERT_VISCHAR_VALID(vischar);
-
-  character = vischar->character;
-  if (character == character_0_COMMANDANT)
-  {
-    // Hero moves to bed in reaction to the commandant...
-
-    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 0 }; /* was BC */ // route_hut2_right_to_left
-    set_hero_route(state, &t);
-  }
-  else
-  {
-    character_bed_common(state, character, route); /* was fallthrough */
-  }
-}
-
-/**
- * $A404: Use character index to assign a "walk to bed" route to the specified character.
- *
- * Common end of above two routines.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] character Character index.  (was A)
- * \param[in] route     Pointer to route. (was HL)
- */
-void character_bed_common(tgestate_t *state,
-                          character_t character,
-                          route_t    *route)
-{
-  uint8_t routeindex; /* was A */
-
-  assert(state != NULL);
-  ASSERT_CHARACTER_VALID(character);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  route->step = 0;
-
-  if (character >= character_20_PRISONER_1)
-  {
-    /* All prisoners */
-
-    // routeindex = 7..12 (route to bed) for prisoner 1..6
-    routeindex = character - 13;
-  }
-  else
-  {
-    /* All hostiles */
-    // which exactly?
-
-    routeindex = 13;
-    if (character & 1) /* Odd numbered characters? */
-    {
-      /* reverse route */
-      route->step = 1;
-      routeindex |= routeindexflag_REVERSED;
-    }
-  }
-
-  route->index = routeindex;
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A420: Character sits.
- *
- * This is called with x = 18,19,20,21,22.
- * - 18..20 go to room_25_BREAKFAST
- * - 21..22 go to room_23_BREAKFAST
- *
- * \param[in] state      Pointer to game state.
- * \param[in] routeindex Index of route.   (was A)
- * \param[in] route      Pointer to route. (was HL)
- */
-void character_sits(tgestate_t *state,
-                    uint8_t     routeindex,
-                    route_t    *route)
-{
-  uint8_t  index;      /* was A */
-  int      room_index; /* Conv: new */
-  int      offset;     /* Conv: new */
-  room_t   room;       /* was C */
-
-  assert(state  != NULL);
-  assert(routeindex >= routeindex_18_PRISONER_SITS_1 &&
-         routeindex <= routeindex_23_PRISONER_SITS_3);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  index = routeindex - routeindex_18_PRISONER_SITS_1;
-  /* First three characters. */
-  room_index = room_25_BREAKFAST;
-  offset     = roomdef_25_BENCH_D;
-  if (index >= 3)
-  {
-    /* Last two characters. */
-    room_index = room_23_BREAKFAST;
-    offset     = roomdef_23_BENCH_A;
-    index -= 3;
-  }
-  set_roomdef(state,
-              room_index,
-              offset + index * 3,
-              interiorobject_PRISONER_SAT_MID_TABLE);
-
-  if (routeindex < routeindex_21_PRISONER_SITS_1)
-    room = room_25_BREAKFAST;
-  else
-    room = room_23_BREAKFAST;
-
-  character_sit_sleep_common(state, room, route);
-}
-
-/**
- * $A444: Character sleeps.
- *
- * This is called with x = 7,8,9,10,11,12.
- * -  7..9  go to room_3_HUT2RIGHT
- * - 10..12 go to room_5_HUT3RIGHT
- *
- * \param[in] state      Pointer to game state.
- * \param[in] routeindex                   (was A)
- * \param[in] route      Pointer to route. (was HL)
- */
-void character_sleeps(tgestate_t *state,
-                      uint8_t     routeindex,
-                      route_t    *route)
-{
-  room_t room; /* was C */
-
-  assert(state  != NULL);
-  assert(routeindex >= routeindex_7_PRISONER_SLEEPS_1 &&
-         routeindex <= routeindex_12_PRISONER_SLEEPS_3);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  /* Poke object. */
-  set_roomdef(state,
-              beds[routeindex - 7].room_index,
-              beds[routeindex - 7].offset,
-              interiorobject_OCCUPIED_BED);
-
-  if (routeindex < routeindex_10_PRISONER_SLEEPS_1)
-    room = room_3_HUT2RIGHT;
-  else
-    room = room_5_HUT3RIGHT;
-
-  character_sit_sleep_common(state, room, route); // was fallthrough
-}
-
-/**
- * $A462: Make characters disappear, repainting the screen if required.
- *
- * \param[in] state Pointer to game state.
- * \param[in] room  Room index.            (was C)
- * \param[in] route Route - used to determine either a vischar or a characterstruct depending on if the room specified is the current room. (was DE/HL)
- */
-void character_sit_sleep_common(tgestate_t *state,
-                                room_t      room,
-                                route_t    *route)
-{
-  /* This receives a pointer to a route structure which is within either a
-   * characterstruct or a vischar. */
-
-  assert(state != NULL);
-  ASSERT_ROOM_VALID(room);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  // sampled HL =
-  // breakfast $8022 + + $76B8 $76BF
-  // night     $76A3 $76B8 $76C6 $76B1 $76BF $76AA
-  // (not always in the same order)
-  //
-  // $8022 -> vischar[1]->route
-  // others -> character_structs->route
-
-  route->index = routeindex_0_HALT; /* Stand still. */
-
-  if (state->room_index != room)
-  {
-    /* Character is sitting or sleeping in a room presently not visible. */
-
-    characterstruct_t *cs;
-
-    /* Retrieve the parent structure pointer. */
-    cs = structof(route, characterstruct_t, route);
-    cs->room = room_NONE;
-  }
-  else
-  {
-    /* Character is visible - force a repaint. */
-
-    vischar_t *vc;
-
-    /* This is only ever hit when location is in vischar @ $8020. */
-
-    /* Retrieve the parent structure pointer. */
-    vc = structof(route, vischar_t, route);
-    vc->room = room_NONE; // hides but doesn't disable the character?
-
-    setup_room_and_plot(state);
-  }
-}
-
-/**
- * $A479: Setup room and plot.
- *
- * \param[in] state Pointer to game state.
- */
-void setup_room_and_plot(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  setup_room(state);
-  plot_interior_tiles(state);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A47F: The hero sits.
- *
- * \param[in] state Pointer to game state.
- */
-void hero_sits(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  set_roomdef(state,
-              room_25_BREAKFAST,
-              roomdef_25_BENCH_G,
-              interiorobject_PRISONER_SAT_END_TABLE);
-  hero_sit_sleep_common(state, &state->hero_in_breakfast);
-}
-
-/**
- * $A489: The hero sleeps.
- *
- * \param[in] state Pointer to game state.
- */
-void hero_sleeps(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  set_roomdef(state,
-              room_2_HUT2LEFT,
-              roomdef_2_BED,
-              interiorobject_OCCUPIED_BED);
-  hero_sit_sleep_common(state, &state->hero_in_bed);
-}
-
-/**
- * $A498: Common end of hero_sits/sleeps.
- *
- * \param[in] state Pointer to game state.
- * \param[in] pflag Pointer to hero_in_breakfast or hero_in_bed. (was HL)
- */
-void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
-{
-  assert(state != NULL);
-  assert(pflag != NULL);
-
-  /* Set hero_in_breakfast or hero_in_bed flag. */
-  *pflag = 255;
-
-  /* Reset only the route index. */
-  state->vischars[0].route.index = routeindex_0_HALT; /* Stand still. */
-
-  /* Set hero position (x,y) to zero. */
-  state->vischars[0].mi.pos.x = 0;
-  state->vischars[0].mi.pos.y = 0;
-
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
-
-  setup_room_and_plot(state);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A4A9: Set "go to yard" route.
- *
- * \param[in] state Pointer to game state.
- */
-void set_route_go_to_yard(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  static const route_t t14 = { routeindex_14_GO_TO_YARD, 0 };
-  set_hero_route(state, &t14);
-
-  route_t t14_also = { routeindex_14_GO_TO_YARD, 0 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t14_also);
-}
-
-/**
- * $A4B7: Set "go to yard" route reversed.
- *
- * \param[in] state Pointer to game state.
- */
-void set_route_go_to_yard_reversed(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  static const route_t t14 = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 };
-  set_hero_route(state, &t14);
-
-  route_t t14_also = { routeindex_14_GO_TO_YARD | routeindexflag_REVERSED, 4 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t14_also);
-}
-
-/**
- * $A4C5: Set route 16.
- *
- * \param[in] state Pointer to game state.
- */
-void set_route_go_to_breakfast(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  static const route_t t16 = { routeindex_16_BREAKFAST_25, 0 };
-  set_hero_route(state, &t16);
-
-  route_t t16_also = { routeindex_16_BREAKFAST_25, 0 }; /* was A',C */
-  set_prisoners_and_guards_route_B(state, &t16_also);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A4D3: entered_move_characters is non-zero (another one).
- *
- * Very similar to the routine at $A3F3.
- *
- * \param[in] state Pointer to game state.
- * \param[in] route Pointer to character struct. (was HL)
- */
-void charevnt_breakfast_state(tgestate_t *state, route_t *route)
-{
-  assert(state != NULL);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  charevnt_breakfast_common(state, state->character_index, route);
-}
-
-/**
- * $A4D8: entered_move_characters is zero (another one).
- *
- * \param[in] state Pointer to game state.
- * \param[in] route Pointer to route. (was HL)
- */
-void charevnt_breakfast_vischar(tgestate_t *state, route_t *route)
-{
-  character_t character;
-  vischar_t  *vischar;
-
-  assert(state != NULL);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  vischar = state->IY;
-  ASSERT_VISCHAR_VALID(vischar);
-
-  character = vischar->character;
-  if (character == character_0_COMMANDANT)
-  {
-    static const route_t t = { routeindex_43_7833, 0 }; /* was BC */
-    set_hero_route(state, &t);
-  }
-  else
-  {
-    charevnt_breakfast_common(state, character, route); /* was fallthrough */
-  }
-}
-
-/**
- * $A4E4: Common end of above two routines.
- *
- * Start of breakfast: sets routes for prisoners and guards.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] character Character index.       (was A)
- * \param[in] route     Pointer to route.      (was HL)
- */
-void charevnt_breakfast_common(tgestate_t *state,
-                               character_t character,
-                               route_t    *route)
-{
-  uint8_t routeindex; /* was A */
-
-  assert(state != NULL);
-  ASSERT_CHARACTER_VALID(character);
-  assert(route != NULL);
-  ASSERT_ROUTE_VALID(*route);
-
-  route->step = 0;
-
-  if (character >= character_20_PRISONER_1)
-  {
-    /* Prisoners 1..6 take routes 18..23 (routes to sitting). */
-    routeindex = character - 2;
-  }
-  else
-  {
-    /* Guards take route 24 if even, or 25 if odd. */
-    routeindex = 24;
-    if (character & 1)
-      routeindex++;
-  }
-
-  route->index = routeindex;
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $A4FD: Go to roll call.
- *
- * \param[in] state Pointer to game state.
- */
-void go_to_roll_call(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  route_t t26 = { routeindex_26_GUARD_12_ROLL_CALL, 0 }; /* was C,A' */
-  set_prisoners_and_guards_route(state, &t26);
-
-  static const route_t t45 = { routeindex_45_HERO_ROLL_CALL, 0 };
-  set_hero_route(state, &t45);
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
  * $A50B: Reset the screen.
  *
  * \param[in] state Pointer to game state.
@@ -3861,7 +2614,6 @@ void escaped(tgestate_t *state)
 
   const screenlocstring_t *message;   /* was HL */
   escapeitem_t             itemflags; /* was C */
-  const item_t            *pitem;     /* was HL */
   uint8_t                  keys;      /* was A */
 
   assert(state != NULL);
@@ -3875,10 +2627,8 @@ void escaped(tgestate_t *state)
   (void) screenlocstring_plot(state, message);    /* FROM THE CAMP */
 
   /* Form escape items bitfield. */
-  itemflags = 0;
-  pitem = &state->items_held[0];
-  itemflags = join_item_to_escapeitem(pitem++, itemflags);
-  itemflags = join_item_to_escapeitem(pitem,   itemflags);
+  itemflags = item_to_escapeitem(state->items_held[0]) |
+              item_to_escapeitem(state->items_held[1]);
 
   /*         Items                     Message
    *    Unf Pur Ppr Cmp                -------
@@ -3890,7 +2640,7 @@ void escaped(tgestate_t *state)
    *  4  .   X   .   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
    *  5  .   X   .   X  "AND WILL CROSS THE BORDER SUCCESSFULLY" (win)
    *  6  .   X   X   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
-   *  8  X   .   .   .  "BUT WERE RECAPTURED TOTALLY LOST" (lose)
+   *  8  X   .   .   .  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
    *  9  X   .   .   X  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
    * 10  X   .   X   .  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
    * 12  X   X   .   .  "BUT WERE RECAPTURED AND SHOT AS A SPY" (lose)
@@ -3933,20 +2683,20 @@ void escaped(tgestate_t *state)
   message = &messages[10]; /* PRESS ANY KEY */
   (void) screenlocstring_plot(state, message);
 
-  // FIXME: Loops which won't check the quit flag.
-  /* Wait for a keypress. */
+  /* Debounce: First wait for any already-held key to be released. */
   do
     keys = keyscan_all(state);
   while (keys != 0); /* Down press */
+  /* Then wait for any key to be pressed. */
   do
     keys = keyscan_all(state);
   while (keys == 0); /* Up press */
 
   /* Reset the game, or send the hero to solitary. */
   if (itemflags == 0xFF || itemflags >= escapeitem_UNIFORM)
-    reset_game(state); // exit via
+    reset_game(state); /* was tail call */
   else
-    solitary(state); // exit via
+    solitary(state); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -3975,7 +2725,7 @@ uint8_t keyscan_all(tgestate_t *state)
     /* Invert bits and mask off key bits. */
     keys = ~keys & 0x1F;
     if (keys)
-      return keys; /* Key(s) pressed */
+      goto exit; /* Key(s) pressed */
 
     /* Rotate the top byte of the port number to get the next port. */
     // Conv: Was RLC B
@@ -3984,26 +2734,21 @@ uint8_t keyscan_all(tgestate_t *state)
   }
   while (carry);
 
-  return 0; /* No keys pressed */
+  keys = 0; /* No keys pressed */
+
+exit:
+
+  /* Conv: Timing: The original game keyscans as fast as it can. We can't
+   * have that so instead we introduce a short delay and handle game thread
+   * termination. */
+  gamedelay(state, 3500000 / 50); /* 50/sec */
+
+  return keys;
 }
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $A59C: Call item_to_escapeitem then merge result with a previous escapeitem.
- *
- * \param[in] pitem    Pointer to item.              (was HL)
- * \param[in] previous Previous escapeitem bitfield. (was C)
- *
- * \return Merged escapeitem bitfield. (was C)
- */
-escapeitem_t join_item_to_escapeitem(const item_t *pitem, escapeitem_t previous)
-{
-  assert(pitem != NULL);
-  // assert(previous);
-
-  return item_to_escapeitem(*pitem) | previous;
-}
+/* Conv: $A59C/join_item_to_escapeitem was inlined. */
 
 /**
  * $A5A3: Return a bitmask indicating the presence of items required for escape.
@@ -4055,9 +2800,6 @@ const screenlocstring_t *screenlocstring_plot(tgestate_t              *state,
   do
     screen = plot_glyph(state, string++, screen);
   while (--length);
-
-//  // FUTURE: Hoist this to the higher level if possible.
-//  state->speccy->draw(state->speccy, NULL);
 
   return slstring + 1;
 }
@@ -4708,56 +3450,42 @@ void shunt_map_down_left(tgestate_t *state)
  */
 void move_map(tgestate_t *state)
 {
-  typedef void (movemapfn_t)(tgestate_t *, uint8_t *);
-
-  static movemapfn_t *const movemapfns[] =
-  {
-    &move_map_up_left,
-    &move_map_up_right,
-    &move_map_down_right,
-    &move_map_down_left,
-  };
-
-  const anim_t  *anim;              /* was DE */
-  uint8_t        animindex;         /* was C */
-  direction_t    map_direction;     /* was A */
-  uint8_t        move_map_y;        /* was A */
-  movemapfn_t   *pmovefn;           /* was HL */
-  uint8_t        x,y;               /* was C,B */
-  uint8_t       *pmove_map_y;       /* was HL */
-  uint8_t       *pmove_map_y_copy;  /* was DE */
-  xy_t           game_window_offset;  /* was HL */
-  // uint16_t       HLpos;  /* was HL */
+  const anim_t *anim;               /* was DE */
+  uint8_t       animindex;          /* was C */
+  direction_t   map_direction;      /* was A */
+  uint8_t       move_map_y;         /* was A */
+  uint8_t       x,y;                /* was C,B */
+  pos8_t        game_window_offset; /* was HL */
 
   assert(state != NULL);
 
   if (state->room_index > room_0_OUTDOORS)
-    return; /* Can't move the map when indoors. */
+    return; /* Don't move the map when indoors. */
 
   if (state->vischars[0].counter_and_flags & vischar_BYTE7_DONT_MOVE_MAP)
-    return; /* Can't move the map when touch() saw contact. */
+    return; /* Don't move the map when touch() saw contact. */
 
   anim      = state->vischars[0].anim;
   animindex = state->vischars[0].animindex;
   map_direction = anim->map_direction;
   if (map_direction == 255)
-    return; /* Don't move. */
+    return; /* Don't move the map if the current animation inhibits it. */
 
   if (animindex & vischar_ANIMINDEX_REVERSE)
-    map_direction ^= 2; /* Exchange up and down. */
+    map_direction ^= 2; /* Exchange up and down directions when reversed. */
 
-  pmovefn = movemapfns[map_direction];
-  // PUSH HL // pushes move_map routine to stack
-  // PUSH AF
+  /* Clamp the map position to (0..192,0..124). */
 
-  /* Map clamping stuff. */
   if (/* DISABLES CODE */ (0))
   {
-    /* FUTURE: Equivalent. */
-         if (map_direction == direction_TOP_LEFT)     { y = 124; x = 192; }
-    else if (map_direction == direction_TOP_RIGHT)    { y = 124; x =   0; }
-    else if (map_direction == direction_BOTTOM_RIGHT) { y =   0; x =   0; }
-    else if (map_direction == direction_BOTTOM_LEFT)  { y =   0; x = 192; }
+    /* Equivalent to: */
+    switch (map_direction)
+    {
+      case direction_TOP_LEFT:     x = 192; y = 124; break;
+      case direction_TOP_RIGHT:    x =   0; y = 124; break;
+      case direction_BOTTOM_RIGHT: x =   0; y =   0; break;
+      case direction_BOTTOM_LEFT:  x = 192; y =   0; break;
+    }
   }
   else
   {
@@ -4775,138 +3503,71 @@ void move_map(tgestate_t *state)
   if (state->map_position.x == x || state->map_position.y == y)
     return; /* Don't move. */
 
-  // POP AF
-
-  // Is this a screen offset of some sort?
-  // It gets passed into the move functions.
-  // Is this a vertical index/offset only?
-  pmove_map_y = &state->move_map_y;
   if (map_direction <= direction_TOP_RIGHT)
-    /* direction_TOP_* */
-    move_map_y = *pmove_map_y + 1;
+    /* Either direction_TOP_* */
+    state->move_map_y++;
   else
-    /* direction_BOTTOM_* */
-    move_map_y = *pmove_map_y - 1;
-  move_map_y &= 3;
-  *pmove_map_y = move_map_y;
+    /* Either direction_BOTTOM_* */
+    state->move_map_y--;
+  state->move_map_y &= 3;
 
-  // FUTURE: Drop this copy.
-  pmove_map_y_copy = pmove_map_y; // was EX DE,HL
-
+  move_map_y = state->move_map_y;
   assert(move_map_y <= 3);
 
-  // used by plot_game_window (which masks off top and bottom separately)
-  if (0)
+  /* Set the game_window_offset. This is used by plot_game_window (which masks
+   * off the top and bottom separately). */
+  /* Conv: Simplified. */
+  switch (move_map_y)
   {
-    // Equivalent:
-//         if (move_map_y == 0) game_window_offset = 0x0000;
-//    else if (move_map_y == 1) game_window_offset = 0xFF30;
-//    else if (move_map_y == 2) game_window_offset = 0x0060;
-//    else if (move_map_y == 3) game_window_offset = 0xFF90;
-  }
-  else
-  {
-    game_window_offset.x = 0;
-    game_window_offset.y = 0;
-    if (move_map_y != 0)
-    {
-      game_window_offset.x = 96;
-      if (move_map_y != 2)
-      {
-        game_window_offset.x = 48;
-        game_window_offset.y = 255;
-        if (move_map_y != 1)
-        {
-          game_window_offset.x = 144;
-        }
-      }
-    }
+    case 0: game_window_offset = (pos8_t) {0x00, 0x00}; break;
+    case 1: game_window_offset = (pos8_t) {0x30, 0xFF}; break;
+    case 2: game_window_offset = (pos8_t) {0x60, 0x00}; break;
+    case 3: game_window_offset = (pos8_t) {0x90, 0xFF}; break;
   }
 
   state->game_window_offset = game_window_offset;
-  // HLpos = state->map_position; // passing map_position in HL omitted in this version
 
-  // pops and calls move_map_* routine pushed at $AAE0
-  pmovefn(state, pmove_map_y_copy);
-}
+  /* These cases check the move_map_y counter to decide when to shunt up/down,
+   * and left/right. */
+  /* Conv: Inlined. */
+  switch (map_direction)
+  {
+    case direction_TOP_LEFT:
+      /* Used when player moves down-right (map is shifted up-left).
+       * Pattern: 0..3 => up/left/none/left. */
+      if (move_map_y == 0)
+        shunt_map_up(state);
+      else if (move_map_y & 1)
+        shunt_map_left(state);
+      break;
 
-// FUTURE: Pass move_map_y directly instead of fetching it from state.
-// FUTURE: And fold these functions in to the parent above. (e.g. in a switch).
+    case direction_TOP_RIGHT:
+      /* Used when player moves down-left (map is shifted up-right).
+       * Pattern: 0..3 => up-right/none/right/none. */
+      if (move_map_y == 0)
+        shunt_map_up_right(state);
+      else if (move_map_y == 2)
+        shunt_map_right(state);
+      break;
 
-/* Called when player moves down-right (map is shifted up-left). */
-void move_map_up_left(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
+    case direction_BOTTOM_RIGHT:
+      /* Used when player moves up-left (map is shifted down-right).
+       * Pattern: 0..3 => right/none/right/down. */
+      if (move_map_y == 3)
+        shunt_map_down(state);
+      else if ((move_map_y & 1) == 0)
+        shunt_map_right(state);
+      break;
 
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => up/left/none/left
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 0)
-    shunt_map_up(state);
-  else if (move_map_y & 1) // 1 or 3
-    shunt_map_left(state);
-  // else 2
-}
-
-/* Called when player moves down-left (map is shifted up-right). */
-void move_map_up_right(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => up-right/none/right/none
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 0)
-    shunt_map_up_right(state);
-  else if (move_map_y == 2)
-    shunt_map_right(state);
-  // else 1 or 3
-}
-
-/* Called when player moves up-left (map is shifted down-right). */
-void move_map_down_right(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => right/none/right/down
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 3)
-    shunt_map_down(state);
-  else if ((move_map_y & 1) == 0) // 0 or 2
-    shunt_map_right(state);
-  // else 1
-}
-
-/* Called when player moves up-right (map is shifted down-left). */
-void move_map_down_left(tgestate_t *state, uint8_t *pmove_map_y)
-{
-  uint8_t move_map_y; /* was A */
-
-  assert(state != NULL);
-  assert(pmove_map_y == &state->move_map_y);
-  assert(*pmove_map_y <= 3);
-
-  // 0..3 => none/left/none/down-left
-
-  move_map_y = *pmove_map_y;
-  if (move_map_y == 1)
-    shunt_map_left(state);
-  else if (move_map_y == 3)
-    shunt_map_down_left(state);
-  // else 0 or 2
+    case direction_BOTTOM_LEFT:
+      /* Used when player moves up-right (map is shifted down-left).
+       * Pattern: 0..3 => none/left/none/down-left. */
+      if (move_map_y == 1)
+        shunt_map_left(state);
+      else if (move_map_y == 3)
+        shunt_map_down_left(state);
+      break;
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4959,295 +3620,6 @@ attribute_t choose_game_window_attributes(tgestate_t *state)
   state->game_window_attribute = attr;
 
   return attr;
-}
-
-/* ----------------------------------------------------------------------- */
-
-/**
- * $ABA0: Zoombox.
- *
- * \param[in] state Pointer to game state.
- */
-void zoombox(tgestate_t *state)
-{
-  attribute_t attrs; /* was A */
-  uint8_t    *pvar;  /* was HL */
-  uint8_t     var;   /* was A */
-
-  assert(state != NULL);
-
-  state->zoombox.x = 12;
-  state->zoombox.y = 8;
-
-  attrs = choose_game_window_attributes(state);
-
-  state->speccy->screen.attributes[ 9 * state->width + 18] = attrs;
-  state->speccy->screen.attributes[ 9 * state->width + 19] = attrs;
-  state->speccy->screen.attributes[10 * state->width + 18] = attrs;
-  state->speccy->screen.attributes[10 * state->width + 19] = attrs;
-
-  state->zoombox.width  = 0;
-  state->zoombox.height = 0;
-
-  do
-  {
-    state->speccy->stamp(state->speccy);
-
-    /* Shrink X and grow width until X is 1 */
-    pvar = &state->zoombox.x;
-    var = *pvar;
-    if (var != 1)
-    {
-      (*pvar)--;
-      var--;
-      pvar[1]++;
-    }
-
-    /* Grow width until it's 22 */
-    pvar++; /* -> &state->width */
-    var += *pvar;
-    if (var < 22)
-      (*pvar)++;
-
-    /* Shrink Y and grow height until Y is 1 */
-    pvar++; /* -> &state->zoombox.y */
-    var = *pvar;
-    if (var != 1)
-    {
-      (*pvar)--;
-      var--;
-      pvar[1]++;
-    }
-
-    /* Grow height until it's 15 */
-    pvar++; /* -> &state->height */
-    var += *pvar;
-    if (var < 15)
-      (*pvar)++;
-
-    zoombox_fill(state);
-    zoombox_draw_border(state);
-
-    /* Conv: Invalidation added over the original game. */
-    invalidate_bitmap(state,
-                      &state->speccy->screen.pixels[0] + state->game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
-                      (state->zoombox.width + 2) * 8,
-                      (state->zoombox.height + 2) * 8);
-
-    {
-      /* Conv: Timing: The original game slows in proportion to the size of
-       * the area being zoomboxed. We simulate that here. */
-      int delay = (state->zoombox.height + state->zoombox.width) * 110951 / 35;
-      state->speccy->sleep(state->speccy, delay);
-    }
-  }
-  while (state->zoombox.height + state->zoombox.width < 35);
-}
-
-/**
- * $ABF9: Zoombox. partial copy of window buffer contents?
- *
- * \param[in] state Pointer to game state.
- */
-void zoombox_fill(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added
-
-  uint8_t   iters;      /* was B */
-  uint8_t   hz_count;   /* was A */
-  uint8_t   iters2;     /* was A */
-  uint8_t   hz_count1;  /* was $AC55 */
-  uint8_t   src_skip;   /* was $AC4D */
-  uint16_t  hz_count2;  /* was BC */
-  uint8_t  *dst;        /* was DE */
-  uint16_t  offset;     /* was HL */
-  uint8_t  *src;        /* was HL */
-  uint16_t  dst_stride; /* was BC */
-  uint8_t  *prev_dst;   /* was stack */
-
-  /* Conv: Simplified calculation to use a single multiply. */
-  offset = state->zoombox.y * state->window_buf_stride + state->zoombox.x;
-  src = &state->window_buf[offset + 1];
-  ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
-  dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
-  ASSERT_SCREEN_PTR_VALID(dst);
-
-  hz_count  = state->zoombox.width;
-  hz_count1 = hz_count;
-  src_skip  = state->columns - hz_count; // columns was 24
-
-  iters = state->zoombox.height; /* iterations */
-  do
-  {
-    prev_dst = dst;
-
-    iters2 = 8; // one row
-    do
-    {
-      hz_count2 = state->zoombox.width; /* TODO: This duplicates the read above. */
-      memcpy(dst, src, hz_count2);
-
-      // these computations might take the values out of range on the final iteration (but will never be used)
-      dst += hz_count2; // this is LDIR post-increment. it can be removed along with the line below.
-      src += hz_count2 + src_skip; // move to next source line
-      dst -= hz_count1; // was E -= self_AC55; // undo LDIR postinc
-      dst += state->width * 8; // was D++; // move to next scanline
-
-      if (iters2 > 1 || iters > 1)
-        ASSERT_SCREEN_PTR_VALID(dst);
-    }
-    while (--iters2);
-
-    dst = prev_dst;
-
-    dst_stride = state->width; // scanline-to-scanline stride (32)
-    if (((dst - screen_base) & 0xFF) >= 224) // 224+32 == 256, so do skip to next band // TODO: 224 should be (256 - state->width)
-      dst_stride += 7 << 8; // was B = 7
-
-    dst += dst_stride;
-  }
-  while (--iters);
-}
-
-/**
- * $AC6F: Draw zoombox border.
- *
- * \param[in] state Pointer to game state.
- */
-void zoombox_draw_border(tgestate_t *state)
-{
-  assert(state != NULL);
-
-  uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added var.
-
-  uint8_t *addr;  /* was HL */
-  uint8_t  iters; /* was B */
-  int      delta; /* was DE */
-
-  addr = screen_base + state->game_window_start_offsets[(state->zoombox.y - 1) * 8]; // Conv: Screen base hoisted from table.
-  ASSERT_SCREEN_PTR_VALID(addr);
-
-  /* Top left */
-  addr += state->zoombox.x - 1;
-  zoombox_draw_tile(state, zoombox_tile_TL, addr++);
-
-  /* Horizontal, moving right */
-  iters = state->zoombox.width;
-  do
-    zoombox_draw_tile(state, zoombox_tile_HZ, addr++);
-  while (--iters);
-
-  /* Top right */
-  zoombox_draw_tile(state, zoombox_tile_TR, addr);
-  delta = state->width; // move to next character row
-  if (((addr - screen_base) & 0xFF) >= 224) // was: if (L >= 224) // if adding 32 would overflow
-    delta += 0x0700; // was D=7
-  addr += delta;
-
-  /* Vertical, moving down */
-  iters = state->zoombox.height;
-  do
-  {
-    zoombox_draw_tile(state, zoombox_tile_VT, addr);
-    delta = state->width; // move to next character row
-    if (((addr - screen_base) & 0xFF) >= 224) // was: if (L >= 224) // if adding 32 would overflow
-      delta += 0x0700; // was D=7
-    addr += delta;
-  }
-  while (--iters);
-
-  /* Bottom right */
-  zoombox_draw_tile(state, zoombox_tile_BR, addr--);
-
-  /* Horizontal, moving left */
-  iters = state->zoombox.width;
-  do
-    zoombox_draw_tile(state, zoombox_tile_HZ, addr--);
-  while (--iters);
-
-  /* Bottom left */
-  zoombox_draw_tile(state, zoombox_tile_BL, addr);
-  delta = -state->width; // move to next character row
-  if (((addr - screen_base) & 0xFF) < 32) // was: if (L < 32) // if subtracting 32 would underflow
-    delta -= 0x0700;
-  addr += delta;
-
-  /* Vertical, moving up */
-  iters = state->zoombox.height;
-  do
-  {
-    zoombox_draw_tile(state, zoombox_tile_VT, addr);
-    delta = -state->width; // move to next character row
-    if (((addr - screen_base) & 0xFF) < 32) // was: if (L < 32) // if subtracting 32 would underflow
-      delta -= 0x0700;
-    addr += delta;
-  }
-  while (--iters);
-}
-
-/**
- * $ACFC: Draw a single zoombox border tile.
- *
- * \param[in] state   Pointer to game state.
- * \param[in] tile    Tile to draw.   (was A)
- * \param[in] addr_in Screen address. (was HL)
- */
-void zoombox_draw_tile(tgestate_t     *state,
-                       zoombox_tile_t  tile,
-                       uint8_t        *addr_in)
-{
-  /**
-   * $AF5E: Zoombox tiles.
-   */
-  static const tile_t zoombox_tiles[zoombox_tile__LIMIT] =
-  {
-    { { 0x00, 0x00, 0x00, 0x03, 0x04, 0x08, 0x08, 0x08 } }, /* TL */
-    { { 0x00, 0x20, 0x18, 0xF4, 0x2F, 0x18, 0x04, 0x00 } }, /* HZ */
-    { { 0x00, 0x00, 0x00, 0x00, 0xE0, 0x10, 0x08, 0x08 } }, /* TR */
-    { { 0x08, 0x08, 0x1A, 0x2C, 0x34, 0x58, 0x10, 0x10 } }, /* VT */
-    { { 0x10, 0x10, 0x10, 0x20, 0xC0, 0x00, 0x00, 0x00 } }, /* BR */
-    { { 0x10, 0x10, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00 } }, /* BL */
-  };
-
-  uint8_t         *addr;  /* was DE */
-  const tilerow_t *row;   /* was HL */
-  uint8_t          iters; /* was B */
-  ptrdiff_t        off;   /* Conv: new */
-  attribute_t     *attrs; /* was HL */
-
-  assert(state != NULL);
-  assert(tile < NELEMS(zoombox_tiles));
-  ASSERT_SCREEN_PTR_VALID(addr_in);
-
-  addr = addr_in; // was EX DE,HL
-  row = &zoombox_tiles[tile].row[0];
-  iters = 8;
-  do
-  {
-    *addr = *row++;
-    addr += 256;
-  }
-  while (--iters);
-
-  /* Conv: The original game can munge bytes directly here, assuming screen
-   * addresses, but I can't... */
-
-  addr -= 256; /* Compensate for overshoot */
-  off = addr - &state->speccy->screen.pixels[0];
-
-  attrs = &state->speccy->screen.attributes[off & 0xFF]; // to within a third
-
-  // can i do ((off >> 11) << 8) ?
-  if (off >= 0x0800)
-  {
-    attrs += 256;
-    if (off >= 0x1000)
-      attrs += 256;
-  }
-
-  *attrs = state->game_window_attribute;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -5416,7 +3788,7 @@ void nighttime(tgestate_t *state)
     goto middle_bit;
   }
 
-  /* When not tracking the hero all three spotlights are cycled through. */
+  /* When not tracking the hero all three searchlights are cycled through. */
 
   slstate = &state->searchlight.states[0];
   iters = 3; // 3 iterations == three searchlights
@@ -5430,8 +3802,8 @@ void nighttime(tgestate_t *state)
 
     /* Would the searchlight intersect with the game window? */
     // Conv: Reordered into the expected series
-    // first check is if the spotlight image is off the left hand side
-    // second check is if the spotlight image is off the right hand side
+    // first check is if the searchlight image is off the left hand side
+    // second check is if the searchlight image is off the right hand side
     // etc.
     if (slstate->xy.x + 16 < map_x || slstate->xy.x >= map_x + state->columns ||
         slstate->xy.y + 16 < map_y || slstate->xy.y >= map_y + state->rows)
@@ -5465,7 +3837,7 @@ next:
 }
 
 /**
- * $AE78: Is the hero is caught in the spotlight?
+ * $AE78: Is the hero is caught in the searchlight?
  *
  * \param[in] state   Pointer to game state.
  * \param[in] slstate Pointer to per-searchlight state. (was HL)
@@ -5501,7 +3873,7 @@ void searchlight_caught(tgestate_t                   *state,
 
   state->bell = bell_RING_PERPETUAL;
 
-  decrease_morale(state, 10); // exit via
+  decrease_morale(state, 10); /* was tail call */
 }
 
 /**
@@ -5509,7 +3881,7 @@ void searchlight_caught(tgestate_t                   *state,
  *
  * \param[in] state     Pointer to game state.
  * \param[in] attrs     Pointer to screen attributes (can be out of bounds!) (was DE)
- * \param[in] clip_left Spotlight is to the left of the main window. (was $AE75)
+ * \param[in] clip_left Searchlight is to the left of the main window. (was $AE75)
  */
 void searchlight_plot(tgestate_t  *state,
                       attribute_t *attrs,
@@ -5676,7 +4048,8 @@ exit:
 /**
  * $AF8F: Test for characters meeting obstacles like doors and map bounds.
  *
- * Also assigns saved_pos to specified vischar's pos and sets the sprite_index.
+ * Also assigns saved_mappos to specified vischar's pos and sets the
+ * sprite_index.
  *
  * \param[in] state        Pointer to game state.
  * \param[in] vischar      Pointer to visible character. (was IY)
@@ -5686,31 +4059,27 @@ exit:
  */
 int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 {
-  spriteindex_t stashed_sprite_index; /* was $81AA */ // FUTURE: Can be removed.
+  /* Conv: Removed $81AA stashed sprite index. */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert((sprite_index & ~sprite_FLAG_FLIP) < sprite__LIMIT);
 
-  stashed_sprite_index = sprite_index;
-  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_TOUCH_ENTERED; // wild guess: clamp character in position?
+  vischar->counter_and_flags |= vischar_BYTE7_DONT_MOVE_MAP | vischar_DRAWABLE;
 
-  // Conv: Removed little register shuffle to get (vischar & 0xFF) into A.
+  /* Conv: Removed little register shuffle to get (vischar & 0xFF) into A. */
 
   /* If hero is player controlled then check for door transitions. */
   if (vischar == &state->vischars[0] && state->automatic_player_counter > 0)
     door_handling(state, vischar);
 
-  /* If non-player character or hero is not cutting the fence. */
-  // NPCs are not bounds checked
-  // player is not bounds checked when cutting the fence
+  /* If a non-player character or hero when he's not cutting the fence. */
   if (vischar > &state->vischars[0] || ((state->vischars[0].flags & (vischar_FLAGS_PICKING_LOCK | vischar_FLAGS_CUTTING_WIRE)) != vischar_FLAGS_CUTTING_WIRE))
-  {
     if (bounds_check(state, vischar))
-      return 1; /* Within wall bounds. */
-  }
+      return 1; /* Outwith wall bounds. */
 
-  if (vischar->character <= character_25_PRISONER_6) /* character temp was in Adash */
+  /* Check "real" characters for collisions. */
+  if (vischar->character <= character_25_PRISONER_6) /* character temp was in A' */
     if (collision(state))
       // there was a collision
       return 1;
@@ -5718,8 +4087,8 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
   /* At this point we handle non-colliding characters and items only. */
 
   vischar->counter_and_flags &= ~vischar_BYTE7_DONT_MOVE_MAP; // clear
-  vischar->mi.pos           = state->saved_pos.pos;
-  vischar->mi.sprite_index  = stashed_sprite_index; // left/right flip flag / sprite offset
+  vischar->mi.mappos          = state->saved_mappos.pos16;
+  vischar->mi.sprite_index    = sprite_index; // left/right flip flag / sprite offset
 
   // A = 0; likely just to set flags
   return 0; // Z
@@ -5728,89 +4097,89 @@ int touch(tgestate_t *state, vischar_t *vischar, spriteindex_t sprite_index)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $AFDF: Handle collisions including items being pushed around.
+ * $AFDF: Handle collisions between vischars, including items being pushed
+ *        around.
  *
- * \param[in] state         Pointer to game state.
+ * \param[in] state Pointer to game state.
  *
- * \return 0 if no collisions, 1 if collision.
+ * \return 0 if no collision, 1 if collision.
  */
 int collision(tgestate_t *state)
 {
-  vischar_t  *vischar;      /* was HL */
-  uint8_t     iters;        /* was B */
-  uint16_t    x;            /* was BC */
-  uint16_t    y;            /* was BC */
-  uint16_t    saved_x;      /* was HL */
-  uint16_t    saved_y;      /* was HL */
-  int8_t      delta;        /* was A */
-  uint8_t     A;
-  character_t character;    /* was A */
-  uint8_t     B;
-  uint8_t     C;
-  uint8_t     input;
-  uint8_t     direction;     /* was A (CHECK) */
-  uint16_t    new_direction; /* was BC */
+  vischar_t  *vischar;        /* was HL */
+  uint8_t     iters;          /* was B */
+  uint16_t    u;              /* was BC */
+  uint16_t    v;              /* was BC */
+  uint16_t    saved_u;        /* was HL */
+  uint16_t    saved_v;        /* was HL */
+  int8_t      delta;          /* was A */
+  uint8_t     coord;          /* was A */
+  character_t character;      /* was A */
+  uint8_t     range;          /* was B */
+  uint8_t     centre;         /* was C */
+  uint8_t     input;          /* was A */
+  uint8_t     direction;      /* was A */
+  uint16_t    new_direction;  /* was BC */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(state->IY);
 
-  // Iterate over characters being collided with (e.g. stove).
+  /* Iterate over characters being collided with (e.g. stove). */
   vischar = &state->vischars[0];
   iters = vischars_LENGTH;
   do
   {
-    if (vischar->flags & vischar_FLAGS_NO_COLLIDE) // sampled = $8001, $8021, ...
+    if (vischar->flags & vischar_FLAGS_NO_COLLIDE)
       goto next;
 
-    /*
-     * Check for contact between current vischar and saved_pos.
-     * +/-4 for x/y
+    /* Test for contact between the current vischar and saved_mappos (which is
+     * set on entry either from a vischar or a characterstruct).
+     *
+     * For contact to occur the vischar being tested must be positioned
+     * within (-4..+4) on the x and y axis and within (-23..23) on the height
+     * axis.
      */
 
-    // PUSH BC, HL here
+    u = vischar->mi.mappos.u; /* Conv: Moved +4 forward. */
+    saved_u = state->saved_mappos.pos16.u;
+    if (saved_u != u + 4) /* redundant check */
+      if (saved_u > u + 4 || saved_u < u - 4) /* Conv: Removed redundant reload. */
+        goto next; /* no x collision */
 
-    // Check: Check this all over...
+    v = vischar->mi.mappos.v; /* Conv: Moved +4 forward. */
+    saved_v = state->saved_mappos.pos16.v;
+    if (saved_v != v + 4) /* redundant check */
+      if (saved_v > v + 4 || saved_v < v - 4) /* Conv: Removed redundant reload. */
+        goto next; /* no y collision */
 
-// This is like:
-//      if (state->saved_pos.x > vischar->mi.pos.x + 4 ||
-//          state->saved_pos.x < vischar->mi.pos.x - 4)
-//        goto pop_next;
-    x = vischar->mi.pos.x; // Conv: Moved +4 forward.
-    saved_x = state->saved_pos.pos.x;
-    if (saved_x != x + 4)
-      if (saved_x > x + 4 || saved_x < x - 4) // Conv: Removed redundant reload.
-        goto pop_next; // no x collision
-
-    y = vischar->mi.pos.y; // Conv: Moved +4 forward.
-    saved_y = state->saved_pos.pos.y;
-    if (saved_y != y + 4)
-      if (saved_y > y + 4 || saved_y < y - 4) // Conv: Removed redundant reload.
-        goto pop_next; // no y collision
-
-    /* Check the heights are within 24 of each other. */
-    // Does this ever happen for real in the game?
-    delta = state->saved_pos.pos.height - vischar->mi.pos.height; // Note: Signed result.
+    /* Ensure that the heights are within 24 of each other. This will stop
+     * the character colliding with any guards high up in watchtowers.
+     * Note: Signed result. */
+    delta = state->saved_mappos.pos16.w - vischar->mi.mappos.w;
     if (delta < 0)
-      delta = -delta; // absolute value
+      delta = -delta; /* absolute value */
     if (delta >= 24)
-      goto pop_next;
+      goto next;
 
-    /* If IY vischar is pursuing... */
-    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_PURSUIT_PURSUE) // sampled IY=$8020, $8040, $8060, $8000
+    /* Check for pursuit. */
+
+
+    /* If vischar IY is pursuing... */
+    if ((state->IY->flags & vischar_FLAGS_PURSUIT_MASK) == vischar_PURSUIT_PURSUE)
     {
-      /* and CURRENT vischar is the hero... */
+      /* ...and the current vischar is the hero... */
       if (vischar == &state->vischars[0])
       {
         if (state->IY->character == state->bribed_character)
         {
-          /* IY is a bribed character pursuing the hero.
+          /* Vischar IY is a bribed character pursuing the hero.
            * When the pursuer catches the hero the bribe will be accepted. */
           accept_bribe(state);
         }
         else
         {
-          /* IY is a hostile who's caught the hero! */
-          // Conv: Removed "HL = IY + 1" code which has no effect.
+          /* Vischar IY is a hostile who's caught the hero! */
+          /* Conv: Removed "HL = IY + 1" code which has no effect. */
           solitary(state);
           NEVER_RETURNS 0;
         }
@@ -5821,127 +4190,123 @@ int collision(tgestate_t *state)
      * Check for collisions with items.
      */
 
-    // POP HL // $8021 etc.
-
-    character = vischar->character; // sampled HL = $80C0, $8040, $8000, $8020, $8060 // vischar_BYTE0
+    /* If it's an item... */
+    character = vischar->character;
     if (character >= character_26_STOVE_1)
     {
+      uint16_t *pcoord; /* was HL */
+
       /* Movable items: Stove 1, Stove 2 or Crate */
 
-      // Stoves move on which axis? screenwise it's bottom-left to top-right
-      // Crate moves on which axis? screenwise it's bottom-right to top-left
+      pcoord = &vischar->mi.mappos.v;
 
-      // PUSH HL
-      uint16_t *coord; /* was HL */
-
-      coord = &vischar->mi.pos.y; // ok
-
-      B = 7; // permitted range from centre point C
-      C = 35; // centre point (29 .. 35 .. 42)
-      direction = state->IY->direction; // was interleaved
+      /* By default, setup for the stove.
+       * It can move on the Y axis only (bottom left to top right). */
+      range = 7; /* permitted range from centre point */
+      centre = 35; /* centre point (object will move from 29 to 42) */
+      direction = state->IY->direction; /* was interleaved */
       if (character == character_28_CRATE)
       {
-        /* Crate moves on x(?) axis only. */
-        coord--; // -> HL->mi.pos.x
-        C = 54; // centre point (47 .. 54 .. 61)
-        direction ^= 1; /* swap direction: left <=> right */
+        /* Setup for the crate.
+         * It can move on the X axis only (top left to bottom right). */
+        pcoord--; /* point at vischar->mi.pos.x */
+        centre = 54; /* centre point (object will move from 47 to 61) */
+        direction ^= 1; /* swap axis: left<=>right */
       }
 
       switch (direction)
       {
         case direction_TOP_LEFT:
-          /* The player is pushing the movable item forward so centre it. */
-          A = *coord; // note: narrowing // orig code loads bytes here?
-          if (A != C) // hit when hero pushes to top-left (screenwise)
+          /* The player is pushing the movable item from its front, so centre
+           * it. */
+          coord = *pcoord; /* Conv: Original code loads a byte here. */
+          if (coord != centre)
           {
-            // Conv: Replaced[-2]+1 trick
-            if (A > C)
-              (*coord)--;
+            /* Conv: This was the [-2]+1 pattern. */
+            if (coord > centre)
+              (*pcoord)--;
             else
-              (*coord)++;
+              (*pcoord)++;
           }
           break;
 
-        case direction_TOP_RIGHT: // hit when hero pushes to top-right (screenwise)
-          if (*coord != (C + B))
-            (*coord)++;
+        case direction_TOP_RIGHT:
+          if (*pcoord != (centre + range))
+            (*pcoord)++;
           break;
 
-        case direction_BOTTOM_RIGHT: // likely never happens in game, but code is present
-          *coord = C - B;
+        case direction_BOTTOM_RIGHT:
+          /* Note: This case happens in the game. */
+          *pcoord = centre - range;
           break;
 
-        case direction_BOTTOM_LEFT: // hit when hero pushes to bottom-left (screenwise)
-          if (*coord != (C - B))
-            (*coord)--;
+        case direction_BOTTOM_LEFT:
+          if (*pcoord != (centre - range))
+            (*pcoord)--;
           break;
 
         default:
           assert("Should not happen" == NULL);
           break;
       }
-
-      // POP HL
-      // POP BC
     }
 
     /*
-     * Reorient the character? Not well understood.
+     * Check for collisions with characters.
      */
 
-    input = vischar->input & ~input_KICK; // sampled HL = $806D, $804D, $802D, $808D, $800D
+    input = vischar->input & ~input_KICK;
     if (input)
     {
-      assert(input < 9); // 9 needs a symbol
+      assert(input < 9); // TODO: Add an input_XXX symbol for '9'
 
-      direction = vischar->direction ^ 2; /* swap direction: top <=> bottom */
-      if (direction != state->IY->direction)
+      /* Swap direction top <=> bottom, then compare. */
+      if ((vischar->direction ^ 2) != state->IY->direction)
       {
-        state->IY->input = input_KICK;
+        /* The characters collided while facing away from each other. */
 
-collided:
-        /* Delay character_behaviour() for five turns. This delay controls
-         * how long it takes before a blocked character will try another
-         * direction. */
+        state->IY->input = input_KICK; /* force an update */
+
+collided_set_delay:
+        /* Delay calling character_behaviour() for five turns. This delay
+         * controls how long it takes before a blocked character will try
+         * another direction. */
         state->IY->counter_and_flags = (state->IY->counter_and_flags & ~vischar_BYTE7_COUNTER_MASK) | 5;
-        // Weird code in the original game which ORs 5 then does a conditional return dependent on Z clear, which it won't be.
-        //if (!Z)
-          return 1; /* odd -- returning with Z not set */
+        return 1; /* collided */
       }
     }
 
+    /* Pick a new direction for the vischar at state->IY. */
+
+    /** $B0F8: Inputs which move the character in the next anticlockwise
+     *         direction. */
+    static const uint8_t new_inputs[4] =
     {
-      /** $B0F8: New inputs. */
-      static const uint8_t new_inputs[4] =
-      {
-        input_DOWN + input_LEFT  + input_KICK,
-        input_UP   + input_LEFT  + input_KICK,
-        input_UP   + input_RIGHT + input_KICK,
-        input_DOWN + input_RIGHT + input_KICK
-      };
+      input_DOWN + input_LEFT  + input_KICK, /* if facing TL, move D+L */
+      input_UP   + input_LEFT  + input_KICK, /* if facing TR, move U+L */
+      input_UP   + input_RIGHT + input_KICK, /* if facing BR, move U+R */
+      input_DOWN + input_RIGHT + input_KICK  /* if facing BL, move D+R */
+    };
 
-      /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
-       * new_inputs[] if we collide when crawling. */
-      new_direction = state->IY->direction & vischar_DIRECTION_MASK;
-      assert(new_direction < 4);
-      state->IY->input = new_inputs[new_direction]; // sampled IY = $8000, $8040, $80E0
-      assert((state->IY->input & ~input_KICK) < 9);
-      if ((new_direction & 1) == 0) /* TL or BR */
-        state->IY->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
-      else
-        state->IY->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
-      goto collided;
-    }
+    /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
+     * new_inputs[] if we collide when crawling. */
+    new_direction = state->IY->direction & vischar_DIRECTION_MASK;
+    assert(new_direction < 4);
+    state->IY->input = new_inputs[new_direction];
+    assert((state->IY->input & ~input_KICK) < 9);
+    if ((new_direction & 1) == 0) /* if was facing TL or BR */
+      state->IY->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
+    else
+      state->IY->counter_and_flags |= vischar_BYTE7_V_DOMINANT;
 
-pop_next:
-    // POP HL
-    // POP BC
+    goto collided_set_delay;
+
 next:
     vischar++;
   }
   while (--iters);
 
-  return 0; // return with Z set
+  return 0; /* no collision */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -5967,7 +4332,7 @@ void accept_bribe(tgestate_t *state)
   state->IY->flags = 0;
 
   route = &state->IY->route;
-  (void) get_target_assign_pos(state, state->IY, route);
+  get_target_assign_pos(state, state->IY, route);
 
   /* Return early if we have no bribes. */
   item = &state->items_held[0];
@@ -6029,14 +4394,14 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
     minheight = wall->minheight * 8;
     maxheight = wall->maxheight * 8;
 
-    if (state->saved_pos.pos.x      >= minx + 2   &&
-        state->saved_pos.pos.x      <  maxx + 4   &&
-        state->saved_pos.pos.y      >= miny       &&
-        state->saved_pos.pos.y      <  maxy + 4   &&
-        state->saved_pos.pos.height >= minheight  &&
-        state->saved_pos.pos.height <  maxheight + 2)
+    if (state->saved_mappos.pos16.u >= minx + 2   &&
+        state->saved_mappos.pos16.u <  maxx + 4   &&
+        state->saved_mappos.pos16.v >= miny       &&
+        state->saved_mappos.pos16.v <  maxy + 4   &&
+        state->saved_mappos.pos16.w >= minheight  &&
+        state->saved_mappos.pos16.w <  maxheight + 2)
     {
-      vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
+      vischar->counter_and_flags ^= vischar_BYTE7_V_DOMINANT;
       return 1; // NZ => outwith wall bounds
     }
 
@@ -6049,19 +4414,7 @@ int bounds_check(tgestate_t *state, vischar_t *vischar)
 
 /* ----------------------------------------------------------------------- */
 
-///**
-// * $B1C7: Multiplies A by 8, returning the result in BC.
-// *
-// * Leaf.
-// *
-// * \param[in] A to be multiplied and widened.
-// *
-// * \return 'A' * 8 widened to a uint16_t. (was BC)
-// */
-//uint16_t multiply_by_8(uint8_t A)
-//{
-//  return A * 8;
-//}
+/* Conv: $B1C7/multiply_by_8 was removed. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -6122,7 +4475,7 @@ void door_handling(tgestate_t *state, vischar_t *vischar)
   /* Interior doors are handled by another routine. */
   if (state->room_index > room_0_OUTDOORS)
   {
-    door_handling_interior(state, vischar); // exit via
+    door_handling_interior(state, vischar); /* was tail call */
     return;
   }
 
@@ -6159,10 +4512,10 @@ found:
   ASSERT_ROOM_VALID(vischar->room);
   if ((door_pos->room_and_direction & door_FLAGS_MASK_DIRECTION) < direction_BOTTOM_RIGHT) /* TL or TR */
     /* Point to the next door's pos */
-    transition(state, &door_pos[1].pos);
+    transition(state, &door_pos[1].mappos);
   else
     /* Point to the previous door's pos */
-    transition(state, &door_pos[-1].pos);
+    transition(state, &door_pos[-1].mappos);
 
   NEVER_RETURNS; // highly likely if this is only tiggered by the hero
 }
@@ -6172,7 +4525,8 @@ found:
 /**
  * $B252: Test whether an exterior door is in range.
  *
- * (saved_X,saved_Y) within (-2,+2) of HL[1..] scaled << 2
+ * A door is in range if (saved_X,saved_Y) is within (-3,+2) of its position
+ * (once scaled).
  *
  * \param[in] state Pointer to game state.
  * \param[in] door  Pointer to door_t. (was HL)
@@ -6183,17 +4537,17 @@ int door_in_range(tgestate_t *state, const door_t *door)
 {
   const int halfdist = 3;
 
-  uint16_t x, y; /* was BC, BC */
+  uint16_t u, v; /* was BC, BC */
 
   assert(state != NULL);
   assert(door  != NULL);
 
-  x = multiply_by_4(door->pos.x);
-  if (state->saved_pos.pos.x < x - halfdist || state->saved_pos.pos.x >= x + halfdist)
+  u = door->mappos.u * 4;
+  if (state->saved_mappos.pos16.u < u - halfdist || state->saved_mappos.pos16.u >= u + halfdist)
     return 1;
 
-  y = multiply_by_4(door->pos.y);
-  if (state->saved_pos.pos.y < y - halfdist || state->saved_pos.pos.y >= y + halfdist)
+  v = door->mappos.v * 4;
+  if (state->saved_mappos.pos16.v < v - halfdist || state->saved_mappos.pos16.v >= v + halfdist)
     return 1;
 
   return 0;
@@ -6201,19 +4555,7 @@ int door_in_range(tgestate_t *state, const door_t *door)
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $B295: Multiplies A by 4, returning the result in BC.
- *
- * Leaf.
- *
- * \param[in] A to be multiplied and widened.
- *
- * \return 'A' * 4 widened to a uint16_t.
- */
-uint16_t multiply_by_4(uint8_t A)
-{
-  return A * 4;
-}
+/* Conv: $B295/multiply_by_4 was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -6222,7 +4564,7 @@ uint16_t multiply_by_4(uint8_t A)
  *
  * Leaf.
  *
- * Position to be checked is passed in in state->saved_pos.
+ * Position to be checked is passed in in state->saved_mappos.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -6257,7 +4599,7 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   };
 
   const wackybounds_t *room_bounds;   /* was BC */
-  const pos_t         *saved_pos;     /* was HL */
+  const mappos16_t    *saved_mappos;  /* was HL */
   const bounds_t      *object_bounds; /* was HL */
   uint8_t              nbounds;       /* was B */
 
@@ -6265,11 +4607,11 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   ASSERT_VISCHAR_VALID(vischar);
 
   room_bounds = &roomdef_dimensions[state->roomdef_dimensions_index];
-  saved_pos = &state->saved_pos.pos;
+  saved_mappos = &state->saved_mappos.pos16;
   /* Conv: Merged conditions, flipped compares and reordered. */
   // inclusive/exclusive bounds look strange here
-  if (saved_pos->x <= room_bounds->x0 + 4 || saved_pos->x > room_bounds->x1 ||
-      saved_pos->y <= room_bounds->y0     || saved_pos->y > room_bounds->y1 - 4)
+  if (saved_mappos->u <= room_bounds->x0 + 4 || saved_mappos->u > room_bounds->x1 ||
+      saved_mappos->v <= room_bounds->y0     || saved_mappos->v > room_bounds->y1 - 4)
   {
     goto hit_bounds;
   }
@@ -6277,23 +4619,23 @@ int interior_bounds_check(tgestate_t *state, vischar_t *vischar)
   object_bounds = &state->roomdef_object_bounds[0]; /* Conv: Moved around. */
   for (nbounds = state->roomdef_object_bounds_count; nbounds > 0; nbounds--)
   {
-    pos_t  *pos;  /* was DE */
-    uint8_t x, y; /* was A, A */
+    mappos16_t *mappos; /* was DE */
+    uint8_t     u, v;   /* was A, A */
 
     /* Conv: HL dropped. */
-    pos = &state->saved_pos.pos;
+    mappos = &state->saved_mappos.pos16;
 
     /* Conv: Two-iteration loop unrolled. */
-    x = pos->x; // note: narrowing // saved_pos must be 8-bit
-    if (x < object_bounds->x0 || x >= object_bounds->x1)
+    u = mappos->u; // note: narrowing // saved_mappos must be 8-bit
+    if (u < object_bounds->x0 || u >= object_bounds->x1)
       goto next;
-    y = pos->y; // note: narrowing
-    if (y < object_bounds->y0 || y >= object_bounds->y1)
+    v = mappos->v; // note: narrowing
+    if (v < object_bounds->y0 || v >= object_bounds->y1)
       goto next;
 
 hit_bounds:
     /* Toggle movement direction preference. */
-    vischar->counter_and_flags ^= vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags ^= vischar_BYTE7_V_DOMINANT;
     return 1; /* return NZ */
 
 next:
@@ -6318,12 +4660,12 @@ void reset_outdoors(tgestate_t *state)
   assert(state != NULL);
 
   /* Reset hero. */
-  calc_vischar_iso_pos_from_vischar(state, &state->vischars[0]);
+  calc_vischar_isopos_from_vischar(state, &state->vischars[0]);
 
   /* Centre the map position on the hero. */
   /* Conv: Removed divide_by_8 calls here. */
-  state->map_position.x = (state->vischars[0].iso_pos.x >> 3) - 11; // 11 would be screen width minus half of character width?
-  state->map_position.y = (state->vischars[0].iso_pos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
+  state->map_position.x = (state->vischars[0].isopos.x >> 3) - 11; // 11 would be screen width minus half of character width?
+  state->map_position.y = (state->vischars[0].isopos.y >> 3) - 6;  // 6 would be screen height minus half of character height?
   ASSERT_MAP_POSITION_VALID(state->map_position);
 
   state->room_index = room_0_OUTDOORS;
@@ -6347,10 +4689,10 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
   doorindex_t      current_door;   /* was A */
   uint8_t          room_and_flags; /* was A */
   const door_t    *door;           /* was HL' */
-  const tinypos_t *doorpos;        /* was HL' */
-  pos_t           *pos;            /* was DE' */
-  uint8_t          x;              /* was A */
-  uint8_t          y;              /* was A */
+  const mappos8_t *doormappos;     /* was HL' */
+  mappos16_t      *mappos;         /* was DE' */
+  uint8_t          u;              /* was A */
+  uint8_t          v;              /* was A */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -6371,13 +4713,13 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
       continue;
 
     /* Skip any door which is more than three units away. */
-    doorpos = &door->pos;
-    pos = &state->saved_pos.pos; // reusing saved_pos as 8-bit here? a case for saved_pos being a union of tinypos and pos types?
-    x = doorpos->x;
-    if (x - 3 >= pos->x || x + 3 < pos->x) // -3 .. +2
+    doormappos = &door->mappos;
+    mappos = &state->saved_mappos.pos16; // reusing saved_mappos as 8-bit here? a case for saved_mappos being a union of pos8 and pos types?
+    u = doormappos->u;
+    if (u - 3 >= mappos->u || u + 3 < mappos->u) // -3 .. +2
       continue;
-    y = doorpos->y;
-    if (y - 3 >= pos->y || y + 3 < pos->y) // -3 .. +2
+    v = doormappos->v;
+    if (v - 3 >= mappos->v || v + 3 < mappos->v) // -3 .. +2
       continue;
 
     if (is_door_locked(state))
@@ -6385,11 +4727,11 @@ void door_handling_interior(tgestate_t *state, vischar_t *vischar)
 
     vischar->room = room_and_flags >> 2;
 
-    doorpos = &door[1].pos;
+    doormappos = &door[1].mappos;
     if (state->current_door & door_REVERSE)
-      doorpos = &door[-1].pos;
+      doormappos = &door[-1].mappos;
 
-    transition(state, doorpos); // exit via
+    transition(state, doormappos); /* was tail call */
     NEVER_RETURNS; // check
   }
 }
@@ -6556,29 +4898,29 @@ void action_shovel(tgestate_t *state)
  */
 void action_wiresnips(tgestate_t *state)
 {
-  const wall_t    *wall;  /* was HL */
-  const tinypos_t *pos;   /* was DE */
-  uint8_t          iters; /* was B */
-  uint8_t          flag;  /* was A */
+  const wall_t    *wall;   /* was HL */
+  const mappos8_t *mappos; /* was DE */
+  uint8_t          iters;  /* was B */
+  uint8_t          flag;   /* was A */
 
   assert(state != NULL);
 
   wall = &walls[12]; /* start of (vertical) fences */
-  pos = &state->hero_map_position;
+  mappos = &state->hero_mappos;
   iters = 4;
   do
   {
     uint8_t coord; /* was A */
 
     // check: this is using x then y which is the wrong order, isn't it?
-    coord = pos->y;
+    coord = mappos->v;
     if (coord >= wall->miny && coord < wall->maxy) /* Conv: Reversed test order. */
     {
-      coord = pos->x;
+      coord = mappos->u;
       if (coord == wall->maxx)
-        goto set_to_4;
+        goto snips_crawl_tl;
       if (coord - 1 == wall->maxx)
-        goto set_to_6;
+        goto snips_crawl_br;
     }
 
     wall++;
@@ -6586,20 +4928,20 @@ void action_wiresnips(tgestate_t *state)
   while (--iters);
 
   wall = &walls[12 + 4]; /* start of (horizontal) fences */
-  pos = &state->hero_map_position;
+  mappos = &state->hero_mappos;
   iters = 3;
   do
   {
     uint8_t coord; /* was A */
 
-    coord = pos->x;
+    coord = mappos->u;
     if (coord >= wall->minx && coord < wall->maxx)
     {
-      coord = pos->y;
+      coord = mappos->v;
       if (coord == wall->miny)
-        goto set_to_5;
+        goto snips_crawl_tr;
       if (coord - 1 == wall->miny)
-        goto set_to_7;
+        goto snips_crawl_bl;
     }
 
     wall++;
@@ -6608,27 +4950,27 @@ void action_wiresnips(tgestate_t *state)
 
   return;
 
-set_to_4: /* Crawl TL */
+snips_crawl_tl: /* Crawl TL */
   flag = direction_TOP_LEFT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_5: /* Crawl TR. */
+snips_crawl_tr: /* Crawl TR */
   flag = direction_TOP_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_6: /* Crawl BR. */
+snips_crawl_br: /* Crawl BR */
   flag = direction_BOTTOM_RIGHT | vischar_DIRECTION_CRAWL;
   goto action_wiresnips_tail;
 
-set_to_7: /* Crawl BL. */
+snips_crawl_bl: /* Crawl BL */
   flag = direction_BOTTOM_LEFT | vischar_DIRECTION_CRAWL;
 
 action_wiresnips_tail:
-  state->vischars[0].direction      = flag; // dir + walk/crawl flag
-  state->vischars[0].input          = input_KICK;
-  state->vischars[0].flags          = vischar_FLAGS_CUTTING_WIRE;
-  state->vischars[0].mi.pos.height  = 12; // crawling height
-  state->vischars[0].mi.sprite      = &sprites[sprite_PRISONER_FACING_AWAY_1];
+  state->vischars[0].direction   = flag; // dir + walk/crawl flag
+  state->vischars[0].input       = input_KICK;
+  state->vischars[0].flags       = vischar_FLAGS_CUTTING_WIRE;
+  state->vischars[0].mi.mappos.w = 12; // crawling height
+  state->vischars[0].mi.sprite   = &sprites[sprite_PRISONER_FACING_AWAY_1];
   state->player_locked_out_until = state->game_counter + 96;
   queue_message(state, message_CUTTING_THE_WIRE);
 }
@@ -6731,7 +5073,7 @@ void action_key(tgestate_t *state, room_t room_of_key)
 /**
  * $B4D0: Return the door in range of the hero.
  *
- * The hero's position is expected in state->saved_pos.
+ * The hero's position is expected in state->saved_mappos.
  *
  * \param[in] state Pointer to game state.
  *
@@ -6744,7 +5086,7 @@ doorindex_t *get_nearest_door(tgestate_t *state)
   const door_t *door;                 /* was HL' */
   doorindex_t   locked_door_index;    /* was C */
   doorindex_t  *interior_doors;       /* was DE */
-  pos_t        *pos;                  /* was DE' */
+  mappos16_t   *mappos;               /* was DE' */
   doorindex_t   interior_door_index;  /* was A */
 
   assert(state != NULL);
@@ -6781,18 +5123,18 @@ doorindex_t *get_nearest_door(tgestate_t *state)
       locked_door_index = *locked_doors & ~door_LOCKED;
 
       /* Search interior_doors[] for door_index. */
-      interior_doors = &state->interior_doors[0];
-each_interior_door:
-      interior_door_index = *interior_doors;
-      if (interior_door_index != interiordoor_NONE)
+      for (interior_doors = &state->interior_doors[0]; ; interior_doors++)
       {
+        interior_door_index = *interior_doors;
+        if (interior_door_index == interiordoor_NONE)
+          break; /* end of list */
+
         if ((interior_door_index & ~door_REVERSE) == locked_door_index) // this must be door_REVERSE as it came from interior_doors[]
           goto found;
 
-        interior_doors++;
-        /* There's no termination condition here where you might expect one,
-         * but since every room has at least one door it *must* find one. */
-        goto each_interior_door;
+        /* There's no termination condition here where you might expect a
+         * test to see if we've run out of doors, but since every room has
+         * at least one door it *must* find one. */
       }
 
 next_locked_door:
@@ -6806,11 +5148,11 @@ next_locked_door:
     // FUTURE: Move this into the body of the loop.
 found:
     door = get_door(*interior_doors);
-    /* Range check pattern (-2..+2). */
-    pos = &state->saved_pos.pos; // note: 16-bit values holding 8-bit values
+    /* Range check pattern (-2..+3). */
+    mappos = &state->saved_mappos.pos16; // note: 16-bit values holding 8-bit values
     // Conv: Unrolled.
-    if (pos->x <= door->pos.x - 3 || pos->x > door->pos.x + 3 ||
-        pos->y <= door->pos.y - 3 || pos->y > door->pos.y + 3)
+    if (mappos->u <= door->mappos.u - 3 || mappos->u > door->mappos.u + 3 ||
+        mappos->v <= door->mappos.v - 3 || mappos->v > door->mappos.v + 3)
       goto next_locked_door;
 
     return locked_doors;
@@ -6956,9 +5298,9 @@ void animate(tgestate_t *state)
 backwards:
       SWAP(const animframe_t *, frameB, frameA);
 
-      state->saved_pos.pos.x      = vischar->mi.pos.x      - frameB->dx;
-      state->saved_pos.pos.y      = vischar->mi.pos.y      - frameB->dy;
-      state->saved_pos.pos.height = vischar->mi.pos.height - frameB->dh;
+      state->saved_mappos.pos16.u = vischar->mi.mappos.u - frameB->dx;
+      state->saved_mappos.pos16.v = vischar->mi.mappos.v - frameB->dy;
+      state->saved_mappos.pos16.w = vischar->mi.mappos.w - frameB->dh;
 
       if (touch(state, vischar, spriteindex2))
         goto pop_next; /* don't animate if collided */
@@ -6979,9 +5321,9 @@ backwards:
 forwards:
       SWAP(const animframe_t *, frameB, frameA);
 
-      state->saved_pos.pos.x      = vischar->mi.pos.x      + frameB->dx;
-      state->saved_pos.pos.y      = vischar->mi.pos.y      + frameB->dy;
-      state->saved_pos.pos.height = vischar->mi.pos.height + frameB->dh;
+      state->saved_mappos.pos16.u = vischar->mi.mappos.u + frameB->dx;
+      state->saved_mappos.pos16.v = vischar->mi.mappos.v + frameB->dy;
+      state->saved_mappos.pos16.w = vischar->mi.mappos.w + frameB->dh;
       spriteindex = frameB->spriteindex;
 
       SWAP(uint8_t, spriteindex, spriteindex2);
@@ -6992,7 +5334,7 @@ forwards:
       vischar->animindex++;
     }
 
-    calc_vischar_iso_pos_from_state(state, vischar);
+    calc_vischar_isopos_from_state(state, vischar);
 
 pop_next:
     if (vischar->flags != vischar_FLAGS_EMPTY_SLOT)
@@ -7058,19 +5400,20 @@ init:
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_isopos_from_vischar(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Save a copy of the vischar's position + offset. */
-  state->saved_pos.pos = vischar->mi.pos;
+  state->saved_mappos.pos16 = vischar->mi.mappos;
 
-  calc_vischar_iso_pos_from_state(state, vischar);
+  calc_vischar_isopos_from_state(state, vischar);
 }
 
 /**
- * $B729: Calculate screen position for the specified vischar from state->saved_pos.
+ * $B729: Calculate screen position for the specified vischar from
+ * state->saved_mappos.
  *
  * Result has three bits of fixed point accuracy.
  *
@@ -7079,21 +5422,21 @@ void calc_vischar_iso_pos_from_vischar(tgestate_t *state, vischar_t *vischar)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was HL)
  */
-void calc_vischar_iso_pos_from_state(tgestate_t *state, vischar_t *vischar)
+void calc_vischar_isopos_from_state(tgestate_t *state, vischar_t *vischar)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   /* Conv: Reordered. */
-  vischar->iso_pos.x = (0x200 - state->saved_pos.pos.x + state->saved_pos.pos.y) * 2;
-  vischar->iso_pos.y = 0x800 - state->saved_pos.pos.x - state->saved_pos.pos.y - state->saved_pos.pos.height;
+  vischar->isopos.x = (0x200 - state->saved_mappos.pos16.u + state->saved_mappos.pos16.v) * 2;
+  vischar->isopos.y = 0x800 - state->saved_mappos.pos16.u - state->saved_mappos.pos16.v - state->saved_mappos.pos16.w;
 
   // Measured: (-1664..3696, -1648..2024)
   // Rounding up:
-  assert((int16_t) vischar->iso_pos.x >= -3000);
-  assert((int16_t) vischar->iso_pos.x <   7000);
-  assert((int16_t) vischar->iso_pos.y >= -3000);
-  assert((int16_t) vischar->iso_pos.y <   4000);
+  assert((int16_t) vischar->isopos.x >= -3000);
+  assert((int16_t) vischar->isopos.x <   7000);
+  assert((int16_t) vischar->isopos.y >= -3000);
+  assert((int16_t) vischar->isopos.y <   4000);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7151,15 +5494,15 @@ void reset_game(tgestate_t *state)
   state->bribed_character = character_NONE;
 
   /* BUG FIX: Reset position of stoves and crate. */
-  state->movable_items[0].pos.x      = 62;
-  state->movable_items[0].pos.y      = 35;
-  state->movable_items[0].pos.height = 16;
-  state->movable_items[1].pos.x      = 55;
-  state->movable_items[1].pos.y      = 54;
-  state->movable_items[1].pos.height = 14;
-  state->movable_items[2].pos.x      = 62;
-  state->movable_items[2].pos.y      = 35;
-  state->movable_items[2].pos.height = 16;
+  state->movable_items[0].mappos.u = 62;
+  state->movable_items[0].mappos.v = 35;
+  state->movable_items[0].mappos.w = 16;
+  state->movable_items[1].mappos.u = 55;
+  state->movable_items[1].mappos.v = 54;
+  state->movable_items[1].mappos.w = 14;
+  state->movable_items[2].mappos.u = 62;
+  state->movable_items[2].mappos.v = 35;
+  state->movable_items[2].mappos.w = 16;
 
   enter_room(state); // returns by goto main_loop
   NEVER_RETURNS;
@@ -7178,8 +5521,8 @@ void reset_map_and_characters(tgestate_t *state)
 {
   typedef struct character_reset_partial
   {
-    room_t  room;
-    uint8_t x, y; /* partial of a tinypos_t */
+    room_t      room;
+    mappos8uv_t mappos;
   }
   character_reset_partial_t;
 
@@ -7188,16 +5531,16 @@ void reset_map_and_characters(tgestate_t *state)
    */
   static const character_reset_partial_t character_reset_data[10] =
   {
-    { room_3_HUT2RIGHT, 40, 60 }, /* for character 12 Guard */
-    { room_3_HUT2RIGHT, 36, 48 }, /* for character 13 Guard */
-    { room_5_HUT3RIGHT, 40, 60 }, /* for character 14 Guard */
-    { room_5_HUT3RIGHT, 36, 34 }, /* for character 15 Guard */
-    { room_NONE,        52, 60 }, /* for character 20 Prisoner */
-    { room_NONE,        52, 44 }, /* for character 21 Prisoner */
-    { room_NONE,        52, 28 }, /* for character 22 Prisoner */
-    { room_NONE,        52, 60 }, /* for character 23 Prisoner */
-    { room_NONE,        52, 44 }, /* for character 24 Prisoner */
-    { room_NONE,        52, 28 }, /* for character 25 Prisoner */
+    { room_3_HUT2RIGHT, { 40, 60 } }, /* for character 12 Guard */
+    { room_3_HUT2RIGHT, { 36, 48 } }, /* for character 13 Guard */
+    { room_5_HUT3RIGHT, { 40, 60 } }, /* for character 14 Guard */
+    { room_5_HUT3RIGHT, { 36, 34 } }, /* for character 15 Guard */
+    { room_NONE,        { 52, 60 } }, /* for character 20 Prisoner */
+    { room_NONE,        { 52, 44 } }, /* for character 21 Prisoner */
+    { room_NONE,        { 52, 28 } }, /* for character 22 Prisoner */
+    { room_NONE,        { 52, 60 } }, /* for character 23 Prisoner */
+    { room_NONE,        { 52, 44 } }, /* for character 24 Prisoner */
+    { room_NONE,        { 52, 28 } }, /* for character 25 Prisoner */
   };
 
   uint8_t                          iters;   /* was B */
@@ -7249,13 +5592,13 @@ void reset_map_and_characters(tgestate_t *state)
   while (--iters);
 
   /* Clear the mess halls. */
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_23_BREAKFAST, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
-  set_roomdef(state, room_25_BREAKFAST, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_B, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_C, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_D, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_E, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_F, interiorobject_EMPTY_BENCH);
+  set_roomdef(state, room_25_MESS_HALL, roomdef_25_BENCH_G, interiorobject_EMPTY_BENCH);
 
   /* Reset characters 12..15 (guards) and 20..25 (prisoners). */
   charstr = &state->character_structs[character_12_GUARD_12];
@@ -7264,9 +5607,9 @@ void reset_map_and_characters(tgestate_t *state)
   do
   {
     charstr->room        = reset->room;
-    charstr->pos.x       = reset->x;
-    charstr->pos.y       = reset->y;
-    charstr->pos.height  = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
+    charstr->mappos.u    = reset->mappos.u;
+    charstr->mappos.v    = reset->mappos.v;
+    charstr->mappos.w    = 18; /* BUG: This is reset to 18 but the initial data is 24. (hex/dec mixup?) */
     charstr->route.index = 0; /* Stand still */
     charstr++;
     reset++;
@@ -7280,7 +5623,7 @@ void reset_map_and_characters(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B83B: Check the mask data to see if the hero is hiding behind something.
+ * $B83B: Check the mask buffer to see if the hero is hiding behind something.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -7307,12 +5650,13 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
   do
   {
     if (*buf != 0)
-      goto still_in_spotlight;
+      goto still_in_searchlight;
     buf += MASK_BUFFER_WIDTHBYTES;
   }
   while (--iters);
 
-  /* Otherwise the hero has escaped the spotlight, so decrement the counter. */
+  /* Otherwise the hero has escaped the searchlight, so decrement the
+   * counter. */
   if (--state->searchlight_state == searchlight_STATE_SEARCHING)
   {
     attrs = choose_game_window_attributes(state);
@@ -7321,7 +5665,7 @@ void searchlight_mask_test(tgestate_t *state, vischar_t *vischar)
 
   return;
 
-still_in_spotlight:
+still_in_searchlight:
   state->searchlight_state = searchlight_STATE_CAUGHT;
 }
 
@@ -7340,13 +5684,14 @@ void plot_sprites(tgestate_t *state)
   vischar_t    *vischar;    /* was IY */
   itemstruct_t *itemstruct; /* was IY */
   int           found;      /* was Z */
+  int           visible;    /* was Z */
 
   assert(state != NULL);
 
   for (;;)
   {
     /* This can return a vischar OR an itemstruct, but not both. */
-    found = locate_vischar_or_itemstruct(state, &index, &vischar, &itemstruct);
+    found = get_next_drawable(state, &index, &vischar, &itemstruct);
     if (!found)
       return;
 
@@ -7359,8 +5704,8 @@ void plot_sprites(tgestate_t *state)
 
     if ((index & item_FOUND) == 0)
     {
-      found = setup_vischar_plotting(state, vischar);
-      if (found)
+      visible = setup_vischar_plotting(state, vischar);
+      if (visible)
       {
         render_mask_buffer(state);
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
@@ -7373,8 +5718,8 @@ void plot_sprites(tgestate_t *state)
     }
     else
     {
-      found = setup_item_plotting(state, itemstruct, index);
-      if (found)
+      visible = setup_item_plotting(state, itemstruct, index);
+      if (visible)
       {
         render_mask_buffer(state);
         masked_sprite_plotter_16_wide_item(state);
@@ -7386,95 +5731,104 @@ void plot_sprites(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $B89C: Returns the next vischar or item to draw.
+ * $B89C: Find the next vischar or itemstruct to draw.
  *
  * \param[in]  state       Pointer to game state.
- * \param[out] pindex      If vischar, returns vischars_LENGTH - iters; if itemstruct, returns ((item__LIMIT - iters) | (1 << 6)). (was A)
+ * \param[out] pindex      Returns (vischars_LENGTH - iters) if vischar,
+ *                         or ((item__LIMIT - iters) | (1 << 6)) if itemstruct. (was A)
  * \param[out] pvischar    Pointer to receive vischar pointer. (was IY)
  * \param[out] pitemstruct Pointer to receive itemstruct pointer. (was IY)
  *
- * \return State of Z flag: 1 if Z, 0 if NZ. // unsure which is found/notfound right now
+ * \return Non-zero if if a valid vischar or item was returned.
  */
-int locate_vischar_or_itemstruct(tgestate_t    *state,
-                                 uint8_t       *pindex,
-                                 vischar_t    **pvischar,
-                                 itemstruct_t **pitemstruct)
+int get_next_drawable(tgestate_t    *state,
+                      uint8_t       *pindex,
+                      vischar_t    **pvischar,
+                      itemstruct_t **pitemstruct)
 {
-  uint16_t      x;                /* was BC */
-  uint16_t      y;                /* was DE */
+  uint16_t      prev_u;           /* was BC */
+  uint16_t      prev_v;           /* was DE */
   item_t        item_and_flag;    /* was A' */
-  uint16_t      DEdash;           /* was DE' */
   uint8_t       iters;            /* was B' */
   vischar_t    *vischar;          /* was HL' */
   vischar_t    *found_vischar;    /* was IY */
   itemstruct_t *found_itemstruct; /* was IY */
-
-  found_vischar = NULL; // shut up MSVC
 
   assert(state       != NULL);
   assert(pindex      != NULL);
   assert(pvischar    != NULL);
   assert(pitemstruct != NULL);
 
+  /* Conv: Quiet MS Visual Studio warning */
+  found_vischar = NULL;
+
+  /* Conv: Added */
   *pvischar    = NULL;
   *pitemstruct = NULL;
 
-  x             = 0; // prev-x
-  y             = 0; // prev-y
-  item_and_flag = item_NONE; // 'nothing found' marker 255
-  DEdash        = 0; // is this even used?
+  prev_u        = 0; /* previous x */
+  prev_v        = 0; /* previous y */
+  item_and_flag = item_NONE; /* item_NONE used as a 'nothing found' marker */
+
+  /* Conv: The original code maintains a previous height variable (in DE'), but
+   * it's ultimately never used, so has been removed here. */
+
+  /* Find the rearmost vischar that is flagged for drawing. */
 
   iters   = vischars_LENGTH; /* iterations */
-  vischar = &state->vischars[0]; /* Conv: Original points to $8007. */
+  vischar = &state->vischars[0]; /* Conv: Original code points at vischar[0].counter_and_flags */
   do
   {
-    if ((vischar->counter_and_flags & vischar_TOUCH_ENTERED) == 0)
-      goto next;
+    /* Select a vischar if it's behind the point (prev_x - 4, prev_y - 4). */
+    if ((vischar->counter_and_flags & vischar_DRAWABLE) &&
+        (vischar->mi.mappos.u >= prev_u - 4) &&
+        (vischar->mi.mappos.v >= prev_v - 4))
+    {
+      item_and_flag = vischars_LENGTH - iters; /* Vischar index (never usefully used). */
 
-    if ((vischar->mi.pos.x + 4 < x) ||
-        (vischar->mi.pos.y + 4 < y))
-      goto next;
-
-    item_and_flag = vischars_LENGTH - iters; /* Item index. */ // BC' is temp.
-    DEdash = vischar->mi.pos.height;
-
-    y = vischar->mi.pos.y; /* Note: The y,x order here matches the original code. */
-    x = vischar->mi.pos.x;
-    state->IY = found_vischar = vischar;
-
-next:
+      /* Note: The (v,u) order here matches the original code */
+      prev_v = vischar->mi.mappos.v;
+      prev_u = vischar->mi.mappos.u;
+      state->IY = found_vischar = vischar;
+    }
     vischar++;
   }
   while (--iters);
 
-  // item_and_flag is passed through if no itemstruct is found.
-  item_and_flag = get_greatest_itemstruct(state,
-                                          item_and_flag,
-                                          x,y,
-                                          &found_itemstruct);
-  *pindex = item_and_flag; // Conv: Additional code.
-  /* If Adash's top bit remains set from initialisation, then no vischar was
-   * found. (It's not affected by get_greatest_itemstruct which passes it
-   * through). */
+  /* Is there an item behind the selected vischar? */
+  item_and_flag = get_next_drawable_itemstruct(state,
+                                               item_and_flag,
+                                               prev_u, prev_v,
+                                              &found_itemstruct);
+
+  *pindex = item_and_flag; /* Conv: Added */
+  /* If the topmost bit of item_and_flag remains set from initialisation,
+   * then no vischar was found. item_and_flag is preserved by the call to
+   * get_greatest_itemstruct. */
   if (item_and_flag & (1 << 7))
-    return 0; // NZ => not found
-
-  if ((item_and_flag & item_FOUND) == 0)
   {
-    found_vischar->counter_and_flags &= ~vischar_TOUCH_ENTERED;
+    return 0; /* not found */
+  }
+  else if ((item_and_flag & item_FOUND) == 0)
+  {
+    /* Vischar found */
 
-    *pvischar = found_vischar; // Conv: Additional code.
+    found_vischar->counter_and_flags &= ~vischar_DRAWABLE;
 
-    return 1; // Z => found
+    *pvischar = found_vischar; /* Conv: Added */
+
+    return 1; /* found */
   }
   else
   {
+    /* Item found */
+
     int Z;
 
     found_itemstruct->room_and_flags &= ~itemstruct_ROOM_FLAG_NEARBY_6;
     Z = (found_itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_6) == 0; // was BIT 6,HL[1] // Odd: This tests the bit we've just cleared.
 
-    *pitemstruct = found_itemstruct; // Conv: Additional code.
+    *pitemstruct = found_itemstruct; /* Conv: Added */
 
     return Z; // check the sense isn't flipped
   }
@@ -7512,113 +5866,121 @@ void render_mask_buffer(tgestate_t *state)
   {
     /* Outdoors */
 
-    iters = NELEMS(exterior_mask_data); // Bug? Was 59 (one too large).
-    pmask = &exterior_mask_data[0]; // offset by +2 bytes; original points to $EC03, table starts at $EC01 // fix by propagation
+    iters = NELEMS(exterior_mask_data); /* BUG FIX: Was 59 (should be 58). */
+    pmask = &exterior_mask_data[0]; /* Conv: Original game points at pmask->bounds.x1. Fixed by propagation. */
   }
 
-  uint8_t         A;                   /* was A */
-  const uint8_t  *mask_pointer;        /* was DE */
-  uint16_t        mask_skip;           /* was HL */
-  uint8_t        *mask_buffer_pointer; /* was $81A0 */
+  uint8_t        A;                   /* was A */
+  const uint8_t *mask_pointer;        /* was DE */
+  uint16_t       mask_skip;           /* was HL */
+  uint8_t       *mask_buffer_pointer; /* was $81A0 */
 
-  /* Mask against all. */
+  /* Fill the mask buffer with the union of all matching masks. */
   do
   {
-    uint8_t scrx, scry, height; /* was A/C, A, A */
-    uint8_t clip_x;       /* was $B837 */ // x0 offset
-    uint8_t clip_y;       /* was $B838 */ // y0 offset
-    uint8_t clip_height;  /* was $B839 */ // y0 offset 2
-    uint8_t clip_width;   /* was $B83A */ // x0 offset 2
-    uint8_t self_BA90;    /* was $BA90 - self modified */
-    uint8_t skip;         /* was $BABA - self modified */
+    uint8_t isopos_x, isopos_y, height; /* was A/C, A, A */
+    uint8_t mask_left_skip;             /* was $B837 */
+    uint8_t mask_top_skip;              /* was $B838 */
+    uint8_t mask_run_height;            /* was $B839 */
+    uint8_t mask_run_width;             /* was $B83A */
+    uint8_t mask_row_skip;              /* was $BA90 - self modified */
+    uint8_t buf_row_skip;               /* was $BABA - self modified */
 
-    /* Skip any masks which aren't on-screen. */
+    /* Skip any masks which don't overlap the character.
+     *
+     * pmask->bounds is a visual position on the map image (isometric map space)
+     * pmask->pos is a map position (map space)
+     * so we can cull masks if not on-screen and we can cull masks if behind play
+     */
 
-    // PUSH BC, PUSH HL
-
-    // pmask->bounds is a visual position on the map image (isometric map space)
-    // pmask->pos is a map position (map space)
-    // so we can cull masks if not on-screen and we can cull masks if behind player
-
-    scrx = state->iso_pos.x;
-    scry = state->iso_pos.y; // reordered
-    if (scrx - 1 >= pmask->bounds.x1 || scrx + 3 < pmask->bounds.x0 ||
-        scry - 1 >= pmask->bounds.y1 || scry + 4 < pmask->bounds.y0)  // $EC03,$EC02 $EC05,$EC04
+    isopos_x = state->isopos.x;
+    isopos_y = state->isopos.y; /* Conv: Reordered */
+    if (isopos_x - 1 >= pmask->bounds.x1 || isopos_x + 3 < pmask->bounds.x0 ||
+        isopos_y - 1 >= pmask->bounds.y1 || isopos_y + 4 < pmask->bounds.y0)
       goto pop_next;
 
-    // what's in state->tinypos_stash at this point?
-    // it's set by setup_vischar_plotting, setup_item_plotting
+    /* CHECK: What's in state->mappos_stash at this point? It's set by
+     * setup_vischar_plotting, setup_item_plotting. */
 
-    if (state->tinypos_stash.x <= pmask->pos.x ||
-        state->tinypos_stash.y <  pmask->pos.y) // $EC06, $EC07
+    if (state->mappos_stash.u <= pmask->mappos.u ||
+        state->mappos_stash.v <  pmask->mappos.v)
       goto pop_next;
 
-    height = state->tinypos_stash.height;
+    height = state->mappos_stash.w;
     if (height)
-      height--; // make inclusive?
-    if (height >= pmask->pos.height) // $EC08
+      height--; /* make inclusive */
+    if (height >= pmask->mappos.w)
       goto pop_next;
 
-    /* Work out clipping offsets, widths and heights. */
+    /* The mask is valid: now work out clipping offsets, widths and heights. */
 
-    // Conv: removed dupe of earlier load of scrx
-    if (scrx >= pmask->bounds.x0) // must be $EC02
+    /* Conv: Removed dupe of earlier load of isopos_x. */
+    if (isopos_x >= pmask->bounds.x0)
     {
-      clip_x      = scrx - pmask->bounds.x0;
-      clip_width  = MIN(pmask->bounds.x1 - scrx, 3) + 1;
+      mask_left_skip  = isopos_x - pmask->bounds.x0; /* left edge skip for mask */
+      mask_run_width  = MIN(pmask->bounds.x1 - isopos_x, 3) + 1;
     }
     else
     {
-      // Conv: removed pmask->bounds.x0 cached in x0 (was B)
-      clip_x      = 0;
-      clip_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - scrx));
+      /* Conv: Removed pmask->bounds.x0 cached in x0 (was B). */
+      mask_left_skip  = 0; /* no left edge skip */
+      mask_run_width  = MIN((pmask->bounds.x1 - pmask->bounds.x0) + 1, 4 - (pmask->bounds.x0 - isopos_x));
     }
 
-    // Conv: removed dupe of earlier load of scry
-    if (scry >= pmask->bounds.y0)
+    /* Conv: Removed dupe of earlier load of isopos_y. */
+    if (isopos_y >= pmask->bounds.y0)
     {
-      clip_y      = scry - pmask->bounds.y0;
-      clip_height = MIN(pmask->bounds.y1 - scry, 4) + 1;
+      mask_top_skip   = isopos_y - pmask->bounds.y0; /* top edge skip for mask */
+      mask_run_height = MIN(pmask->bounds.y1 - isopos_y, 4) + 1;
     }
     else
     {
-      // Conv: removed pmask->bounds.y0 cached in x0 (was B)
-      clip_y      = 0;
-      clip_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - scry));
+      /* Conv: Removed pmask->bounds.y0 cached in x0 (was B). */
+      mask_top_skip   = 0; /* no top edge skip */
+      mask_run_height = MIN((pmask->bounds.y1 - pmask->bounds.y0) + 1, 5 - (pmask->bounds.y0 - isopos_y));
     }
 
-    // In the original code, HL is here decremented to point at member y0.
+    /* Note: In the original code, HL is here decremented to point at member
+     *       y0. */
 
+    /* Calculate the initial mask buffer pointer. */
     {
-      uint8_t x, y;  /* was B, C */ // x,y are the correct way around here i think!
-      uint8_t index; /* was A */
+      uint8_t buf_top_skip, buf_left_skip; /* was C, B */
+      uint8_t index;                       /* was A */
 
-      x = y = 0;
-      // Conv: flipped order of these
-      if (clip_x == 0)
-        x = pmask->bounds.x0 - state->iso_pos.x;
-      if (clip_y == 0)
-        y = pmask->bounds.y0 - state->iso_pos.y;
+      /* When the mask has a top or left hand gap, calculate that. */
+      buf_top_skip = buf_left_skip = 0;
+      if (mask_top_skip == 0)
+        buf_top_skip  = pmask->bounds.y0 - state->isopos.y; /* FUTURE: Could avoid this reload of isopos.y. */
+      if (mask_left_skip == 0)
+        buf_left_skip = pmask->bounds.x0 - state->isopos.x;
 
       index = pmask->index;
       assert(index < NELEMS(mask_pointers));
 
-      mask_buffer_pointer = &state->mask_buffer[y * MASK_BUFFER_ROWBYTES + x];
+      mask_buffer_pointer = &state->mask_buffer[buf_top_skip * MASK_BUFFER_ROWBYTES + buf_left_skip];
 
       mask_pointer = mask_pointers[index];
 
-      self_BA90 = mask_pointer[0] - clip_width; // self modify // *mask_pointer is the mask's width
-      skip = MASK_BUFFER_ROWBYTES - clip_width; // self modify
+      /* Conv: Self modify of $BA70 removed (height loop). */
+      /* Conv: Self modify of $BA72 removed (width loop). */
+      /* mask_pointer[0] is the mask's width so this must calculate the skip
+       * from the end of one row's used data to the start of the next */
+      mask_row_skip = mask_pointer[0]      - mask_run_width; /* Conv: was self modified */
+      buf_row_skip  = MASK_BUFFER_ROWBYTES - mask_run_width; /* Conv: was self modified */
     }
 
-    /* Calculate count of mask tiles to skip. */
-    mask_skip = clip_y * mask_pointer[0] + clip_x + 1;
+    /* Skip the initial clipped mask bytes. The masks are RLE compressed so
+     * we can't jump directly to the first byte we need. */
 
-    /* Skip the initial clipped mask bytes. */
+    /* First, calculate the total number of mask tiles to skip.  */
+    mask_skip = mask_top_skip * mask_pointer[0] + mask_left_skip + 1;
+
+    /* Next, loop until we've passed through that number of output bytes. */
     do
     {
 more_to_skip:
-      A = *mask_pointer++; /* read count byte OR tile index */
+      A = *mask_pointer++; /* read a count byte or tile index */
       if (A & MASK_RUN_FLAG)
       {
         A &= ~MASK_RUN_FLAG;
@@ -7626,96 +5988,97 @@ more_to_skip:
         if ((int16_t) mask_skip < 0) /* went too far? */
           goto skip_went_negative;
         mask_pointer++; /* skip mask index */
-        if (mask_skip > 0) // still more to skip?
+        if (mask_skip > 0) /* still more to skip? */
         {
           goto more_to_skip;
         }
-        else // mask_skip must be zero
+        else /* mask_skip must be zero */
         {
-          A = 0; // counter
-          goto skip_went_zero;
+          A = 0; /* zero counter */
+          goto start_drawing;
         }
       }
     }
     while (--mask_skip);
-    A = mask_skip; // ie. A = 0
-    goto skip_went_zero;
+    A = mask_skip; /* ie. A = 0 */
+    goto start_drawing;
+
 
 skip_went_negative:
-    A = -(mask_skip & 0xFF); // counter
+    A = -(mask_skip & 0xFF); /* calculate skip counter */
 
-skip_went_zero:
+start_drawing:
     {
-      uint8_t *maskbufptr;  /* was HL */
-      uint8_t  y_count;     /* was C */
-      uint8_t  x_count;     /* was B */
-      uint8_t  right_skip;  /* was B */
+      uint8_t *maskbufptr;   /* was HL */
+      uint8_t  y_count;      /* was C */
+      uint8_t  x_count;      /* was B */
+      uint8_t  right_skip;   /* was B */
+      uint8_t  Adash = 0xCC; /* Conv: initialise with safety value */
 
       maskbufptr = mask_buffer_pointer;
-      // R I:C Iterations (inner loop);
-      y_count = clip_height; // self modified
+      // R I:C Iterations (inner loop)
+      y_count = mask_run_height; /* Conv: was self modified */
       do
       {
-        x_count = clip_width; // self modified
+        x_count = mask_run_width; /* Conv: was self modified */
         do
         {
-          // the original code has some mismatched EX AF,AF's stuff going on which is hard to grok
-          // AFAICT it's ensuring that A is always the tile and that A' is the counter
+          /* IN PROGRESS: The original code has some mismatched EX AF,AF
+           * operations here which are hard to grok. AFAICT it's ensuring
+           * that A is always the tile and that A' is the counter. */
 
-          uint8_t Adash = 0xCC; // safety value
+          SWAP(uint8_t, A, Adash); /* bank the repeat length */
 
-          SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
-
-          A = *mask_pointer; // read count byte OR tile index
+          A = *mask_pointer; /* read a count byte or tile index */
           if (A & MASK_RUN_FLAG)
           {
             A &= ~MASK_RUN_FLAG;
-            SWAP(uint8_t, A, Adash); // was Adash = A; // save counter
+            SWAP(uint8_t, A, Adash); /* bank the repeat count */
             mask_pointer++;
-            A = *mask_pointer; // read next byte (tile)
+            A = *mask_pointer; /* read the next byte (a tile) */
           }
 
-          if (A != 0) /* shortcut the totally blank tile 0 */
+          if (A != 0) /* shortcut tile 0 which is blank */
             mask_against_tile(A, maskbufptr);
           maskbufptr++;
 
-          SWAP(uint8_t, A, Adash); // was A = Adash; // fetch counter
+          SWAP(uint8_t, A, Adash); /* unbank the repeat count/length */
 
-          /* advance the mask pointer when the counter reaches zero */
-          if (A == 0 || --A == 0) /* Conv: written inverted over the original version */
+          /* Advance the mask pointer when the counter reaches zero. */
+          if (A == 0 || --A == 0) /* Conv: Written inverted vs. the original version. */
             mask_pointer++;
         }
         while (--x_count);
 
-        // Conv: Avoid running the trailing code when we're on the final line
-        // since that results in out-of-bounds memory reads.
+        /* Conv: Don't run the trailing code when we're on the final line
+         * since that results in out-of-bounds memory reads. */
         if (y_count == 1)
           goto pop_next;
 
         // trailing skip
 
-        right_skip = self_BA90; // self modified // == mask width - clipped width (amount to skip on the right hand side)
+        right_skip = mask_row_skip; /* Conv: Was self modified. */ // == mask width - clipped width (amount to skip on the right hand side + left of next row)
         if (right_skip)
         {
           if (A)
-            goto baa3; // must be continuing with a nonzero counter
+            goto trailskip_dive_in; // must be continuing with a nonzero counter
           do
           {
-ba9b:
-            A = *mask_pointer++; // read count byte OR tile index
+trailskip_more_to_skip:
+            A = *mask_pointer++; /* read a count byte or tile index */
             if (A & MASK_RUN_FLAG)
             {
               // it's a run
 
               A &= ~MASK_RUN_FLAG;
-baa3:
-              right_skip = A = right_skip - A; // CHECK THIS OVER
+trailskip_dive_in:
+              right_skip = A = right_skip - A; // CHECK THIS OVER // decrement skip
               if ((int8_t) right_skip < 0) // skip went negative
-                goto bab6;
+                goto trailskip_went_negative;
               mask_pointer++; // don't care about the mask index since we're skipping
               if (right_skip > 0)
-                goto ba9b;
-              else // right_skip must be zero
+                goto trailskip_more_to_skip;
+              else
                 goto next_line;
             }
           }
@@ -7723,37 +6086,20 @@ baa3:
 
           A = 0;
           goto next_line;
-bab6:
-          A = -A; // does this make sense?
+
+trailskip_went_negative:
+          A = -A;
         }
 next_line:
-        maskbufptr += skip; // self modified
+        maskbufptr += buf_row_skip; /* Conv: Was self modified. */
       }
       while (--y_count);
     }
 
 pop_next:
-    // POP HL
-    // POP BC
-    pmask++; // stride is 1 mask_t
+    pmask++;
   }
   while (--iters);
-
-  /* Dump the mask buffer to the top-left of the screen. */
-  if (/* DISABLES CODE */ (0))
-  {
-    uint8_t *slp;
-    int      yy;
-
-    slp = &state->speccy->screen.pixels[(128 + 1) * state->width];
-    for (yy = 0; yy < MASK_BUFFER_HEIGHT * 8; yy++)
-    {
-      memcpy(slp, &state->mask_buffer[yy * MASK_BUFFER_WIDTHBYTES], MASK_BUFFER_WIDTHBYTES);
-      slp = get_next_scanline(state, slp);
-    }
-
-    state->speccy->draw(state->speccy, NULL); // <<dst-to-x,y>, MASK_BUFFER_WIDTHBYTES / 8, MASK_BUFFER_HEIGHT * 8>
-  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7775,7 +6121,6 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
 
   assert(index < 111);
   assert(dst);
-  // ASSERT_MASK_BUF_PTR_VALID(dst); // we don't have access to state from here to compare
 
   row = &mask_tiles[index].row[0];
   iters = 8;
@@ -7792,8 +6137,6 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
 /**
  * $BAF7: Clips the given vischar's dimensions against the game window.
  *
- * Returns 255 if the vischar is outside the game window, or zero if visible.
- *
  * If the vischar spans a boundary a packed field is returned in the
  * respective clipped width/height. The low byte holds the width/height to
  * draw and the high byte holds the number of columns/rows to skip.
@@ -7802,180 +6145,205 @@ void mask_against_tile(tileindex_t index, tilerow_t *dst)
  *
  * \param[in]  state          Pointer to game state.
  * \param[in]  vischar        Pointer to visible character.       (was IY)
- * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (width, lefthand skip)
- * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (height, top skip)
+ * \param[out] left_skip      Pointer to returned left edge skip. (was B)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was C)
+ * \param[out] top_skip       Pointer to returned top edge skip.  (was D)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was E)
  *
- * \return 0 => visible, 255 => invisible. (was A)
+ * \return 255 if the vischar is outside the game window, or zero if visible. (was A)
  */
 int vischar_visible(tgestate_t      *state,
                     const vischar_t *vischar,
-                    uint16_t        *clipped_width,
-                    uint16_t        *clipped_height)
+                    uint8_t         *left_skip,
+                    uint8_t         *clipped_width,
+                    uint8_t         *top_skip,
+                    uint8_t         *clipped_height)
 {
   uint8_t  window_right_edge;   /* was A  */
   int8_t   available_right;     /* was A  */
-  uint16_t new_width;           /* was BC */
+  uint8_t  new_left;            /* was B  */
+  uint8_t  new_width;           /* was C  */
   int8_t   vischar_right_edge;  /* was A  */
   int8_t   available_left;      /* was A  */
   uint16_t window_bottom_edge;  /* was HL */
   uint16_t available_bottom;    /* was HL */
-  uint16_t new_height;          /* was DE */
+  uint8_t  new_top;             /* was D  */
+  uint8_t  new_height;          /* was E  */
   uint16_t vischar_bottom_edge; /* was HL */
   uint16_t available_top;       /* was HL */
 
   assert(state          != NULL);
   ASSERT_VISCHAR_VALID(vischar);
+  assert(left_skip      != NULL);
   assert(clipped_width  != NULL);
+  assert(top_skip       != NULL);
   assert(clipped_height != NULL);
 
   /* Conv: Added to guarantee initialisation of return values. */
-  *clipped_width  = 65535;
-  *clipped_height = 65535;
+  *left_skip      = 255;
+  *clipped_width  = 255;
+  *top_skip       = 255;
+  *clipped_height = 255;
 
   /* To determine visibility and sort out clipping there are five cases to
    * consider per axis:
-   * (A) vischar is completely off left/top of screen
-   * (B) vischar is clipped/truncated on its left/top
+   * (A) vischar is completely off the left/top of screen
+   * (B) vischar is clipped on its left/top
    * (C) vischar is entirely visible
-   * (D) vischar is clipped/truncated on its right/bottom
-   * (E) vischar is completely off right/bottom of screen
+   * (D) vischar is clipped on its right/bottom
+   * (E) vischar is completely off the right/bottom of screen
    */
 
   /*
-   * Handle horizontal intersections.
+   * Handle horizontal cases.
    */
 
   /* Calculate the right edge of the window in map space. */
   /* Conv: Columns was constant 24; replaced with state var. */
   window_right_edge = state->map_position.x + state->columns;
 
-  /* Subtracting vischar's x yields the space available between vischar's
+  /* Subtracting vischar's x gives the space available between vischar's
    * left edge and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  // state->iso_pos is iso_pos / 8.
-  available_right = window_right_edge - state->iso_pos.x;
+  // state->isopos is isopos / 8.
+  available_right = window_right_edge - state->isopos.x;
   if (available_right <= 0)
     /* Case (E): Vischar is beyond the window's right edge. */
-    goto invisible;
+    goto not_visible;
 
   /* Check for vischar partway off-screen. */
   if (available_right < vischar->width_bytes)
   {
-    /* Case (D): Vischar's right edge is off-screen, so truncate width. */
+    /* Case (D): Vischar's right edge is off-screen so truncate its width. */
+    new_left  = 0;
     new_width = available_right;
   }
   else
   {
     /* Calculate the right edge of the vischar. */
-    vischar_right_edge = state->iso_pos.x + vischar->width_bytes;
+    vischar_right_edge = state->isopos.x + vischar->width_bytes;
 
-    /* Subtracting the map position's x yields the space available between
+    /* Subtracting the map position's x gives the space available between
      * vischar's right edge and the left edge of the window (in bytes).
      * Note that available_left is signed to allow the subsequent test. */
     available_left = vischar_right_edge - state->map_position.x;
     if (available_left <= 0)
       /* Case (A): Vischar's right edge is beyond the window's left edge. */
-      goto invisible;
+      goto not_visible;
 
     /* Check for vischar partway off-screen. */
     if (available_left < vischar->width_bytes)
-      /* Case (B): Left edge is off-screen and right edge is on-screen.
-       * Pack the lefthand skip into the low byte and the clipped width into
-       * the high byte. */
-      new_width = ((vischar->width_bytes - available_left) << 8) | available_left;
+    {
+      /* Case (B): Left edge is off-screen and right edge is on-screen. */
+      new_left  = vischar->width_bytes - available_left;
+      new_width = available_left;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_left  = 0;
       new_width = vischar->width_bytes;
+    }
   }
 
   /*
-   * Handle vertical intersections.
+   * Handle vertical cases.
    */
 
-  /* Note: this uses vischar->iso_pos not state->iso_pos as above.
-   * state->iso_pos.x/y is vischar->iso_pos.x/y >> 3. */
+  /* Note: this uses vischar->isopos not state->isopos as above.
+   * state->isopos.x/y is vischar->isopos.x/y >> 3. */
 
   /* Calculate the bottom edge of the window in map space. */
   /* Conv: Rows was constant 17; replaced with state var. */
   window_bottom_edge = state->map_position.y + state->rows;
 
-  /* Subtracting the vischar's y yields the space available between window's
+  /* Subtracting the vischar's y gives the space available between window's
    * bottom edge and the vischar's top. */
-  available_bottom = window_bottom_edge * 8 - vischar->iso_pos.y;
+  available_bottom = window_bottom_edge * 8 - vischar->isopos.y;
   // FUTURE: The second test here can be gotten rid of if available_bottom is
   //         made signed.
   if (available_bottom <= 0 || available_bottom >= 256)
     /* Case (E): Vischar is beyond the window's bottom edge. */
-    goto invisible;
+    goto not_visible;
 
   /* Check for vischar partway off-screen. */
   if (available_bottom < vischar->height)
   {
     /* Case (D): Vischar's bottom edge is off-screen, so truncate height. */
+    new_top    = 0;
     new_height = available_bottom;
   }
   else
   {
     /* Calculate the bottom edge of the vischar. */
-    vischar_bottom_edge = vischar->iso_pos.y + vischar->height;
+    vischar_bottom_edge = vischar->isopos.y + vischar->height;
 
-    /* Subtracting the map position's y (scaled) yields the space available
+    /* Subtracting the map position's y (scaled) gives the space available
      * between vischar's bottom edge and the top edge of the window (in
      * rows). */
     available_top = vischar_bottom_edge - state->map_position.y * 8;
     if (available_top <= 0 || available_top >= 256)
       /* Case (A): Vischar's bottom edge is beyond the window's top edge. */
-      goto invisible;
+      goto not_visible;
 
     /* Check for vischar partway off-screen. */
     if (available_top < vischar->height)
-      /* Case (B): Top edge is off-screen and bottom edge is on-screen.
-       * Pack the top skip into the low byte and the clipped height into the
-       * high byte. */
-      new_height = ((vischar->height - available_top) << 8) | available_top;
+    {
+      /* Case (B): Top edge is off-screen and bottom edge is on-screen. */
+      new_top    = vischar->height - available_top;
+      new_height = available_top;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_top    = 0;
       new_height = vischar->height;
+    }
   }
 
+  *left_skip      = new_left;
   *clipped_width  = new_width;
+  *top_skip       = new_top;
   *clipped_height = new_height;
 
   return 0; /* Visible */
 
 
-invisible:
+not_visible:
   return 255;
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $BB98: Paints any tiles occupied by visible characters with tiles from tile_buf.
+ * $BB98: Paint any tiles occupied by visible characters with tiles from
+ * tile_buf.
  *
  * \param[in] state Pointer to game state.
  */
 void restore_tiles(tgestate_t *state)
 {
-  uint8_t             iters;                  /* was B */
-  const vischar_t    *vischar;                /* new local copy */
-  uint8_t             height;                 /* was A / $BC5F */
-  int8_t              heightsigned;           /* was A */
-  uint8_t             width;                  /* was $BC61 */
-  uint8_t             tilebuf_stride;         /* was $BC8E */
-  uint8_t             windowbuf_stride;       /* was $BC95 */
-  uint8_t             width_counter, height_counter;  /* was B, C */
-  uint16_t            clipped_width;          /* was BC */
-  uint16_t            clipped_height;         /* was DE */
-  const xy_t         *map_position;           /* was HL */
-  uint8_t            *windowbuf;              /* was HL */
-  uint8_t            *windowbuf2;             /* was DE */
-  uint8_t             x, y;                   /* was H', L' */
-  const tileindex_t  *tilebuf;                /* was HL/DE */
-  tileindex_t         tile;                   /* was A */
-  const tile_t       *tileset;                /* was BC */
-  uint8_t             tile_counter;           /* was B' */
-  const tilerow_t    *tilerow;                /* was HL' */
+  uint8_t            iters;                         /* was B */
+  const vischar_t   *vischar;                       /* new local copy */
+  uint8_t            height;                        /* was A/$BC5F */
+  int8_t             bottom;                        /* was A */
+  uint8_t            width;                         /* was $BC61 */
+  uint8_t            tilebuf_skip;                  /* was $BC8E */
+  uint8_t            windowbuf_skip;                /* was $BC95 */
+  uint8_t            width_counter, height_counter; /* was B,C */
+  uint8_t            left_skip;                     /* was B */
+  uint8_t            clipped_width;                 /* was C */
+  uint8_t            top_skip;                      /* was D */
+  uint8_t            clipped_height;                /* was E */
+  const pos8_t      *map_position;                  /* was HL */
+  uint8_t           *windowbuf;                     /* was HL */
+  uint8_t           *windowbuf2;                    /* was DE */
+  uint8_t            x, y;                          /* was H', L' */
+  const tileindex_t *tilebuf;                       /* was HL/DE */
+  tileindex_t        tile;                          /* was A */
+  const tile_t      *tileset;                       /* was BC */
+  uint8_t            tile_counter;                  /* was B' */
+  const tilerow_t   *tilerow;                       /* was HL' */
 
   assert(state != NULL);
 
@@ -7989,74 +6357,98 @@ void restore_tiles(tgestate_t *state)
       goto next;
 
     /* Get the visible character's position in screen space. */
-    state->iso_pos.y = vischar->iso_pos.y >> 3; // divide by 8 (16-to-8)
-    state->iso_pos.x = vischar->iso_pos.x >> 3; // divide by 8 (16-to-8)
+    state->isopos.y = vischar->isopos.y >> 3; /* divide by 8 (16-to-8) */
+    state->isopos.x = vischar->isopos.x >> 3; /* divide by 8 (16-to-8) */
 
-    if (vischar_visible(state, vischar, &clipped_width, &clipped_height))
-      goto next; /* invisible */
+    if (vischar_visible(state,
+                        vischar,
+                       &left_skip,
+                       &clipped_width,
+                       &top_skip,
+                       &clipped_height))
+      goto next; /* not visible */
 
-    // $BBD3
-    height = ((clipped_height >> 3) & 0x1F) + 2; // the masking will only be required if the top byte of clipped_height contains something
+    /* Compute scaled clipped height. */
+    /* Conv: Rotate and mask turned into right shift. */
+    height = (clipped_height >> 3) + 2; /* TODO: Explain the +2 fudge factor. */
 
-    heightsigned = height + state->iso_pos.y - state->map_position.y;
-    if (heightsigned >= 0)
+    /* Note: It seems that the following sequence (from here to clamp_height)
+     * duplicates the work done by vischar_visible. I can't see any benefit to
+     * it. */
+
+    /* Compute bottom = height + isopos_y - map_position_y. This is the
+     * distance of the (clipped) bottom edge of the vischar from the top of the
+     * window. */
+    bottom = height + state->isopos.y - state->map_position.y;
+    if (bottom >= 0)
     {
-      heightsigned -= 17; // likely window_buf height
-      if (heightsigned > 0)
+      /* Bottom edge is on-screen, or off the bottom of the screen. */
+
+      bottom -= state->rows; /* i.e. 17 */
+      if (bottom > 0)
       {
-        clipped_height = heightsigned; // original code assigns low byte only - could be an issue
-        heightsigned = height - clipped_height;
-        if (heightsigned < 0) // if carry
+        /* Bottom edge is now definitely visible. */
+
+        int8_t visible_height; /* was A */
+
+        visible_height = height - bottom;
+        if (visible_height < 0)
         {
-          goto next; // not visible?
+          goto next; /* not visible */
         }
-        else if (heightsigned != 0) // ie. > 0
+        else if (visible_height != 0)
         {
-          height = heightsigned;
+          height = visible_height;
           goto clamp_height;
         }
         else
         {
-          assert(heightsigned == 0);
-
-          goto next; // not visible?
+          /* Note: Could merge this case into the earlier one. */
+          assert(visible_height == 0);
+          goto next; /* not visible */
         }
       }
     }
-    // unsure about the else case here
 
-clamp_height: // was $BBF8
-    if (height > 5) // note: this is height, not heightsigned (preceding POP removed)
-      height = 5; // outer loop counter // height
+clamp_height:
+    /* Clamp the height to a maximum of five. */
+    if (height > 5)
+      height = 5;
 
-    width            = clipped_width & 0xFF; // was self modify // inner loop counter // width
-    tilebuf_stride   = state->columns - width; // was self modify
-    windowbuf_stride = tilebuf_stride + 7 * state->columns; // was self modify // == (8 * state->columns - C)
+    /* Conv: Self modifying code replaced. */
 
-    map_position = &state->map_position;
+    width          = clipped_width;
+    tilebuf_skip   = state->columns - width;
+    windowbuf_skip = tilebuf_skip + 7 * state->columns;
+
+    map_position   = &state->map_position;
 
     /* Work out x,y offsets into the tile buffer. */
 
-    if ((clipped_width >> 8) == 0)
-      x = state->iso_pos.x - map_position->x;
+    if (left_skip == 0)
+      x = state->isopos.x - map_position->x;
     else
-      x = 0; // was interleaved
+      x = 0; /* was interleaved */
 
-    if ((clipped_height >> 8) == 0)
-      y = state->iso_pos.y - map_position->y;
+    if (top_skip == 0)
+      y = state->isopos.y - map_position->y;
     else
-      y = 0; // was interleaved
+      y = 0; /* was interleaved */
+
+    /* Calculate the offset into the window buffer. */
 
     windowbuf = &state->window_buf[y * state->window_buf_stride + x];
     ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
 
+    /* Calculate the offset into the tile buffer. */
+
     tilebuf = &state->tile_buf[x + y * state->columns];
     ASSERT_TILE_BUF_PTR_VALID(tilebuf);
 
-    height_counter = height;
+    height_counter = height; /* in rows */
     do
     {
-      width_counter = width;
+      width_counter = width; /* in columns */
       do
       {
         ASSERT_TILE_BUF_PTR_VALID(tilebuf);
@@ -8093,10 +6485,10 @@ clamp_height: // was $BBF8
       /* Reset x offset. Advance to next row. */
       x -= width;
       y++;
-      tilebuf   += tilebuf_stride;
+      tilebuf   += tilebuf_skip;
       if (height_counter > 1)
         ASSERT_TILE_BUF_PTR_VALID(tilebuf);
-      windowbuf += windowbuf_stride;
+      windowbuf += windowbuf_skip;
       if (height_counter > 1)
         ASSERT_WINDOW_BUF_PTR_VALID(windowbuf, 0);
     }
@@ -8195,23 +6587,23 @@ void spawn_characters(tgestate_t *state)
       {
         if (room == room_0_OUTDOORS)
         {
-          /* Outdoors. */
+          /* Handle outdoors. */
 
-          /* Screen Y calculation.
+          /* Do screen Y calculation.
            * The 0x100 here is represented as zero in the original game. */
-          y = 0x100 - charstr->pos.x - charstr->pos.y - charstr->pos.height;
-          if (y <= map_y_clamped ||
+          y = 0x100 - charstr->mappos.u - charstr->mappos.v - charstr->mappos.w;
+          if (y <= map_y_clamped || // <= might need to be <
               y > MIN(map_y_clamped + GRACE + 16 + GRACE, 0xFF))
             goto skip;
 
-          /* Screen X calculation. */
-          x = (0x40 - charstr->pos.x + charstr->pos.y) * 2;
-          if (x <= map_x_clamped ||
+          /* Do screen X calculation. */
+          x = (0x40 - charstr->mappos.u + charstr->mappos.v) * 2;
+          if (x <= map_x_clamped || // <= might need to be <
               x > MIN(map_x_clamped + GRACE + 24 + GRACE, 0xFF))
             goto skip;
         }
 
-        spawn_character(state, charstr); // return code ignored
+        spawn_character(state, charstr);
       }
     }
 
@@ -8233,13 +6625,15 @@ skip:
 void purge_invisible_characters(tgestate_t *state)
 {
   /* Size, in UDGs, of a buffer zone around the visible screen in which
-   * visible characters will persist. */
+   * visible characters will persist. (Compare to the spawning size of
+   * 8). */
   enum { GRACE = 9 };
 
   uint8_t    miny, minx;  /* was D, E */
   uint8_t    iters;       /* was B */
   vischar_t *vischar;     /* was HL */
-  uint8_t    lo, hi;      /* was C, A */
+  uint8_t    y;           /* was C */
+  uint8_t    x;           /* was C */
 
   assert(state != NULL);
 
@@ -8255,7 +6649,7 @@ void purge_invisible_characters(tgestate_t *state)
     if (vischar->character == character_NONE)
       goto next;
 
-    /* Reset characters not in the current room. */
+    /* Reset this character if it's not in the current room. */
     if (state->room_index != vischar->room)
       goto reset;
 
@@ -8263,27 +6657,26 @@ void purge_invisible_characters(tgestate_t *state)
     //
     // /* Calculate clamped upper bound. */
     // maxx = MIN(minx + EDGE + state->columns + EDGE, 255);
-    // maxy = MIN(miny + EDGE + (state->rows + 1) + EDGE, 255);
+    // maxy = MIN(miny + EDGE + (state->rows - 1) + EDGE, 255);
     //
-    // t = (vischar->iso_pos.y + 4) / 8 / 256; // round
+    // t = (vischar->isopos.y + 4) / 8 / 256; // round
     // if (t <= miny || t > maxy)
     //   goto reset;
-    // t = (vischar->iso_pos.x) / 8 / 256;
+    // t = (vischar->isopos.x) / 8 / 256;
     // if (t <= minx || t > maxx)
     //   goto reset;
 
-    // Conv: Replaced constants with state->columns/rows.
+    /* Conv: Replaced screen dimension constants with state->columns/rows. */
 
-    hi = vischar->iso_pos.y >> 8;
-    lo = vischar->iso_pos.y & 0xFF;
-    divide_by_8_with_rounding(&lo, &hi);
-    if (lo <= miny || lo > MIN(miny + GRACE + (state->rows + 1) + GRACE, 255)) // Conv: C -> A
+    /* Handle Y part */
+    y = divround(vischar->isopos.y);
+    /* The original code uses 16 instead of 17 for 'rows' so match that. */
+    if (y <= miny || y > MIN(miny + GRACE + (state->rows - 1) + GRACE, 255))
       goto reset;
 
-    hi = vischar->iso_pos.x >> 8;
-    lo = vischar->iso_pos.x & 0xFF;
-    divide_by_8(&lo, &hi);
-    if (lo <= minx || lo > MIN(minx + GRACE + state->columns + GRACE, 255)) // Conv: C -> A
+    /* Handle X part */
+    x = vischar->isopos.x / 8; /* round down */
+    if (x <= minx || x > MIN(minx + GRACE + state->columns + GRACE, 255))
       goto reset;
 
     goto next;
@@ -8304,10 +6697,8 @@ next:
  *
  * \param[in] state   Pointer to game state.
  * \param[in] charstr Pointer to character to spawn. (was HL)
- *
- * \return 1 if spawned, 0 if no empty slots
  */
-int spawn_character(tgestate_t *state, characterstruct_t *charstr)
+void spawn_character(tgestate_t *state, characterstruct_t *charstr)
 {
   /**
    * $CD9A: Data for the four classes of characters.
@@ -8320,24 +6711,25 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
     { &animations[0], &sprites[sprite_PRISONER_FACING_AWAY_1]   },
   };
 
-  vischar_t                   *vischar;           /* was HL/IY */
-  uint8_t                      iters;             /* was B */
-  characterstruct_t           *charstr2;          /* was DE */
-  pos_t                       *saved_pos;         /* was HL */
-  character_t                  character;         /* was A */
-  const character_class_data_t *metadata;         /* was DE */
-  int                          Z;                 /* flag */
-  room_t                       room;              /* was A */
-  uint8_t                      get_target_result; /* was A */
-  const tinypos_t             *doorpos;           /* was HL */
-  const xy_t                  *location;          /* was HL */
+  vischar_t                    *vischar;      /* was HL/IY */
+  uint8_t                       iters;        /* was B */
+  characterstruct_t            *charstr2;     /* was DE */
+  mappos16_t                   *saved_mappos; /* was HL */
+  character_t                   character;    /* was A */
+  const character_class_data_t *metadata;     /* was DE */
+  int                           Z;            /* flag */
+  room_t                        room;         /* was A */
+  uint8_t                       target_type;  /* was A */
+  const mappos8_t              *doormappos;   /* was HL */
+  const pos8_t                 *location;     /* was HL */
+  route_t                      *route;        /* was HL */
 
   assert(state   != NULL);
   assert(charstr != NULL);
 
   /* Skip spawning if the character is already on-screen. */
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
-    return 1; // NZ
+    return; /* already spawned */
 
   /* Find an empty slot in the visible character list. */
   vischar = &state->vischars[1];
@@ -8350,57 +6742,43 @@ int spawn_character(tgestate_t *state, characterstruct_t *charstr)
   }
   while (--iters);
 
-  return 0; // Z
+  return; /* no spare slot */
 
 
 found_empty_slot:
-
-  // POP DE  (DE = charstr)
-  // PUSH HL (vischar)
-  // POP IY  (IY_vischar = HL_vischar)
   state->IY = vischar;
-  // PUSH HL (vischar)
-  // PUSH DE (charstr)
-
-  charstr2 = charstr;
+  charstr2 = charstr; /* Conv: Original points at charstr.room */
 
   /* Scale coords dependent on which room the character is in. */
-  saved_pos = &state->saved_pos.pos;
+  saved_mappos = &state->saved_mappos.pos16;
   if (charstr2->room == room_0_OUTDOORS)
   {
     /* Conv: Unrolled. */
-    saved_pos->x      = charstr2->pos.x      * 8;
-    saved_pos->y      = charstr2->pos.y      * 8;
-    saved_pos->height = charstr2->pos.height * 8;
+    saved_mappos->u = charstr2->mappos.u * 8;
+    saved_mappos->v = charstr2->mappos.v * 8;
+    saved_mappos->w = charstr2->mappos.w * 8;
   }
   else
   {
     /* Conv: Unrolled. */
-    saved_pos->x      = charstr2->pos.x;
-    saved_pos->y      = charstr2->pos.y;
-    saved_pos->height = charstr2->pos.height;
+    saved_mappos->u = charstr2->mappos.u;
+    saved_mappos->v = charstr2->mappos.v;
+    saved_mappos->w = charstr2->mappos.w;
   }
 
   Z = collision(state);
-  if (Z == 0)
+  if (Z == 0) /* no collision */
     Z = bounds_check(state, vischar);
-  // if Z == 1 then within wall bounds
+  if (Z == 1)
+    return; /* a character or bounds collision occurred */
 
-  // POP DE (charstr)
-  // POP HL (vischar)
-
-  if (Z == 1) // if collision or bounds_check is nonzero, then return
-    return 0; // check
-
-  /* Transfer character to vischar. */
+  /* Transfer character struct to vischar. */
   character = charstr->character_and_flags | characterstruct_FLAG_ON_SCREEN;
   charstr->character_and_flags = character;
 
   character &= characterstruct_CHARACTER_MASK;
   vischar->character = character;
   vischar->flags     = 0;
-
-  // PUSH DE (charstr)
 
   metadata = &character_class_data[0]; /* Commandant */
   if (character != 0)
@@ -8416,16 +6794,9 @@ found_empty_slot:
     }
   }
 
-  // EX DE,HL (DE = vischar, HL = metadata)
-
-  vischar->animbase  = metadata->animbase; // seems to be a constant
+  vischar->animbase  = metadata->animbase;
   vischar->mi.sprite = metadata->sprite;
-  memcpy(&vischar->mi.pos, &state->saved_pos, sizeof(pos_t));
-
-  // POP HL (charstr)
-
-  //HL += 5; // -> charstr->route
-  //DE += 7; // -> vischar->room
+  memcpy(&vischar->mi.mappos, &state->saved_mappos, sizeof(mappos16_t));
 
   room = state->room_index;
   vischar->room = room;
@@ -8435,68 +6806,46 @@ found_empty_slot:
     play_speaker(state, sound_CHARACTER_ENTERS_1);
   }
 
-  // DE -= 26; // -> vischar->route
   vischar->route = charstr->route;
-  // DE += 2, HL += 2; // DE -> vischar->pos
-  // HL -= 2; // -> charstr->route
 
-  tinypos_t *DEtarget;
-  route_t   *HLroute;
-
-  DEtarget = &vischar->target;
-  HLroute  = &charstr->route;
+  /* Conv: Removed DE handling here and below which isn't used in this port. */
+  route = &charstr->route;
 again:
-  if (HLroute->index != routeindex_0_HALT) /* if not stood still */
+  if (route->index != routeindex_0_HALT) /* if not stood still */
   {
-    state->entered_move_characters = 0;
-    // PUSH DE // -> vischar->pos
-    get_target_result = get_target(state,
-                                   HLroute,
-                                   &doorpos,
-                                   &location);
-    if (get_target_result == get_target_ROUTE_ENDS)
+    state->entered_move_a_character = 0;
+    target_type = get_target(state, route, &doormappos, &location);
+    if (target_type == get_target_ROUTE_ENDS)
     {
-      // POP HL // -> vischar->pos
-      // HL -= 2; // -> vischar->route
-      // PUSH HL // save vischar->route
-      (void) route_ended(state, vischar, &vischar->route);
-      // POP HL // restore vischar->route
-      // DE = HL + 2; // -> vischar->pos
+      route_ended(state, vischar, &vischar->route);
 
-      // To match the original code this should jump to 'again' with HL now
-      // pointing to vischar->route, not charstr->route as on the first go.
-      // DEtarget is likely not necessary - it's only ever assigned in this
-      // code.
-      DEtarget = &vischar->target;
-      HLroute  = &vischar->route;
+      /* To match the original code this should now jump to 'again' with 'route'
+       * pointing to vischar->route, not charstr->route as used on the first
+       * round. */
+      route = &vischar->route;
 
+      /* Jump back and try again. */
       goto again;
     }
-    else if (get_target_result == get_target_DOOR)
+    else if (target_type == get_target_DOOR)
     {
       vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
     }
-    // POP DE // -> vischar->pos
-    // sampled HL is $7913 (a doors tinypos)
-    if (get_target_result == get_target_DOOR)
+    if (target_type == get_target_DOOR)
     {
-      vischar->target = *doorpos;
+      vischar->target = *doormappos;
     }
     else
     {
-      vischar->target.x = location->x;
-      vischar->target.y = location->y;
-      // Note we're not setting .z here.
+      vischar->target.u = location->x;
+      vischar->target.v = location->y;
+      /* Note: We're not assigning .height here. */
     }
   }
+
   vischar->counter_and_flags = 0;
-  // DE -= 7;
-  // EX DE,HL
-  // PUSH HL
-  calc_vischar_iso_pos_from_vischar(state, vischar);
-  // POP HL
-  character_behaviour(state, vischar);
-  return 1; // exit via
+  calc_vischar_isopos_from_vischar(state, vischar);
+  character_behaviour(state, vischar); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8510,7 +6859,7 @@ again:
 void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 {
   character_t        character; /* was A */
-  pos_t             *pos;       /* was DE */
+  mappos16_t        *mappos;    /* was DE */
   characterstruct_t *charstr;   /* was DE */
   room_t             room;      /* was A */
 
@@ -8531,11 +6880,11 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 
     /* Save the old position. */
     if (character == character_26_STOVE_1)
-      pos = &state->movable_items[movable_item_STOVE1].pos;
+      mappos = &state->movable_items[movable_item_STOVE1].mappos;
     else if (character == character_27_STOVE_2)
-      pos = &state->movable_items[movable_item_STOVE2].pos;
+      mappos = &state->movable_items[movable_item_STOVE2].mappos;
     else
-      pos = &state->movable_items[movable_item_CRATE].pos;
+      mappos = &state->movable_items[movable_item_CRATE].mappos;
 
     /* The DOS version of the game has a difference here. Instead of
      * memcpy'ing the current vischar's position into the movable_items's
@@ -8544,16 +6893,16 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
      * movsw' for it to work. It fixes the bug where stoves get left in place
      * after a restarted game, but almost looks like an accident.
      */
-    memcpy(pos, &vischar->mi.pos, sizeof(*pos));
+    memcpy(mappos, &vischar->mi.mappos, sizeof(*mappos));
   }
   else
   {
-    pos_t     *vispos_in;   /* was HL */
-    tinypos_t *charpos_out; /* was DE */
+    mappos16_t *vispos_in;   /* was HL */
+    mappos8_t  *charpos_out; /* was DE */
 
     /* A non-object character. */
 
-    charstr = get_character_struct(state, character);
+    charstr = &state->character_structs[character];
 
     /* Re-enable the character. */
     charstr->character_and_flags &= ~characterstruct_FLAG_ON_SCREEN;
@@ -8565,21 +6914,21 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
 
     /* Save the old position. */
 
-    vispos_in   = &vischar->mi.pos;
-    charpos_out = &charstr->pos;
+    vispos_in   = &vischar->mi.mappos;
+    charpos_out = &charstr->mappos;
 
     if (room == room_0_OUTDOORS)
     {
       /* Outdoors. */
-      pos_to_tinypos(vispos_in, charpos_out);
+      scale_mappos_down(vispos_in, charpos_out);
     }
     else
     {
       /* Indoors. */
       /* Conv: Unrolled from original code. */
-      charpos_out->x      = vispos_in->x; // note: narrowing
-      charpos_out->y      = vispos_in->y; // note: narrowing
-      charpos_out->height = vispos_in->height; // note: narrowing
+      charpos_out->u = vispos_in->u; // note: narrowing
+      charpos_out->v = vispos_in->v; // note: narrowing
+      charpos_out->w = vispos_in->w; // note: narrowing
     }
 
     // character = vischar->character; /* Done in original code, but we already have this from earlier. */
@@ -8611,16 +6960,16 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  * $C651: Return the coordinates of the route's current target.
  *
  * Given a route_t return the coordinates the character should move to.
- * Coordinates are returned as a tinypos_t when moving to a door or an xy_t
+ * Coordinates are returned as a mappos8_t when moving to a door or a pos8_t
  * when moving to a numbered location.
  *
  * If the route specifies 'wander' then one of eight random locations is
  * chosen starting from route.step.
  *
- * \param[in]  state    Pointer to game state.
- * \param[in]  route    Pointer to route.                            (was HL)
- * \param[out] doorpos  Receives doorpos when moving to a door.      (was HL)
- * \param[out] location Receives location when moving to a location. (was HL)
+ * \param[in]  state      Pointer to game state.
+ * \param[in]  route      Pointer to route.                            (was HL)
+ * \param[out] doormappos Receives doorpos when moving to a door.      (was HL)
+ * \param[out] location   Receives location when moving to a location. (was HL)
  *
  * \retval get_target_ROUTE_ENDS The route has ended.
  * \retval get_target_DOOR       The next target is a door.
@@ -8628,13 +6977,13 @@ void reset_visible_character(tgestate_t *state, vischar_t *vischar)
  */
 uint8_t get_target(tgestate_t       *state,
                    route_t          *route,
-                   const tinypos_t **doorpos,
-                   const xy_t      **location)
+                   const mappos8_t **doormappos,
+                   const pos8_t    **location)
 {
   /**
    * $783A: Table of map locations used in routes.
    */
-  static const xy_t locations[78] =
+  static const pos8_t locations[78] =
   {
     // reset_visible_character guard dogs 1 & 2 use 0..7
     // character_behaviour uss this range also, for dog behaviour
@@ -8742,7 +7091,7 @@ uint8_t get_target(tgestate_t       *state,
   assert(route     != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  *doorpos  = NULL; /* Conv: Added. */
+  *doormappos  = NULL; /* Conv: Added. */
   *location = NULL; /* Conv: Added. */
 
 #ifdef DEBUG_ROUTES
@@ -8802,10 +7151,10 @@ uint8_t get_target(tgestate_t       *state,
     {
       /* Route byte < 40: A door */
       routebyte = routebytes[step];
-      if (route->index & routeindexflag_REVERSED)
+      if (route->index & ROUTEINDEX_REVERSE_FLAG)
         routebyte ^= door_REVERSE;
       door = get_door(routebyte);
-      *doorpos = &door->pos;
+      *doormappos = &door->mappos;
       return get_target_DOOR;
     }
     else
@@ -8831,27 +7180,27 @@ uint8_t get_target(tgestate_t       *state,
  *
  * \param[in] state Pointer to game state.
  */
-void move_characters(tgestate_t *state)
+void move_a_character(tgestate_t *state)
 {
-  character_t        character;               /* was A */
-  characterstruct_t *charstr;                 /* was HL */
-  room_t             room;                    /* was A */
-  item_t             item;                    /* was C */
-  uint8_t            get_target_result;       /* was A */
-  route_t           *HLroute;                 /* was HL */
-  const tinypos_t   *HLtinypos;               /* was HL */
-  const xy_t        *HLlocation;              /* was HL */
-  uint8_t            routeindex;              /* was A */
-  characterstruct_t *DEcharstr;               /* was DE */
-  uint8_t            max;                     /* was A' */
-  uint8_t            B;                       /* was B */
-  door_t            *HLdoor;                  /* was HL */
-  tinypos_t         *DEcharstr_tinypos;       /* was DE */
+  character_t        character;   /* was A */
+  characterstruct_t *charstr;     /* was HL/DE */
+  room_t             room;        /* was A */
+  item_t             item;        /* was C */
+  uint8_t            target_type; /* was A */
+  route_t           *route;       /* was HL */
+  const mappos8_t   *doormappos;  /* was HL */
+  const pos8_t      *location;    /* was HL */
+  uint8_t            routeindex;  /* was A */
+  uint8_t            max;         /* was A' */
+  uint8_t            arrived;     /* was B */
+  door_t            *door;        /* was HL */
+  mappos8_t         *charstr_pos; /* was DE */
 
   assert(state != NULL);
 
+  /* Set the 'character index is valid' flag. */
   /* This makes future character events use state->character_index. */
-  state->entered_move_characters = 255;
+  state->entered_move_a_character = 255;
 
   /* Move to the next character, wrapping around after character 26. */
   character = state->character_index + 1;
@@ -8859,40 +7208,32 @@ void move_characters(tgestate_t *state)
     character = character_0_COMMANDANT;
   state->character_index = character;
 
-  /* Get its chararacter struct, exiting if it's on-screen. */
-  charstr = get_character_struct(state, character);
+  /* Get its chararacter struct and exit if the character is on-screen. */
+  charstr = &state->character_structs[character];
   if (charstr->character_and_flags & characterstruct_FLAG_ON_SCREEN)
     return;
-
-  // PUSH HL_charstr
 
   /* Are any items to be found in the same room as the character? */
   room = charstr->room;
   ASSERT_ROOM_VALID(room);
   if (room != room_0_OUTDOORS)
-    /* This discovers one item at a time. */
+    /* Note: This discovers just one item at a time. */
     if (is_item_discoverable_interior(state, room, &item) == 0)
       item_discovered(state, item);
 
-  // POP HL_charstr
-  // HL += 2; // point at charstr->pos
-  // PUSH HL_pos
-  // HL += 3; // point at charstr->route
-
-  /* If standing still, return. */
-  if (charstr->route.index == routeindex_0_HALT) /* temp was A */
-    // POP HL_pos
+  /* If the character is standing still, return now. */
+  if (charstr->route.index == routeindex_0_HALT)
     return;
 
-  get_target_result = get_target(state,
-                                 &charstr->route,
-                                 &HLtinypos,
-                                 &HLlocation);
-  if (get_target_result == get_target_ROUTE_ENDS)
+  target_type = get_target(state,
+                          &charstr->route,
+                          &doormappos,
+                          &location);
+  if (target_type == get_target_ROUTE_ENDS)
   {
-    /* When the route ends reverse the route. */
+    /* When the route ends, reverse the route. */
 
-    HLroute = &charstr->route;
+    route = &charstr->route;
 
     character = state->character_index;
     if (character != character_0_COMMANDANT)
@@ -8904,170 +7245,157 @@ void move_characters(tgestate_t *state)
 
       /* Characters 1..11. */
 reverse_route:
-      HLroute->index = routeindex = HLroute->index ^ routeindexflag_REVERSED;
+      route->index = routeindex = route->index ^ ROUTEINDEX_REVERSE_FLAG;
 
       /* Conv: Was [-2]+1 pattern. Adjusted to be clearer. */
-      if (routeindex & routeindexflag_REVERSED)
-        HLroute->step--;
+      if (routeindex & ROUTEINDEX_REVERSE_FLAG)
+        route->step--;
       else
-        HLroute->step++;
-
-      // POP HL_pos
-      return;
+        route->step++;
     }
     else
     {
       /* Commandant only. */
 
-      // sampled HL = $7617 (characterstruct + 5)
-      routeindex = HLroute->index & ~routeindexflag_REVERSED;
-      if (routeindex != 36)
+      routeindex = route->index & ~ROUTEINDEX_REVERSE_FLAG;
+      if (routeindex != routeindex_36_GO_TO_SOLITARY)
         goto reverse_route;
 
 trigger_event:
-      /* We arrive here if character >= character_12_GUARD_12 or if
-       * commandant on route 36. */
+      /* We arrive here if the character index is character_12_GUARD_12, or
+       * higher, or if it's the commandant on route 36 ("go to solitary"). */
 
-      // POP DE_pos
-      character_event(state, HLroute);
-      return; // exit via
+      character_event(state, route); /* was tail call */
     }
   }
   else
   {
-    if (get_target_result == get_target_DOOR)
+    if (target_type == get_target_DOOR)
     {
-      const tinypos_t *HLtinypos2; /* was HL */
+      /* Handle the target-is-a-door case. */
 
-      // POP DE_pos
-      DEcharstr = charstr; // points at characterstruct.pos
-      room = DEcharstr->room; // read one byte earlier
-      // PUSH HL_route
+      const mappos8_t *doormappos2; /* was HL */
+
+      room = charstr->room;
       if (room == room_0_OUTDOORS)
       {
-        // The original code stores to saved_pos as if it's a pair of bytes.
-        // This is different from most, if not all, of the other locations in
-        // the code which treat it as a pair of 16-bit words.
-        // Given that I assume it's just being used here as scratch space.
+        /* The original code stores to saved_mappos as if it's a pair of bytes.
+         * This is different from most, if not all, of the other locations in
+         * the code which treat it as a pair of 16-bit words.
+         * Given that I assume it's just being used here as scratch space. */
 
         /* Conv: Unrolled. */
-        state->saved_pos.tinypos.x = HLtinypos->x >> 1;
-        state->saved_pos.tinypos.y = HLtinypos->y >> 1;
-        HLtinypos2 = &state->saved_pos.tinypos;
+        state->saved_mappos.pos8.u = doormappos->u >> 1;
+        state->saved_mappos.pos8.v = doormappos->v >> 1;
+        doormappos2 = &state->saved_mappos.pos8;
       }
       else
       {
         /* Conv: Assignment made explicit. */
-        HLtinypos2 = HLtinypos;
+        doormappos2 = doormappos;
       }
 
-      if (DEcharstr->room == room_0_OUTDOORS) // FUTURE: Remove reload of 'room'.
+      if (charstr->room == room_0_OUTDOORS) /* FUTURE: Remove reload of 'room'. */
         max = 2;
       else
         max = 6;
 
-      DEcharstr_tinypos = &DEcharstr->pos;
+      charstr_pos = &charstr->mappos;
 
-      B = change_by_delta(max, 0, &HLtinypos2->x, &DEcharstr_tinypos->x); // max, rc, second, first
-      B = change_by_delta(max, B, &HLtinypos2->y, &DEcharstr_tinypos->y);
-      if (B != 2)
-        return; /* Managed to move. */
+      /* args: max move, rc, second val, first val */
+      arrived = move_towards(max,       0, &doormappos2->u, &charstr_pos->u);
+      arrived = move_towards(max, arrived, &doormappos2->v, &charstr_pos->v);
+      if (arrived != 2)
+        return; /* not arrived */
 
-      // sampled DE at $C73B = 767c, 7675, 76ad, 7628, 76b4, 76bb, 76c2, 7613, 769f
-      // => character_structs.room
+      /* If we reach here the character has arrived at their destination.
+       *
+       * Our current target is a door, so change to the door's target room. */
 
-      /* This unpleasant cast turns HLtinypos (assigned in get_target)
-       * back into a door_t. */
-      HLdoor = (door_t *)((char *) HLtinypos - 1);
-      assert(HLdoor >= &doors[0]);
-      assert(HLdoor < &doors[door_MAX * 2]);
+      /* This unpleasant cast turns doorpos (assigned in get_target) back into a door_t. */
+      door = (door_t *)((char *) doormappos - 1);
+      assert(door >= &doors[0]);
+      assert(door < &doors[door_MAX * 2]);
 
-      // sampled HL at $C73C = 7942, 79be, 79d6, 79a6, 7926, 79ee, 78da, 79a2, 78e2
-      // => doors.room_and_flags
+      charstr->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
-      DEcharstr->room = (HLdoor->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
-
-      // Stuff reading from doors.
-      if ((HLdoor->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
-        // top left or top right
-        // sampled HL = 78fa,794a,78da,791e,78e2,790e,796a,790e,791e,7962,791a
-        HLtinypos = &HLdoor[1].pos;
+      /* Determine the destination door. */
+      if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) < 2)
+        /* The door is facing top left or top right. */
+        doormappos = &door[1].mappos; /* point at the next half of door pair */
       else
-        // bottom left or bottom right
-        HLtinypos = &HLdoor[-1].pos;
+        /* The door is facing bottom left or bottom right. */
+        doormappos = &door[-1].mappos; /* point at the previous half of door pair */
 
-      room = DEcharstr->room; // *DE++;
-      DEcharstr_tinypos = &DEcharstr->pos;
+      /* Copy the door's position into the charstr. */
+      room = charstr->room;
+      charstr_pos = &charstr->mappos;
       if (room != room_0_OUTDOORS)
       {
-        *DEcharstr_tinypos = *HLtinypos;
-//        DE += 3;
-//        DE--; // DE points to DEtinypos->height
-        // HL += 3 // HL points to next door_t?
+        /* Indoors. Copy the door's position into the charstr. */
+
+        *charstr_pos = *doormappos;
       }
       else
       {
+        /* Outdoors. Copy the door's position into the charstr, dividing by
+         * two. */
+
         /* Conv: Unrolled. */
-        DEcharstr_tinypos->x      = HLtinypos->x      >> 1;
-        DEcharstr_tinypos->y      = HLtinypos->y      >> 1;
-        DEcharstr_tinypos->height = HLtinypos->height >> 1;
-//        DE += 3;
-//        DE--;
+        charstr_pos->u = doormappos->u >> 1;
+        charstr_pos->v = doormappos->v >> 1;
+        charstr_pos->w = doormappos->w >> 1;
       }
     }
     else
     {
-      // POP DE
-      DEcharstr = charstr; // points at characterstruct.pos
+      /* Normal move case. */
 
+      /* Establish a maximum for passing into move_towards. */
       /* Conv: Reordered. */
-      if (charstr->room == room_0_OUTDOORS) // was DE[-1]
+      if (charstr->room == room_0_OUTDOORS)
         max = 2;
       else
         max = 6;
 
-      // sampled HL at $C77A = 787a, 787e, 7888, 7890, 78aa, 783a, 786a, 7896, 787c,
-      // => locations[]
-      // HL comes from HLlocation
-
-      B = change_by_delta(max, 0, &HLlocation->x, &charstr->pos.x);
-      B = change_by_delta(max, B, &HLlocation->y, &charstr->pos.y);
-      if (B != 2)
-        return; // managed to move
+      arrived = move_towards(max,       0, &location->x, &charstr->mappos.u);
+      arrived = move_towards(max, arrived, &location->y, &charstr->mappos.v);
+      if (arrived != 2)
+        return; /* not arrived */
     }
-//    DE++;
-    // EX DE, HL
-    // HL -> DEcharstr->route
-    routeindex = DEcharstr->route.index; // address? 761e 7625 768e 7695 7656 7695 7680 // => character struct entry + 5 // route field
+
+    /* If we reach here the character has arrived at their destination. */
+    routeindex = charstr->route.index;
     if (routeindex == routeindex_255_WANDER)
       return;
-    if ((routeindex & routeindexflag_REVERSED) == 0)  // similar to pattern above (with the -1/+1)
-      DEcharstr->route.step++;
+
+    if ((routeindex & ROUTEINDEX_REVERSE_FLAG) == 0)
+      charstr->route.step++;
     else
-      DEcharstr->route.step--;
+      charstr->route.step--;
   }
 }
 
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C79A: Increments 'first' by ('first' - 'second').
+ * $C79A: Moves the first value toward the second.
  *
- * Used only by move_characters().
+ * Used only by move_a_character().
  *
  * Leaf.
  *
- * \param[in] max    A maximum value, usually 2 or 6. (was A')
+ * \param[in] max    Some maximum value, usually 2 or 6. (was A')
  * \param[in] rc     Return code. Incremented if delta is zero. (was B)
  * \param[in] second Pointer to second value. (was HL)
  * \param[in] first  Pointer to first value. (was DE)
  *
  * \return rc as passed in, or rc incremented if delta was zero. (was B)
  */
-int change_by_delta(int8_t         max,
-                    int            rc,
-                    const uint8_t *second,
-                    uint8_t       *first)
+int move_towards(int8_t         max,
+                 int            rc,
+                 const uint8_t *second,
+                 uint8_t       *first)
 {
   int delta; /* was A */
 
@@ -9100,22 +7428,7 @@ int change_by_delta(int8_t         max,
 
 /* ----------------------------------------------------------------------- */
 
-/**
- * $C7B9: Get character struct.
- *
- * \param[in] state     Pointer to game state.
- * \param[in] character Character index. (was A)
- *
- * \return Pointer to character struct. (was HL)
- */
-characterstruct_t *get_character_struct(tgestate_t *state,
-                                        character_t character)
-{
-  assert(state != NULL);
-  ASSERT_CHARACTER_VALID(character);
-
-  return &state->character_structs[character];
-}
+/* Conv: $C7B9/get_character_struct was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -9131,7 +7444,7 @@ characterstruct_t *get_character_struct(tgestate_t *state,
  */
 void character_event(tgestate_t *state, route_t *route)
 {
-#define REVERSE routeindexflag_REVERSED
+#define REVERSE ROUTEINDEX_REVERSE_FLAG
 
   /* $C7F9 */
   static const route2event_t eventmap[24] =
@@ -9256,7 +7569,7 @@ void charevnt_commandant_to_yard(tgestate_t *state, route_t *route)
 void charevnt_hero_release(tgestate_t *state, route_t *route)
 {
   /* Reverse the commandant's route. */
-  route->index = routeindex_36_GO_TO_SOLITARY | routeindexflag_REVERSED;
+  route->index = routeindex_36_GO_TO_SOLITARY | ROUTEINDEX_REVERSE_FLAG;
   route->step  = 3;
 
   state->automatic_player_counter = 0; /* Force automatic control */
@@ -9356,7 +7669,7 @@ void charevnt_wander_top(tgestate_t *state, route_t *route)
  */
 void charevnt_bed(tgestate_t *state, route_t *route)
 {
-  if (state->entered_move_characters == 0)
+  if (state->entered_move_a_character == 0)
     character_bed_vischar(state, route);
   else
     character_bed_state(state, route);
@@ -9367,7 +7680,7 @@ void charevnt_bed(tgestate_t *state, route_t *route)
  */
 void charevnt_breakfast(tgestate_t *state, route_t *route)
 {
-  if (state->entered_move_characters == 0)
+  if (state->entered_move_a_character == 0)
     charevnt_breakfast_vischar(state, route);
   else
     charevnt_breakfast_state(state, route);
@@ -9417,7 +7730,7 @@ void automatics(tgestate_t *state)
   assert(state != NULL);
 
   /* (I've still no idea what this flag means). */
-  state->entered_move_characters = 0;
+  state->entered_move_a_character = 0;
 
   /* If the bell is ringing, hostiles pursue. */
   if (state->bell == bell_RING_PERPETUAL)
@@ -9484,7 +7797,7 @@ void automatics(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $C918: Character behaviour stuff.
+ * $C918: Character behaviour.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
@@ -9520,8 +7833,8 @@ void character_behaviour(tgestate_t *state, vischar_t *vischar)
     {
 pursue_hero:
       /* Pursue the hero. */
-      vischar2->target.x = state->hero_map_position.x;
-      vischar2->target.y = state->hero_map_position.y;
+      vischar2->target.u = state->hero_mappos.u;
+      vischar2->target.v = state->hero_mappos.v;
       goto move;
     }
     /* Mode 2: Hero is chased by hostiles if under player control. */
@@ -9537,7 +7850,7 @@ pursue_hero:
         /* The hero is under automatic control: hostiles lose interest and
          * resume following their original route. */
         vischar2->flags = 0; /* clear vischar_PURSUIT_HASSLE */
-        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+        get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9547,8 +7860,8 @@ pursue_hero:
       if (state->item_structs[item_FOOD].room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
       {
         /* Set dog target to poisoned food. */
-        vischar2->target.x = state->item_structs[item_FOOD].pos.x;
-        vischar2->target.y = state->item_structs[item_FOOD].pos.y;
+        vischar2->target.u = state->item_structs[item_FOOD].mappos.u;
+        vischar2->target.v = state->item_structs[item_FOOD].mappos.v;
         goto move;
       }
       else
@@ -9558,7 +7871,7 @@ pursue_hero:
         vischar2->flags = 0; /* clear vischar_PURSUIT_DOG_FOOD */
         vischar2->route.index = routeindex_255_WANDER;
         vischar2->route.step  = 0; /* 0..7 */
-        (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+        get_target_assign_pos(state, vischar2, &vischar2->route);
         return;
       }
     }
@@ -9586,27 +7899,27 @@ pursue_hero:
       /* Bribed character was not visible: hostiles lose interest and resume
        * following their original route. */
       vischar2->flags = 0; /* clear vischar_PURSUIT_SAW_BRIBE */
-      (void) get_target_assign_pos(state, vischar2, &vischar2->route);
+      get_target_assign_pos(state, vischar2, &vischar2->route);
       return;
 
 bribed_visible:
       /* Found the bribed character in vischars: hostiles target him. */
       {
-        pos_t     *pos;    /* was HL */
-        tinypos_t *target; /* was DE */
+        mappos16_t *mappos; /* was HL */
+        mappos8_t  *target; /* was DE */
 
-        pos    = &found->mi.pos;
+        mappos = &found->mi.mappos;
         target = &vischar2->target;
         if (state->room_index == room_0_OUTDOORS)
         {
           /* Outdoors */
-          pos_to_tinypos(pos, target);
+          scale_mappos_down(mappos, target);
         }
         else
         {
           /* Indoors */
-          target->x = pos->x; // note: narrowing
-          target->y = pos->y; // note: narrowing
+          target->u = mappos->u; // note: narrowing
+          target->v = mappos->v; // note: narrowing
         }
         goto move;
       }
@@ -9616,24 +7929,14 @@ bribed_visible:
   if (vischar2->route.index == routeindex_0_HALT) /* Stand still */
   {
     character_behaviour_set_input(state, vischar, 0 /* new_input */);
-    return; // exit via
+    return; /* was tail call */
   }
 
 move:
   vischar2flags = vischar2->flags; // sampled = $8081, 80a1, 80e1, 8001, 8021, ...
 
-  /* The original code self modifies the vischar_move_x/y routines. */
-//  if (state->room_index > room_0_OUTDOORS)
-//    HLdash = &multiply_by_1;
-//  else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
-//    HLdash = &multiply_by_4;
-//  else
-//    HLdash = &multiply_by_8;
-//
-//  self_CA13 = HLdash; // self-modify vischar_move_x:$CA13
-//  self_CA4B = HLdash; // self-modify vischar_move_y:$CA4B
-
-  /* Replacement code passes down a scale factor. */
+  /* Conv: The original code here self modifies the vischar_move_u/v routines.
+   *       The replacement code passes in a scale factor. */
   if (state->room_index > room_0_OUTDOORS)
     scale = 1; /* Indoors. */
   else if (vischar2flags & vischar_FLAGS_TARGET_IS_DOOR)
@@ -9641,32 +7944,49 @@ move:
   else
     scale = 8; /* Outdoors. */
 
-  /* If the vischar_BYTE7_Y_DOMINANT flag is set then
-   * character_behaviour_move_y_dominant is used instead of the code below,
-   * which is x dominant. ie. It means "try moving y then x, rather than x
-   * then y". This is the code which makes characters alternate left/right
-   * when navigating. */
-  if (vischar->counter_and_flags & vischar_BYTE7_Y_DOMINANT)
+  /* If the vischar_BYTE7_V_DOMINANT flag is set then we try moving on the v
+   * axis then the u axis, rather than u then v. This is the code which makes
+   * characters alternate left/right when navigating. */
+  if (vischar->counter_and_flags & vischar_BYTE7_V_DOMINANT)
   {
-    // FUTURE: inline it here
-    character_behaviour_move_y_dominant(state, vischar, scale); // exit via
-  }
-  else
-  {
-    input_t input; /* was ? */
+    /* V dominant case */
 
-    input = vischar_move_x(state, vischar, scale);
+    /* Conv: Inlined the chunk from $C9FF here. */
+
+    input_t input; /* was A */
+
+    input = vischar_move_v(state, vischar, scale);
     if (input)
     {
       character_behaviour_set_input(state, vischar, input);
     }
     else
     {
-      input = vischar_move_y(state, vischar, scale);
+      input = vischar_move_u(state, vischar, scale);
       if (input)
         character_behaviour_set_input(state, vischar, input);
       else
-        target_reached(state, vischar); // exit via
+        target_reached(state, vischar); /* was tail call */
+    }
+  }
+  else
+  {
+    /* U dominant case */
+
+    input_t input; /* was A */
+
+    input = vischar_move_u(state, vischar, scale);
+    if (input)
+    {
+      character_behaviour_set_input(state, vischar, input);
+    }
+    else
+    {
+      input = vischar_move_v(state, vischar, scale);
+      if (input)
+        character_behaviour_set_input(state, vischar, input);
+      else
+        target_reached(state, vischar); /* was tail call */
     }
   }
 }
@@ -9691,53 +8011,20 @@ void character_behaviour_set_input(tgestate_t *state,
   assert((vischar->input & ~input_KICK) < 9);
 }
 
-/**
- * $C9FF: This is the same as the end of character_behaviour above but the
- * movement order is reversed to be y-x rather than x-y.
- *
- * \param[in] state   Pointer to game state.
- * \param[in] vischar Pointer to visible character.   (was IY)
- * \param[in] scale   Scale factor (replaces self-modifying code in original).
- */
-void character_behaviour_move_y_dominant(tgestate_t *state,
-                                         vischar_t  *vischar,
-                                         int         scale)
-{
-  input_t input; /* was ? */
-
-  assert(state != NULL);
-  ASSERT_VISCHAR_VALID(vischar);
-  assert(scale == 1 || scale == 4 || scale == 8);
-
-  input = vischar_move_y(state, vischar, scale);
-  if (input)
-  {
-    character_behaviour_set_input(state, vischar, input);
-  }
-  else
-  {
-    input = vischar_move_x(state, vischar, scale);
-    if (input)
-      character_behaviour_set_input(state, vischar, input);
-    else
-      target_reached(state, vischar); // exit via
-  }
-}
-
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA11: Return the input_t which moves us closer to our X target.
+ * $CA11: Return the input_t which moves us closer to our U target.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 8 => x >  pos.x
- *         4 => x <  pos.x
- *         0 => x == pos.x
+ * \return 8 => u >  pos.u
+ *         4 => u <  pos.u
+ *         0 => u == pos.u
  */
-input_t vischar_move_x(tgestate_t *state,
+input_t vischar_move_u(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale)
 {
@@ -9756,7 +8043,7 @@ input_t vischar_move_x(tgestate_t *state,
   // suspect that mi.pos.x is "where i am"
   // and that pos.x is "where i need to be"
 
-  delta = (int16_t) vischar->mi.pos.x - (int16_t) vischar->target.x * scale;
+  delta = (int16_t) vischar->mi.mappos.u - (int16_t) vischar->target.u * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_RIGHT + input_DOWN;
@@ -9764,7 +8051,7 @@ input_t vischar_move_x(tgestate_t *state,
     return input_LEFT + input_UP;
   else
   {
-    vischar->counter_and_flags |= vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags |= vischar_BYTE7_V_DOMINANT;
     return input_NONE;
   }
 }
@@ -9772,7 +8059,7 @@ input_t vischar_move_x(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CA49: Return the input_t which moves us closer to our Y target.
+ * $CA49: Return the input_t which moves us closer to our V target.
  *
  * Nearly identical to vischar_move_x.
  *
@@ -9780,11 +8067,11 @@ input_t vischar_move_x(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] scale   Scale factor. (replaces self-modifying code in original)
  *
- * \return 5 => y >  pos.y
- *         7 => y <  pos.y
- *         0 => y == pos.y
+ * \return 5 => v >  pos.v
+ *         7 => v <  pos.v
+ *         0 => v == pos.v
  */
-input_t vischar_move_y(tgestate_t *state,
+input_t vischar_move_v(tgestate_t *state,
                        vischar_t  *vischar,
                        int         scale)
 {
@@ -9798,7 +8085,7 @@ input_t vischar_move_y(tgestate_t *state,
    * same vischar on entry. */
   assert(vischar == state->IY);
 
-  delta = (int16_t) vischar->mi.pos.y - (int16_t) vischar->target.y * scale;
+  delta = (int16_t) vischar->mi.mappos.v - (int16_t) vischar->target.v * scale;
   /* Conv: Rewritten to simplify. Split D,E checking boiled down to -3/+3. */
   if (delta >= 3)
     return input_LEFT + input_DOWN;
@@ -9806,7 +8093,7 @@ input_t vischar_move_y(tgestate_t *state,
     return input_RIGHT + input_UP;
   else
   {
-    vischar->counter_and_flags &= ~vischar_BYTE7_Y_DOMINANT;
+    vischar->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
     return input_NONE;
   }
 }
@@ -9821,173 +8108,172 @@ input_t vischar_move_y(tgestate_t *state,
  */
 void target_reached(tgestate_t *state, vischar_t *vischar)
 {
-  uint8_t          flags_lower6;            /* was A */
   uint8_t          flags_all;               /* was C */
+
+  uint8_t          flags_lower6;            /* was A */
   uint8_t          food_discovered_counter; /* was A */
   uint8_t          step;                    /* was C */
   uint8_t          route;                   /* was A */
   doorindex_t      doorindex;               /* was A */
   const door_t    *door;                    /* was HL */
-  const tinypos_t *tinypos;                 /* was HL */
+  const mappos8_t *mappos;                  /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-#ifdef DEBUG_ROUTES
-  if (vischar == &state->vischars[0])
-    printf("(hero) target_reached\n");
-#endif
-
-  // In the original code HL is IY + 4 on entry.
-  // In this version we replace HL references with IY ones.
+  /* Conv: In the original code HL is IY + 4 on entry.
+   *       In this version we replace HL references with IY ones.
+   */
 
   flags_all = vischar->flags;
-  flags_lower6 = flags_all & vischar_FLAGS_MASK; // lower 6 bits only
-  if (flags_lower6) // if in one of these states: vischar_PURSUIT_PURSUE || vischar_PURSUIT_HASSLE || vischar_PURSUIT_DOG_FOOD || vischar_PURSUIT_SAW_BRIBE
+
+  /* Check for a pursuit mode. */
+  flags_lower6 = flags_all & vischar_FLAGS_MASK;
+  if (flags_lower6)
   {
+    /* We're in one of the pursuit modes - find out which one. */
     if (flags_lower6 == vischar_PURSUIT_PURSUE)
     {
+      /* Handle 'pursue' mode. */
       if (vischar->character == state->bribed_character)
-        accept_bribe(state);
+        accept_bribe(state); /* was tail call */
       else
-        solitary(state); // caught pursued character (ie. the hero)
-      return; // exit via // factored out
+        /* The pursuing character caught its target. */ // this bit needs work
+        solitary(state); /* was tail call */
     }
     else if (flags_lower6 == vischar_PURSUIT_HASSLE ||
              flags_lower6 == vischar_PURSUIT_SAW_BRIBE)
     {
-      /* Nothing to do in these cases. */
-      return;
+      /* Handle 'hassle' or 'saw a bribe' modes (no action required). */
     }
     else
     {
+      /* Otherwise we're in vischar_PURSUIT_DOG_FOOD mode. */
+
+      /* automatics() only permits dogs to enter this mode. */
       assert(flags_lower6 == vischar_PURSUIT_DOG_FOOD);
 
-      /* Decide how long until food is discovered. */
+      /* Decide how long remains until the food is discovered.
+       * Use 32 if the food is poisoned, 255 otherwise. */
       if ((state->item_structs[item_FOOD].item_and_flags & itemstruct_ITEM_FLAG_POISONED) == 0)
         food_discovered_counter = 32; /* food is not poisoned */
       else
         food_discovered_counter = 255; /* food is poisoned */
       state->food_discovered_counter = food_discovered_counter;
 
-      vischar->route.index = routeindex_0_HALT; /* Stand still (ie. the dog is poisoned) */
+      /* This dog has been poisoned, so make it halt. */
+      vischar->route.index = routeindex_0_HALT;
 
       character_behaviour_set_input(state, vischar, 0 /* new_input */);
-      return;
     }
-    // FUTURE: Factor out all of the returns above to here.
+
+    return;
   }
 
   if (flags_all & vischar_FLAGS_TARGET_IS_DOOR)
   {
-    /* Results in character entering. */
-
-    //orig:C = *--HL; // 80a3, 8083, 8063, 8003 // route.step
-    //orig:A = *--HL; // 80a2 etc
+    /* Handle the door - this results in the character entering. */
 
     step  = vischar->route.step;
     route = vischar->route.index;
 
-    doorindex = get_route(route)[step]; // follow this through
-    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
+    doorindex = get_route(route)[step];
+    if (route & ROUTEINDEX_REVERSE_FLAG) /* Conv: Avoid needless reload */
       doorindex ^= door_REVERSE;
 
-    // Conv: This is the [-2]+1 pattern which works out -1/+1.
-    if (route & routeindexflag_REVERSED) /* Conv: avoid needless reload */
+    /* Conv: This is the [-2]+1 pattern which works out -1/+1. */
+    if (route & ROUTEINDEX_REVERSE_FLAG) /* Conv: Avoid needless reload */
       vischar->route.step--;
     else
       vischar->route.step++;
 
-    door = get_door(doorindex); // door related
-    vischar->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2; // was (*HL >> 2) & 0x3F; // sampled HL = $790E, $7962, $795E => door position
+    /* Get the door structure for the door index and start processing it. */
+    door = get_door(doorindex);
+    vischar->room = (door->room_and_direction & ~door_FLAGS_MASK_DIRECTION) >> 2;
 
+    /* In which direction is the door facing?
+     *
+     * Each door in the doors array is a pair of two "half doors" where each
+     * half represents one side of the doorway. We test the direction of the
+     * half door we find ourselves pointing at and use it to find the
+     * counterpart door's position. */
     if ((door->room_and_direction & door_FLAGS_MASK_DIRECTION) <= direction_TOP_RIGHT)
-      /* TOP_LEFT or TOP_RIGHT */
-      tinypos = &door[1].pos; // was HL += 5;
+      mappos = &door[1].mappos; /* TOP_LEFT or TOP_RIGHT */
     else
-      /* BOTTOM_RIGHT or BOTTOM_LEFT */
-      tinypos = &door[-1].pos; // was HL -= 3;
+      mappos = &door[-1].mappos; /* BOTTOM_RIGHT or BOTTOM_LEFT */
 
-    // PUSH HL_tinypos
-
-    if (vischar == &state->vischars[0]) // was if ((HL & 0x00FF) == 0)
+    if (vischar == &state->vischars[0])
     {
       /* Hero's vischar only. */
       vischar->flags &= ~vischar_FLAGS_TARGET_IS_DOOR;
-      (void) get_target_assign_pos(state, vischar, &vischar->route);
+      get_target_assign_pos(state, vischar, &vischar->route);
     }
 
-    // POP HL_tinypos
-
-    transition(state, tinypos);
+    transition(state, mappos);
 
     play_speaker(state, sound_CHARACTER_ENTERS_1);
     return;
   }
 
-  /* When on a route (.x != 255) advance the counter (.y) in the required direction. */
   route = vischar->route.index;
   if (route != routeindex_255_WANDER)
   {
-    if (route & routeindexflag_REVERSED)
+    if (route & ROUTEINDEX_REVERSE_FLAG)
       vischar->route.step--;
     else
       vischar->route.step++;
   }
 
-  (void) get_target_assign_pos(state, vischar, &vischar->route); // was fallthrough
+  get_target_assign_pos(state, vischar, &vischar->route); /* was fallthrough */
 }
 
 /**
- * $CB23: Calls get_target then puts coords in vischar->target and set flags.
+ * $CB23: Calls get_target() then puts coords in vischar->target and set flags.
  *
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t get_target_assign_pos(tgestate_t *state,
-                              vischar_t  *vischar,
-                              route_t    *route)
+void get_target_assign_pos(tgestate_t *state,
+                           vischar_t  *vischar,
+                           route_t    *route)
 {
   uint8_t          get_target_result; /* was A */
-  const tinypos_t *doorpos;           /* was HL */
-  const xy_t      *location;          /* was HL */
+  const mappos8_t *doormappos;        /* was HL */
+  const pos8_t    *location;          /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
   assert(route != NULL);
   ASSERT_ROUTE_VALID(*route);
 
-  get_target_result = get_target(state, route, &doorpos, &location);
+  get_target_result = get_target(state, route, &doormappos, &location);
   if (get_target_result != get_target_ROUTE_ENDS)
   {
-    /* Didn't hit end of list case. */
-    /* Conv: Inlined chunk from $CB61 handle_target here. */
+    /* "Didn't hit end of list" case. */
+    /* Conv: Inlined $CB61/handle_target here since we're the only user. */
 
     if (get_target_result == get_target_DOOR)
       vischar->flags |= vischar_FLAGS_TARGET_IS_DOOR;
 
-    // Conv: Cope with get_target returning results in different vars.
-    // Original game just transfers x,y across.
+    /* Conv: In the original game HL returns a doorpos or a location to
+     * transfer. This version must cope with get_target() returning results in
+     * different vars. */
     if (get_target_result == get_target_DOOR)
     {
-      vischar->target.x = doorpos->x;
-      vischar->target.y = doorpos->y;
+      vischar->target.u = doormappos->u;
+      vischar->target.v = doormappos->v;
     }
     else
     {
-      vischar->target.x = location->x;
-      vischar->target.y = location->y;
+      vischar->target.u = location->x;
+      vischar->target.v = location->y;
     }
-
-    return 1 << 7; // get_target_DOOR?
   }
   else
   {
-    return route_ended(state, vischar, route); // was fallthrough
+    route_ended(state, vischar, route); /* was fallthrough */
   }
-
-  /* FUTURE: The return values never seem to be used, so remove them. */
 }
 
 /**
@@ -9998,7 +8284,7 @@ uint8_t get_target_assign_pos(tgestate_t *state,
  * \param[in] vischar Pointer to visible character. (was IY)
  * \param[in] route   Pointer to vischar->route.    (was HL)
  */
-uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
+void route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 {
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10020,7 +8306,7 @@ uint8_t route_ended(tgestate_t *state, vischar_t *vischar, route_t *route)
 
     /* Call character_event at the end of commandant route 36. */
     if (character == character_0_COMMANDANT)
-      if ((route->index & ~routeindexflag_REVERSED) == routeindex_36_GO_TO_SOLITARY)
+      if ((route->index & ~ROUTEINDEX_REVERSE_FLAG) == routeindex_36_GO_TO_SOLITARY)
         goto do_character_event;
 
     /* Reverse the route for guards 1..11. */
@@ -10037,10 +8323,9 @@ do_character_event:
    */
 
   character_event(state, route);
-  if (route->index == routeindex_0_HALT) /* standing still */
-    return 0;
-  else
-    return get_target_assign_pos(state, vischar, route); // re-enter
+  if (route->index != routeindex_0_HALT) /* standing still */
+    get_target_assign_pos(state, vischar, route); // re-enter
+  return;
 
 reverse_route:
   /* We arrive here if:
@@ -10049,31 +8334,19 @@ reverse_route:
    *   - character is character_1_GUARD_1 .. character_11_GUARD_11
    */
 
-  route->index ^= routeindexflag_REVERSED; /* toggle route direction */
+  route->index ^= ROUTEINDEX_REVERSE_FLAG; /* toggle route direction */
   // Conv: Removed [-2]+1 pattern.
-  if (route->index & routeindexflag_REVERSED)
+  if (route->index & ROUTEINDEX_REVERSE_FLAG)
     route->step--;
   else
     route->step++;
-
-  return 0;
 }
 
 // $CB5F,2 Unreferenced bytes. [Absent in DOS version]
 
 /* ----------------------------------------------------------------------- */
 
-///**
-// * $CB75: Widen A to BC.
-// *
-// * \param[in] A 'A' to be widened.
-// *
-// * \return 'A' widened to a uint16_t.
-// */
-//uint16_t multiply_by_1(uint8_t A)
-//{
-//  return A;
-//}
+/* Conv: $CB75/multiply_by_1 was inlined. */
 
 /* ----------------------------------------------------------------------- */
 
@@ -10131,8 +8404,8 @@ const uint8_t *get_route(routeindex_t index)
     DOOR(35),                 // room_17_CORRIDOR -> room_12_CORRIDOR
     DOOR(25 | door_REVERSE),  // room_12_CORRIDOR -> room_18_RADIO
     DOOR(22 | door_REVERSE),  // room_18_RADIO    -> room_19_FOOD
-    DOOR(21 | door_REVERSE),  // room_19_FOOD     -> room_23_BREAKFAST
-    DOOR(20 | door_REVERSE),  // room_23_BREAKFAST-> room_21_CORRIDOR
+    DOOR(21 | door_REVERSE),  // room_19_FOOD     -> room_23_MESS_HALL
+    DOOR(20 | door_REVERSE),  // room_23_MESS_HALL-> room_21_CORRIDOR
     DOOR(23 | door_REVERSE),  // room_21_CORRIDOR -> room_22_REDKEY
     LOCATION(42),
     DOOR(23),                 // room_22_REDKEY   -> room_21_CORRIDOR
@@ -10223,8 +8496,8 @@ const uint8_t *get_route(routeindex_t index)
   {
     LOCATION(12),             // 93,104
     DOOR(10),                 // room_0_OUTDOORS   -> room_21_CORRIDOR
-    DOOR(20),                 // room_21_CORRIDOR  -> room_23_BREAKFAST
-    DOOR(19 | door_REVERSE),  // room_23_BREAKFAST -> room_25_BREAKFAST
+    DOOR(20),                 // room_21_CORRIDOR  -> room_23_MESS_HALL
+    DOOR(19 | door_REVERSE),  // room_23_MESS_HALL -> room_25_MESS_HALL
     routebyte_END
   };
   static const uint8_t route_breakfast_room_23[] =
@@ -10232,7 +8505,7 @@ const uint8_t *get_route(routeindex_t index)
     LOCATION(16),
     LOCATION(12),
     DOOR(10),                 // room_0_OUTDOORS  -> room_21_CORRIDOR
-    DOOR(20),                 // room_21_CORRIDOR -> room_23_BREAKFAST
+    DOOR(20),                 // room_21_CORRIDOR -> room_23_MESS_HALL
     routebyte_END
   };
   static const uint8_t route_prisoner_sits_1[] =
@@ -10395,7 +8668,7 @@ const uint8_t *get_route(routeindex_t index)
 
     &route_7795[0],                 //  1: L-shaped route in the fenced area
     &route_7799[0],                 //  2: guard's route around the front perimeter wall
-    &route_commandant[0],           //  3: set by charevnt_commandant_to_yard [longest of all the routes -- comandants's route perhaps?]
+    &route_commandant[0],           //  3: the commandant's route - the longest of all the routes
     &route_77CD[0],                 //  4: guard's route marching over the front gate
 
     &route_exit_hut2[0],            //  5: character_1x_GUARD_12/13, character_2x_PRISONER_1/2/3 by wake_up & go_to_time_for_bed, go_to_time_for_bed (for hero),
@@ -10459,7 +8732,7 @@ const uint8_t *get_route(routeindex_t index)
 
   /* Conv: The index may have its reverse flag set so mask it off. The
    * original game gets this for free when scaling the index. */
-  index &= ~routeindexflag_REVERSED;
+  index &= ~ROUTEINDEX_REVERSE_FLAG;
 
   assert(index < NELEMS(routes));
 
@@ -10566,7 +8839,7 @@ void solitary(tgestate_t *state)
   /**
    * $7AC6: Solitary map position.
    */
-  static const tinypos_t solitary_pos =
+  static const mappos8_t solitary_pos =
   {
     58, 42, 24
   };
@@ -10614,11 +8887,11 @@ void solitary(tgestate_t *state)
     if ((pitemstruct->room_and_flags & itemstruct_ROOM_MASK) == room_0_OUTDOORS)
     {
       item_t     item_and_flags; /* was A */
-      tinypos_t *itempos;        /* was HL */
+      mappos8_t *itempos;        /* was HL */
       uint8_t    area;           /* was A' */
 
       item_and_flags = pitemstruct->item_and_flags;
-      itempos = &pitemstruct->pos;
+      itempos = &pitemstruct->mappos;
       area = 0; /* iterate 0,1,2 */
       do
         /* If the item is within the camp bounds then it will be discovered.
@@ -10652,6 +8925,7 @@ next:
   /* Set the commandant on a path which results in the hero being released. */
   memcpy(&state->character_structs[character_0_COMMANDANT].room, &solitary_commandant_reset_data, 6);
 
+  /* Queue solitary messages. */
   queue_message(state, message_YOU_ARE_IN_SOLITARY);
   queue_message(state, message_WAIT_FOR_RELEASE);
   queue_message(state, message_ANOTHER_DAY_DAWNS);
@@ -10679,9 +8953,9 @@ next:
 void guards_follow_suspicious_character(tgestate_t *state,
                                         vischar_t  *vischar)
 {
-  character_t  character; /* was A */
-  tinypos_t   *tinypos;   /* was DE */
-  pos_t       *pos;       /* was HL */
+  character_t  character;    /* was A */
+  mappos8_t   *mappos_stash; /* was DE */
+  mappos16_t  *mappos;       /* was HL */
 
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10690,63 +8964,73 @@ void guards_follow_suspicious_character(tgestate_t *state,
 
   character = vischar->character;
 
-  /* When the uniform is worn only the commandant will recognise the hero. */
+  /* Wearing the uniform stops anyone but the commandant from pursuing the
+   * hero. */
   if (character != character_0_COMMANDANT &&
       state->vischars[0].mi.sprite == &sprites[sprite_GUARD_FACING_AWAY_1])
     return;
 
-  /* If this (hostile) character saw the bribe being used then ignore the hero. */
+  /* If this (hostile) character saw the bribe being used then ignore the
+   * hero. */
   if (vischar->flags == vischar_PURSUIT_SAW_BRIBE)
     return;
 
-  // this must be line of sight checking (outdoors only)
+  /* Do line of sight checking when outdoors. */
 
-  pos = &vischar->mi.pos; /* was HL += 15 */
-  tinypos = &state->tinypos_stash; // TODO: Find out if this use of tinypos_stash ever intersects with the use of tinypos_stash for the mask rendering.
+  mappos = &vischar->mi.mappos; /* was HL += 15 */
+  mappos_stash = &state->mappos_stash; // TODO: Find out if this use of mappos_stash ever intersects with the use of mappos_stash for the mask rendering.
   if (state->room_index == room_0_OUTDOORS)
   {
-    tinypos_t *hero_map_pos;  /* was HL */
-    int        dir;           /* Conv */
-    uint8_t    direction;     /* was A / C */
+    mappos8_t *hero_mappos; /* was HL */
+    int        dir;         /* Conv: was carry */
+    uint8_t    direction;   /* was A / C */
 
-    pos_to_tinypos(pos, tinypos); // tinypos_stash = vischar.mi.pos
+    scale_mappos_down(mappos, mappos_stash); // stash_pos = vischar.mi.pos
 
-    hero_map_pos = &state->hero_map_position;
-    /* Conv: Dupe tinypos ptr factored out. */
+    hero_mappos = &state->hero_mappos;
+    /* Conv: Dupe pos pointer factored out. */
 
     direction = vischar->direction; /* This character's direction. */
     /* Conv: Avoided shifting 'direction' here. Propagated shift into later ops. */
 
-    if ((direction & 1) == 0) /* TL or BR */
+    if ((direction & 1) == 0)
     {
-      // range check (uses A as temporary)
-      if (tinypos->y - 1 >= hero_map_pos->y ||
-          tinypos->y + 1 <  hero_map_pos->y)
+      /* TL or BR */
+
+      /* Does the hero approximately match our Y coordinate? */
+      if (mappos_stash->v - 1 >= hero_mappos->v ||
+          mappos_stash->v + 1 <  hero_mappos->v)
         return;
 
-      dir = tinypos->x < hero_map_pos->x;
-      if ((direction & 2) == 0) /* TL (can't be TR) */
+      /* Are we facing the hero? */
+      dir = mappos_stash->u < hero_mappos->u;
+      if ((direction & 2) == 0)
         dir = !dir;
       if (dir)
         return;
     }
+    else
+    {
+      /* TR or BL */
 
-    // range check (uses A as temporary)
-    if (tinypos->x - 1 >= hero_map_pos->x ||
-        tinypos->x + 1 <  hero_map_pos->x)
-      return;
+      /* Does the hero approximately match our X coordinate? */
+      if (mappos_stash->u - 1 >= hero_mappos->u ||
+          mappos_stash->u + 1 <  hero_mappos->u)
+        return;
 
-    dir = tinypos->height < hero_map_pos->height;
-    if ((direction & 2) == 0) /* TL or TR */
-      dir = !dir;
-    if (dir)
-      return;
+      /* Are we facing the hero? */
+      dir = mappos_stash->v < hero_mappos->v;
+      if ((direction & 2) == 0)
+        dir = !dir;
+      if (dir)
+        return;
+    }
   }
 
   if (!state->red_flag)
   {
     /* Hostiles *not* in guard towers hassle the hero. */
-    if (vischar->mi.pos.height < 32) /* uses A as temporary */
+    if (vischar->mi.mappos.w < 32) /* uses A as temporary */
       vischar->flags = vischar_PURSUIT_HASSLE;
   }
   else
@@ -10777,7 +9061,7 @@ void hostiles_pursue(tgestate_t *state)
   do
   {
     if (vischar->character <= character_19_GUARD_DOG_4 &&
-        vischar->mi.pos.height < 32) /* Excludes the guards high up in towers. */
+        vischar->mi.mappos.w < 32) /* Excludes the guards high up in towers. */
       vischar->flags = vischar_PURSUIT_PURSUE;
     vischar++;
   }
@@ -10808,18 +9092,22 @@ void is_item_discoverable(tgestate_t *state)
   room = state->room_index;
   if (room != room_0_OUTDOORS)
   {
-    if (is_item_discoverable_interior(state, room, NULL) == 0) /* Item found */
+    /* Interior. */
+
+    if (is_item_discoverable_interior(state, room, NULL) == 0)
+      /* Item was found. */
       hostiles_pursue(state);
   }
   else
   {
+    /* Exterior. */
+    
     itemstruct = &state->item_structs[0];
     iters      = item__LIMIT;
     do
     {
       if (itemstruct->room_and_flags & itemstruct_ROOM_FLAG_NEARBY_7)
         goto nearby;
-
 next:
       itemstruct++;
     }
@@ -10827,16 +9115,15 @@ next:
     return;
 
 nearby:
-    // FUTURE: merge into loop
+    /* FUTURE: Merge into loop. */
     item = itemstruct->item_and_flags & itemstruct_ITEM_MASK;
 
     /* The green key and food items are ignored. */
     if (item == item_GREEN_KEY || item == item_FOOD)
       goto next;
 
-    /* Suspected bug in original game appears here: itemstruct pointer is
-     * decremented to access item_and_flags but is not re-adjusted
-     * afterwards. */
+    /* BUG FIX: In the original game the itemstruct pointer is decremented to
+     * access item_and_flags but is not re-adjusted afterwards. */
 
     hostiles_pursue(state);
   }
@@ -10847,11 +9134,11 @@ nearby:
 /**
  * $CCFB: Is an item discoverable indoors?
  *
- * A discoverable item is one moved away from its default room, and one that
- * isn't the red cross parcel.
+ * A discoverable item is one which has been moved away from its default
+ * room, and one that isn't the red cross parcel.
  *
  * \param[in]  state Pointer to game state.
- * \param[in]  room  Room index. (was A)
+ * \param[in]  room  Room index to check against. (was A)
  * \param[out] pitem Pointer to item (if found). (Can be NULL). (was C)
  *
  * \return 0 if found, 1 if not found. (Conv: Was Z flag).
@@ -10903,7 +9190,7 @@ int is_item_discoverable_interior(tgestate_t *state,
 /* ----------------------------------------------------------------------- */
 
 /**
- * $CD31: Item discovered. / reset item
+ * $CD31: An item is discovered.
  *
  * \param[in] state Pointer to game state.
  * \param[in] item  Item. (was C)
@@ -10930,22 +9217,22 @@ void item_discovered(tgestate_t *state, item_t item)
   default_item_location = &default_item_locations[item];
   room = default_item_location->room_and_flags;
 
-  itemstruct = item_to_itemstruct(state, item);
+  itemstruct = &state->item_structs[item];
   itemstruct->item_and_flags &= ~itemstruct_ITEM_FLAG_HELD;
   itemstruct->room_and_flags = default_item_location->room_and_flags;
-  itemstruct->pos.x = default_item_location->pos.x;
-  itemstruct->pos.y = default_item_location->pos.y;
+  itemstruct->mappos.u = default_item_location->mappos.u;
+  itemstruct->mappos.v = default_item_location->mappos.v;
 
   if (room == room_0_OUTDOORS)
   {
     /* Conv: The original code assigned 'room' here since it's already zero. */
-    itemstruct->pos.height = 0;
-    calc_exterior_item_iso_pos(itemstruct);
+    itemstruct->mappos.w = 0;
+    calc_exterior_item_isopos(itemstruct);
   }
   else
   {
-    itemstruct->pos.height = 5;
-    calc_interior_item_iso_pos(itemstruct);
+    itemstruct->mappos.w = 5;
+    calc_interior_item_isopos(itemstruct);
   }
 }
 
@@ -11138,7 +9425,7 @@ const anim_t *animations[animations__LIMIT] =
 void mark_nearby_items(tgestate_t *state)
 {
   room_t        room;       /* was C */
-  xy_t          map_xy;     /* was D, E */
+  pos8_t        map_xy;     /* was D, E */
   uint8_t       iters;      /* was B */
   itemstruct_t *itemstruct; /* was HL */
 
@@ -11154,12 +9441,11 @@ void mark_nearby_items(tgestate_t *state)
   itemstruct = &state->item_structs[0];
   do
   {
-    const xy_t iso_pos = itemstruct->iso_pos; /* new */
+    const pos8_t isopos = itemstruct->isopos; /* new */
 
-    /* Conv: Ranges adjusted. */ // but it still looks asymmetric...
     if ((itemstruct->room_and_flags & itemstruct_ROOM_MASK) == room &&
-        (iso_pos.x >= map_xy.x - 1 && iso_pos.x <= map_xy.x + (state->columns + 1) - 1) &&
-        (iso_pos.y >= map_xy.y     && iso_pos.y <= map_xy.y + state->rows))
+        (map_xy.x - 2 <= isopos.x && map_xy.x + (state->columns - 1) >= isopos.x) &&
+        (map_xy.y - 1 <= isopos.y && map_xy.y + (state->rows    - 1) >= isopos.y))
       itemstruct->room_and_flags |= itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7; /* set */
     else
       itemstruct->room_and_flags &= ~(itemstruct_ROOM_FLAG_NEARBY_6 | itemstruct_ROOM_FLAG_NEARBY_7); /* reset */
@@ -11172,63 +9458,58 @@ void mark_nearby_items(tgestate_t *state)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $DBEB: Iterates over all item_structs looking for nearby items.
- *
- * Returns the furthest/highest/nearest/ item? Next frontmost?
+ * $DBEB: Find the next item to draw that is furthest behind (u,v).
  *
  * Leaf.
  *
  * \param[in]  state         Pointer to game state.
  * \param[in]  item_and_flag Initial item_and_flag, passed through if no itemstruct is found. (was A')
- * \param[in]  x             X pos? Compared to X. (was BC') // sampled BCdash = $26, $3E, $00, $26, $34, $22, $32
- * \param[in]  y             Y pos? Compared to Y. (was DE')
+ * \param[in]  u             U pos? Compared to U. (was BC')
+ * \param[in]  v             V pos? Compared to V. (was DE')
  * \param[out] pitemstr      Returned pointer to item struct. (was IY)
  *
  * \return item+flag. (was A')
  */
-uint8_t get_greatest_itemstruct(tgestate_t    *state,
-                                item_t         item_and_flag,
-                                uint16_t       x,
-                                uint16_t       y,
-                                itemstruct_t **pitemstr)
+uint8_t get_next_drawable_itemstruct(tgestate_t    *state,
+                                     item_t         item_and_flag,
+                                     uint16_t       u,
+                                     uint16_t       v,
+                                     itemstruct_t **pitemstr)
 {
   uint8_t             iters;   /* was B */
   const itemstruct_t *itemstr; /* was HL */
 
   assert(state    != NULL);
-  // assert(item_and_flag);
-  // assert(x);
-  // assert(y);
   assert(pitemstr != NULL);
 
   *pitemstr = NULL; /* Conv: Added safety initialisation. */
+
+  /* Find the rearmost itemstruct that is flagged for drawing. */
 
   iters   = item__LIMIT;
   itemstr = &state->item_structs[0]; /* Conv: Original pointed to itemstruct->room_and_flags. */
   do
   {
+    /* Select an item if it's behind the point (u,v). */
     const enum itemstruct_room_and_flags FLAGS = itemstruct_ROOM_FLAG_NEARBY_6 |
                                                  itemstruct_ROOM_FLAG_NEARBY_7;
-
-    if ((itemstr->room_and_flags & FLAGS) == FLAGS)
+    /* Conv: Original calls out to multiply by 8, HL' is temp. */
+    if ((itemstr->room_and_flags & FLAGS) == FLAGS &&
+        (itemstr->mappos.u * 8 > u) &&
+        (itemstr->mappos.v * 8 > v))
     {
-      /* Conv: Original calls out to multiply by 8, HLdash is temp. */
-      if (itemstr->pos.x * 8 > x &&
-          itemstr->pos.y * 8 > y)
-      {
-        const tinypos_t *pos; /* was HL' */
+      const mappos8_t *mappos; /* was HL' */
 
-        pos = &itemstr->pos; /* Conv: Was direct pointer, now points to member. */
-        /* Get x,y for the next iteration. */
-        y = pos->y * 8;
-        x = pos->x * 8;
-        *pitemstr = (itemstruct_t *) itemstr;
+      mappos = &itemstr->mappos; /* Conv: Was direct pointer, now points to member. */
+      /* Calculate (u,v) for the next iteration. */
+      v = mappos->v * 8;
+      u = mappos->u * 8;
+      *pitemstr = (itemstruct_t *) itemstr;
 
-        /* The original code has an unpaired A register exchange here. If the
-         * loop continues then it's unclear which output register is used. */
-        /* It seems that A' is the output register, irrespective. */
-        item_and_flag = (item__LIMIT - iters) | item_FOUND; /* item index + 'item found' flag */
-      }
+      /* The original code has an unpaired A register exchange here. If the
+       * loop continues then it's unclear which output register is used. */
+      /* It seems that A' is the output register, irrespective. */
+      item_and_flag = (item__LIMIT - iters) | item_FOUND; /* item index + 'item found' flag */
     }
     itemstr++;
   }
@@ -11252,11 +9533,13 @@ uint8_t setup_item_plotting(tgestate_t   *state,
                             itemstruct_t *itemstr,
                             item_t        item)
 {
-//  xy_t         *HL; /* was HL */
-//  tinypos_t    *DE; /* was DE */
+//  pos8_t       *HL; /* was HL */
+//  mappos_t     *DE; /* was DE */
 //  uint16_t      BC; /* was BC */
-  uint16_t      clipped_width;  /* was BC */
-  uint16_t      clipped_height; /* was DE */
+  uint8_t       left_skip;      /* was B */
+  uint8_t       clipped_width;  /* was C */
+  uint8_t       top_skip;       /* was D */
+  uint8_t       clipped_height; /* was E */
   uint8_t       instr;          /* was A */
   uint8_t       A;              /* was A */
   uint8_t       offset_tmp;     /* was A' */
@@ -11281,11 +9564,11 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    */
   /* $8213 = A; */
 
-  state->tinypos_stash = itemstr->pos;
-  state->iso_pos       = itemstr->iso_pos;
+  state->mappos_stash = itemstr->mappos;
+  state->isopos       = itemstr->isopos;
 // after LDIR we have:
 //  HL = &IY->pos.x + 5;
-//  DE = &state->tinypos_stash + 5;
+//  DE = &state->mappos_stash + 5;
 //  BC = 0;
 //
 //  // EX DE, HL
@@ -11296,23 +9579,27 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   state->item_height    = item_definitions[item].height;
   state->bitmap_pointer = item_definitions[item].bitmap;
   state->mask_pointer   = item_definitions[item].mask;
-  if (item_visible(state, &clipped_width, &clipped_height) != 0)
+  if (item_visible(state,
+                  &left_skip,
+                  &clipped_width,
+                  &top_skip,
+                  &clipped_height))
     return 0; /* invisible */
 
-  // PUSH clipped_width
-  // PUSH clipped_height
+  // PUSH left_skip + clipped_width
+  // PUSH top_skip + clipped_height
 
-  state->self_E2C2 = clipped_height & 0xFF; // self modify masked_sprite_plotter_16_wide_left
+  state->self_E2C2 = clipped_height; // self modify masked_sprite_plotter_16_wide_left
 
-  if ((clipped_width >> 8) == 0)
+  if (left_skip == 0)
   {
     instr = 119; /* opcode of 'LD (HL),A' */
-    offset_tmp = clipped_width & 0xFF;
+    offset_tmp = clipped_width;
   }
   else
   {
     instr = 0; /* opcode of 'NOP' */
-    offset_tmp = 3 - (clipped_width & 0xFF);
+    offset_tmp = 3 - clipped_width;
   }
 
   offset = offset_tmp; /* FUTURE: Could assign directly to offset instead. */
@@ -11333,33 +9620,33 @@ uint8_t setup_item_plotting(tgestate_t   *state,
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0) /* no rows to skip */
-    y = (state->iso_pos.y - state->map_position.y) * state->window_buf_stride;
+  if (top_skip == 0) /* no rows to skip */
+    y = (state->isopos.y - state->map_position.y) * state->window_buf_stride;
 
-  // (state->iso_pos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
-  // state->iso_pos.y seems to match, but state->map_position.y is 2 bigger
+  // (state->isopos.y - state->map_position.y) never seems to exceed $10 in the original game, but does for me
+  // state->isopos.y seems to match, but state->map_position.y is 2 bigger
 
   /* Calculate X plotting offset. */
 
   // Conv: Assigns to signed var.
-  x = state->iso_pos.x - state->map_position.x;
+  x = state->isopos.x - state->map_position.x;
 
   state->window_buf_pointer = &state->window_buf[x + y]; // window buffer start address
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 3);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, 3);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (clipped_height - 1) * state->columns + clipped_width - 1, 3);
 
   maskbuf = &state->mask_buffer[0];
 
-  // POP DE  // get clipped_height
+  // POP DE  // get top_skip + clipped_height
   // PUSH DE
 
-  state->foreground_mask_pointer = &maskbuf[(clipped_height >> 8) * 4];
+  state->foreground_mask_pointer = &maskbuf[top_skip * 4];
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
   // POP DE  // this pop/push seems to be needless - DE already has the value
   // PUSH DE
 
-  A = clipped_height >> 8; // A = D // sign?
+  A = top_skip; // A = D // sign?
   if (A)
   {
     /* The original game has a generic multiply loop here which is setup to
@@ -11381,7 +9668,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
      */
 
     A *= 2;
-    // clipped_height &= 0x00FF; // D = 0
+    // top_skip = 0
   }
 
   /* D ends up as zero either way. */
@@ -11403,47 +9690,51 @@ uint8_t setup_item_plotting(tgestate_t   *state,
  *
  * Returns 1 if the item is outside the game window, or zero if visible.
  *
- * If the item spans a boundary a packed field is returned in the
- * respective clipped width/height. The low byte holds the width/height to
- * draw and the high byte holds the number of columns/rows to skip.
- *
  * Counterpart to \ref vischar_visible.
  *
  * Called by setup_item_plotting only.
  *
  * \param[in]  state          Pointer to game state.
- * \param[out] clipped_width  Pointer to returned clipped width.  (was BC) packed: (lo,hi) = (clipped width, lefthand skip)
- * \param[out] clipped_height Pointer to returned ciipped height. (was DE) packed: (lo,hi) = (clipped height, top skip)
+ * \param[out] left_skip      Pointer to returned left edge skip. (was B)
+ * \param[out] clipped_width  Pointer to returned clipped width.  (was C)
+ * \param[out] top_skip       Pointer to returned top edge skip.  (was D)
+ * \param[out] clipped_height Pointer to returned ciipped height. (was E)
  *
  * \return 0 => visible, 1 => invisible. (was A)
  */
 uint8_t item_visible(tgestate_t *state,
-                     uint16_t   *clipped_width,
-                     uint16_t   *clipped_height)
+                     uint8_t    *left_skip,
+                     uint8_t    *clipped_width,
+                     uint8_t    *top_skip,
+                     uint8_t    *clipped_height)
 {
 #define WIDTH_BYTES 3 /* in bytes - items are always 16 pixels wide */
 #define HEIGHT      2 /* in UDGs - items are ~ 16 pixels high */
 
-  const xy_t *piso_pos;           /* was HL */
-  xy_t        map_position;       /* was DE */
-  uint8_t     window_right_edge;  /* was A  */
-  int8_t      available_right;    /* was A  */
-  uint16_t    new_width;          /* was BC */
-  uint8_t     item_right_edge;    /* was A  */
-  int8_t      available_left;     /* was A  */
-  uint8_t     window_bottom_edge; /* was A  */
-  int8_t      available_bottom;   /* was A  */
-  uint16_t    new_height;         /* was DE */
-  uint8_t     item_bottom_edge;   /* was A  */
-  uint8_t     available_top;      /* was A  */
+  const pos8_t *pisopos;            /* was HL */
+  pos8_t        map_position;       /* was DE */
+  uint8_t       window_right_edge;  /* was A  */
+  int8_t        available_right;    /* was A  */
+  uint8_t       new_left;           /* was B  */
+  uint8_t       new_width;          /* was C  */
+  uint8_t       item_right_edge;    /* was A  */
+  int8_t        available_left;     /* was A  */
+  uint8_t       window_bottom_edge; /* was A  */
+  int8_t        available_bottom;   /* was A  */
+  uint8_t       new_top;            /* was D  */
+  uint8_t       new_height;         /* was E  */
+  uint8_t       item_bottom_edge;   /* was A  */
+  uint8_t       available_top;      /* was A  */
 
   assert(state          != NULL);
   assert(clipped_width  != NULL);
   assert(clipped_height != NULL);
 
   /* Conv: Added to guarantee initialisation of return values. */
-  *clipped_width  = 65535;
-  *clipped_height = 65535;
+  *left_skip      = 255;
+  *clipped_width  = 255;
+  *top_skip       = 255;
+  *clipped_height = 255;
 
   /* To determine visibility and sort out clipping there are five cases to
    * consider per axis:
@@ -11458,16 +9749,16 @@ uint8_t item_visible(tgestate_t *state,
    * Handle horizontal intersections.
    */
 
-  piso_pos = &state->iso_pos;
+  pisopos = &state->isopos;
   map_position = state->map_position;
 
   /* Conv: Columns was constant 24; replaced with state var. */
   window_right_edge = map_position.x + state->columns;
 
-  /* Subtracting item's x yields the space available between item's left edge
+  /* Subtracting item's x gives the space available between item's left edge
    * and the right edge of the window (in bytes).
    * Note that available_right is signed to enable the subsequent test. */
-  available_right = window_right_edge - piso_pos->x;
+  available_right = window_right_edge - pisopos->x;
   if (available_right <= 0)
     /* Case (E): Item is beyond the window's right edge. */
     goto invisible;
@@ -11476,14 +9767,15 @@ uint8_t item_visible(tgestate_t *state,
   if (available_right < WIDTH_BYTES)
   {
     /* Case (D): Item's right edge is off-screen, so truncate width. */
+    new_left  = 0;
     new_width = available_right;
   }
   else
   {
     /* Calculate the right edge of the item. */
-    item_right_edge = piso_pos->x + WIDTH_BYTES;
+    item_right_edge = pisopos->x + WIDTH_BYTES;
 
-    /* Subtracting the map position's x yields the space available between
+    /* Subtracting the map position's x gives the space available between
      * item's right edge and the left edge of the window (in bytes).
      * Note that available_left is signed to allow the subsequent test. */
     available_left = item_right_edge - map_position.x;
@@ -11493,13 +9785,19 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Check for item partway off-screen. */
     if (available_left < WIDTH_BYTES)
+    {
       /* Case (B): Left edge is off-screen and right edge is on-screen.
        * Pack the lefthand skip into the low byte and the clipped width into
        * the high byte. */
-      new_width = ((WIDTH_BYTES - available_left) << 8) | available_left;
+      new_left  = WIDTH_BYTES - available_left;
+      new_width = available_left;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_left  = 0;
       new_width = WIDTH_BYTES;
+    }
   }
 
   /*
@@ -11513,9 +9811,9 @@ uint8_t item_visible(tgestate_t *state,
   /* Conv: Rows was constant 17; replaced with state var. */
   window_bottom_edge = map_position.y + state->rows;
 
-  /* Subtracting the item's y yields the space available between window's
+  /* Subtracting the item's y gives the space available between window's
    * bottom edge and the item's top. */
-  available_bottom = window_bottom_edge - piso_pos->y;
+  available_bottom = window_bottom_edge - pisopos->y;
   if (available_bottom <= 0)
     /* Case (E): Item is beyond the window's bottom edge. */
     goto invisible;
@@ -11524,14 +9822,15 @@ uint8_t item_visible(tgestate_t *state,
   if (available_bottom < HEIGHT)
   {
     /* Case (D): Item's bottom edge is off-screen, so truncate height. */
+    new_top    = 0;
     new_height = 8;
   }
   else
   {
     /* Calculate the bottom edge of the item. */
-    item_bottom_edge = piso_pos->y + HEIGHT;
+    item_bottom_edge = pisopos->y + HEIGHT;
 
-    /* Subtracting the map position's y (scaled) yields the space available
+    /* Subtracting the map position's y (scaled) gives the space available
      * between item's bottom edge and the top edge of the window (in UDGs).
      */
     available_top = item_bottom_edge - map_position.y;
@@ -11540,16 +9839,24 @@ uint8_t item_visible(tgestate_t *state,
 
     /* Check for item partway off-screen. */
     if (available_top < HEIGHT)
+    {
       /* Case (B): Top edge is off-screen and bottom edge is on-screen.
        * Pack the top skip into the low byte and the clipped height into the
        * high byte. */
-      new_height = (8 << 8) | (state->item_height - 8);
+      new_top    = 8;
+      new_height = state->item_height - 8;
+    }
     else
+    {
       /* Case (C): No clipping. */
+      new_top    = 0;
       new_height = state->item_height;
+    }
   }
 
+  *left_skip      = new_left;
   *clipped_width  = new_width;
+  *top_skip       = new_top;
   *clipped_height = new_height;
 
   return 0; /* Visible */
@@ -11628,7 +9935,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  if ((x = (vischar->iso_pos.x & 7)) < 4)
+  if ((x = (vischar->isopos.x & 7)) < 4)
   {
     /* Shift right? */
 
@@ -11916,7 +10223,7 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
 
   ASSERT_VISCHAR_VALID(vischar);
 
-  x = vischar->iso_pos.x & 7;
+  x = vischar->isopos.x & 7;
   if (x < 4)
     masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
   else
@@ -12329,16 +10636,18 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     // masked_sprite_plotter_24_wide_vischar
   };
 
-  pos_t             *pos;            /* was HL */
-  tinypos_t         *tinypos;        /* was DE */
+  mappos16_t        *vischar_pos;    /* was HL */
+  mappos8_t         *mappos_stash;   /* was DE */
   const spritedef_t *sprite;         /* was BC */
   spriteindex_t      sprite_index;   /* was A */
   const spritedef_t *sprite2;        /* was DE */
-  uint16_t           clipped_width;  /* was BC */
-  uint16_t           clipped_height; /* was DE */
+  uint8_t            left_skip;      /* was B */
+  uint8_t            clipped_width;  /* was C */
+  uint8_t            top_skip;       /* was D */
+  uint8_t            clipped_height; /* was E */
   const size_t      *enables;        /* was HL */
-  uint8_t            self_E4C0;      /* was $E4C0 */
-  uint8_t            offset;         /* was A' */
+  uint8_t            enable_count;   /* was $E4C0 */
+  uint8_t            counter;        /* was A' */
   uint8_t            iters;          /* was B' */
   uint8_t            E;              /* was E */
   uint8_t            instr;          /* was A */
@@ -12351,37 +10660,37 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
-  pos     = &vischar->mi.pos;
-  tinypos = &state->tinypos_stash;
+  vischar_pos  = &vischar->mi.mappos;
+  mappos_stash = &state->mappos_stash;
 
   if (state->room_index > room_0_OUTDOORS)
   {
     /* Indoors. */
-    tinypos->x      = pos->x; // note: narrowing
-    tinypos->y      = pos->y; // note: narrowing
-    tinypos->height = pos->height; // note: narrowing
+    mappos_stash->u = vischar_pos->u; // note: narrowing
+    mappos_stash->v = vischar_pos->v; // note: narrowing
+    mappos_stash->w = vischar_pos->w; // note: narrowing
   }
   else
   {
     /* Outdoors. */
     /* Conv: Unrolled, removed divide-by-8 calls. */
-    tinypos->x      = (pos->x + 4 ) >> 3; /* with rounding */
-    tinypos->y      = (pos->y     ) >> 3; /* without rounding */
-    tinypos->height = (pos->height) >> 3;
+    mappos_stash->u = (vischar_pos->u + 4) >> 3; /* with rounding */
+    mappos_stash->v = (vischar_pos->v    ) >> 3; /* without rounding */
+    mappos_stash->w = (vischar_pos->w    ) >> 3;
   }
 
   sprite = vischar->mi.sprite;
-  // banked in A'
 
+  // banked in A'
   state->sprite_index = sprite_index = vischar->mi.sprite_index; // set left/right flip flag / sprite offset
 
-  // HL now points after sprite_index
-  // DE now points to state->map_position_related.x
+  // HL now points after sprite_index, at isopos
+  // DE now points to state->isopos.x
 
   // unrolled versus original
-  state->iso_pos.x = vischar->iso_pos.x >> 3;
-  state->iso_pos.y = vischar->iso_pos.y >> 3;
-  // 'iso_pos' here is now a scaled-down projected map coordinate
+  state->isopos.x = vischar->isopos.x >> 3;
+  state->isopos.y = vischar->isopos.y >> 3;
+  // 'isopos' here is now a scaled-down projected map coordinate
 
   // A is (1<<7) mask OR sprite offset
   // original game uses ADD A,A to double A and in doing so discards top bit, here we mask it off explicitly
@@ -12393,15 +10702,20 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   state->bitmap_pointer = sprite2->bitmap;
   state->mask_pointer   = sprite2->mask;
 
-  if (vischar_visible(state, vischar, &clipped_width, &clipped_height)) // used A as temporary
+  if (vischar_visible(state,
+                      vischar,
+                     &left_skip,
+                     &clipped_width,
+                     &top_skip,
+                     &clipped_height)) // used A as temporary
     return 0; /* invisible */
 
   // PUSH clipped_width
   // PUSH clipped_height
 
-  E = clipped_height & 0xFF; // must be no of visible rows? // Conv: added
+  E = clipped_height; // must be no of visible rows? // Conv: added
 
-  assert((clipped_width & 0xFF) < 100);
+  assert(clipped_width < 100);
   assert(E < 100);
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
@@ -12409,7 +10723,7 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     state->self_E2C2 = E; // self modify masked_sprite_plotter_16_wide_left
     state->self_E363 = E; // self-modify masked_sprite_plotter_16_wide_right
 
-    A = 3;
+    enable_count = 3;
     enables = &masked_sprite_plotter_16_enables[0];
   }
   else
@@ -12417,24 +10731,24 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
     state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift right case)
     state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift left case)
 
-    A = 4;
+    enable_count = 4;
     enables = &masked_sprite_plotter_24_enables[0];
   }
 
   // PUSH HL_enables
 
-  self_E4C0 = A; // self-modify
+  // enable_count = A; // self-modify
   // E = A
   // A = B
-  if ((clipped_width >> 8) == 0) // no lefthand skip: start with 'on'
+  if (left_skip == 0) // no lefthand skip: start with 'on'
   {
     instr = 119; /* opcode of 'LD (HL),A' */
-    offset = clipped_width & 0xFF; // process this many bytes before clipping
+    counter = clipped_width; // process this many bytes before clipping
   }
   else // lefthand skip present: start with 'off'
   {
     instr = 0; /* opcode of 'NOP' */
-    offset = A - (clipped_width & 0xFF); // clip until this many bytes have been processed
+    counter = enable_count - clipped_width; // clip until this many bytes have been processed
   }
 
   // EXX
@@ -12442,32 +10756,32 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 
   /* Set the addresses in the jump table to NOP or LD (HL),A. */
   //Cdash = offset; // must be no of columns?
-  iters = self_E4C0; /* 3 or 4 iterations */
+  iters = enable_count; /* 3 or 4 iterations */
   do
   {
     *(((uint8_t *) state) + *enables++) = instr;
     *(((uint8_t *) state) + *enables++) = instr;
-    if (--offset == 0)
+    if (--counter == 0)
       instr ^= 119; /* Toggle between LD and NOP. */
   }
   while (--iters);
 
   // EXX
 
-  assert(vischar->iso_pos.y / 8 - state->map_position.y < state->rows);
-  assert(vischar->iso_pos.y / 8 - state->map_position.y + (clipped_height & 0xFF) / 8 <= state->rows);
+  assert(vischar->isopos.y / 8 - state->map_position.y < state->rows);
+  assert(vischar->isopos.y / 8 - state->map_position.y + clipped_height / 8 <= state->rows);
 
   /* Calculate Y plotting offset.
    * The full calculation can be avoided if there are rows to skip since
    * the sprite is always aligned to the top of the screen in that case. */
   y = 0; /* Conv: Moved. */
-  if ((clipped_height >> 8) == 0) /* no rows to skip */
-    y = (vischar->iso_pos.y - state->map_position.y * 8) * state->columns;
+  if (top_skip == 0) /* no rows to skip */
+    y = (vischar->isopos.y - state->map_position.y * 8) * state->columns;
 
   assert(y / 8 / state->columns < state->rows);
 
   /* Calculate X plotting offset. */
-  x = state->iso_pos.x - state->map_position.x; // signed subtract + extend to 16-bit
+  x = state->isopos.x - state->map_position.x; // signed subtract + extend to 16-bit
 
   assert(x >= -3 && x <= state->columns - 1); // found empirically
 
@@ -12481,29 +10795,29 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
    */
 
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, vischar->width_bytes - 1);
-  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + ((clipped_height & 0xFF) - 1) * state->columns + (clipped_width & 0xFF) - 1, vischar->width_bytes - 1);
+  ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (clipped_height - 1) * state->columns + clipped_width - 1, vischar->width_bytes - 1);
 
   maskbuf = &state->mask_buffer[0];
 
   // POP DE_clipped_height
   // PUSH DE
 
-  assert(((clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4) < 255);
+  assert((top_skip * 4 + (vischar->isopos.y & 7) * 4) < 255);
 
-  maskbuf += (clipped_height >> 8) * 4 + (vischar->iso_pos.y & 7) * 4;
+  maskbuf += top_skip * 4 + (vischar->isopos.y & 7) * 4;
   ASSERT_MASK_BUF_PTR_VALID(maskbuf);
   state->foreground_mask_pointer = maskbuf;
 
   // POP DE_clipped_height
 
-  A = clipped_height >> 8; // offset/skip
+  A = top_skip; // offset/skip
   if (A)
   {
     /* Conv: The original game has a generic multiply loop here. In this
      * version instead we'll just multiply. */
 
     A *= vischar->width_bytes - 1;
-    // clipped_height &= 0x00FF; // D = 0
+    // top_skip = 0
   }
 
   /* D ends up as zero either way. */
@@ -12520,15 +10834,15 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
 /* ----------------------------------------------------------------------- */
 
 /**
- * $E542: Scale down a pos_t and assign result to a tinypos_t.
+ * $E542: Scale down a mappos16_t position, assigning the result to a mappos8_t.
  *
  * Divides the three input 16-bit words by 8, with rounding to nearest,
  * storing the result as bytes.
  *
- * \param[in]  in  Input pos_t.      (was HL)
- * \param[out] out Output tinypos_t. (was DE)
+ * \param[in]  in  Input mappos16_t. (was HL)
+ * \param[out] out Output mappos8_t. (was DE)
  */
-void pos_to_tinypos(const pos_t *in, tinypos_t *out)
+void scale_mappos_down(const mappos16_t *in, mappos8_t *out)
 {
   const uint16_t *pcoordin;  /* was HL */
   uint8_t        *pcoordout; /* was DE */
@@ -12539,58 +10853,13 @@ void pos_to_tinypos(const pos_t *in, tinypos_t *out)
 
   /* Use knowledge of the structure layout to cast the pointers to array[3]
    * of their respective types. */
-  pcoordin  = (const uint16_t *) &in->x;
-  pcoordout = (uint8_t *) &out->x;
+  pcoordin  = (const uint16_t *) &in->u;
+  pcoordout = (uint8_t *) &out->u;
 
   iters = 3;
   do
-  {
-    uint16_t coord; // Conv: added
-    uint8_t  low, high; /* was A, C */
-
-    coord = *pcoordin++;
-    low  = coord & 0xFF;
-    high = coord >> 8;
-    divide_by_8_with_rounding(&low, &high);
-    *pcoordout++ = low;
-  }
+    *pcoordout++ = divround(*pcoordin++);
   while (--iters);
-}
-
-/**
- * $E550: Divide AC by 8, with rounding to nearest.
- *
- * \param[in,out] plow Pointer to low. (was A)
- * \param[in,out] phigh Pointer to high. (was C)
- */
-void divide_by_8_with_rounding(uint8_t *plow, uint8_t *phigh)
-{
-  int t; /* Conv: Added. */
-
-  assert(plow  != NULL);
-  assert(phigh != NULL);
-
-  t = *plow + 4; /* Like adding 0.5. */
-  *plow = (uint8_t) t; /* Store modulo 256. */
-  if (t >= 256)
-    (*phigh)++; /* Carry. */
-
-  divide_by_8(plow, phigh);
-}
-
-/**
- * $E555: Divide AC by 8.
- *
- * \param[in,out] plow Pointer to low. (was A)
- * \param[in,out] phigh Pointer to high. (was C)
- */
-void divide_by_8(uint8_t *plow, uint8_t *phigh)
-{
-  assert(plow  != NULL);
-  assert(phigh != NULL);
-
-  *plow = (*plow >> 3) | (*phigh << 5);
-  *phigh >>= 3;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12705,7 +10974,7 @@ void plot_game_window(tgestate_t *state)
  */
 void event_roll_call(tgestate_t *state)
 {
-  uint16_t   range;   /* was DE */ // xy_t?
+  uint16_t   range;   /* was DE */ // pos8_t?
   uint8_t   *pcoord;  /* was HL */
   uint8_t    iters;   /* was B */
   uint8_t    coord;   /* was A */
@@ -12717,7 +10986,7 @@ void event_roll_call(tgestate_t *state)
   /* Conv: Unrolled. */
   /* Range checking. X in (114..124) and Y in (106..114). */
   range = map_ROLL_CALL_X;
-  pcoord = &state->hero_map_position.x;
+  pcoord = &state->hero_mappos.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     goto not_at_roll_call;
@@ -12743,7 +11012,7 @@ void event_roll_call(tgestate_t *state)
 not_at_roll_call:
   state->bell = bell_RING_PERPETUAL;
   queue_message(state, message_MISSED_ROLL_CALL);
-  hostiles_pursue(state); // exit via
+  hostiles_pursue(state); /* was tail call */
 }
 
 /* ----------------------------------------------------------------------- */
@@ -12760,7 +11029,7 @@ void action_papers(tgestate_t *state)
   /**
    * $EFF9: Position outside the main gate.
    */
-  static const tinypos_t outside_main_gate = { 214, 138, 6 };
+  static const mappos8_t outside_main_gate = { 214, 138, 6 };
 
   uint16_t  range;  /* was DE */
   uint8_t  *pcoord; /* was HL */
@@ -12772,7 +11041,7 @@ void action_papers(tgestate_t *state)
   // UNROLLED
   /* Range checking. X in (105..109) and Y in (73..75). */
   range = map_MAIN_GATE_X; // note the confused coords business
-  pcoord = &state->hero_map_position.x;
+  pcoord = &state->hero_mappos.u;
   coord = *pcoord++;
   if (coord < ((range >> 8) & 0xFF) || coord >= ((range >> 0) & 0xFF))
     return;
@@ -12824,10 +11093,8 @@ int user_confirm(tgestate_t *state)
   screenlocstring_plot(state, &screenlocstring_confirm_y_or_n);
 
   /* Keyscan. */
-  for (;;) // FIXME: Loop which doesn't check the quit flag.
+  for (;;)
   {
-    state->speccy->stamp(state->speccy);
-
     keymask = state->speccy->in(state->speccy, port_KEYBOARD_POIUY);
     if ((keymask & (1 << 4)) == 0)
     {
@@ -12844,13 +11111,12 @@ int user_confirm(tgestate_t *state)
     }
 
     /* Conv: Timing: The original game keyscans as fast as it can. We can't
-     * have that so instead we introduce a short delay. */
-    state->speccy->sleep(state->speccy, 3500000 / 10); /* 10/sec */
+     * have that so instead we introduce a short delay and handle game thread
+     * termination. */
+    gamedelay(state, 3500000 / 50); /* 50/sec */
   }
 
 exit:
-   /* Undo the stamp at the start of the loop. */
-  state->speccy->sleep(state->speccy, 0);
   return flags;
 }
 
@@ -12867,7 +11133,7 @@ TGE_API void tge_setup(tgestate_t *state)
 
   wipe_full_screen_and_attributes(state);
   set_morale_flag_screen_attributes(state, attribute_BRIGHT_GREEN_OVER_BLACK);
-  /* The original code seems to pass in 68, not zero, as it uses a register
+  /* Conv: The original code passes in 68, not zero, as it uses a register
    * left over from a previous call to set_morale_flag_screen_attributes(). */
   set_menu_item_attributes(state, 0, attribute_BRIGHT_YELLOW_OVER_BLACK);
   plot_statics_and_menu_text(state);
@@ -12876,13 +11142,17 @@ TGE_API void tge_setup(tgestate_t *state)
 }
 
 /**
- * $F17A: Run the main menu until the game is ready to run.
+ * $F17A: Run the main menu until the game is ready to start.
  *
  * \param[in] state Pointer to game state.
+ *
+ * \return +ve when the game should begin,
+ *         -ve when the game thread should terminate,
+ *         zero otherwise.
  */
 TGE_API int tge_menu(tgestate_t *state)
 {
-  // Note: that game will sit in this function while the menu screen runs.
+  /* Note: The game will sit in this function while the menu screen runs. */
   return menu_screen(state);
 }
 
@@ -12996,14 +11266,22 @@ TGE_API void tge_setup2(tgestate_t *state)
   // we arrive here once the game is initialised and the initial bedroom scene is drawn and zoomboxed onto the screen
 }
 
-// missing prologue here - is this new code?
+/**
+ * Entry point for the main game loop (in addition to original game code).
+ *
+ * This sets up a jump buffer so that various point in the game code can long
+ * jump to the exit.
+ *
+ * \param[in] state Pointer to game state.
+ */
 TGE_API void tge_main(tgestate_t *state)
 {
-  // Conv: Need to get main loop to setjmp so we call it from here.
   if (setjmp(state->jmpbuf_main) == 0)
-  {
+    /* On entry we run the main loop. */
     main_loop(state);
-  }
+  else
+    /* If something wanted to exit quickly we arrive here. */
+    ;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -13018,7 +11296,9 @@ void wipe_full_screen_and_attributes(tgestate_t *state)
   assert(state != NULL);
   assert(state->speccy != NULL);
 
-  memset(&state->speccy->screen, 0, SCREEN_BITMAP_LENGTH);
+  memset(&state->speccy->screen.pixels,
+         0,
+         SCREEN_BITMAP_LENGTH);
   memset(&state->speccy->screen.attributes,
          attribute_WHITE_OVER_BLACK,
          SCREEN_ATTRIBUTES_LENGTH);

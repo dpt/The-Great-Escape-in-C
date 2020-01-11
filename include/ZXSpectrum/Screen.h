@@ -16,7 +16,8 @@ extern "C"
 #include "ZXSpectrum/Spectrum.h"
 
 /**
- * Convert the given screen into 0x00BBGGRR pixel format (or 0x00RRGGBB on Windows).
+ * Convert the given ZX Spectrum format screen into 0x00BBGGRR pixel format
+ * (or 0x00RRGGBB on Windows).
  *
  * \param[in] screen ZX Spectrum screen data.
  * \param[in] output Output screen pixels.

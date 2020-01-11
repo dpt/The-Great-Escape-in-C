@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef ROOMS_H
@@ -114,9 +114,9 @@ enum room
   room_20_REDCROSS,
   room_21_CORRIDOR,
   room_22_REDKEY,
-  room_23_BREAKFAST,
+  room_23_MESS_HALL,
   room_24_SOLITARY,
-  room_25_BREAKFAST,
+  room_25_MESS_HALL,
   room_26,           // unused
   room_27,           // unused
   room_28_HUT1LEFT,
