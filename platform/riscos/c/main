@@ -2,7 +2,7 @@
  *
  * Minimal front-end for The Great Escape.
  *
- * (c) David Thomas, 2017-2018.
+ * (c) David Thomas, 2017-2020.
  */
 
 #include <stdio.h>

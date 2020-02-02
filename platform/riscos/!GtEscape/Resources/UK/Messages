@@ -1,0 +1,50 @@
+# Messages for The Great Escape
+# © David Thomas, 2020
+#
+
+version:0.01 (xx yyy zzzz)
+
+task:The Great Escape
+icon:!gtescape
+
+# Menus
+
+menu.iconbar:The Great Escape,>Info,Quit
+menu.zxgame:The Great Escape,>Scale view F11
+
+# Errors (numbered)
+
+error.unknown:Error %d.
+error.no.mem:There is not enough memory to perform the requested operation. Quit any unwanted applications or see the RISC OS User Guide for ways to maximise memory.
+
+# Interactive Help
+
+# \S:Click SELECT to
+# \R:Move the pointer right to
+# \A:Click ADJUST to
+# \T:This is the
+# \G:This option is greyed out because
+# \W:This window is
+# \D:Drag SELECT to
+# \d:Drag ADJUST to
+# \w:window
+# \s:SELECT
+# \a:ADJUST
+
+#  Window help
+
+hw.zxgame:\Tgame \w.
+
+#  Menu help
+
+hm.iconbar.0:\Rsee information about The Great Escape.
+hm.iconbar.1:\Sto make The Great Escape go away.
+
+hw.scale.b_cancel:\Scancel the dialogue box.
+hw.scale.b_down:\Sdecrease the scale.|MHold SHIFT to go faster.
+hw.scale.b_fitscr:\Sfit the image to the size of the screen.
+hw.scale.b_fitwin:\Sfit the image to the current size of the viewer window.
+hw.scale.b_scale:\Sapply the given scale.
+hw.scale.b_up:\Sincrease the scale.|MHold SHIFT to go faster.
+hw.scale.w_scale:\Tscale to use.
+hw.scale:\Tview scaling \w.|MUse this \w to alter the scale of the displayed image.

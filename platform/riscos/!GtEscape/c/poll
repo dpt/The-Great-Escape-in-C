@@ -1,0 +1,24 @@
+/* --------------------------------------------------------------------------
+ *    Name: poll.c
+ * Purpose: Poll loop
+ *  Author: David Thomas
+ * ----------------------------------------------------------------------- */
+
+#include "oslib/wimp.h"
+
+#include "appengine/types.h"
+#include "appengine/wimp/event.h"
+
+#include "poll.h"
+
+int poll(void)
+{
+  wimp_block poll;
+
+  event_set_interval(100 / 10); // centiseconds FIXME: calc this properly!
+  (void) event_poll(&poll);
+
+  return 0;
+}
+
+// vim: ts=8 sts=2 sw=2 et

@@ -1,0 +1,24 @@
+/* --------------------------------------------------------------------------
+ *    Name: menunames.h
+ * Purpose: Identifiers for menu numbers
+ *  Author: David Thomas
+ * ----------------------------------------------------------------------- */
+
+#ifndef MENUNAMES_H
+#define MENUNAMES_H
+
+enum
+{
+  ICONBAR_INFO          = 0,
+  ICONBAR_QUIT,
+  ICONBAR__LIMIT,
+};
+
+enum
+{
+  SCALE_VIEW            = 0,
+};
+
+#endif /* MENUNAMES_H */
+
+// vim: ts=8 sts=2 sw=2 et

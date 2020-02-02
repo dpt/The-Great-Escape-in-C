@@ -1,0 +1,32 @@
+| >!Run for The Great Escape
+| by David Thomas, © 2020
+
+Obey <Obey$Dir>.!Boot
+
+Set Alias$GtEscapeRMLoad IfThere %%*0 Then RMLoad %%*0
+
+RMEnsure UtilityModule  3.50 Error The Great Escape requires RISC OS 3.5 or later
+
+RMEnsure WindowManager  3.98 Error The Great Escape requires WindowManager 3.98 or later ('nested WIMP')
+
+RMEnsure UtilityModule  3.70 RMEnsure CallASWI 0.02 GtEscapeRMLoad System:Modules.CallASWI
+RMEnsure UtilityModule  3.70 RMEnsure CallASWI 0.02 Error The Great Escape requires CallASWI 0.02 or later
+
+RMEnsure FPEmulator     4.03 GtEscapeRMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator     4.03 Error The Great Escape requires FPEmulator 4.03 or later
+
+RMEnsure SharedCLibrary 5.17 GtEscapeRMLoad System:Modules.CLib
+RMEnsure SharedCLibrary 5.34 Error The Great Escape requires SharedCLibrary 5.34 or later
+
+RMEnsure AppEngine      0.16 GtEscapeRMLoad <GtEscape$Dir>.AppEngine
+RMEnsure AppEngine      0.16 Error The Great Escape requires AppEngine 0.16 or later
+
+Unset Alias$GtEscapeRMLoad
+
+WimpSlot -min 520K -max 520K
+| GCC:
+|WimpSlot -min 600K -max 600K
+
+Run <GtEscape$Dir>.Resources.ResFind GtEscape
+
+Run <GtEscape$Dir>.!RunImage %*0
