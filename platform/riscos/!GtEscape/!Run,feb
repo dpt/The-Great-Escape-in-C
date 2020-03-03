@@ -21,6 +21,9 @@ RMEnsure SharedCLibrary 5.34 Error The Great Escape requires SharedCLibrary 5.34
 RMEnsure AppEngine      0.16 GtEscapeRMLoad <GtEscape$Dir>.AppEngine
 RMEnsure AppEngine      0.16 Error The Great Escape requires AppEngine 0.16 or later
 
+RMEnsure TimerMod       4.17 GtEscapeRMLoad <GtEscape$Dir>.TimerMod
+RMEnsure TimerMod       4.17 Error The Great Escape requires TimerMod 4.17 or later
+
 Unset Alias$GtEscapeRMLoad
 
 WimpSlot -min 520K -max 520K
@@ -29,4 +32,4 @@ WimpSlot -min 520K -max 520K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
-Run <GtEscape$Dir>.!RunImage %*0
+Run <GtEscape$Dir>.!RunImage %*0 >stdouterr 2>&1

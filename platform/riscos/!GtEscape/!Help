@@ -1,0 +1,4 @@
+TODO
+
+- wonky scaling ops
+- gaps at edges of game sprite (inaccuracy in scaling - percentages not good enough)

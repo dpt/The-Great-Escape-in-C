@@ -8,6 +8,7 @@
 #include "swis.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,23 +48,35 @@
 #include "zxscale.h"
 #include "poll.h"
 
+static list_t list_anchor; // tentative declaration (real one later)
+
 /* ----------------------------------------------------------------------- */
 
 /* Configuration */
 
-#define GAMEWIDTH  (256)
-#define GAMEHEIGHT (192)
-#define GAMEBORDER  (32)
+#define GAMEWIDTH    (256)
+#define GAMEHEIGHT   (192)
+#define GAMEBORDER    (16)
 
-#define MAXSTAMPS    (4) /* depth of nested timestamp stack */
+#define MAXSTAMPS      (4) /* depth of nested timestamp stack */
+
+#define MAXSPEED   (32767) /* fastest possible game (percent) */
+
+#define GAMEEIG        (2) /* resolution of game when at 100% (eig, 2 => 45dpi) */
 
 /* ----------------------------------------------------------------------- */
 
-#define zxgame_FLAG_FIRST               (1u << 0) // very first render
-#define zxgame_FLAG_PAUSED              (1u << 1) // game is paused
-#define zxgame_FLAG_QUIT                (1u << 2) // quit the game
-#define zxgame_FLAG_MENU                (1u << 3) // running the menu
-#define zxgame_FLAG_REJECT_NULL_EVENTS  (1u << 4)
+#define zxgame_FLAG_FIRST               (1u <<  0) // very first render
+#define zxgame_FLAG_PAUSED              (1u <<  1) // game is paused
+#define zxgame_FLAG_QUIT                (1u <<  2) // quit the game
+#define zxgame_FLAG_MENU                (1u <<  3) // running the game menu
+#define zxgame_FLAG_REJECT_NULL_EVENTS  (1u <<  4)
+#define zxgame_FLAG_MONOCHROMATIC       (1u <<  5) // monochrome display
+#define zxgame_FLAG_FIT                 (1u <<  6) // fit to window
+#define zxgame_FLAG_SNAP                (1u <<  7) // whole pixel snapping (when in fit-to-window mode)
+#define zxgame_FLAG_HAVE_CARET          (1u <<  8) // we own the caret
+#define zxgame_FLAG_BIG_WINDOW          (1u <<  9) // size window to screen
+#define zxgame_FLAG_SOUND               (1u << 10) // sound is enabled
 
 struct zxgame
 {
@@ -73,31 +86,29 @@ struct zxgame
 
   struct
   {
-    int                 cur, prev;      /* Current and previous scale factors. */
+    int                 cur;//, prev;      /* Current and previous scale factors. */
   }
   scale;
 
   struct
   {
     os_colour           colour;
-    // ...
   }
   background;
 
-  int                   x,y;            /* Where to draw the image (OS units rounded to nearest whole pixels). */
-
   unsigned int          flags;
-
 
   zxspectrum_t         *zx;
   tgestate_t           *tge;
 
-  os_t                  stamps[MAXSTAMPS];
+  int                   border_size;    // pixels
+  int                   speed;          // percent
+
+  unsigned long long    stamps[MAXSTAMPS];
   int                   nstamps;
 
   zxkeyset_t            keys;
   zxkempston_t          kempston;
-
 
   osspriteop_area      *sprite;
   os_factors            factors;
@@ -105,30 +116,169 @@ struct zxgame
   zxbox_t               dirty;
 
   int                   sleep_us; // us to sleep for on the next loop
+
+  int                   win_width, win_height; // OS units
+  os_box                extent; // extent of window w
+  os_box                imgbox; // where to draw the image, positioned within the window extent
 };
 
 /* ----------------------------------------------------------------------- */
 
-/* Games are stored in a linked list. */
-static list_t list_anchor = { NULL };
-
-/* ----------------------------------------------------------------------- */
-
+static void set_palette(zxgame_t *zxgame);
 static void destroy_game(zxgame_t *zxgame);
 
 /* ----------------------------------------------------------------------- */
 
+/* Fill in a single edge. */
+static void draw_edge(const wimp_draw *draw, const os_box *box)
+{
+  os_box clip;
+
+  box_intersection(&draw->clip, box, &clip);
+  if (box_is_empty(&clip))
+    return;
+
+  screen_clip(&clip);
+  os_writec(os_VDU_CLG);
+}
+
+/* Draw the window background by filling in the regions around the outside of
+ * opaque bitmaps. This avoids flicker. */
+static void draw_edges_only(zxgame_t  *zxgame,
+                      const wimp_draw *draw,
+                            int        x,
+                            int        y)
+{
+  const os_box *extent;
+  const os_box *imgbox;
+  os_box        box;
+
+  colourtrans_set_gcol(zxgame->background.colour,
+                       colourtrans_SET_BG_GCOL,
+                       os_ACTION_OVERWRITE,
+                       NULL);
+
+  extent = &zxgame->extent;
+  imgbox = &zxgame->imgbox;
+
+  /* Draw top, bottom, left, right. */
+
+  box.x0 = extent->x0 + x;
+  box.y0 = imgbox->y1 + y;
+  box.x1 = extent->x1 + x;
+  box.y1 = extent->y1 + y;
+  draw_edge(draw, &box);
+//
+//  colourtrans_set_gcol(os_COLOUR_GREEN,
+//                       colourtrans_SET_BG_GCOL,
+//                       os_ACTION_OVERWRITE,
+//                       NULL);
+
+  /* Top and bottom share x coordinates. */
+  box.y0 = extent->y0 + y;
+  box.y1 = imgbox->y0 + y;
+  draw_edge(draw, &box);
+//
+//  colourtrans_set_gcol(os_COLOUR_YELLOW,
+//                       colourtrans_SET_BG_GCOL,
+//                       os_ACTION_OVERWRITE,
+//                       NULL);
+
+  /* Left and bottom share x0 only. */
+  box.y0 = imgbox->y0 + y;
+  box.x1 = imgbox->x0 + x;
+  box.y1 = imgbox->y1 + y;
+  draw_edge(draw, &box);
+//
+//  colourtrans_set_gcol(os_COLOUR_BLUE,
+//                       colourtrans_SET_BG_GCOL,
+//                       os_ACTION_OVERWRITE,
+//                       NULL);
+
+  /* Right and left share y coordinates. */
+  box.x0 = imgbox->x1 + x;
+  box.x1 = extent->x1 + x;
+  draw_edge(draw, &box);
+
+  screen_clip(&draw->clip);
+}
+
+static void redrawfn(zxgame_t *zxgame, wimp_draw *draw, osbool more)
+{
+  for (; more; more = wimp_get_rectangle(draw))
+  {
+    int    x,y;
+    os_box dirty;
+    os_box result;
+    int    scale;
+
+    // calculate where top left of window would be on-screen
+    x = draw->box.x0 - draw->xscroll;
+    y = draw->box.y1 - draw->yscroll;
+
+    draw_edges_only(zxgame, draw, x, y);
+
+    // position it
+    x += zxgame->imgbox.x0;
+    y += zxgame->imgbox.y0;
+
+    if (0)
+    {
+      // set a clip region
+      //
+      dirty.x0 = zxgame->dirty.x0 << 1; // scale to OS units
+      dirty.y0 = zxgame->dirty.y0 << 1; // scale to OS units
+      dirty.x1 = zxgame->dirty.x1 << 1; // scale to OS units
+      dirty.y1 = zxgame->dirty.y1 << 1; // scale to OS units
+      // todo: dirty should be in screen space
+      // todo: snap to whole pixels
+
+      box_intersection(&draw->clip, &dirty, &result);
+      // todo: bomb out if the result is invalid
+
+      /* set our clip rectangle */
+      screen_clip(&result);
+    } // clipping
+
+    // zxgame->factors is computed in zxgame_update()
+
+    scale = zxgame->scale.cur;
+
+    // 100% => 1:1 pixel mapping
+
+    // scaled dims,  use sprite res 45dpi
+    int border_os = zxgame->border_size << GAMEEIG;
+    int height_os = GAMEHEIGHT << GAMEEIG;
+
+    fprintf(stderr, "factors: mul %d %d div %d %d\n",
+            zxgame->factors.xmul, zxgame->factors.ymul,
+            zxgame->factors.xdiv, zxgame->factors.ydiv);
+
+    osspriteop_put_sprite_scaled(osspriteop_PTR,
+                                 zxgame->sprite,
+                 (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                                 x,y,
+                                 os_ACTION_OVERWRITE | osspriteop_GIVEN_WIDE_ENTRIES,
+                                &zxgame->factors,
+                                 zxgame->trans_tab);
+
+    /* restore the previous clip rectangle */
+//    screen_clip(&draw->clip);
+  }
+}
+
 static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
-  zxgame_t    *zxgame = opaque;
+  zxgame_t  *zxgame = opaque;
   uint32_t  *pixels;
   char      *dst;
   char      *src;
   size_t     rowbytes;
   int        y;
   int        w;
-  int        dx0, dx1, dy0, dy1;
+  int        dx0, dy0, dx1, dy1;
+  wimp_draw  draw;
 
   pixels = zxspectrum_claim_screen(zxgame->zx);
 
@@ -163,11 +313,25 @@ static void draw_handler(const zxbox_t *dirty,
   zxspectrum_release_screen(zxgame->zx);
 
   /* Convert the dirty region into window coordinates. */
-  dx0 = dirty->x0 * 2;
-  dy0 = (dirty->y0 - 192) * 2;
-  dx1 = dirty->x1 * 2;
-  dy1 = (dirty->y1 - 192) * 2;
-  wimp_force_redraw(zxgame->w, dx0, dy0, dx1, dy1);
+  draw.w = zxgame->w;
+  draw.box.x0 =  dirty->x0 * 2; // FIXME - all this
+  draw.box.y0 = (dirty->y0 - 192) * 2;
+  draw.box.x1 =  dirty->x1 * 2;
+  draw.box.y1 = (dirty->y1 - 192) * 2;
+  redrawfn(zxgame, &draw, wimp_update_window(&draw));
+}
+
+static unsigned long long read_timer(void)
+{
+#define Timer_Value 0x490C2
+
+  unsigned int s, us;
+
+  (void) _swix(Timer_Value, _OUTR(0,1), &s, &us);
+  fprintf(stderr, "read_timer @ %d : %d\n", s, us);
+  return ((unsigned long long) s << 32) | us;
+
+#undef Timer_Value
 }
 
 static void stamp_handler(void *opaque)
@@ -175,53 +339,61 @@ static void stamp_handler(void *opaque)
   zxgame_t *zxgame = opaque;
 
   if (zxgame->nstamps < MAXSTAMPS)
-    zxgame->stamps[zxgame->nstamps++] = os_read_monotonic_time();
+    zxgame->stamps[zxgame->nstamps++] = read_timer();
 }
 
 static int sleep_handler(int durationTStates, void *opaque)
 {
   zxgame_t *zxgame = opaque;
 
+  fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
+
   /* Unstack timestamps */
   assert(zxgame->nstamps > 0);
-  if (zxgame->nstamps <= 0)
-    return (zxgame->flags & zxgame_FLAG_QUIT) != 0;
-  --zxgame->nstamps;
+  if (zxgame->nstamps > 0)
+    --zxgame->nstamps;
 
   if (zxgame->flags & zxgame_FLAG_QUIT)
     return 1;
 
   {
-    const int speed = 100; // temp
     const int tstatesPerSec = 3500000; // 3.5e6
-    os_t      now;
-    float     duration;
-    os_t      then;
-    os_t      delta;
-    float     consumed;
 
-    now = os_read_monotonic_time();
+    float               duration_s;
+    unsigned long long  now;
+    unsigned long long  then;
+    float               consumed_s;
+    float               sleep_s;
 
-    duration = (float) durationTStates / tstatesPerSec; // T-states to secs
-    duration = duration * 100.0f / speed; // scale by speed - a percentage
-
-    then = zxgame->stamps[zxgame->nstamps];
-    delta = now - then; // csec
+    // how much should we consume?
+    duration_s = (float) durationTStates / tstatesPerSec; // T-states to secs
+    duration_s = duration_s * 100.0f / zxgame->speed; // scale by speed - inverse percentage
 
     // how much time have we consumed so far?
-    consumed = delta / 100.0f; // csec -> sec
-    if (consumed < duration)
+    now  = read_timer();
+    then = zxgame->stamps[zxgame->nstamps];
+    consumed_s = (now - then) / 1000000.0f; // usec -> sec
+    fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
+
+    sleep_s = duration_s - consumed_s;
+    if (sleep_s > 0) // if we need to sleep then delay
     {
-      float delay; // s
+      os_t now_cs = os_read_monotonic_time();
+      os_t target;
 
-      delay = duration - consumed;
-
-      if (delay > 0) // if we need to sleep then delay
+      target = now_cs + sleep_s * 100.0f; // sec -> csec
+      fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
+      do
       {
         zxgame->flags |= zxgame_FLAG_REJECT_NULL_EVENTS; // could do this instead by disabling the null event handler (might need event lib changes to be efficient though)
+
+        poll_set_target(target);
         poll();
+
         zxgame->flags &= ~zxgame_FLAG_REJECT_NULL_EVENTS;
       }
+      while (os_read_monotonic_time() < target);
+      fprintf(stderr, "resuming\n");
     }
   }
 
@@ -229,50 +401,123 @@ static int sleep_handler(int durationTStates, void *opaque)
   return 0;
 }
 
-static int keystroke_time = 0;
-
 static int key_handler(uint16_t port, void *opaque)
 {
-  NOT_USED(opaque);
+  zxgame_t *zxgame = opaque;
+  int       key_in;
 
+  /* if our window lacks input focus then return the previous state */
+  if ((zxgame->flags & zxgame_FLAG_HAVE_CARET) == 0)
+    goto exit;
+
+  /* clear all keys */
+  zxgame->keys     = 0;
+  zxgame->kempston = 0;
+
+  /* scan pressed keys, starting at the lowest internal key number: Shift */
+  for (key_in = 0; ; )
+  {
+    int          key_out;
+    zxkey_t      index;
+    zxjoystick_t joystick;
+
+    key_out = osbyte1(osbyte_IN_KEY, key_in ^ 0x7F, 0xFF);
+    if (key_out == 0xFF)
+      break;
+
+    index    = zxkey_UNKNOWN;
+    joystick = zxjoystick_UNKNOWN;
+
+    switch (key_out)
+    {
+      /* don't consume Ctrl - reserve it for shortcuts */
+      case   1: goto exit;
+
+      case  48: index = zxkey_1;                break; // ZX row 1
+      case  49: index = zxkey_2;                break;
+      case  17: index = zxkey_3;                break;
+      case  18: index = zxkey_4;                break;
+      case  19: index = zxkey_5;                break;
+      case  52: index = zxkey_6;                break;
+      case  36: index = zxkey_7;                break;
+      case  21: index = zxkey_8;                break;
+      case  38: index = zxkey_9;                break;
+      case  39: index = zxkey_0;                break;
+      case  16: index = zxkey_Q;                break; // ZX row 2
+      case  33: index = zxkey_W;                break;
+      case  34: index = zxkey_E;                break;
+      case  51: index = zxkey_R;                break;
+      case  35: index = zxkey_T;                break;
+      case  68: index = zxkey_Y;                break;
+      case  53: index = zxkey_U;                break;
+      case  37: index = zxkey_I;                break;
+      case  54: index = zxkey_O;                break;
+      case  55: index = zxkey_P;                break;
+      case  65: index = zxkey_A;                break; // ZX row 3
+      case  81: index = zxkey_S;                break;
+      case  50: index = zxkey_D;                break;
+      case  67: index = zxkey_F;                break;
+      case  83: index = zxkey_G;                break;
+      case  84: index = zxkey_H;                break;
+      case  69: index = zxkey_J;                break;
+      case  70: index = zxkey_K;                break;
+      case  86: index = zxkey_L;                break;
+      case  73: index = zxkey_ENTER;            break;
+      case   0: index = zxkey_CAPS_SHIFT;       break; // ZX row 4 // either Shift key
+      case  97: index = zxkey_Z;                break;
+      case  66: index = zxkey_X;                break;
+      case  82: index = zxkey_C;                break;
+      case  99: index = zxkey_V;                break;
+      case 100: index = zxkey_B;                break;
+      case  85: index = zxkey_N;                break;
+      case 101: index = zxkey_M;                break;
+      case   2: index = zxkey_SYMBOL_SHIFT;     break; // either Alt key
+      case  98: index = zxkey_SPACE;            break;
+
+      case  57: joystick = zxjoystick_UP;       break; // joystick
+      case  41: joystick = zxjoystick_DOWN;     break;
+      case  25: joystick = zxjoystick_LEFT;     break;
+      case 121: joystick = zxjoystick_RIGHT;    break;
+      case 103: joystick = zxjoystick_FIRE;     break;
+    }
+
+    if (index != zxkey_UNKNOWN)
+      zxkeyset_assign(&zxgame->keys, index, 1 /* on */);
+    if (joystick != zxjoystick_UNKNOWN)
+      zxkempston_assign(&zxgame->kempston, joystick, 1 /* on */);
+
+    key_in = key_out + 1;
+  }
+
+exit:
   if (port == port_KEMPSTON_JOYSTICK)
-    return 0; // active high (zeroes by default)
-
-  keystroke_time++;
-
-  // first send a '2' to select Kempston joystick mode
-  if (keystroke_time < 3 && port == port_KEYBOARD_12345)
-    return 0x1F ^ 2;
-
-  // then send a '0' to start the game
-  if (keystroke_time < 6 && port == port_KEYBOARD_09876)
-    return 0x1F ^ 1;
-
-  return 0x1F;
+    return zxgame->kempston;
+  else
+    return zxkeyset_for_port(port, zxgame->keys);
 }
 
 static void border_handler(int colour, void *opaque)
 {
+  NOT_USED(colour);
   NOT_USED(opaque);
-
 }
 
 static void speaker_handler(int on_off, void *opaque)
 {
+  NOT_USED(on_off);
   NOT_USED(opaque);
-
-  // dump the speaker pulses in binary
-  // putc('0' + on_off, stderr);
 }
 
 /* ----------------------------------------------------------------------- */
 
 static event_wimp_handler zxgame_event_null_reason_code,
                           zxgame_event_redraw_window_request,
+                          zxgame_event_open_window_request,
                           zxgame_event_close_window_request,
                           zxgame_event_mouse_click,
                           zxgame_event_key_pressed,
-                          zxgame_event_menu_selection;
+                          zxgame_event_menu_selection,
+                          zxgame_event_losegain_caret;
 
 /* ----------------------------------------------------------------------- */
 
@@ -282,9 +527,12 @@ static void register_handlers(int reg, const zxgame_t *zxgame)
   {
     { wimp_NULL_REASON_CODE,      zxgame_event_null_reason_code      },
     { wimp_REDRAW_WINDOW_REQUEST, zxgame_event_redraw_window_request },
+    { wimp_OPEN_WINDOW_REQUEST,   zxgame_event_open_window_request   },
     { wimp_CLOSE_WINDOW_REQUEST,  zxgame_event_close_window_request  },
     { wimp_MOUSE_CLICK,           zxgame_event_mouse_click           },
     { wimp_KEY_PRESSED,           zxgame_event_key_pressed           },
+    { wimp_LOSE_CARET,            zxgame_event_losegain_caret        },
+    { wimp_GAIN_CARET,            zxgame_event_losegain_caret        },
   };
 
   event_register_wimp_group(reg,
@@ -343,14 +591,11 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
 
   zxgame = handle;
 
-  if (zxgame->flags & zxgame_FLAG_REJECT_NULL_EVENTS)
-    return event_PASS_ON;
-
   if (zxgame->flags & zxgame_FLAG_QUIT)
     return event_HANDLED;
 
-  // TODO: Timing - we've been entered but are we at the time we want to
-  // resume?
+  if (zxgame->flags & zxgame_FLAG_REJECT_NULL_EVENTS)
+    return event_PASS_ON;
 
   if (zxgame->flags & zxgame_FLAG_MENU)
   {
@@ -365,30 +610,7 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
     tge_main(zxgame->tge);
   }
 
-//  // cycle the list of games to even out the null events - might not be needed now
-//  {
-//    zxgame_t **p;
-//
-//    p = &GLOBALS.first;
-//    while ((*p)->next != NULL)
-//      p = &(*p)->next;
-//
-//    if (p == &GLOBALS.first)
-//    {
-//      // need more than one game
-//    }
-//    else
-//    {
-//      zxgame_t *t;
-//
-//      t = GLOBALS.first;
-//      GLOBALS.first = t->next;
-//      (*p)->next = t;
-//      t->next = NULL;
-//    }
-//  }
-
-  return event_PASS_ON; //event_HANDLED; // to understand: why handling nulls starves subsequent games
+  return event_PASS_ON;
 }
 
 static int zxgame_event_redraw_window_request(wimp_event_no event_no,
@@ -397,58 +619,50 @@ static int zxgame_event_redraw_window_request(wimp_event_no event_no,
 {
   wimp_draw *draw;
   zxgame_t  *zxgame;
-  osbool     more;
 
   NOT_USED(event_no);
 
-  draw = &block->redraw;
+  draw   = &block->redraw;
   zxgame = handle;
 
-  for (more = wimp_redraw_window(draw);
-       more;
-       more = wimp_get_rectangle(draw))
+  redrawfn(zxgame, draw, wimp_redraw_window(draw));
+
+  return event_HANDLED;
+}
+
+static int zxgame_event_open_window_request(wimp_event_no event_no,
+                                            wimp_block   *block,
+                                            void         *handle)
+{
+  wimp_open *open;
+  zxgame_t  *zxgame;
+
+  NOT_USED(event_no);
+
+  open   = &block->open;
+  zxgame = handle;
+
+  if (zxgame->flags & zxgame_FLAG_FIT)
   {
-    int    x,y;
-    os_box dirty;
-    os_box result;
+    int win_width, win_height;
 
-    x = draw->box.x0 - draw->xscroll;
-    y = draw->box.y1 - draw->yscroll;
+    /* Calculate the window's visible width and height (OS units) */
+    win_width  = open->visible.x1 - open->visible.x0;
+    win_height = open->visible.y1 - open->visible.y0;
 
-    // set a clip region
-    //
-    dirty.x0 = zxgame->dirty.x0 * 2; // scale to OS units
-    dirty.y0 = zxgame->dirty.y0 * 2; // scale to OS units
-    dirty.x1 = zxgame->dirty.x1 * 2; // scale to OS units
-    dirty.y1 = zxgame->dirty.y1 * 2; // scale to OS units
-    // todo: dirty should be in screen space
+    if (win_width != zxgame->win_width || win_height != zxgame->win_height)
+    {
+      zxgame->win_width  = win_width;
+      zxgame->win_height = win_height;
 
-    box_intersection(&draw->clip, &dirty, &result);
-    // todo: bomb out if the result is invalid
+      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+    }
 
-    /* set our clip rectangle */
-    screen_clip(&result);
-
- // todo: do a selective clear like PrivateEye does for borders
-
-//    _swix(OS_WriteC, _IN(0), 16); // CLG
-
-    zxgame->factors.xmul = zxgame->scale.cur;
-    zxgame->factors.ymul = zxgame->scale.cur;
-    zxgame->factors.xdiv = 100;
-    zxgame->factors.ydiv = 100;
-
-    osspriteop_put_sprite_scaled(osspriteop_PTR,
-                                 zxgame->sprite,
-                 (osspriteop_id) sprite_select(zxgame->sprite, 0),
-                                 x,y-192*2,
-                                 os_ACTION_OVERWRITE | osspriteop_GIVEN_WIDE_ENTRIES,
-                                &zxgame->factors,
-                                 zxgame->trans_tab);
-
-    /* restore the previous clip rectangle */
-    screen_clip(&draw->clip);
+    /* Disable scrolling */
+    open->xscroll = open->yscroll = 0;
   }
+
+  wimp_open_window(open);
 
   return event_HANDLED;
 }
@@ -458,7 +672,7 @@ static int zxgame_event_close_window_request(wimp_event_no event_no,
                                              void         *handle)
 {
   wimp_close *close;
-  zxgame_t     *zxgame;
+  zxgame_t   *zxgame;
 
   NOT_USED(event_no);
 
@@ -466,62 +680,63 @@ static int zxgame_event_close_window_request(wimp_event_no event_no,
   zxgame = handle;
 
 //  if (zxgame_query_unload(zxgame))
-  {
-//    zxgame_unload(zxgame);
-//    zxgame_destroy(zxgame);
-  }
+    zxgame_destroy(zxgame);
 
   return event_HANDLED;
 }
 
+static void tick(wimp_menu *m, int entry, int ticked)
+{
+  menu_set_menu_flags(m,
+                      entry,
+                      ticked ? wimp_MENU_TICKED : 0,
+                      wimp_MENU_TICKED);
+}
+
 static void zxgame_menu_update(void)
 {
-  zxgame_t *zxgame;
+  zxgame_t  *zxgame;
+  wimp_menu *m;
 
   zxgame = GLOBALS.current_zxgame;
   if (zxgame == NULL)
     return;
 
-//  viewer_t        *viewer;
-//  image_t         *image;
-//  wimp_menu_entry *entries;
-//  wimp_menu       *m;
-//
-//  viewer = GLOBALS.current_viewer;
-//  if (viewer == NULL)
-//    return;
-//
-//  image = viewer->drawable->image;
-//
-//  entries = GLOBALS.image_m->entries;
-//
-//  /* Misc menu */
-//
-//  m = entries[IMAGE_FILE].sub_menu;
-//
-//  /* Shade the "Histogram" entry if we don't have that method */
-//  disable(m, FILE_HIST, hist_available(image));
-//
-//#ifdef EYE_META
-//  /* Shade the "Metadata" entry if we don't have that method */
-//  disable(m, FILE_METADATA, metadata_available(image));
-//#endif
-//
-//  /* Edit menu */
-//
-//  m = entries[IMAGE_EDIT].sub_menu;
-//
-//  /* Shade the "Effects" entry if effects module says "no" */
-//  disable(m, EDIT_EFFECTS, effects_available(image));
-//
-//  /* Shade the "Rotate" entry if rotate module says "no" */
-//  disable(m, EDIT_ROTATE,  rotate_available(image));
-//
-//  /* Shade the "Convert to Sprite" entry if to_spr module says "no" */
-//  disable(m, EDIT_CONVERT_TO_SPRITE, to_spr_available(image));
-//
-//  /* Shade the "Release clipboard" entry if we don't own the clipboard */
-//  disable(m, EDIT_RELEASE, clipboard_own());
+  /* View menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
+
+  tick(m, VIEW_MONOCHROMATIC, (zxgame->flags & zxgame_FLAG_MONOCHROMATIC) != 0);
+
+  /* Game menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
+  m = m->entries[VIEW_GAME].sub_menu;
+
+  tick(m, GAME_FIT_WINDOW,  (zxgame->flags & zxgame_FLAG_FIT)  != 0);
+  tick(m, GAME_SNAP_PIXELS, (zxgame->flags & zxgame_FLAG_SNAP) != 0);
+
+  /* Window menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
+  m = m->entries[VIEW_WINDOW].sub_menu;
+
+  tick(m, WINDOW_FIT_GAME,   (zxgame->flags & zxgame_FLAG_BIG_WINDOW) == 0);
+  tick(m, WINDOW_FIT_SCREEN, (zxgame->flags & zxgame_FLAG_BIG_WINDOW) != 0);
+
+  /* Speed menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_SPEED].sub_menu;
+
+  tick(m, SPEED_PAUSE,   (zxgame->flags & zxgame_FLAG_PAUSED) != 0);
+  tick(m, SPEED_100PC,   (zxgame->speed == 100));
+  tick(m, SPEED_MAXIMUM, (zxgame->speed == MAXSPEED));
+
+  /* Sound menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_SOUND].sub_menu;
+
+  tick(m, SOUND_ENABLED, (zxgame->flags & zxgame_FLAG_SOUND) != 0);
 }
 
 static int zxgame_event_mouse_click(wimp_event_no event_no,
@@ -529,7 +744,7 @@ static int zxgame_event_mouse_click(wimp_event_no event_no,
                                     void         *handle)
 {
   wimp_pointer *pointer;
-  zxgame_t       *zxgame;
+  zxgame_t     *zxgame;
 
   NOT_USED(event_no);
   NOT_USED(block);
@@ -544,6 +759,14 @@ static int zxgame_event_mouse_click(wimp_event_no event_no,
     zxgame_menu_update();
 
     menu_open(GLOBALS.zxgame_m, pointer->pos.x - 64, pointer->pos.y);
+  }
+  else
+  {
+    wimp_set_caret_position((zxgame->flags & zxgame_FLAG_HAVE_CARET) ? wimp_BACKGROUND : pointer->w,
+                            wimp_ICON_WINDOW,
+                            0,0,
+                            1<<25, // invisible - (is there no OSLib flag for this?)
+                            0);
   }
 
   return event_HANDLED;
@@ -563,12 +786,27 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
 
   switch (key->c)
   {
-    case wimp_KEY_ESCAPE:
+    //case ('K' - 0x40): /* Kill */
+    case wimp_KEY_CONTROL | wimp_KEY_F2:
+      zxgame->flags |= zxgame_FLAG_QUIT;
       break;
 
     default:
-      wimp_process_key(key->c);
-      return event_HANDLED;
+      // absorb anything we'd normally use
+      if (isalnum(key->c)           ||
+          key->c == wimp_KEY_RETURN ||
+          key->c == ' '             ||
+          key->c == wimp_KEY_UP     ||
+          key->c == wimp_KEY_DOWN   ||
+          key->c == wimp_KEY_LEFT   ||
+          key->c == wimp_KEY_RIGHT)
+      {
+      }
+      else
+      {
+        wimp_process_key(key->c);
+      }
+      break;
   }
 
   return event_HANDLED;
@@ -578,72 +816,126 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
                                        wimp_block   *block,
                                        void         *handle)
 {
-//#define PACK(a,b) (((a) << 8) | (b))
-//
-//  static const struct
-//  {
-//    unsigned int items;
-//    int          op;
-//  }
-//  map[] =
-//  {
-//#ifdef EYE_META
-//    { PACK(IMAGE_FILE, FILE_METADATA),          MetaData  },
-//#endif
-//    { PACK(IMAGE_FILE, FILE_HIST),              Hist      },
-//#ifdef EYE_TAGS
-//    { PACK(IMAGE_FILE, FILE_TAGS),              Tags      },
-//#endif
-//    { PACK(IMAGE_FILE, FILE_NEWVIEW),           NewView   },
-//    { PACK(IMAGE_EDIT, EDIT_EFFECTS),           Effects   },
-//    { PACK(IMAGE_EDIT, EDIT_ROTATE),            Rotate    },
-//    { PACK(IMAGE_EDIT, EDIT_CONVERT_TO_SPRITE), ConvToSpr },
-//    { PACK(IMAGE_EDIT, EDIT_CLAIM),             Copy      },
-//    { PACK(IMAGE_EDIT, EDIT_RELEASE),           Release   },
-//  };
-//
-//  const size_t stride = sizeof(map[0]);
-//  const size_t nelems = sizeof(map) / stride;
-//
-//  wimp_selection *selection;
+  wimp_selection *selection;
   wimp_menu      *last;
-//  wimp_pointer    p;
-//  viewer_t       *viewer;
-//  unsigned int    item;
-//  int             i;
-//
-//  NOT_USED(event_no);
-//  NOT_USED(handle);
-//
-//  selection = &block->selection;
-//
-  /* We will receive this event on *any* menu selection. It's essential to reject events not intended for us. */
+  wimp_pointer    p;
+
+  NOT_USED(event_no);
+  NOT_USED(handle);
+
+  selection = &block->selection;
+
+  /* We will receive this event on *any* menu selection. It's essential to
+   * reject events not intended for us. */
   last = menu_last();
   if (last != GLOBALS.zxgame_m)
     return event_NOT_HANDLED;
-//
-//  item = PACK(selection->items[0], selection->items[1]);
-//
-//  i = bsearch_uint(&map[0].items, nelems, stride, item);
-//  if (i >= 0)
-//  {
-//    viewer = GLOBALS.current_viewer;
-//    if (viewer == NULL)
-//      return event_HANDLED;
-//
-//    action(viewer, map[i].op);
-//  }
-//
-//  wimp_get_pointer_info(&p);
-//  if (p.buttons & wimp_CLICK_ADJUST)
-//  {
-//    display_menu_update();
-//    menu_reopen();
-//  }
-//
-//  return event_HANDLED;
-//
-//#undef PACK
+
+  switch (selection->items[0])
+  {
+  case ZXGAME_VIEW:
+    switch (selection->items[1])
+    {
+    case VIEW_GAME:
+      switch (selection->items[2])
+      {
+      case GAME_SCALE: // submenu only
+        break;
+
+      case GAME_FIT_WINDOW:
+        GLOBALS.current_zxgame->flags ^= zxgame_FLAG_FIT;
+        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+        break;
+
+      case GAME_SNAP_PIXELS:
+        GLOBALS.current_zxgame->flags ^= zxgame_FLAG_SNAP;
+        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+        break;
+      }
+      break;
+
+    case VIEW_WINDOW:
+      switch (selection->items[2])
+      {
+      case WINDOW_FIT_GAME:
+      case WINDOW_FIT_SCREEN:
+        GLOBALS.current_zxgame->flags &= ~zxgame_FLAG_BIG_WINDOW;
+        if (selection->items[2] == WINDOW_FIT_SCREEN)
+          GLOBALS.current_zxgame->flags ^= zxgame_FLAG_BIG_WINDOW;
+        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+        break;
+      }
+      break;
+
+    case VIEW_MONOCHROMATIC:
+      GLOBALS.current_zxgame->flags ^= zxgame_FLAG_MONOCHROMATIC;
+      set_palette(GLOBALS.current_zxgame);
+      zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_COLOURS | zxgame_UPDATE_REDRAW);
+      break;
+    }
+    break;
+
+  case ZXGAME_SPEED:
+    switch (selection->items[1])
+    {
+    case SPEED_PAUSE:
+      GLOBALS.current_zxgame->flags |= zxgame_FLAG_PAUSED;
+      break;
+
+    case SPEED_100PC:
+      GLOBALS.current_zxgame->speed = 100;
+      break;
+
+    case SPEED_MAXIMUM:
+      GLOBALS.current_zxgame->speed = MAXSPEED;
+      break;
+
+    case SPEED_FASTER:
+      GLOBALS.current_zxgame->speed += 50;
+      break;
+
+    case SPEED_SLOWER:
+      GLOBALS.current_zxgame->speed -= 50;
+      break;
+    }
+    break;
+
+  case ZXGAME_SOUND:
+    switch (selection->items[1])
+    {
+    case SOUND_ENABLED:
+      GLOBALS.current_zxgame->flags ^= zxgame_FLAG_SOUND;
+      break;
+    }
+    break;
+  }
+
+  wimp_get_pointer_info(&p);
+  if (p.buttons & wimp_CLICK_ADJUST)
+  {
+    zxgame_menu_update();
+    menu_reopen();
+  }
+
+  return event_HANDLED;
+}
+
+static int zxgame_event_losegain_caret(wimp_event_no event_no,
+                                       wimp_block   *block,
+                                       void         *handle)
+{
+  wimp_caret *caret;
+  zxgame_t   *zxgame;
+
+  NOT_USED(event_no);
+
+  caret  = &block->caret;
+  zxgame = handle;
+
+  if (event_no == wimp_GAIN_CARET)
+    zxgame->flags |= zxgame_FLAG_HAVE_CARET;
+  else
+    zxgame->flags &= ~zxgame_FLAG_HAVE_CARET;
 
   return event_HANDLED;
 }
@@ -654,6 +946,7 @@ static error gentranstab(zxgame_t *zxgame)
 {
   free(zxgame->trans_tab);
   zxgame->trans_tab = malloc(16 * 4); // worst case?
+  // FIXME check error case
 
   colourtrans_generate_table_for_sprite(zxgame->sprite,
                         (osspriteop_id) sprite_select(zxgame->sprite, 0),
@@ -667,6 +960,126 @@ static error gentranstab(zxgame_t *zxgame)
   return error_OK;
 }
 
+void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
+{
+  if (flags & zxgame_UPDATE_COLOURS)
+    gentranstab(zxgame); // was update_colours()
+
+  if (flags & (zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT))
+  {
+    const int   image_xeig = GAMEEIG, image_yeig = GAMEEIG;
+    int         scale  = zxgame->scale.cur;
+    const int   border = zxgame->border_size; /* pixels */
+
+    int         screen_xeig, screen_yeig;
+    int         extent_w, extent_h;
+    int         scaled_w, scaled_h;
+    int         left_x, bottom_y;
+
+    read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
+
+    // set this flag if any of its controlling vars change (e.g. scale)
+    if (flags & zxgame_UPDATE_EXTENT)
+    {
+      if (zxgame->flags & zxgame_FLAG_FIT)
+      {
+        int reduced_border_x, reduced_border_y;
+        int games_per_window;
+
+        /* How many 1:1 games fit comfortably in the window? */
+        reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels to OS units */
+        do
+        {
+          int game_widths_per_window  = (zxgame->win_width  - reduced_border_x * 2) * 65536 / (GAMEWIDTH  << GAMEEIG);
+          int game_heights_per_window = (zxgame->win_height - reduced_border_y * 2) * 65536 / (GAMEHEIGHT << GAMEEIG);
+          games_per_window = MIN(game_widths_per_window, game_heights_per_window);
+          if (reduced_border_x > 0) reduced_border_x -= screen_xeig;
+          if (reduced_border_y > 0) reduced_border_y -= screen_yeig;
+        }
+        // while there's borders to reduce and we're still struggling to fit a whole game in the window, loop
+        while (reduced_border_x > 0 && reduced_border_y > 0 && games_per_window < 65536);
+
+        /* Snap the game scale to whole units */
+        if (games_per_window >= 1.0 && (zxgame->flags & zxgame_FLAG_SNAP))
+          scale = (games_per_window >> 16) * 100;
+        else
+          scale = (games_per_window * 100) >> 16;
+
+          // might need to clamp here
+
+        scaled_w = ((GAMEWIDTH  + reduced_border_x * 2) << image_xeig) * scale / 100;
+        scaled_h = ((GAMEHEIGHT + reduced_border_y * 2) << image_yeig) * scale / 100;
+
+        zxgame->scale.cur = scale;
+
+        flags |= zxgame_UPDATE_SCALING;
+
+        // centre the box
+        left_x   = (zxgame->win_width  - scaled_w) / 2;
+        bottom_y = -((zxgame->win_height - scaled_h) / 2 + scaled_h);
+      }
+      else
+      {
+        if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
+        {
+          read_max_visible_area(zxgame->w, &extent_w, &extent_h);
+        }
+        else // fit to game+border
+        {
+          extent_w = ((border + GAMEWIDTH  + border) << image_xeig) * scale / 100;
+          extent_h = ((border + GAMEHEIGHT + border) << image_yeig) * scale / 100;
+          // TODO: round the extents to whole-pixel values for the current mode
+          extent_w = (extent_w + 3) & ~3; // temp
+          extent_h = (extent_h + 3) & ~3;
+        }
+
+        // TODO: don't ignore the returned minsize flag
+        (void) window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+
+        // save the extent
+        zxgame->extent.x0 = 0;
+        zxgame->extent.y0 = -extent_h;
+        zxgame->extent.x1 = extent_w;
+        zxgame->extent.y1 = 0;
+
+        scaled_w = (GAMEWIDTH  << image_xeig) * scale / 100;
+        scaled_h = (GAMEHEIGHT << image_yeig) * scale / 100;
+
+        // centre the box
+        left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
+        bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
+      }
+    }
+
+    zxgame->imgbox.x0 = left_x;
+    zxgame->imgbox.y0 = bottom_y;
+    zxgame->imgbox.x1 = left_x   + scaled_w;
+    zxgame->imgbox.y1 = bottom_y + scaled_h;
+
+    box_round4(&zxgame->imgbox); // temp rounding
+
+    // update sprite scaling
+    if (flags & zxgame_UPDATE_SCALING)
+    {
+      os_factors_from_ratio(&zxgame->factors, scale, 100);
+      zxgame->factors.xmul <<= image_xeig;
+      zxgame->factors.ymul <<= image_yeig;
+      zxgame->factors.xdiv <<= screen_xeig;
+      zxgame->factors.ydiv <<= screen_yeig;
+      fprintf(stderr, "zxgame_update: factors: mul %d %d div %d %d\n",
+              zxgame->factors.xmul, zxgame->factors.ymul,
+              zxgame->factors.xdiv, zxgame->factors.ydiv);
+    }
+  }
+
+  if (flags & zxgame_UPDATE_REDRAW)
+    window_redraw(zxgame->w);
+}
+
+/* ----------------------------------------------------------------------- */
+
+static void set_palette(zxgame_t *zxgame)
+{
 #define BLK (os_COLOUR_BLACK   / 0xFFu)
 #define BLU (os_COLOUR_BLUE    / 0xFFu)
 #define RED (os_COLOUR_RED     / 0xFFu)
@@ -686,18 +1099,61 @@ static error gentranstab(zxgame_t *zxgame)
   BRIGHT(YLW), \
   BRIGHT(WHT),
 
+  static const os_SPRITE_PALETTE(16) stdpalette =
+  {{
+#define BRIGHT(C) { C * 0xAA, C * 0xAA }
+    DEFINE_PALETTE
+#undef BRIGHT
+#define BRIGHT(C) { C * 0xFF, C * 0xFF }
+    DEFINE_PALETTE
+#undef BRIGHT
+  }};
+
+  int                palette_size;
+  os_sprite_palette *palette;
+
+  osspriteop_read_palette_size(osspriteop_PTR,
+                               zxgame->sprite,
+               (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                              &palette_size,
+                              &palette,
+                               NULL);
+
+  assert(palette_size * 8 == sizeof(stdpalette));
+  memcpy(palette, &stdpalette, sizeof(stdpalette));
+
+  if (zxgame->flags & zxgame_FLAG_MONOCHROMATIC)
+  {
+    /* Convert the palette to monochrome. */
+
+    const int red_weight   = 19595; /* 0.29900 * 65536 (rounded down) */
+    const int green_weight = 38470; /* 0.58700 * 65536 (rounded up)   */
+    const int blue_weight  =  7471; /* 0.11400 * 65536 (rounded down) */
+
+    int i;
+
+    for (i = 0; i < 16; i++)
+    {
+      os_colour c;
+      int       r, g, b;
+      int       grey;
+
+      /* 0xBBGGRR00 */
+
+      c = palette->entries[i].on;
+      r = (c >> 8)  & 0xFF;
+      g = (c >> 16) & 0xFF;
+      b = (c >> 24) & 0xFF;
+
+      grey = (r * red_weight + g * green_weight + b * blue_weight) >> 16;
+      c = (grey << 24) | (grey << 16) | (grey << 8);
+      palette->entries[i].on = palette->entries[i].off = c;
+    }
+  }
+}
+
 error zxgame_create(zxgame_t **new_zxgame)
 {
-  static const os_PALETTE(32) zxpalette =
-  {
-#define BRIGHT(C) (C * 0xCC), (C * 0xCC)
-    DEFINE_PALETTE
-#undef BRIGHT
-#define BRIGHT(C) (C * 0xFF), (C * 0xFF)
-    DEFINE_PALETTE
-#undef BRIGHT
-  };
-
   static const zxconfig_t zxconfigconsts =
   {
     GAMEWIDTH / 8, GAMEHEIGHT / 8,
@@ -714,8 +1170,6 @@ error zxgame_create(zxgame_t **new_zxgame)
   zxgame_t          *zxgame   = NULL;
   size_t             sprareasz;
   zxconfig_t         zxconfig = zxconfigconsts;
-  int                palette_size;
-  os_sprite_palette *palette;
 
   *new_zxgame = NULL;
 
@@ -728,9 +1182,12 @@ error zxgame_create(zxgame_t **new_zxgame)
   if (zxgame->w == NULL)
     goto NoMem;
 
-  zxgame->scale.cur = zxgame->scale.prev = 100;
+  zxgame->scale.cur = 100;
+  //zxgame->scale.prev = 100;
+  zxgame->speed = 100;
+  zxgame->border_size = GAMEBORDER;
 
-  sprareasz = sprite_size(256, 192, 4, TRUE);
+  sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 4, TRUE);
 
   zxgame->sprite = malloc(sprareasz);
   if (zxgame->sprite == NULL)
@@ -744,22 +1201,19 @@ error zxgame_create(zxgame_t **new_zxgame)
                            zxgame->sprite,
                           "zxgame",
                            TRUE, /* paletted */
-                           256, 192,
+                           GAMEWIDTH, GAMEHEIGHT,
                            os_MODE4BPP45X45);
 
-  osspriteop_read_palette_size(osspriteop_PTR,
-                               zxgame->sprite,
-               (osspriteop_id) sprite_select(zxgame->sprite, 0),
-                              &palette_size,
-                              &palette,
-                               NULL);
-
-  assert(palette_size * 8 == sizeof(zxpalette));
-
-  memcpy(palette, &zxpalette, sizeof(zxpalette));
+  set_palette(zxgame);
 
   zxgame->trans_tab = NULL;
   gentranstab(zxgame);
+
+  zxgame_update(zxgame, zxgame_UPDATE_ALL); // FIXME: won't need _ALL
+
+  zxgame->background.colour = os_COLOUR_MID_LIGHT_GREY;
+
+  // =====
 
   zxconfig.opaque = zxgame;
 
@@ -831,13 +1285,16 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale)
     return;
 
   zxgame->scale.cur = scale;
+
+// check: how were scaling and extent different?
+  zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
 }
 
 /* ----------------------------------------------------------------------- */
 
 void zxgame_open(zxgame_t *zxgame)
 {
-  window_open_at(zxgame->w, AT_DEF);
+  window_open_at(zxgame->w, AT_CENTRE);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -890,5 +1347,34 @@ void zxgame_fin(void)
 }
 
 /* ----------------------------------------------------------------------- */
+
+/* Games are stored in a linked list. */
+static list_t list_anchor = { NULL };
+
+/* ----------------------------------------------------------------------- */
+
+void zxgame_map(zxgame_map_callback *fn, void *opaque)
+{
+  /* Note that the callback signatures are identical, so we can cast. */
+  list_walk(&list_anchor, (list_walk_callback *) fn, opaque);
+}
+
+/* ----------------------------------------------------------------------- */
+
+static int update_all_callback(zxgame_t *zxgame, void *opaque)
+{
+  zxgame_update(zxgame, (unsigned int) opaque);
+  return 0;
+}
+
+void zxgame_update_all(zxgame_update_flags flags)
+{
+  zxgame_map(update_all_callback, (void *) flags);
+}
+
+// possibly put plurals pelsewhere, e.g. zxgames.[ch]
+
+/* ----------------------------------------------------------------------- */
+
 
 // vim: ts=8 sts=2 sw=2 et

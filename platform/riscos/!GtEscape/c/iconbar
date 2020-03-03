@@ -16,7 +16,7 @@
 #include "menunames.h"
 #include "zxgame.h"
 
-static void clicked(const wimp_pointer *pointer, void *opaque)
+static void icon_clicked(const wimp_pointer *pointer, void *opaque)
 {
   NOT_USED(opaque);
 
@@ -36,7 +36,7 @@ static void clicked(const wimp_pointer *pointer, void *opaque)
   }
 }
 
-static void selected(const wimp_selection *selection, void *opaque)
+static void menu_selected(const wimp_selection *selection, void *opaque)
 {
   NOT_USED(opaque);
 
@@ -56,7 +56,7 @@ error tge_icon_bar_init(void)
   if (err)
     return err;
 
-  icon_bar_set_handlers(clicked, selected, NULL, NULL);
+  icon_bar_set_handlers(icon_clicked, menu_selected, NULL, NULL);
 
   return error_OK;
 }

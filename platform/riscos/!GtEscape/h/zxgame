@@ -20,6 +20,29 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale);
 
 void zxgame_open(zxgame_t *zxgame);
 
+typedef int (zxgame_map_callback)(zxgame_t *, void *opaque);
+
+/* Call the specified function for every zxgame. */
+void zxgame_map(zxgame_map_callback *fn, void *opaque);
+
+enum
+{
+  zxgame_UPDATE_COLOURS = 1 << 0,
+  zxgame_UPDATE_SCALING = 1 << 1,
+  zxgame_UPDATE_EXTENT  = 1 << 2,
+  zxgame_UPDATE_REDRAW  = 1 << 3,
+
+  zxgame_UPDATE_ALL     = zxgame_UPDATE_COLOURS |
+                          zxgame_UPDATE_SCALING |
+                          zxgame_UPDATE_EXTENT  |
+                          zxgame_UPDATE_REDRAW
+};
+
+typedef unsigned int zxgame_update_flags;
+
+void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags);
+void zxgame_update_all(zxgame_update_flags flags);
+
 #endif /* ZXGAME_H */
 
 // vim: ts=8 sts=2 sw=2 et

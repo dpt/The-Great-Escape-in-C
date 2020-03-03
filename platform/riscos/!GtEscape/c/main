@@ -150,7 +150,7 @@ static int message_palette_change(wimp_message *message, void *handle)
   NOT_USED(message);
   NOT_USED(handle);
 
-  // update all game windows
+  zxgame_update_all(zxgame_UPDATE_COLOURS | zxgame_UPDATE_REDRAW);
 
   return event_PASS_ON;
 }
@@ -163,13 +163,13 @@ static int kick_update_event_null_reason_code(wimp_event_no event_no,
   NOT_USED(block);
   NOT_USED(handle);
 
-  // update all game windows
+  zxgame_update_all(zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
 
-//  event_deregister_wimp_handler(wimp_NULL_REASON_CODE,
-//                                event_ANY_WINDOW,
-//                                event_ANY_ICON,
-//                                kick_update_event_null_reason_code,
-//                                NULL);
+  event_deregister_wimp_handler(wimp_NULL_REASON_CODE,
+                                event_ANY_WINDOW,
+                                event_ANY_ICON,
+                                kick_update_event_null_reason_code,
+                                NULL);
 
   return event_HANDLED;
 }
@@ -180,6 +180,8 @@ static int message_mode_change(wimp_message *message, void *handle)
   NOT_USED(handle);
 
   cache_mode_vars();
+
+  zxgame_update_all(zxgame_UPDATE_COLOURS | zxgame_UPDATE_SCALING);
 
   // update all game windows
 
