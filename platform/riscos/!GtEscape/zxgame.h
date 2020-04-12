@@ -7,6 +7,8 @@
 #ifndef ZXGAME_H
 #define ZXGAME_H
 
+#include "appengine/base/errors.h"
+
 typedef struct zxgame zxgame_t;
 
 error zxgame_init(void);
@@ -19,11 +21,6 @@ int zxgame_get_scale(zxgame_t *zxgame);
 void zxgame_set_scale(zxgame_t *zxgame, int scale);
 
 void zxgame_open(zxgame_t *zxgame);
-
-typedef int (zxgame_map_callback)(zxgame_t *, void *opaque);
-
-/* Call the specified function for every zxgame. */
-void zxgame_map(zxgame_map_callback *fn, void *opaque);
 
 enum
 {
@@ -41,7 +38,6 @@ enum
 typedef unsigned int zxgame_update_flags;
 
 void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags);
-void zxgame_update_all(zxgame_update_flags flags);
 
 #endif /* ZXGAME_H */
 

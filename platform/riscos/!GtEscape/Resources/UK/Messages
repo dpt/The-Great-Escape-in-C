@@ -10,7 +10,7 @@ icon:!gtescape
 # Menus
 
 menu.iconbar:The Great Escape,>Info,Quit
-menu.zxgame:The Great Escape,View{View,Game{Game,>Scale view,Fit to window,Snap to pixels},Window{Window,Fit to game,Fit to screen}|Monochromatic},Speed{Speed,Pause|100%,Maximum|Faster,Slower},Sound{Sound,Enabled}
+menu.zxgame:The Great Escape,View{View,Game{Game,>Scale view,Fit to window,Snap to pixels},Window{Window,Fit to game,Fit to screen}|Monochrome},Speed{Speed,Pause|100%,Maximum|Faster,Slower},Sound{Sound,Enabled}
 
 # Errors (numbered)
 

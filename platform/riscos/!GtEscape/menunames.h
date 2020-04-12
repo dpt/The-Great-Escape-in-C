@@ -20,7 +20,7 @@ enum
 
   VIEW_GAME             = 0,
   VIEW_WINDOW,
-  VIEW_MONOCHROMATIC,
+  VIEW_MONOCHROME,
   VIEW__LIMIT,
 
   GAME_SCALE            = 0,

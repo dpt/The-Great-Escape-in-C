@@ -1,4 +1,26 @@
+The Great Escape
+================
+
+This is The Great Escape application. It is a port to RISC OS of a ZX
+Spectrum game from 1986.
+
+
 TODO
 
 - wonky scaling ops
 - gaps at edges of game sprite (inaccuracy in scaling - percentages not good enough)
+
+- sound (big job)
+
+- appengine changes
+  - appengine (lib) likely needs versioning
+
+- TimerMod won't load on RO3.1
+
+- write this !Help file
+
+
+problems without nested wimp
+- main menu gets a bit mangled
+- prog_info not resizing
+

@@ -38,6 +38,7 @@
 #include "globals.h"
 #include "menunames.h"
 #include "zxgame.h"
+#include "zxgames.h"
 #include "iconbar.h"
 #include "poll.h"
 
@@ -156,8 +157,8 @@ static int message_palette_change(wimp_message *message, void *handle)
 }
 
 static int kick_update_event_null_reason_code(wimp_event_no event_no,
-                                               wimp_block   *block,
-                                               void         *handle)
+                                              wimp_block   *block,
+                                              void         *handle)
 {
   NOT_USED(event_no);
   NOT_USED(block);

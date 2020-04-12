@@ -33,19 +33,19 @@ defines			=
 
 # Compiler options
 
-cpu			= -apcs 3/32bit -arch 3 -cpu XScale
+cpu			= -apcs 3/32bit/fpe2/swstackcheck/fp/nofpregargs -arch 3 -cpu XScale
 depend			= -depend !Depend
 throwback		= -throwback
 
 # Library references
 
-includes		= -I^.^.^.include -I^.^.^.libraries.ZXSpectrum.include -I^.^.^.libraries.TheGreatEscape.include -IC: -ICLibs: -IOSLib:
+includes		= -I^.^.^.include -I^.^.^.libraries.ZXSpectrum.include -I^.^.^.libraries.TheGreatEscape.include -IStubsG_C: -ICLibs: -IOSLib:
 
 lib_normal		= CLibs:appengine.o.AOFLib
 lib_debug		= CLibs:appengine.odf.AOFLib
 lib_fortify       	= CLibs:fortify.o.libfortify
 #lib_memcheck       	= MemCheck:o.MC
-lib_all			= OSLib:o.OSLib32 C:o.flexlib C:o.stubs
+lib_all			= OSLib:o.OSLib32 StubsG_C:o.flexlib StubsG_C:o.StubsG
 
 libraries_normal	= $(lib_normal) $(lib_all)
 libraries_debug_fortify	= $(lib_debug) $(lib_fortify) $(lib_all)

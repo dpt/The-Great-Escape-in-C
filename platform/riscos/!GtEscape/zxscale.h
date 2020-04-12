@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *    Name: zxscale.h
  * Purpose: ZX game scale dialogue handler
+ *  Author: David Thomas
  * ----------------------------------------------------------------------- */
 
 #ifndef ZXGAMESCALE_DLG_H
