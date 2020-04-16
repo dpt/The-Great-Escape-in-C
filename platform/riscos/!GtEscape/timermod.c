@@ -26,7 +26,7 @@ float diff_timer(const timer_t *left, const timer_t *right)
   float d;
 
   d  = (left->s  - right->s);
-  d += (left->us - right->us) / 1000000.0f; // usec -> sec
+  d += (left->us - right->us) / 1000000.0f; /* usec -> sec */
 
   return d;
 }

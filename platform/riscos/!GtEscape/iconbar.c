@@ -42,6 +42,14 @@ static void menu_selected(const wimp_selection *selection, void *opaque)
 
   switch (selection->items[0])
   {
+    case ICONBAR_HELP:
+      xos_cli("Filer_Run " APPNAME "Res:!Help");
+      break;
+
+    case ICONBAR_INSTRUCTIONS:
+      xos_cli("Filer_Run " APPNAME "Res:Instruct");
+      break;
+
     case ICONBAR_QUIT:
       GLOBALS.flags |= Flag_Quit;
       break;

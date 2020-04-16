@@ -13,6 +13,12 @@
 
 #include "zxgame.h"
 
+/* ----------------------------------------------------------------------- */
+
+#define APPNAME "GtEscape" /* short form for GtEscape$Dir etc. */
+
+/* ----------------------------------------------------------------------- */
+
 enum
 {
   Flag_Quit = 1 << 0
@@ -32,6 +38,8 @@ extern struct TheGreatEscapeGlobals
   zxgame_t        *current_zxgame;
 }
 GLOBALS;
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* GLOBALS_H */
 

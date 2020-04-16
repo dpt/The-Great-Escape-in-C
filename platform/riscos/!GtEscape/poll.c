@@ -13,38 +13,47 @@
 #include "appengine/types.h"
 #include "appengine/wimp/event.h"
 
+#include "globals.h"
+
 #include "poll.h"
 
 /* A target time will be set when polling when inside the context of the
- * game, but otherwise we will use a default target time. This will control
- * how fast the outer loop runs. Since the game loop is rate limited this
- * shouldn't matter.
- *
- * BUT it does, because the speed of the loop is what we're limiting, but not
- * its rate.
- */
+ * game, but otherwise we will use a default target time. */
 
-static os_t target = INT_MAX;
-
-void poll_set_target(os_t time)
+static struct
 {
-  if (time < target)
-    target = time;
+  int  target_set;
+  os_t target;
+}
+LOCALS;
+
+void poll_set_target(os_t new_target)
+{
+  if (LOCALS.target_set && new_target >= LOCALS.target)
+    return; /* retain existing target which is sooner */
+
+  LOCALS.target_set = 1;
+  LOCALS.target     = new_target;
 }
 
 int poll(void)
 {
   wimp_block poll;
 
-  if (target == INT_MAX)
-    target = os_read_monotonic_time() + 2; /* 50Hz */
+  //fprintf(stderr, "poll: target=%d\n", LOCALS.target);
 
-  fprintf(stderr, "poll: target=%d\n", target);
+  event_set_earliest(LOCALS.target);
+  do
+  {
+    (void) event_poll(&poll);
 
-  event_set_earliest(target);
-  (void) event_poll(&poll);
+    if ((GLOBALS.flags & Flag_Quit) != 0)
+      break;
+  }
+  while (LOCALS.target_set && os_read_monotonic_time() < LOCALS.target);
 
-  target = INT_MAX;
+  LOCALS.target_set = 0;
+  LOCALS.target     = 0;
 
   return 0;
 }

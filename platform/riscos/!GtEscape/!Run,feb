@@ -3,25 +3,12 @@
 
 Obey <Obey$Dir>.!Boot
 
-Set Alias$GtEscapeRMLoad IfThere %%*0 Then RMLoad %%*0
-
 RMEnsure UtilityModule  3.10 Error The Great Escape requires RISC OS 3.1 or later
 
-|RMEnsure WindowManager  3.98 Error The Great Escape requires WindowManager 3.98 or later ('nested WIMP')
-
-|RMEnsure UtilityModule  3.70 RMEnsure CallASWI 0.02 GtEscapeRMLoad System:Modules.CallASWI
-|RMEnsure UtilityModule  3.70 RMEnsure CallASWI 0.02 Error The Great Escape requires CallASWI 0.02 or later
-
-|RMEnsure FPEmulator     4.03 GtEscapeRMLoad System:Modules.FPEmulator
-|RMEnsure FPEmulator     4.03 Error The Great Escape requires FPEmulator 4.03 or later
-
-|RMEnsure SharedCLibrary 5.17 GtEscapeRMLoad System:Modules.CLib
-|RMEnsure SharedCLibrary 5.34 Error The Great Escape requires SharedCLibrary 5.34 or later
-
-RMEnsure AppEngine      0.16 GtEscapeRMLoad <GtEscape$Dir>.AppEngine
+RMEnsure AppEngine      0.16 RMLoad <GtEscape$Dir>.AppEngine
 RMEnsure AppEngine      0.16 Error The Great Escape requires AppEngine 0.16 or later
 
-RMEnsure TimerMod       4.17 GtEscapeRMLoad <GtEscape$Dir>.TimerMod
+RMEnsure TimerMod       4.17 RMLoad <GtEscape$Dir>.TimerMod
 RMEnsure TimerMod       4.17 Error The Great Escape requires TimerMod 4.17 or later
 
 |RMEnsure SharedSound    1.07 GtEscapeRMLoad System:Modules.SSound
@@ -33,11 +20,8 @@ RMEnsure TimerMod       4.17 Error The Great Escape requires TimerMod 4.17 or la
 |RMEnsure SharedSoundBuffer 0.07 GtEscapeRMLoad System:Modules.SSBuffer
 |RMEnsure SharedSoundBuffer 0.07 Error The Great Escape requires SharedSoundBuffer 0.07 or later
 
-Unset Alias$GtEscapeRMLoad
-
-|WimpSlot -min 128K -max 128K
-WimpSlot -min 1280K -max 1280K
+WimpSlot -min 128K -max 128K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
-Run <GtEscape$Dir>.!RunImage %*0 >stdouterr 2>&1
+Run <GtEscape$Dir>.!RunImage %*0 ><GtEscape$Dir>.^.stdouterr 2>&1

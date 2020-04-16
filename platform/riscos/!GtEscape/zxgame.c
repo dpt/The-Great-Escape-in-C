@@ -63,25 +63,27 @@
 #define GAMEEIG         (2)     /* natural scale of game (EIG 2 = 45dpi) */
 
 #define MAXSTAMPS       (4)     /* max depth of timestamps stack */
-#define MAXSPEED        (32767) /* fastest possible game (percent) */
+#define MAXSPEED        (99999) /* fastest possible game (percent) */
 
 /* ----------------------------------------------------------------------- */
 
 /* Audio */
 
 #define SAMPLE_RATE     (44100)
-#define AVG             (5)     // average this many input bits to make an output sample {magic}
+#define AVG             (5)     // average this many input bits to make an output sample {magic value}
 #define PERIOD          (10)    // process 10th sec at a time
 #define BITFIFO_LENGTH_BITS (SAMPLE_RATE * AVG / PERIOD)
 #define BITFIFO_LENGTH  (BITFIFO_LENGTH_BITS / 8)
 
 /* ----------------------------------------------------------------------- */
 
+/* Types */
+
 typedef int scale_t;
-#define SCALE_1         (512)   // 1.0 in scale_t units
+#define SCALE_1         (1024)  /* 1.0 in scale_t units */
 
 typedef int fix16_t;
-#define FIX16_1         (65536) // 1.0 in fix16_t units
+#define FIX16_1         (65536) /* 1.0 in fix16_t units */
 
 /* ----------------------------------------------------------------------- */
 
@@ -91,7 +93,7 @@ typedef int fix16_t;
 #define zxgame_FLAG_PAUSED      (1u <<  1) /* game is paused */
 #define zxgame_FLAG_FIRST       (1u <<  2) /* first render */
 #define zxgame_FLAG_MENU        (1u <<  3) /* game menu running */
-#define zxgame_FLAG_DODGE_NULLS (1u <<  4) /* don't react to nulls */
+#define zxgame_FLAG_SLEEPING    (1u <<  4) /* null shouldn't drive game */
 #define zxgame_FLAG_MONOCHROME  (1u <<  5) /* display as monochrome */
 #define zxgame_FLAG_FIT         (1u <<  6) /* fit game to window */
 #define zxgame_FLAG_SNAP        (1u <<  7) /* whole pixel snapping (in fit-to-window mode) */
@@ -104,13 +106,14 @@ typedef int fix16_t;
 
 struct zxgame
 {
-  list_t                list;           /* A game is a node in a linked list. */
+  list_t                list;   /* A game is a node in a linked list. */
 
-  wimp_w                w;              /* The "primary key". */
+  wimp_w                w;      /* The "primary key". */
 
   struct
   {
-    int                 cur;//, prev;      /* Current and previous scale factors. */
+    int                 cur;    /* Current and previous scale factors. */
+    int                 prev;
   }
   scale;
 
@@ -125,8 +128,8 @@ struct zxgame
   zxspectrum_t         *zx;
   tgestate_t           *tge;
 
-  int                   border_size;    // pixels
-  int                   speed;          // percent
+  int                   border_size; /* Pixels */
+  int                   speed;  /* Percent */
 
   timer_t               stamps[MAXSTAMPS];
   int                   nstamps;
@@ -138,17 +141,15 @@ struct zxgame
   os_factors            factors;
   osspriteop_trans_tab *trans_tab;
 
-  int                   sleep_us; // us to sleep for on the next loop
-
-  int                   win_width, win_height; // OS units
-  os_box                extent; // extent of window w
-  os_box                imgbox; // where to draw the image, positioned within the window extent
+  int                   win_width, win_height; /* OS units */
+  os_box                extent; /* Extent of window w */
+  os_box                imgbox; /* Ewhere to draw the image, positioned within the window extent */
 
   struct
   {
     int                 index;
     bitfifo_t          *fifo;
-    int                 lastvol;  // most recently output volume
+    int                 lastvol; /* Most recently output volume */
     ssndbuf_t           buf;
     unsigned int       *data;
   }
@@ -158,7 +159,6 @@ struct zxgame
 /* ----------------------------------------------------------------------- */
 
 static void set_palette(zxgame_t *zxgame);
-static void destroy_game(zxgame_t *zxgame);
 
 /* ----------------------------------------------------------------------- */
 
@@ -189,14 +189,14 @@ static void draw_edge(const wimp_draw *draw, const os_box *box)
   os_box clip;
 
   if (box_intersection(&draw->clip, box, &clip))
-    return;
+    return; /* invalid intersection */
 
   screen_clip(&clip);
   os_writec(os_VDU_CLG);
 }
 
 /* Draw the window background by filling in the regions around the outside of
- * opaque bitmaps. This avoids flicker. */
+ * the image. This avoids flicker. */
 static void draw_edges_only(zxgame_t  *zxgame,
                       const wimp_draw *draw,
                             int        x,
@@ -222,31 +222,16 @@ static void draw_edges_only(zxgame_t  *zxgame,
   box.y1 = extent->y1 + y;
   draw_edge(draw, &box);
 
-  colourtrans_set_gcol(os_COLOUR_GREEN,
-                       colourtrans_SET_BG_GCOL,
-                       os_ACTION_OVERWRITE,
-                       NULL);
-
   /* Top and bottom share x coordinates. */
   box.y0 = extent->y0 + y;
   box.y1 = imgbox->y0 + y;
   draw_edge(draw, &box);
-
-  colourtrans_set_gcol(os_COLOUR_YELLOW,
-                       colourtrans_SET_BG_GCOL,
-                       os_ACTION_OVERWRITE,
-                       NULL);
 
   /* Left and bottom share x0 only. */
   box.y0 = imgbox->y0 + y;
   box.x1 = imgbox->x0 + x;
   box.y1 = imgbox->y1 + y;
   draw_edge(draw, &box);
-
-  colourtrans_set_gcol(os_COLOUR_BLUE,
-                       colourtrans_SET_BG_GCOL,
-                       os_ACTION_OVERWRITE,
-                       NULL);
 
   /* Right and left share y coordinates. */
   box.x0 = imgbox->x1 + x;
@@ -259,28 +244,31 @@ static void draw_edges_only(zxgame_t  *zxgame,
 static void redrawfn(zxgame_t *zxgame, wimp_draw *draw, osbool more)
 {
   osspriteop_action action;
+  osspriteop_id     id;
 
   action = os_ACTION_OVERWRITE;
   if (zxgame->flags & zxgame_FLAG_WIDE_CTRANS)
     action |= osspriteop_GIVEN_WIDE_ENTRIES;
 
+  id = (osspriteop_id) sprite_select(zxgame->sprite, 0);
+
   for (; more; more = wimp_get_rectangle(draw))
   {
     int x,y;
 
-    /* Calculate where the top left of the window would be on-screen */
+    /* Calculate where the top left of the window would be on-screen. */
     x = draw->box.x0 - draw->xscroll;
     y = draw->box.y1 - draw->yscroll;
 
     draw_edges_only(zxgame, draw, x, y);
 
-    /* Position it */
+    /* Position the sprite. */
     x += zxgame->imgbox.x0;
     y += zxgame->imgbox.y0;
 
     osspriteop_put_sprite_scaled(osspriteop_PTR,
                                  zxgame->sprite,
-                 (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                                 id,
                                  x,y,
                                  action,
                                 &zxgame->factors,
@@ -288,18 +276,19 @@ static void redrawfn(zxgame_t *zxgame, wimp_draw *draw, osbool more)
   }
 }
 
+/* Game callback. */
 static void draw_handler(const zxbox_t *dirty,
                          void          *opaque)
 {
-  zxgame_t  *zxgame = opaque;
-  uint32_t  *pixels;
+  zxgame_t *zxgame = opaque;
+  uint32_t *pixels;
 
   pixels = zxspectrum_claim_screen(zxgame->zx);
 
   if (zxgame->flags & zxgame_FLAG_FIRST)
   {
-    /* First time this has been drawn - copy all. */
-    static const zxbox_t all = { 0, 0, 256, 192 };
+    /* The first time this image has been drawn - copy all. */
+    static const zxbox_t all = { 0, 0, GAMEWIDTH, GAMEHEIGHT };
     zxgame->flags &= ~zxgame_FLAG_FIRST;
     dirty = &all;
   }
@@ -310,23 +299,29 @@ static void draw_handler(const zxbox_t *dirty,
     char   *src;
     size_t  rowbytes;
     int     dx0, dy0, dx1, dy1;
-    int     w;
-    int     y;
+    int     w, h;
 
-    dst = (char *) zxgame->sprite + 16 + 44 + (16 * 4 * 2);
+    dst = sprite_data(sprite_select(zxgame->sprite, 0));
     src = (char *) pixels;
-    rowbytes = 256 / 2;
+    rowbytes = GAMEWIDTH / 2;
 
-    dx0 = (dirty->x0    ) >> 1; // round down to byte boundary
-    dx1 = (dirty->x1 + 1) >> 1; // round up
-    w = dx1 - dx0; // width in bytes
+    dx0 = (dirty->x0    ) >> 1; /* round down 4bpp to byte boundary (incl) */
+    dx1 = (dirty->x1 + 1) >> 1; /* round up 4bpp to byte boundary (excl) */
+    w = dx1 - dx0; /* width in bytes */
 
-    // todo: double check these inversions
-    dy0 = 192 - dirty->y1;
-    dy1 = 192 - dirty->y0;
+    // TODO: Double check these inversions (does excl to incl mean we're off by one?)
+    dy0 = GAMEHEIGHT - dirty->y1;
+    dy1 = GAMEHEIGHT - dirty->y0;
+    h = dy1 - dy0;
 
-    for (y = dy0; y < dy1; y++)
-      memcpy(dst + y * rowbytes + dx0, src + y * rowbytes + dx0, w);
+    dst += dy0 * rowbytes + dx0;
+    src += dy0 * rowbytes + dx0;
+    while (h--)
+    {
+      memcpy(dst, src, w);
+      dst += rowbytes;
+      src += rowbytes;
+    }
   }
 
   zxspectrum_release_screen(zxgame->zx);
@@ -340,7 +335,7 @@ static void draw_handler(const zxbox_t *dirty,
     x0 = zxgame->imgbox.x0;
     y0 = zxgame->imgbox.y0;
 
-    scale = zxgame->scale.cur * SCALE_1 / 100; // % -> scale_t
+    scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
 
     draw.w = zxgame->w;
     draw.box.x0 = x0 + (dirty->x0 << GAMEEIG) * scale / SCALE_1;
@@ -352,15 +347,16 @@ static void draw_handler(const zxbox_t *dirty,
   }
 }
 
+/* Game callback. */
 static void stamp_handler(void *opaque)
 {
   zxgame_t *zxgame = opaque;
 
-  if (zxgame->nstamps < MAXSTAMPS)
-  {
-    read_timer(&zxgame->stamps[zxgame->nstamps]);
-    zxgame->nstamps++;
-  }
+  if (zxgame->nstamps >= MAXSTAMPS)
+    return;
+
+  read_timer(&zxgame->stamps[zxgame->nstamps]);
+  zxgame->nstamps++;
 }
 
 static int should_quit(const zxgame_t *zxgame)
@@ -369,13 +365,14 @@ static int should_quit(const zxgame_t *zxgame)
          (zxgame->flags & zxgame_FLAG_QUIT) != 0;
 }
 
+/* Game callback. */
 static int sleep_handler(int durationTStates, void *opaque)
 {
   zxgame_t *zxgame = opaque;
 
   //fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
 
-  /* Unstack timestamps */
+  /* Unstack timestamps. */
   assert(zxgame->nstamps > 0);
   if (zxgame->nstamps > 0)
     --zxgame->nstamps;
@@ -383,85 +380,89 @@ static int sleep_handler(int durationTStates, void *opaque)
   if (should_quit(zxgame))
     return 1;
 
+  /* Handle pausing. */
   if ((zxgame->flags & zxgame_FLAG_PAUSED) != 0)
   {
-    int quit;
-    int paused;
-
-    zxgame->flags |= zxgame_FLAG_DODGE_NULLS; // could do this instead by disabling our null event handler (might need event lib changes to be efficient though)
+    os_t target_cs;
+    int  quit;
+    int  paused;
 
     do
     {
-      poll_set_target(os_read_monotonic_time() + 100); /* sleep 1s */
+      target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
+      poll_set_target(target_cs);
       poll();
       quit = should_quit(zxgame);
       paused = (zxgame->flags & zxgame_FLAG_PAUSED) != 0;
     }
-    while (!quit && paused);
-
-    zxgame->flags &= ~zxgame_FLAG_DODGE_NULLS;
+    while (!quit && paused && os_read_monotonic_time() < target_cs);
 
     if (quit)
       return 1;
   }
 
+  /* Handle actual sleeping. */
   {
-    const int tstatesPerSec = 3500000; // 3.5e6
+    const float tstatesPerSec = 3500000.0f;
 
-    float               duration_s;
-    timer_t             now;
-    const timer_t      *then;
-    float               consumed_s;
-    float               sleep_s;
+    float          duration_s;
+    const timer_t *then;
+    timer_t        now;
+    float          consumed_s;
+    float          sleep_s;
 
-    // how much should we consume?
-    duration_s = (float) durationTStates / tstatesPerSec; // T-states to secs
-    duration_s = duration_s * 100.0f / zxgame->speed; // scale by speed - inverse percentage
+    /* How much time should this sleep handler consume? */
+    duration_s = durationTStates / tstatesPerSec; /* T-states -> secs */
+    duration_s = duration_s * 100.0f / zxgame->speed; /* scale to match speed */
 
-    // how much time have we consumed so far?
-    read_timer(&now);
+    /* How much time have we consumed so far? */
     then = &zxgame->stamps[zxgame->nstamps];
+    read_timer(&now);
     consumed_s = diff_timer(&now, then);
     //fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
 
+    /* How much remains? */
     sleep_s = duration_s - consumed_s;
-    if (sleep_s > 0) // if we need to sleep then delay
+    if (sleep_s > 0)
     {
-      os_t now_cs = os_read_monotonic_time();
-      os_t target;
+      /* If we need to sleep then delay here by polling the Wimp. */
 
-      target = now_cs + sleep_s * 100.0f; // sec -> csec
+      os_t now_cs, target_cs;
+      int  quit;
+
+      now_cs    = os_read_monotonic_time();
+      target_cs = now_cs + (os_t) (sleep_s * 100.0f); /* sec -> centisec */
       //fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
-      zxgame->flags |= zxgame_FLAG_DODGE_NULLS; // could do this instead by disabling our null event handler (might need event lib changes to be efficient though)
+      zxgame->flags |= zxgame_FLAG_SLEEPING;
       do
       {
-        poll_set_target(target);
+        poll_set_target(target_cs);
         poll();
+        quit = should_quit(zxgame);
       }
-      while (os_read_monotonic_time() < target);
-      zxgame->flags &= ~zxgame_FLAG_DODGE_NULLS;
-      //fprintf(stderr, "resuming\n");
+      while (!quit && os_read_monotonic_time() < target_cs);
+      zxgame->flags &= ~zxgame_FLAG_SLEEPING;
     }
   }
 
-  // return immediately: run the game as fast as possible
   return 0;
 }
 
+/* Game callback. */
 static int key_handler(uint16_t port, void *opaque)
 {
   zxgame_t *zxgame = opaque;
   int       key_in;
 
-  /* if our window lacks input focus then return the previous state */
+  /* If our window lacks input focus then return the previous key state. */
   if ((zxgame->flags & zxgame_FLAG_HAVE_CARET) == 0)
     goto exit;
 
-  /* clear all keys */
+  /* Clear all keys. */
   zxkeyset_clear(&zxgame->keys);
   zxgame->kempston = 0;
 
-  /* scan pressed keys, starting at the lowest internal key number: Shift */
+  /* Scan pressed keys, starting at the lowest internal key number: Shift. */
   for (key_in = 0; ; )
   {
     int          key_out;
@@ -477,10 +478,10 @@ static int key_handler(uint16_t port, void *opaque)
 
     switch (key_out)
     {
-      /* don't consume Ctrl - reserve it for shortcuts */
+      /* Don't consume Ctrl - reserve it for shortcuts. */
       case   1: goto exit;
 
-      case  48: index = zxkey_1;                break; // ZX row 1
+      case  48: index = zxkey_1;                break; /* ZX row 1 */
       case  49: index = zxkey_2;                break;
       case  17: index = zxkey_3;                break;
       case  18: index = zxkey_4;                break;
@@ -490,7 +491,7 @@ static int key_handler(uint16_t port, void *opaque)
       case  21: index = zxkey_8;                break;
       case  38: index = zxkey_9;                break;
       case  39: index = zxkey_0;                break;
-      case  16: index = zxkey_Q;                break; // ZX row 2
+      case  16: index = zxkey_Q;                break; /* ZX row 2 */
       case  33: index = zxkey_W;                break;
       case  34: index = zxkey_E;                break;
       case  51: index = zxkey_R;                break;
@@ -500,7 +501,7 @@ static int key_handler(uint16_t port, void *opaque)
       case  37: index = zxkey_I;                break;
       case  54: index = zxkey_O;                break;
       case  55: index = zxkey_P;                break;
-      case  65: index = zxkey_A;                break; // ZX row 3
+      case  65: index = zxkey_A;                break; /* ZX row 3 */
       case  81: index = zxkey_S;                break;
       case  50: index = zxkey_D;                break;
       case  67: index = zxkey_F;                break;
@@ -510,7 +511,7 @@ static int key_handler(uint16_t port, void *opaque)
       case  70: index = zxkey_K;                break;
       case  86: index = zxkey_L;                break;
       case  73: index = zxkey_ENTER;            break;
-      case   0: index = zxkey_CAPS_SHIFT;       break; // ZX row 4 // either Shift key
+      case   0: index = zxkey_CAPS_SHIFT;       break; /* ZX row 4 - either Shift key */
       case  97: index = zxkey_Z;                break;
       case  66: index = zxkey_X;                break;
       case  82: index = zxkey_C;                break;
@@ -518,10 +519,10 @@ static int key_handler(uint16_t port, void *opaque)
       case 100: index = zxkey_B;                break;
       case  85: index = zxkey_N;                break;
       case 101: index = zxkey_M;                break;
-      case   2: index = zxkey_SYMBOL_SHIFT;     break; // either Alt key
+      case   2: index = zxkey_SYMBOL_SHIFT;     break; /* Either Alt key */
       case  98: index = zxkey_SPACE;            break;
 
-      case  57: joystick = zxjoystick_UP;       break; // joystick
+      case  57: joystick = zxjoystick_UP;       break; /* Joystick */
       case  41: joystick = zxjoystick_DOWN;     break;
       case  25: joystick = zxjoystick_LEFT;     break;
       case 121: joystick = zxjoystick_RIGHT;    break;
@@ -543,14 +544,35 @@ exit:
     return zxkeyset_for_port(port, &zxgame->keys);
 }
 
+/* Game callback. */
 static void border_handler(int colour, void *opaque)
 {
-  NOT_USED(colour);
-  NOT_USED(opaque);
+  zxgame_t *zxgame = opaque;
+  os_colour c;
+
+  switch (colour)
+  {
+    case 0:  c = os_COLOUR_BLACK;   break;
+    case 1:  c = os_COLOUR_BLUE;    break;
+    case 2:  c = os_COLOUR_RED;     break;
+    case 3:  c = os_COLOUR_MAGENTA; break;
+    case 4:  c = os_COLOUR_GREEN;   break;
+    case 5:  c = os_COLOUR_CYAN;    break;
+    case 6:  c = os_COLOUR_YELLOW;  break;
+    case 7:  c = os_COLOUR_WHITE;   break;
+    default: c = os_COLOUR_ORANGE;  break;
+  }
+
+  zxgame->background.colour = colour;
+
+  zxgame_update(zxgame, zxgame_UPDATE_REDRAW);
 }
 
+/* Game callback. */
 static void speaker_handler(int on_off, void *opaque)
 {
+  NOT_USED(on_off);
+
   zxgame_t *zxgame = opaque;
 
   if ((zxgame->flags & zxgame_FLAG_SOUND) == 0)
@@ -680,10 +702,16 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
 
   zxgame = handle;
 
-  if (zxgame->flags & zxgame_FLAG_QUIT)
+  if (should_quit(zxgame))
+  {
+    /* Note: Deregistering event handlers within an event handler is ok. */
+    zxgame_destroy(zxgame);
     return event_HANDLED;
+  }
 
-  if (zxgame->flags & zxgame_FLAG_DODGE_NULLS)
+  /* Paused flag set => Game is paused by the user.
+   * Sleeping flag set => Game is idling until next run. */
+  if (zxgame->flags & (zxgame_FLAG_PAUSED | zxgame_FLAG_SLEEPING))
     return event_PASS_ON;
 
   if (zxgame->flags & zxgame_FLAG_MENU)
@@ -748,7 +776,7 @@ static int zxgame_event_open_window_request(wimp_event_no event_no,
     }
 
     /* Disable scrolling */
-    open->xscroll = open->yscroll = 0;
+    //open->xscroll = open->yscroll = 0;
   }
 
   wimp_open_window(open);
@@ -760,16 +788,14 @@ static int zxgame_event_close_window_request(wimp_event_no event_no,
                                              wimp_block   *block,
                                              void         *handle)
 {
-  wimp_close *close;
-  zxgame_t   *zxgame;
+  zxgame_t *zxgame;
 
   NOT_USED(event_no);
+  NOT_USED(block);
 
-  close  = &block->close;
   zxgame = handle;
 
-//  if (zxgame_query_unload(zxgame))
-    zxgame_destroy(zxgame);
+  zxgame->flags |= zxgame_FLAG_QUIT;
 
   return event_HANDLED;
 }
@@ -875,9 +901,21 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
 
   switch (key->c)
   {
+    case 'Q' - 64: /* Zoom out */
+      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) / 2);
+      break;
+    case 'W' - 64: /* Zoom in */
+      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) * 2);
+      break;
+    case 'D' - 64: /* Reset zoom */
+      zxgame_set_scale(zxgame, 100);
+      break;
+    case 'T' - 64: /* Toggle zoom */
+      zxgame_set_scale(zxgame, zxgame->scale.prev);
+      break;
+
     case wimp_KEY_CONTROL | wimp_KEY_F2:
-      zxgame->flags |= zxgame_FLAG_QUIT; // doesn't clean up properly
-      // needs to zxgame_destroy(zxgame); once the quit is processed
+      zxgame->flags |= zxgame_FLAG_QUIT;
       break;
 
     default:
@@ -889,7 +927,7 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
           key->c == wimp_KEY_LEFT   ||
           key->c == wimp_KEY_RIGHT)
       {
-        /* consume any key presses that the game would normally accept */
+        /* Consume any key presses that the game would normally accept. */
       }
       else
       {
@@ -928,7 +966,7 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
     case VIEW_GAME:
       switch (selection->items[2])
       {
-      case GAME_SCALE: // is a submenu only
+      case GAME_SCALE: /* is a submenu only */
         break;
 
       case GAME_FIT_WINDOW:
@@ -980,13 +1018,13 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
       break;
 
     case SPEED_FASTER:
-      GLOBALS.current_zxgame->speed += 50;
+      GLOBALS.current_zxgame->speed += 20;
       if (GLOBALS.current_zxgame->speed >= MAXSPEED)
         GLOBALS.current_zxgame->speed = MAXSPEED;
       break;
 
     case SPEED_SLOWER:
-      GLOBALS.current_zxgame->speed -= 50;
+      GLOBALS.current_zxgame->speed -= 20;
       if (GLOBALS.current_zxgame->speed <= 0)
         GLOBALS.current_zxgame->speed = 1;
       break;
@@ -1037,19 +1075,33 @@ static int zxgame_event_losegain_caret(wimp_event_no event_no,
 
 static error gentranstab(zxgame_t *zxgame)
 {
+  osspriteop_id           id;
   colourtrans_table_flags flags;
+  int                     size;
 
   free(zxgame->trans_tab);
-  zxgame->trans_tab = malloc(16 * 4); // CHECK is this the worst case?
-  if (zxgame->trans_tab == NULL)
-    return error_OOM;
+
+  id = (osspriteop_id) sprite_select(zxgame->sprite, 0);
 
   flags = colourtrans_GIVEN_SPRITE;
   if (zxgame->flags & zxgame_FLAG_WIDE_CTRANS)
     flags |= colourtrans_RETURN_WIDE_ENTRIES;
 
+  size = colourtrans_generate_table_for_sprite(zxgame->sprite,
+                                               id,
+                                               os_CURRENT_MODE,
+                                               colourtrans_CURRENT_PALETTE,
+                                               NULL, /* return size */
+                                               flags,
+                                               NULL,
+                                               NULL);
+
+  zxgame->trans_tab = malloc(size);
+  if (zxgame->trans_tab == NULL)
+    return error_OOM;
+
   colourtrans_generate_table_for_sprite(zxgame->sprite,
-                        (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                                        id,
                                         os_CURRENT_MODE,
                                         colourtrans_CURRENT_PALETTE,
                                         zxgame->trans_tab,
@@ -1066,32 +1118,46 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
 
   if (flags & (zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT))
   {
-    const int   image_xeig = GAMEEIG, image_yeig = GAMEEIG;
-    const int   border = zxgame->border_size; /* pixels */
+    const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
+    const int border = zxgame->border_size; /* pixels */
 
-    scale_t     scale;
-    int         screen_xeig, screen_yeig;
+    scale_t   scale;
+    int       minsize;
+    int       screen_xeig, screen_yeig;
+    int       extent_w, extent_h;
+    scale_t   scaled_w, scaled_h;
+    int       left_x, bottom_y;
 
-    int         extent_w, extent_h;
-    scale_t     scaled_w, scaled_h;
-    int         left_x, bottom_y;
-
-    scale = zxgame->scale.cur * SCALE_1 / 100; // % -> scale_t
+    scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
 
     read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
 
     // set this flag if any of its controlling vars change (e.g. scale)
     if (flags & zxgame_UPDATE_EXTENT)
     {
+      // updating the extent when in openwindow is a bad idea - avoid
+
       if (zxgame->flags & zxgame_FLAG_FIT)
       {
-        // fit game to window mode
+        /* "Fit to window" mode. */
+
+        /* Window is to be sized to screen. */
+        read_max_visible_area(zxgame->w, &extent_w, &extent_h); /* read max workarea size */
+
+        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+        // TODO: make use of the returned minsize flag
+
+        /* Save the extent. */
+        zxgame->extent.x0 = 0;
+        zxgame->extent.y0 = -extent_h;
+        zxgame->extent.x1 = extent_w;
+        zxgame->extent.y1 = 0;
 
         int reduced_border_x, reduced_border_y;
         int games_per_window;
 
-        /* How many 1:1 games fit comfortably in the window? */
-        reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels to OS units */
+        /* How many 1:1 games fit comfortably in the window (at its current size)? */
+        reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels -> OS units */
         do
         {
           fix16_t game_widths_per_window, game_heights_per_window;
@@ -1105,46 +1171,45 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
         // loop while there's borders to reduce and we're still struggling to fit a whole game in the window
         while (games_per_window < FIX16_1 && (reduced_border_x > 0 || reduced_border_y > 0));
 
-        /* Snap the game scale to whole units */
-        if (games_per_window >= 1.0 && (zxgame->flags & zxgame_FLAG_SNAP))
+        /* Snap the game scale to whole units. */
+        if (games_per_window >= FIX16_1 && (zxgame->flags & zxgame_FLAG_SNAP))
           scale = (games_per_window >> 16) * SCALE_1;
         else
           scale = (games_per_window * SCALE_1) >> 16;
-
-        scale = CLAMP(scale, 1, 8000);
+        zxgame->scale.cur = scale * 100 / SCALE_1; /* scale_t -> % */
+        zxgame->scale.cur = CLAMP(zxgame->scale.cur, 1, 8000);
+        flags |= zxgame_UPDATE_SCALING;
 
         scaled_w = ((GAMEWIDTH  + reduced_border_x * 2) << image_xeig) * scale / SCALE_1;
         scaled_h = ((GAMEHEIGHT + reduced_border_y * 2) << image_yeig) * scale / SCALE_1;
-//        scaled_w = (scaled_w + 3) & ~3; // temp
-//        scaled_h = (scaled_h + 3) & ~3; // temp
+        snap2px(&scaled_w, &scaled_h);
 
-        zxgame->scale.cur = scale * 100 / SCALE_1; // scale_t -> %
-
-        flags |= zxgame_UPDATE_SCALING;
-
-        /* centre the box */
-        left_x   =   (zxgame->win_width  - scaled_w) / 2;
-        bottom_y = -((zxgame->win_height - scaled_h) / 2 + scaled_h);
-      }
+        /* Centre the box. */
+        left_x   = zxgame->extent.x0 + (zxgame->win_width  - scaled_w) / 2;
+        bottom_y = zxgame->extent.y0 + (zxgame->win_height - scaled_h) / 2;
+        snap2px(&left_x, &bottom_y);
+     }
       else
       {
-        // non-fit mode
+        /* Non-"Fit to window" mode. */
 
-        if (zxgame->flags & zxgame_FLAG_BIG_WINDOW) // window is to be sized to screen
+        if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
         {
-          read_max_visible_area(zxgame->w, &extent_w, &extent_h); // read max workarea size
+          /* Window is to be sized to screen. */
+          read_max_visible_area(zxgame->w, &extent_w, &extent_h); /* read max workarea size */
         }
-        else // window is to be sized to game+border
+        else
         {
+          /* Window is to be sized to game plus border. */
           extent_w = ((GAMEWIDTH  + border * 2) << image_xeig) * scale / SCALE_1;
           extent_h = ((GAMEHEIGHT + border * 2) << image_yeig) * scale / SCALE_1;
           snap2px(&extent_w, &extent_h);
         }
 
+        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
         // TODO: make use of the returned minsize flag
-        (void) window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
 
-        // save the extent
+        /* Save the extent. */
         zxgame->extent.x0 = 0;
         zxgame->extent.y0 = -extent_h;
         zxgame->extent.x1 = extent_w;
@@ -1154,20 +1219,20 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
         scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
         snap2px(&scaled_w, &scaled_h);
 
-        // centre the box
+        /* Centre the box. */
         left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
         bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
         snap2px(&left_x, &bottom_y);
       }
+
+      zxgame->imgbox.x0 = left_x;
+      zxgame->imgbox.y0 = bottom_y;
+      zxgame->imgbox.x1 = left_x   + scaled_w;
+      zxgame->imgbox.y1 = bottom_y + scaled_h;
+      snapbox2px(&zxgame->imgbox);
     }
 
-    zxgame->imgbox.x0 = left_x;
-    zxgame->imgbox.y0 = bottom_y;
-    zxgame->imgbox.x1 = left_x   + scaled_w;
-    zxgame->imgbox.y1 = bottom_y + scaled_h;
-    snapbox2px(&zxgame->imgbox);
-
-    // update sprite scaling
+    /* Update sprite scaling */
     if (flags & zxgame_UPDATE_SCALING)
     {
       os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
@@ -1175,9 +1240,9 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
       zxgame->factors.ymul <<= image_yeig;
       zxgame->factors.xdiv <<= screen_xeig;
       zxgame->factors.ydiv <<= screen_yeig;
-      fprintf(stderr, "zxgame_update: factors: mul %d %d div %d %d\n",
-              zxgame->factors.xmul, zxgame->factors.ymul,
-              zxgame->factors.xdiv, zxgame->factors.ydiv);
+      //fprintf(stderr, "zxgame_update: factors: mul %d %d div %d %d\n",
+      //        zxgame->factors.xmul, zxgame->factors.ymul,
+      //        zxgame->factors.xdiv, zxgame->factors.ydiv);
     }
   }
 
@@ -1300,8 +1365,7 @@ error zxgame_create(zxgame_t **new_zxgame)
   if (zxgame->w == NULL)
     goto NoMem;
 
-  zxgame->scale.cur = 100;
-  //zxgame->scale.prev = 100;
+  zxgame->scale.cur = zxgame->scale.prev = 100;
   zxgame->speed = 100;
   zxgame->border_size = GAMEBORDER;
 
@@ -1329,7 +1393,7 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   zxgame_update(zxgame, zxgame_UPDATE_ALL); // FIXME: won't need _ALL
 
-  zxgame->background.colour = os_COLOUR_MID_LIGHT_GREY;
+  zxgame->background.colour = os_COLOUR_BLUE;
 
   // =====
 
@@ -1358,7 +1422,7 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   tge_setup(zxgame->tge);
 
-  register_handlers(1, zxgame);
+  set_handlers(zxgame);
 
   zxgame_add(zxgame);
 
@@ -1403,7 +1467,7 @@ void zxgame_destroy(zxgame_t *zxgame)
   /* Delete the window */
   window_delete_cloned(zxgame->w);
 
-  register_handlers(0, zxgame);
+  release_handlers(zxgame);
   tge_destroy(zxgame->tge);
   zxspectrum_destroy(zxgame->zx);
   free(zxgame->trans_tab);
@@ -1423,6 +1487,7 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale)
   if (scale == zxgame->scale.cur)
     return;
 
+  zxgame->scale.prev = zxgame->scale.cur;
   zxgame->scale.cur = scale;
 
 // check: how were scaling and extent different?

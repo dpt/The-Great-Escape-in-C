@@ -7,7 +7,7 @@
 #ifndef POLL_H
 #define POLL_H
 
-void poll_set_target(os_t time);
+void poll_set_target(os_t target);
 int poll(void);
 
 #endif /* POLL_H */

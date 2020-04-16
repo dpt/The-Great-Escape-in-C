@@ -44,10 +44,6 @@
 
 /* ----------------------------------------------------------------------- */
 
-#define APPNAME "GtEscape" /* short form for GtEscape$Dir etc. */
-
-/* ----------------------------------------------------------------------- */
-
 static event_message_handler message_quit,
                              message_palette_change,
                              message_mode_change,

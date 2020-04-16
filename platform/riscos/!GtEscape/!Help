@@ -1,26 +1,43 @@
-The Great Escape
+The Great Escape v0.90 (April 2020)
 ================
+This is The Great Escape application. It is a port to RISC OS of a
+ZX Spectrum game originally released in 1986. The game has been
+reverse engineered for the purposes of education from its original
+Z80 assembly form and then reimplemented as portable C code.
 
-This is The Great Escape application. It is a port to RISC OS of a ZX
-Spectrum game from 1986.
+Compatibility
+-------------
+RISC OS 3.1 or later.
 
+Instructions
+------------
+Launch the game and choose 'Instructions' from the icon bar menu.
+
+Copyright
+---------
+The original game was developed by Denton Designs and published by
+Ocean Software and. Since this is a reverse engineered game
+thirty-odd years old it's not possible for someone doing this as a
+hobby (for the purposes of preservation and education) to
+determine the current legal owners of the game.
+
+While I claim no copyright over the original parts of the game, I
+do claim copyright over the parts unique to this reimplementation.
 
 TODO
+----
+* Sound
+* Joystick
 
-- wonky scaling ops
-- gaps at edges of game sprite (inaccuracy in scaling - percentages not good enough)
+Acknowledgements
+----------------
+Thanks to David Ruck for TimerMod.
 
-- sound (big job)
+Changelog
+---------
+v0.90 (April 2020) - First beta test release
 
-- appengine changes
-  - appengine (lib) likely needs versioning
-
-- TimerMod won't load on RO3.1
-
-- write this !Help file
-
-
-problems without nested wimp
-- main menu gets a bit mangled
-- prog_info not resizing
-
+Contact
+-------
+dave@davespace.co.uk
+http://www.davespace.co.uk/
