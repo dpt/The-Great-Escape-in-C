@@ -10,11 +10,10 @@
 #include "oslib/os.h"
 
 #include "appengine/dialogues/scale.h"
-#include "appengine/graphics/drawable.h"
 #include "appengine/wimp/dialogue.h"
 
 #include "globals.h"
-#include "zxgame.h"
+//#include "zxgame.h"
 
 #include "zxscale.h"
 

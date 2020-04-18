@@ -52,6 +52,7 @@
 #include "zxgame.h"
 #include "zxgames.h"
 #include "zxscale.h"
+#include "zxsave.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -99,8 +100,9 @@ typedef int fix16_t;
 #define zxgame_FLAG_SNAP        (1u <<  7) /* whole pixel snapping (in fit-to-window mode) */
 #define zxgame_FLAG_HAVE_CARET  (1u <<  8) /* we own the caret */
 #define zxgame_FLAG_BIG_WINDOW  (1u <<  9) /* size window to screen */
-#define zxgame_FLAG_SOUND       (1u << 10) /* sound is enabled */
-#define zxgame_FLAG_WIDE_CTRANS (1u << 11) /* use wide ColourTrans table */
+#define zxgame_FLAG_HAVE_SOUND  (1u << 10) /* sound is available */
+#define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is enabled */
+#define zxgame_FLAG_WIDE_CTRANS (1u << 12) /* use wide ColourTrans table */
 
 /* ----------------------------------------------------------------------- */
 
@@ -575,7 +577,7 @@ static void speaker_handler(int on_off, void *opaque)
 
   zxgame_t *zxgame = opaque;
 
-  if ((zxgame->flags & zxgame_FLAG_SOUND) == 0)
+  if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
     return;
 
 #if 0
@@ -687,6 +689,134 @@ static void register_single_handlers(int reg)
                             event_ANY_WINDOW,
                             event_ANY_ICON,
                             NULL);
+}
+
+/* ----------------------------------------------------------------------- */
+
+typedef enum action
+{
+  SelectFixedScale,
+  OpenScaleViewDialogue,
+  ToggleBigWindow,
+  SelectScaledToFit,
+  ToggleSnapToPixels,
+  FullScreen,
+  ToggleMonochrome,
+  SpeedNormal,
+  SpeedMax,
+  Faster,
+  Slower,
+  TogglePause,
+  ToggleSound,
+  OpenSaveGame,
+  OpenSaveScreenshot,
+  ZoomOut,
+  ZoomIn,
+  ToggleZoom,
+  ResetZoom,
+  Close
+}
+action_t;
+
+static void action(action_t action)
+{
+  zxgame_t *zxgame = GLOBALS.current_zxgame;
+
+  switch (action)
+  {
+    case SelectFixedScale:
+      zxgame->flags &= ~zxgame_FLAG_FIT;
+      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      break;
+
+    case OpenScaleViewDialogue:
+      dialogue_show(zxgamescale_dlg);
+      break;
+
+    case ToggleBigWindow:
+      zxgame->flags ^= zxgame_FLAG_BIG_WINDOW;
+      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      break;
+
+    case SelectScaledToFit:
+      zxgame->flags |= zxgame_FLAG_FIT;
+      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      break;
+
+    case ToggleSnapToPixels:
+      zxgame->flags ^= zxgame_FLAG_SNAP;
+      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      break;
+
+    case FullScreen:
+      // TODO
+      break;
+
+    case ToggleMonochrome:
+      zxgame->flags ^= zxgame_FLAG_MONOCHROME;
+      set_palette(zxgame);
+      zxgame_update(zxgame, zxgame_UPDATE_COLOURS | zxgame_UPDATE_REDRAW);
+      break;
+
+    case SpeedNormal:
+      zxgame->speed = 100;
+      break;
+
+    case SpeedMax:
+      zxgame->speed = MAXSPEED;
+      break;
+
+    case Faster:
+      zxgame->speed += 20;
+      if (zxgame->speed >= MAXSPEED)
+        zxgame->speed = MAXSPEED;
+      break;
+
+    case Slower:
+      zxgame->speed -= 20;
+      if (zxgame->speed <= 0)
+        zxgame->speed = 1;
+      break;
+
+    case TogglePause:
+      zxgame->flags ^= zxgame_FLAG_PAUSED;
+      break;
+
+    case ToggleSound:
+      if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
+        zxgame->flags ^= zxgame_FLAG_SOUND_ON;
+      break;
+
+    case OpenSaveGame:
+      // TODO
+      // dialogue_show(zxgamesave_dlg);
+      break;
+
+    case OpenSaveScreenshot:
+      // TODO
+      // dialogue_show(zxgamesave_dlg);
+      break;
+
+    case ZoomOut:
+      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) / 2);
+      break;
+
+    case ZoomIn:
+      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) * 2);
+      break;
+
+    case ToggleZoom:
+      zxgame_set_scale(zxgame, zxgame->scale.prev);
+      break;
+
+    case ResetZoom:
+      zxgame_set_scale(zxgame, 100);
+      break;
+
+    case Close:
+      zxgame->flags |= zxgame_FLAG_QUIT;
+      break;
+  }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -808,6 +938,14 @@ static void tick(wimp_menu *m, int entry, int ticked)
                       wimp_MENU_TICKED);
 }
 
+static void shade(wimp_menu *m, int entry, int shaded)
+{
+  menu_set_icon_flags(m,
+                      entry,
+                      shaded ? wimp_ICON_SHADED : 0,
+                      wimp_ICON_SHADED);
+}
+
 static void zxgame_menu_update(void)
 {
   zxgame_t  *zxgame;
@@ -817,41 +955,44 @@ static void zxgame_menu_update(void)
   if (zxgame == NULL)
     return;
 
-  /* View menu */
+  /* "View" menu */
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
 
+  tick(m, VIEW_FIXED,      (zxgame->flags & zxgame_FLAG_FIT)        == 0);
+  tick(m, VIEW_SCALED,     (zxgame->flags & zxgame_FLAG_FIT)        != 0);
   tick(m, VIEW_MONOCHROME, (zxgame->flags & zxgame_FLAG_MONOCHROME) != 0);
 
-  /* Game menu */
+  /* "Fixed scale" menu */
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
-  m = m->entries[VIEW_GAME].sub_menu;
+  m = m->entries[VIEW_FIXED].sub_menu;
 
-  tick(m, GAME_FIT_WINDOW,  (zxgame->flags & zxgame_FLAG_FIT)  != 0);
-  tick(m, GAME_SNAP_PIXELS, (zxgame->flags & zxgame_FLAG_SNAP) != 0);
+  tick(m, FIXED_SELECTED,   (zxgame->flags & zxgame_FLAG_FIT)        == 0);
+  tick(m, FIXED_BIG_WINDOW, (zxgame->flags & zxgame_FLAG_BIG_WINDOW) != 0);
 
-  /* Window menu */
+  /* "Scaled to fit" menu */
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_VIEW].sub_menu;
-  m = m->entries[VIEW_WINDOW].sub_menu;
+  m = m->entries[VIEW_SCALED].sub_menu;
 
-  tick(m, WINDOW_FIT_GAME,   (zxgame->flags & zxgame_FLAG_BIG_WINDOW) == 0);
-  tick(m, WINDOW_FIT_SCREEN, (zxgame->flags & zxgame_FLAG_BIG_WINDOW) != 0);
+  tick(m, SCALED_SELECTED, (zxgame->flags & zxgame_FLAG_FIT)  != 0);
+  tick(m, SCALED_SNAP,     (zxgame->flags & zxgame_FLAG_SNAP) != 0);
 
-  /* Speed menu */
-
-  m = GLOBALS.zxgame_m->entries[ZXGAME_SPEED].sub_menu;
-
-  tick(m, SPEED_PAUSE,   (zxgame->flags & zxgame_FLAG_PAUSED) != 0);
-  tick(m, SPEED_100PC,   (zxgame->speed == 100));
-  tick(m, SPEED_MAXIMUM, (zxgame->speed == MAXSPEED));
-
-  /* Sound menu */
+  /* "Sound" menu */
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_SOUND].sub_menu;
 
-  tick(m, SOUND_ENABLED, (zxgame->flags & zxgame_FLAG_SOUND) != 0);
+  shade(m, SOUND_ENABLED, (zxgame->flags & zxgame_FLAG_HAVE_SOUND) == 0);
+  tick(m, SOUND_ENABLED, (zxgame->flags & zxgame_FLAG_SOUND_ON) != 0);
+
+  /* "Speed" menu */
+
+  m = GLOBALS.zxgame_m->entries[ZXGAME_SPEED].sub_menu;
+
+  tick(m, SPEED_100PC,   (zxgame->speed == 100));
+  tick(m, SPEED_MAXIMUM, (zxgame->speed == MAXSPEED));
+  tick(m, SPEED_PAUSE,   (zxgame->flags & zxgame_FLAG_PAUSED) != 0);
 }
 
 static int zxgame_event_mouse_click(wimp_event_no event_no,
@@ -901,22 +1042,79 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
 
   switch (key->c)
   {
+    /* Menu actions */
+
+    case 'F' - 64: /* Fixed scale > Selected */
+      action(SelectFixedScale);
+      break;
+    case wimp_KEY_F11: /* Fixed scale > Scale view */
+      action(OpenScaleViewDialogue);
+      break;
+    case 'G' - 64: /* Fixed scale > Big window */
+      action(ToggleBigWindow);
+      break;
+
+    case 'V' - 64: /* Scaled to fit > Selected */
+      action(SelectScaledToFit);
+      break;
+    case 'S' - 64: /* Scaled to fit > Snap to pixels */
+      action(ToggleSnapToPixels);
+      break;
+
+    case wimp_KEY_F10: /* View > Full screen */
+      action(FullScreen);
+      break;
+    case 'N' - 64: /* View > Monochrome */
+      action(ToggleMonochrome);
+      break;
+
+    case wimp_KEY_F3: /* Save > Save */
+      action(OpenSaveGame);
+      break;
+    case wimp_KEY_SHIFT | wimp_KEY_F3: /* Save > Screenshot */
+      action(OpenSaveScreenshot);
+      break;
+
+    case 'O' - 64: /* Sound > Enabled */
+      action(ToggleSound);
+      break;
+
+    case wimp_KEY_F5: /* Speed > Slower */
+      action(Slower);
+      break;
+    case wimp_KEY_F6: /* Speed > 100% */
+      action(SpeedNormal);
+      break;
+    case wimp_KEY_F7: /* Speed > Faster */
+      action(Faster);
+      break;
+    case wimp_KEY_SHIFT | wimp_KEY_F7: /* Speed > Maximum */
+      action(SpeedMax);
+      break;
+    case 'P' - 64: /* Speed > Pause */
+      action(TogglePause);
+      break;
+
+    /* Non-menu actions */
+
     case 'Q' - 64: /* Zoom out */
-      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) / 2);
+      action(ZoomOut);
       break;
     case 'W' - 64: /* Zoom in */
-      zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) * 2);
-      break;
-    case 'D' - 64: /* Reset zoom */
-      zxgame_set_scale(zxgame, 100);
+      action(ZoomIn);
       break;
     case 'T' - 64: /* Toggle zoom */
-      zxgame_set_scale(zxgame, zxgame->scale.prev);
+      action(ToggleZoom);
+      break;
+    case 'D' - 64: /* Reset zoom */
+      action(ResetZoom);
       break;
 
     case wimp_KEY_CONTROL | wimp_KEY_F2:
-      zxgame->flags |= zxgame_FLAG_QUIT;
+      action(Close);
       break;
+
+    /* Others */
 
     default:
       if (isalnum(key->c)           ||
@@ -963,41 +1161,40 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
   case ZXGAME_VIEW:
     switch (selection->items[1])
     {
-    case VIEW_GAME:
+    case VIEW_FIXED:
       switch (selection->items[2])
       {
-      case GAME_SCALE: /* is a submenu only */
+      case -1:
+      case FIXED_SELECTED:
+        action(SelectFixedScale);
         break;
 
-      case GAME_FIT_WINDOW:
-        GLOBALS.current_zxgame->flags ^= zxgame_FLAG_FIT;
-        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
-        break;
-
-      case GAME_SNAP_PIXELS:
-        GLOBALS.current_zxgame->flags ^= zxgame_FLAG_SNAP;
-        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      case FIXED_BIG_WINDOW:
+        action(ToggleBigWindow);
         break;
       }
       break;
 
-    case VIEW_WINDOW:
+    case VIEW_SCALED:
       switch (selection->items[2])
       {
-      case WINDOW_FIT_GAME:
-      case WINDOW_FIT_SCREEN:
-        GLOBALS.current_zxgame->flags &= ~zxgame_FLAG_BIG_WINDOW;
-        if (selection->items[2] == WINDOW_FIT_SCREEN)
-          GLOBALS.current_zxgame->flags ^= zxgame_FLAG_BIG_WINDOW;
-        zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      case -1:
+      case SCALED_SELECTED:
+        action(SelectScaledToFit);
+        break;
+
+      case SCALED_SNAP:
+        action(ToggleSnapToPixels);
         break;
       }
+      break;
+
+    case VIEW_FULL_SCREEN:
+      action(FullScreen);
       break;
 
     case VIEW_MONOCHROME:
-      GLOBALS.current_zxgame->flags ^= zxgame_FLAG_MONOCHROME;
-      set_palette(GLOBALS.current_zxgame);
-      zxgame_update(GLOBALS.current_zxgame, zxgame_UPDATE_COLOURS | zxgame_UPDATE_REDRAW);
+      action(ToggleMonochrome);
       break;
     }
     break;
@@ -1005,28 +1202,24 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
   case ZXGAME_SPEED:
     switch (selection->items[1])
     {
-    case SPEED_PAUSE:
-      GLOBALS.current_zxgame->flags ^= zxgame_FLAG_PAUSED;
-      break;
-
     case SPEED_100PC:
-      GLOBALS.current_zxgame->speed = 100;
+      action(SpeedNormal);
       break;
 
     case SPEED_MAXIMUM:
-      GLOBALS.current_zxgame->speed = MAXSPEED;
+      action(SpeedMax);
       break;
 
     case SPEED_FASTER:
-      GLOBALS.current_zxgame->speed += 20;
-      if (GLOBALS.current_zxgame->speed >= MAXSPEED)
-        GLOBALS.current_zxgame->speed = MAXSPEED;
+      action(Faster);
       break;
 
     case SPEED_SLOWER:
-      GLOBALS.current_zxgame->speed -= 20;
-      if (GLOBALS.current_zxgame->speed <= 0)
-        GLOBALS.current_zxgame->speed = 1;
+      action(Slower);
+      break;
+
+    case SPEED_PAUSE:
+      action(TogglePause);
       break;
     }
     break;
@@ -1035,7 +1228,7 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
     switch (selection->items[1])
     {
     case SOUND_ENABLED:
-      GLOBALS.current_zxgame->flags ^= zxgame_FLAG_SOUND;
+      action(ToggleSound);
       break;
     }
     break;
@@ -1353,19 +1546,18 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   zxgame->flags = zxgame_FLAG_FIRST | zxgame_FLAG_MENU;
 
-  // 1.64 is the RISC OS 3.6 version (hoist to main())
-  if (xos_cli("RMEnsure ColourTrans 1.64") == NULL)
+  if (GLOBALS.flags & Flag_HaveWideColourTrans)
     zxgame->flags |= zxgame_FLAG_WIDE_CTRANS;
 
-  if (0) { // if shared sound is available (hoist to main())
-    zxgame->flags |= zxgame_FLAG_SOUND;
-  }
+  if (GLOBALS.flags & Flag_HaveSharedSoundBuffer)
+    zxgame->flags |= zxgame_FLAG_HAVE_SOUND;
 
   zxgame->w = window_clone(GLOBALS.zxgame_w);
   if (zxgame->w == NULL)
     goto NoMem;
 
-  zxgame->scale.cur = zxgame->scale.prev = 100;
+  zxgame->scale.cur = 100;
+  zxgame->scale.prev = 50;
   zxgame->speed = 100;
   zxgame->border_size = GAMEBORDER;
 
@@ -1407,13 +1599,13 @@ error zxgame_create(zxgame_t **new_zxgame)
   if (zxgame->tge == NULL)
     goto Failure;
 
-  // maybe just do all the sound init lazily
-  zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH); // fixme: iff sound
-  if (zxgame->audio.fifo == NULL)
-    goto NoMem;
-
-  if (zxgame->flags & zxgame_FLAG_SOUND)
+  if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
   {
+    // maybe just do all the sound init lazily
+    zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH);
+    if (zxgame->audio.fifo == NULL)
+      goto NoMem;
+
     _swi(SharedSoundBuffer_OpenStream, _INR(0,1)|_OUT(0),
          0,
          message0("task"),
@@ -1456,7 +1648,7 @@ void zxgame_destroy(zxgame_t *zxgame)
 
   bitfifo_destroy(zxgame->audio.fifo);
 
-  if (zxgame->flags & zxgame_FLAG_SOUND)
+  if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
   {
     _swi(SharedSoundBuffer_CloseStream, _IN(0),
          zxgame->audio.buf); // stop audio dead
@@ -1507,7 +1699,7 @@ error zxgame_init(void)
 {
   error err;
 
-  /* main? Dependencies */
+  /* Dependencies */
 
   err = help_init();
   if (err)
@@ -1521,14 +1713,18 @@ error zxgame_init(void)
 
   /* Internal dependencies */
 
-  err = zxgamescale_dlg_init();
+  err = zxgamesave_dlg_init();
+  if (!err)
+    err = zxgamescale_dlg_init();
   if (err)
     return err;
 
   /* Menu */
 
   GLOBALS.zxgame_m = menu_create_from_desc(message0("menu.zxgame"),
-                                           dialogue_get_window(zxgamescale_dlg));
+                                           dialogue_get_window(zxgamescale_dlg),
+                                           dialogue_get_window(zxgamesave_dlg),
+                                           dialogue_get_window(zxgamesave_dlg));
 
   err = help_add_menu(GLOBALS.zxgame_m, "zxgame");
   if (err)
@@ -1544,6 +1740,7 @@ void zxgame_fin(void)
   menu_destroy(GLOBALS.zxgame_m);
 
   zxgamescale_dlg_fin();
+  zxgamesave_dlg_fin();
 
   register_single_handlers(0);
 

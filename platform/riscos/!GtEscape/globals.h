@@ -21,7 +21,9 @@
 
 enum
 {
-  Flag_Quit = 1 << 0
+  Flag_Quit                     = 1 << 0,
+  Flag_HaveWideColourTrans      = 1 << 1,
+  Flag_HaveSharedSoundBuffer    = 1 << 2
 };
 
 typedef unsigned int Flags;

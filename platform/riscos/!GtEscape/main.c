@@ -83,6 +83,13 @@ int main(void)
     message_QUIT
   }};
 
+  /* ColourTrans 1.64 is the RISC OS 3.6 version,
+   * needed for wide translation table support. */
+  if (xos_cli("RMEnsure ColourTrans 1.64") == NULL)
+    GLOBALS.flags |= Flag_HaveWideColourTrans;
+
+  if (xos_cli("RMEnsure SharedSoundBuffer 0.07") == NULL)
+    GLOBALS.flags |= Flag_HaveSharedSoundBuffer;
 
   open_messages(APPNAME "Res:Messages");
 
@@ -104,7 +111,7 @@ int main(void)
 
   // choices init goes here
 
-  // init subsystems
+  /* Initialise subsystems */
   zxgame_init();
   tge_icon_bar_init();
 
@@ -117,7 +124,7 @@ int main(void)
 
   register_event_handlers(0);
 
-  // fin subsystems
+  /* Finalise subsystems */
   tge_icon_bar_fin();
   zxgame_fin();
 
