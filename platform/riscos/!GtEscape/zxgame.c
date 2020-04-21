@@ -22,6 +22,7 @@
 #include "oslib/wimpreadsysinfo.h"
 
 #include "appengine/types.h"
+#include "appengine/base/bsearch.h"
 #include "appengine/base/messages.h"
 #include "appengine/base/os.h"
 #include "appengine/base/oserror.h"
@@ -64,6 +65,8 @@
 #define GAMEEIG         (2)     /* natural scale of game (EIG 2 = 45dpi) */
 
 #define MAXSTAMPS       (4)     /* max depth of timestamps stack */
+#define SPEEDQ          (20)    /* smallest unit of speed (percent) */
+#define NORMSPEED       (100)   /* normal speed (percent) */
 #define MAXSPEED        (99999) /* fastest possible game (percent) */
 
 /* ----------------------------------------------------------------------- */
@@ -143,7 +146,9 @@ struct zxgame
   os_factors            factors;
   osspriteop_trans_tab *trans_tab;
 
-  int                   win_width, win_height; /* OS units */
+  int                   window_w, window_h; /* OS units */
+  int                   xscroll, yscroll;
+
   os_box                extent; /* Extent of window w */
   os_box                imgbox; /* Ewhere to draw the image, positioned within the window extent */
 
@@ -722,11 +727,13 @@ static void action(action_t action)
 {
   zxgame_t *zxgame = GLOBALS.current_zxgame;
 
+  // TODO: Narrow these update flags down where possible.
+
   switch (action)
   {
     case SelectFixedScale:
       zxgame->flags &= ~zxgame_FLAG_FIT;
-      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
       break;
 
     case OpenScaleViewDialogue:
@@ -735,17 +742,31 @@ static void action(action_t action)
 
     case ToggleBigWindow:
       zxgame->flags ^= zxgame_FLAG_BIG_WINDOW;
-      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      if ((zxgame->flags & zxgame_FLAG_FIT) == 0)
+        zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
       break;
 
     case SelectScaledToFit:
-      zxgame->flags |= zxgame_FLAG_FIT;
-      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      {
+        wimp_window_state state;
+
+        state.w = zxgame->w;
+        wimp_get_window_state(&state);
+
+        zxgame->window_w = state.visible.x1 - state.visible.x0;
+        zxgame->window_h = state.visible.y1 - state.visible.y0;
+        zxgame->xscroll  = state.xscroll;
+        zxgame->yscroll  = state.yscroll;
+
+        zxgame->flags |= zxgame_FLAG_FIT;
+        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
+      }
       break;
 
     case ToggleSnapToPixels:
       zxgame->flags ^= zxgame_FLAG_SNAP;
-      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      if (zxgame->flags & zxgame_FLAG_FIT)
+        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
       break;
 
     case FullScreen:
@@ -759,7 +780,7 @@ static void action(action_t action)
       break;
 
     case SpeedNormal:
-      zxgame->speed = 100;
+      zxgame->speed = NORMSPEED;
       break;
 
     case SpeedMax:
@@ -767,15 +788,15 @@ static void action(action_t action)
       break;
 
     case Faster:
-      zxgame->speed += 20;
+      zxgame->speed += SPEEDQ;
       if (zxgame->speed >= MAXSPEED)
         zxgame->speed = MAXSPEED;
       break;
 
     case Slower:
-      zxgame->speed -= 20;
-      if (zxgame->speed <= 0)
-        zxgame->speed = 1;
+      zxgame->speed -= SPEEDQ;
+      if (zxgame->speed <= SPEEDQ)
+        zxgame->speed = SPEEDQ;
       break;
 
     case TogglePause:
@@ -891,22 +912,24 @@ static int zxgame_event_open_window_request(wimp_event_no event_no,
 
   if (zxgame->flags & zxgame_FLAG_FIT)
   {
-    int win_width, win_height;
+    int window_w, window_h;
 
-    /* Calculate the window's visible width and height (OS units) */
-    win_width  = open->visible.x1 - open->visible.x0;
-    win_height = open->visible.y1 - open->visible.y0;
+    /* Calculate the window's visible width and height (OS units). */
+    window_w = open->visible.x1 - open->visible.x0;
+    window_h = open->visible.y1 - open->visible.y0;
 
-    if (win_width != zxgame->win_width || win_height != zxgame->win_height)
+    if (window_w != zxgame->window_w || window_h != zxgame->window_h)
     {
-      zxgame->win_width  = win_width;
-      zxgame->win_height = win_height;
+      zxgame->window_w = window_w;
+      zxgame->window_h = window_h;
+      zxgame->xscroll  = open->xscroll;
+      zxgame->yscroll  = open->yscroll;
 
-      zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+      zxgame_update(zxgame, zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
     }
 
-    /* Disable scrolling */
-    //open->xscroll = open->yscroll = 0;
+    /* Inhibit scrolling. */
+    open->xscroll = open->yscroll = 0;
   }
 
   wimp_open_window(open);
@@ -990,7 +1013,7 @@ static void zxgame_menu_update(void)
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_SPEED].sub_menu;
 
-  tick(m, SPEED_100PC,   (zxgame->speed == 100));
+  tick(m, SPEED_100PC,   (zxgame->speed == NORMSPEED));
   tick(m, SPEED_MAXIMUM, (zxgame->speed == MAXSPEED));
   tick(m, SPEED_PAUSE,   (zxgame->flags & zxgame_FLAG_PAUSED) != 0);
 }
@@ -1018,7 +1041,7 @@ static int zxgame_event_mouse_click(wimp_event_no event_no,
   }
   else
   {
-    wimp_set_caret_position((zxgame->flags & zxgame_FLAG_HAVE_CARET) ? wimp_BACKGROUND : pointer->w,
+    wimp_set_caret_position((pointer->buttons == wimp_CLICK_SELECT) ? pointer->w : wimp_BACKGROUND,
                             wimp_ICON_WINDOW,
                             0,0,
                             1 << 25, /* invisible */
@@ -1141,9 +1164,39 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
                                        wimp_block   *block,
                                        void         *handle)
 {
+#define PACK(a,b,c) ((((a+1) & 0xFF) << 16) | (((b+1) & 0xFF) << 8) | (((c+1) & 0xFF) << 0))
+
+  static const struct
+  {
+    unsigned int items;
+    action_t     action;
+  }
+  map[] =
+  {
+    { PACK(ZXGAME_VIEW,  VIEW_FIXED,       -1),               SelectFixedScale },
+    { PACK(ZXGAME_VIEW,  VIEW_FIXED,       FIXED_SELECTED),   SelectFixedScale },
+    { PACK(ZXGAME_VIEW,  VIEW_FIXED,       FIXED_BIG_WINDOW), ToggleBigWindow  },
+    { PACK(ZXGAME_VIEW,  VIEW_SCALED,      -1),               SelectScaledToFit },
+    { PACK(ZXGAME_VIEW,  VIEW_SCALED,      SCALED_SELECTED),  SelectScaledToFit },
+    { PACK(ZXGAME_VIEW,  VIEW_SCALED,      SCALED_SNAP),      ToggleSnapToPixels },
+    { PACK(ZXGAME_VIEW,  VIEW_FULL_SCREEN, -1),               FullScreen },
+    { PACK(ZXGAME_VIEW,  VIEW_MONOCHROME,  -1),               ToggleMonochrome },
+    { PACK(ZXGAME_SOUND, SOUND_ENABLED,    -1),               ToggleSound },
+    { PACK(ZXGAME_SPEED, SPEED_100PC,      -1),               SpeedNormal },
+    { PACK(ZXGAME_SPEED, SPEED_MAXIMUM,    -1),               SpeedMax },
+    { PACK(ZXGAME_SPEED, SPEED_FASTER,     -1),               Faster },
+    { PACK(ZXGAME_SPEED, SPEED_SLOWER,     -1),               Slower },
+    { PACK(ZXGAME_SPEED, SPEED_PAUSE,      -1),               TogglePause },
+  };
+
+  const size_t stride = sizeof(map[0]);
+  const size_t nelems = sizeof(map) / stride;
+
   wimp_selection *selection;
   wimp_menu      *last;
   wimp_pointer    p;
+  unsigned int    item;
+  int             i;
 
   NOT_USED(event_no);
   NOT_USED(handle);
@@ -1156,83 +1209,11 @@ static int zxgame_event_menu_selection(wimp_event_no event_no,
   if (last != GLOBALS.zxgame_m)
     return event_NOT_HANDLED;
 
-  switch (selection->items[0])
-  {
-  case ZXGAME_VIEW:
-    switch (selection->items[1])
-    {
-    case VIEW_FIXED:
-      switch (selection->items[2])
-      {
-      case -1:
-      case FIXED_SELECTED:
-        action(SelectFixedScale);
-        break;
+  item = PACK(selection->items[0], selection->items[1], selection->items[2]);
 
-      case FIXED_BIG_WINDOW:
-        action(ToggleBigWindow);
-        break;
-      }
-      break;
-
-    case VIEW_SCALED:
-      switch (selection->items[2])
-      {
-      case -1:
-      case SCALED_SELECTED:
-        action(SelectScaledToFit);
-        break;
-
-      case SCALED_SNAP:
-        action(ToggleSnapToPixels);
-        break;
-      }
-      break;
-
-    case VIEW_FULL_SCREEN:
-      action(FullScreen);
-      break;
-
-    case VIEW_MONOCHROME:
-      action(ToggleMonochrome);
-      break;
-    }
-    break;
-
-  case ZXGAME_SPEED:
-    switch (selection->items[1])
-    {
-    case SPEED_100PC:
-      action(SpeedNormal);
-      break;
-
-    case SPEED_MAXIMUM:
-      action(SpeedMax);
-      break;
-
-    case SPEED_FASTER:
-      action(Faster);
-      break;
-
-    case SPEED_SLOWER:
-      action(Slower);
-      break;
-
-    case SPEED_PAUSE:
-      action(TogglePause);
-      break;
-    }
-    break;
-
-  case ZXGAME_SOUND:
-    switch (selection->items[1])
-    {
-    case SOUND_ENABLED:
-      action(ToggleSound);
-      break;
-    }
-    break;
-  }
+  i = bsearch_uint(&map[0].items, nelems, stride, item);
+  if (i >= 0)
+    action(map[i].action);
 
   wimp_get_pointer_info(&p);
   if (p.buttons & wimp_CLICK_ADJUST)
@@ -1309,133 +1290,164 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
   if (flags & zxgame_UPDATE_COLOURS)
     gentranstab(zxgame);
 
-  if (flags & (zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT))
+
+// put if (scaling/extent/window) ... around this big block
+
+
+  const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
+  const int border = zxgame->border_size; /* pixels */
+
+  scale_t   scale;
+  int       screen_xeig, screen_yeig;
+  int       extent_w, extent_h;
+
+  scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
+
+  read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
+
+  if ((zxgame->flags & zxgame_FLAG_FIT) == 0)
   {
-    const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
-    const int border = zxgame->border_size; /* pixels */
+    /* "Fixed scale" mode. */
 
-    scale_t   scale;
-    int       minsize;
-    int       screen_xeig, screen_yeig;
-    int       extent_w, extent_h;
-    scale_t   scaled_w, scaled_h;
-    int       left_x, bottom_y;
-
-    scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
-
-    read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
-
-    // set this flag if any of its controlling vars change (e.g. scale)
     if (flags & zxgame_UPDATE_EXTENT)
     {
-      // updating the extent when in openwindow is a bad idea - avoid
+      int min_w, min_h;
+      int game_w, game_h;
+      int minsize;
 
-      if (zxgame->flags & zxgame_FLAG_FIT)
-      {
-        /* "Fit to window" mode. */
+      /* Size the window. If a big window is configured then use it as the
+       * _minimum_ size of the window. */
 
-        /* Window is to be sized to screen. */
-        read_max_visible_area(zxgame->w, &extent_w, &extent_h); /* read max workarea size */
-
-        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
-        // TODO: make use of the returned minsize flag
-
-        /* Save the extent. */
-        zxgame->extent.x0 = 0;
-        zxgame->extent.y0 = -extent_h;
-        zxgame->extent.x1 = extent_w;
-        zxgame->extent.y1 = 0;
-
-        int reduced_border_x, reduced_border_y;
-        int games_per_window;
-
-        /* How many 1:1 games fit comfortably in the window (at its current size)? */
-        reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels -> OS units */
-        do
-        {
-          fix16_t game_widths_per_window, game_heights_per_window;
-
-          game_widths_per_window  = (zxgame->win_width  - reduced_border_x * 2) * FIX16_1 / (GAMEWIDTH  << GAMEEIG);
-          game_heights_per_window = (zxgame->win_height - reduced_border_y * 2) * FIX16_1 / (GAMEHEIGHT << GAMEEIG);
-          games_per_window = MIN(game_widths_per_window, game_heights_per_window);
-          if (reduced_border_x > 0) reduced_border_x -= screen_xeig;
-          if (reduced_border_y > 0) reduced_border_y -= screen_yeig;
-        }
-        // loop while there's borders to reduce and we're still struggling to fit a whole game in the window
-        while (games_per_window < FIX16_1 && (reduced_border_x > 0 || reduced_border_y > 0));
-
-        /* Snap the game scale to whole units. */
-        if (games_per_window >= FIX16_1 && (zxgame->flags & zxgame_FLAG_SNAP))
-          scale = (games_per_window >> 16) * SCALE_1;
-        else
-          scale = (games_per_window * SCALE_1) >> 16;
-        zxgame->scale.cur = scale * 100 / SCALE_1; /* scale_t -> % */
-        zxgame->scale.cur = CLAMP(zxgame->scale.cur, 1, 8000);
-        flags |= zxgame_UPDATE_SCALING;
-
-        scaled_w = ((GAMEWIDTH  + reduced_border_x * 2) << image_xeig) * scale / SCALE_1;
-        scaled_h = ((GAMEHEIGHT + reduced_border_y * 2) << image_yeig) * scale / SCALE_1;
-        snap2px(&scaled_w, &scaled_h);
-
-        /* Centre the box. */
-        left_x   = zxgame->extent.x0 + (zxgame->win_width  - scaled_w) / 2;
-        bottom_y = zxgame->extent.y0 + (zxgame->win_height - scaled_h) / 2;
-        snap2px(&left_x, &bottom_y);
-     }
+      if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
+        /* Not ideally named: reads max workarea size given current screen */
+        read_max_visible_area(zxgame->w, &min_w, &min_h);
       else
-      {
-        /* Non-"Fit to window" mode. */
+        min_w = min_h = 0;
 
-        if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
-        {
-          /* Window is to be sized to screen. */
-          read_max_visible_area(zxgame->w, &extent_w, &extent_h); /* read max workarea size */
-        }
-        else
-        {
-          /* Window is to be sized to game plus border. */
-          extent_w = ((GAMEWIDTH  + border * 2) << image_xeig) * scale / SCALE_1;
-          extent_h = ((GAMEHEIGHT + border * 2) << image_yeig) * scale / SCALE_1;
-          snap2px(&extent_w, &extent_h);
-        }
+      /* Calculate dimensions of scaled game+border. */
+      game_w = ((GAMEWIDTH  + border * 2) << image_xeig) * scale / SCALE_1;
+      game_h = ((GAMEHEIGHT + border * 2) << image_yeig) * scale / SCALE_1;
 
-        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
-        // TODO: make use of the returned minsize flag
+      extent_w = MAX(min_w, game_w);
+      extent_h = MAX(min_h, game_h);
+      snap2px(&extent_w, &extent_h);
 
-        /* Save the extent. */
-        zxgame->extent.x0 = 0;
-        zxgame->extent.y0 = -extent_h;
-        zxgame->extent.x1 = extent_w;
-        zxgame->extent.y1 = 0;
+      minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+      // TODO: If we hit minsize then read the size we minned out at.
 
-        scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
-        scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
-        snap2px(&scaled_w, &scaled_h);
+      /* Save the extent. */
+      zxgame->extent.x0 = 0;
+      zxgame->extent.y0 = -extent_h;
+      zxgame->extent.x1 = extent_w;
+      zxgame->extent.y1 = 0;
+    }
 
-        /* Centre the box. */
-        left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
-        bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
-        snap2px(&left_x, &bottom_y);
-      }
+    if (flags & zxgame_UPDATE_SCALING)
+    {
+      scale_t scaled_w, scaled_h;
+      int     left_x, bottom_y;
+
+      /* Calculate dimensions of scaled game only. */
+      scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
+      scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
+      snap2px(&scaled_w, &scaled_h);
+
+      /* Centre the box in the work area. */
+      extent_w = zxgame->extent.x1 - zxgame->extent.x0;
+      extent_h = zxgame->extent.y1 - zxgame->extent.y0;
+      left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
+      bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
+      snap2px(&left_x, &bottom_y);
 
       zxgame->imgbox.x0 = left_x;
       zxgame->imgbox.y0 = bottom_y;
       zxgame->imgbox.x1 = left_x   + scaled_w;
       zxgame->imgbox.y1 = bottom_y + scaled_h;
       snapbox2px(&zxgame->imgbox);
-    }
 
-    /* Update sprite scaling */
-    if (flags & zxgame_UPDATE_SCALING)
-    {
+      /* Update sprite scaling. */
       os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
       zxgame->factors.xmul <<= image_xeig;
       zxgame->factors.ymul <<= image_yeig;
       zxgame->factors.xdiv <<= screen_xeig;
       zxgame->factors.ydiv <<= screen_yeig;
-      //fprintf(stderr, "zxgame_update: factors: mul %d %d div %d %d\n",
-      //        zxgame->factors.xmul, zxgame->factors.ymul,
-      //        zxgame->factors.xdiv, zxgame->factors.ydiv);
+    }
+  }
+  else
+  {
+    /* "Scaled to fit" mode. */
+
+    if (flags & zxgame_UPDATE_EXTENT)
+    {
+      int minsize;
+
+      /* Window is to be sized to screen. */
+      read_max_visible_area(zxgame->w, &extent_w, &extent_h);
+
+      minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+      // TODO: If we hit minsize then read the size we minned out at.
+
+      /* Save the extent. */
+      zxgame->extent.x0 = 0;
+      zxgame->extent.y0 = -extent_h;
+      zxgame->extent.x1 = extent_w;
+      zxgame->extent.y1 = 0;
+    }
+
+    if (flags & zxgame_UPDATE_WINDOW)
+    {
+      int     reduced_border_x, reduced_border_y;
+      int     games_per_window;
+      scale_t scaled_w, scaled_h;
+      int     left_x, bottom_y;
+
+      /* How many 1:1 games fit comfortably in the window (at this size)? */
+      reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels -> OS units */
+      do
+      {
+        fix16_t game_widths_per_window, game_heights_per_window;
+
+        game_widths_per_window  = (zxgame->window_w - reduced_border_x * 2) * FIX16_1 / (GAMEWIDTH  << GAMEEIG);
+        game_heights_per_window = (zxgame->window_h - reduced_border_y * 2) * FIX16_1 / (GAMEHEIGHT << GAMEEIG);
+        games_per_window = MIN(game_widths_per_window, game_heights_per_window);
+        if (reduced_border_x >= screen_xeig) reduced_border_x -= screen_xeig;
+        if (reduced_border_y >= screen_yeig) reduced_border_y -= screen_yeig;
+      }
+      /* Loop while there's borders to reduce and we're still struggling to
+       * fit a whole game in the window. */
+      while (games_per_window < FIX16_1 && (reduced_border_x > 0 || reduced_border_y > 0));
+
+      /* Snap the game scale to whole units. */
+      if (games_per_window >= FIX16_1 && (zxgame->flags & zxgame_FLAG_SNAP))
+        scale = (games_per_window >> 16) * SCALE_1;
+      else
+        scale = (games_per_window * SCALE_1) >> 16;
+      zxgame->scale.cur = scale * 100 / SCALE_1; /* scale_t -> % */
+      zxgame->scale.cur = CLAMP(zxgame->scale.cur, 1, 8000);
+
+      /* Calculate dimensions of scaled game only. */
+      scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
+      scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
+      snap2px(&scaled_w, &scaled_h);
+
+      /* Centre the box in the visible area. */
+      left_x   = zxgame->xscroll + (zxgame->window_w - scaled_w) / 2;
+      bottom_y = zxgame->yscroll + (zxgame->window_h - scaled_h) / 2;
+      bottom_y -= zxgame->window_h;
+      snap2px(&left_x, &bottom_y);
+
+      zxgame->imgbox.x0 = left_x;
+      zxgame->imgbox.y0 = bottom_y;
+      zxgame->imgbox.x1 = left_x   + scaled_w;
+      zxgame->imgbox.y1 = bottom_y + scaled_h;
+      snapbox2px(&zxgame->imgbox);
+
+      /* Update sprite scaling. */
+      os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
+      zxgame->factors.xmul <<= image_xeig;
+      zxgame->factors.ymul <<= image_yeig;
+      zxgame->factors.xdiv <<= screen_xeig;
+      zxgame->factors.ydiv <<= screen_yeig;
     }
   }
 
@@ -1558,7 +1570,7 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   zxgame->scale.cur = 100;
   zxgame->scale.prev = 50;
-  zxgame->speed = 100;
+  zxgame->speed = NORMSPEED;
   zxgame->border_size = GAMEBORDER;
 
   sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 4, TRUE);
@@ -1682,7 +1694,6 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale)
   zxgame->scale.prev = zxgame->scale.cur;
   zxgame->scale.cur = scale;
 
-// check: how were scaling and extent different?
   zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
 }
 

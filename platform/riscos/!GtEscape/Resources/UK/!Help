@@ -1,27 +1,30 @@
 The Great Escape - Help for v0.90 (April 2020)
 ==============================================
 This is The Great Escape application. It is a port
-to RISC OS of a ZX Spectrum game originally
-released in 1986. The game has been reverse
-engineered for the purposes of education from its
-original Z80 assembly form, then reimplemented
-as portable C code and finally rebuilt for the
-RISC OS desktop.
+to RISC OS of a classic isometric ZX Spectrum game
+originally released in 1986.
+
+The game has been reverse engineered for the
+purposes of education from its original Z80
+assembly form, reimplemented as portable C code
+and finally rebuilt for the RISC OS desktop.
 
 Compatibility
 -------------
-RISC OS 3.1 or later.
+* RISC OS 3.1 or later.
+* Since this is a desktop game, an ARM250 or
+  better system is recommended.
 
-Instructions
-------------
+How To Play
+-----------
 For the full instructions launch the game and
 choose 'Instructions' from the icon bar menu.
 
 Copyright
 ---------
 The original game was developed by Denton Designs
-and published by Ocean Software and. Since this is
-a reverse engineered game thirty-odd years old
+and published by Ocean Software. Since this is a
+reverse engineered game some thirty-odd years old
 it's not possible for someone doing this as a
 hobby (for the purposes of preservation and
 education) to determine the current legal owners
@@ -31,18 +34,36 @@ While I claim no copyright over the original parts
 of the game, I do claim copyright over the parts
 unique to this reimplementation.
 
-TODO
-----
-* Sound
-* Joystick
+TODOs / Missing Features
+------------------------
+* Full screen mode
+* Sound support
+* Save games
+* Joystick support
 
 Acknowledgements
 ----------------
+Thanks to Justin Fletcher for StubsG.
 Thanks to David Ruck for TimerMod.
+Thanks to Richard Dymond for SkoolKit.
 
 Changelog
 ---------
 v0.90 (April 2020) - First beta test release
+
+Background
+-----------
+Original game disassembly:
+http://dpt.github.io/The-Great-Escape/
+
+Disassembly project:
+https://github.com/dpt/The-Great-Escape/
+
+Porting the game to C project:
+https://github.com/dpt/The-Great-Escape-in-C/
+
+Project write-up:
+http://www.davespace.co.uk/the.great.escape/
 
 Contact
 -------

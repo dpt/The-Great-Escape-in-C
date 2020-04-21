@@ -1,0 +1,27 @@
+| >MkRelease [GtEscape]
+|
+
+Set APP GtEscape
+Set V 090
+
+|
+
+Set In$Path <Obey$Dir>.^.
+Set Out$Dir <Obey$Dir>.^.Release.!<APP>
+SetMacro Out$Path <Out$Dir>.
+
+CDir <Out$Dir>
+
+Alias C Copy In:%%0 Out:%%0 A ~C ~D F L N ~P ~Q R ~S ~T ~V
+
+C !Boot      
+C !Help      
+C !Run       
+C !RunImage  
+C !Sprites  
+C !Sprites22
+C AppEngine 
+C Resources
+C TimerMod
+
+zip -r -9 -u -b <Wimp$ScrapDir> <Obey$Dir>.<APP>-<V>/zip !GtEscape

@@ -1,11 +1,39 @@
-- stretch to fit mode is broken
+next up:
+
+- big windows must resized on mode changes
+- big windows must be a minimum size for huge zooms
+
+- check that closing games works as expected (releasing mem)
+
+
+longer term:
+
+- snapping /could/ snap more often on higher res screens
 - interactive help needs finishing
-- main() checking for modules
-
-
-next up
-
+- full screen mode (for speed) 
 - sound support
-- perhaps a prototype version first
+  - perhaps a prototype version first
 - save games, load games
 
+
+questions:
+
+- is squeeze ok to use now?
+- do i actually need wide colourtrans?
+- why didn't stubsg support long long for me?
+- concerns about speed - need to test on a real ARM2
+
+
+game bugs to check out:
+
+- saw the item room item mispositioned
+- saw the hero trapped endlessly in solitary
+
+
+done:
+
+- main() should check for modules [done]
+- stretch to fit mode is broken [done]
+- fix window focus capture (gain/lose=select/adjust) [done]
+- set 144k wimpslot [done]
+- windows being off-screen after mode change [done - check]

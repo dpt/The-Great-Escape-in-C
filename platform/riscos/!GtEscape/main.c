@@ -167,7 +167,7 @@ static int kick_update_event_null_reason_code(wimp_event_no event_no,
   NOT_USED(block);
   NOT_USED(handle);
 
-  zxgame_update_all(zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+  zxgame_update_all(zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW); // + update_window too
 
   event_deregister_wimp_handler(wimp_NULL_REASON_CODE,
                                 event_ANY_WINDOW,
@@ -185,23 +185,19 @@ static int message_mode_change(wimp_message *message, void *handle)
 
   cache_mode_vars();
 
-  zxgame_update_all(zxgame_UPDATE_COLOURS | zxgame_UPDATE_SCALING);
+  zxgame_update_all(zxgame_UPDATE_COLOURS);
 
-  // update all game windows
+  /* Since we can't change the extent of windows on a mode change, we need
+   * to register a callback to perform the work later on. If there was a
+   * way to test if the screen resolution had actually changed then I could
+   * avoid this. */
+  event_register_wimp_handler(wimp_NULL_REASON_CODE,
+                              event_ANY_WINDOW,
+                              event_ANY_ICON,
+                              kick_update_event_null_reason_code,
+                              NULL);
 
-//  if (GLOBALS.choices.viewer.size == 1)
-//  {
-//    /* Since we can't change the extent of windows on a mode change, we need
-//     * to register a callback to perform the work later on. If there was a
-//     * way to test if the screen resolution had actually changed then I could
-//     * avoid this. */
-//
-//    event_register_wimp_handler(wimp_NULL_REASON_CODE,
-//                                event_ANY_WINDOW,
-//                                event_ANY_ICON,
-//                                kick_update_event_null_reason_code,
-//                                NULL);
-//  }
+                              // can maybe do this on open_window?
 
   return event_PASS_ON;
 }
