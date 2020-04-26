@@ -18,7 +18,11 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/TheGreatEscape.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * Identifiers of game messages.
@@ -60,6 +64,8 @@ void queue_message(tgestate_t *state,
                    message_t   message_index);
 /* $7D48 */
 void message_display(tgestate_t *state);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MESSAGES_H */
 

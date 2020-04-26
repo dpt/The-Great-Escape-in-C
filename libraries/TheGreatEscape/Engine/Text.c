@@ -15,12 +15,19 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
+#include <stddef.h>
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
 
 #include "TheGreatEscape/Font.h"
-#include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Screen.h"
-#include "TheGreatEscape/State.h"
+#include "TheGreatEscape/Tiles.h"
+
 #include "TheGreatEscape/Text.h"
 
 /* ----------------------------------------------------------------------- */

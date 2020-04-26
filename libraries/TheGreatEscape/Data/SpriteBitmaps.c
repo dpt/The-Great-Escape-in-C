@@ -15,15 +15,19 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-/**
- * $D026: Sprite bitmaps and masks.
- */
+/* ----------------------------------------------------------------------- */
 
-#include <stdint.h>
+#include "C99/Types.h"
 
 #include "TheGreatEscape/Pixels.h"
 
 #include "TheGreatEscape/SpriteBitmaps.h"
+
+/* ----------------------------------------------------------------------- */
+
+/**
+ * $D026: Sprite bitmaps and masks.
+ */
 
 // 16x29
 const uint8_t bitmap_commandant_facing_top_left_4[] =
@@ -1604,5 +1608,7 @@ const uint8_t mask_stove[] =
   X_______,_______X,
   ____XX__,__XX____,
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

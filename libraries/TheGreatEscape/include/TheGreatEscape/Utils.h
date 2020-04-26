@@ -18,6 +18,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/* ----------------------------------------------------------------------- */
+
+#include <assert.h>
+#include <stddef.h>
+
+#include "C99/Types.h"
+
 #include "TheGreatEscape/TheGreatEscape.h"
 
 /* ----------------------------------------------------------------------- */
@@ -31,8 +38,8 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 /**
- * Given a pointer p, its parent structure type t and structure member name f,
- * returns the parent structure.
+ * Given a pointer p, its parent structure type t and structure member name
+ * f, returns the parent structure.
  */
 #define structof(p,t,f) ((t*)((uintptr_t)(p) - offsetof(t,f)))
 

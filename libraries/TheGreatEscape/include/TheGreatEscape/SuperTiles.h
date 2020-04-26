@@ -18,9 +18,13 @@
 #ifndef SUPER_TILES_H
 #define SUPER_TILES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
 
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * A supertile is a 4x4 array of tile indices.
@@ -46,6 +50,8 @@ enum
  * 'supertiles' defines all of the supertiles.
  */
 extern const supertile_t supertiles[supertileindex__LIMIT];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* SUPER_TILES_H */
 

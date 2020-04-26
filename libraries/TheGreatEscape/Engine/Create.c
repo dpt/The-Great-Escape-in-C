@@ -15,16 +15,19 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "TheGreatEscape/State.h"
-
-#include "TheGreatEscape/Messages.h"
-#include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Types.h"
+#include "TheGreatEscape/InteriorObjectDefs.h"
+#include "TheGreatEscape/Messages.h"
+#include "TheGreatEscape/Rooms.h"
+#include "TheGreatEscape/State.h"
 
 /* ----------------------------------------------------------------------- */
 

@@ -20,14 +20,23 @@
  * Only used by plot_statics_and_menu_text().
  */
 
-#include <assert.h>
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
+#include <assert.h>
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Types.h"
+#include "TheGreatEscape/Asserts.h"
+#include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
-#include "TheGreatEscape/StaticGraphics.h"
 #include "TheGreatEscape/StaticTiles.h"
-#include "TheGreatEscape/Main.h"
+#include "TheGreatEscape/Utils.h"
+
+#include "TheGreatEscape/StaticGraphics.h"
 
 /* ----------------------------------------------------------------------- */
 

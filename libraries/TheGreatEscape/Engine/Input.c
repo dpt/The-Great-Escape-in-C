@@ -15,11 +15,15 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
 
-#include "TheGreatEscape/Input.h"
+#include "C99/Types.h"
+
 #include "TheGreatEscape/State.h"
-#include "TheGreatEscape/Utils.h"
+
+#include "TheGreatEscape/Input.h"
 
 /* ----------------------------------------------------------------------- */
 

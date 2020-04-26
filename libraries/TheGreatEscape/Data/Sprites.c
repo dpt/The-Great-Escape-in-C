@@ -15,11 +15,13 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
 #include "TheGreatEscape/SpriteBitmaps.h"
 
 #include "TheGreatEscape/Sprites.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * $CE22: Sprites: objects which can move.
@@ -77,5 +79,7 @@ const spritedef_t sprites[sprite__LIMIT] =
   { 3, 27, bitmap_commandant_facing_bottom_right_3, mask_various_facing_bottom_right_3 },
   { 3, 28, bitmap_commandant_facing_bottom_right_4, mask_various_facing_bottom_right_4 },
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

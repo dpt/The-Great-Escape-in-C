@@ -578,9 +578,9 @@ static void border_handler(int colour, void *opaque)
 /* Game callback. */
 static void speaker_handler(int on_off, void *opaque)
 {
-  NOT_USED(on_off);
-
   zxgame_t *zxgame = opaque;
+
+  NOT_USED(on_off);
 
   if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
     return;
@@ -1291,163 +1291,164 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
     gentranstab(zxgame);
 
 
-// put if (scaling/extent/window) ... around this big block
+  // put if (scaling/extent/window) ... around this big block
 
-
-  const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
-  const int border = zxgame->border_size; /* pixels */
-
-  scale_t   scale;
-  int       screen_xeig, screen_yeig;
-  int       extent_w, extent_h;
-
-  scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
-
-  read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
-
-  if ((zxgame->flags & zxgame_FLAG_FIT) == 0)
   {
-    /* "Fixed scale" mode. */
+    const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
+    const int border = zxgame->border_size; /* pixels */
 
-    if (flags & zxgame_UPDATE_EXTENT)
+    scale_t   scale;
+    int       screen_xeig, screen_yeig;
+    int       extent_w, extent_h;
+
+    scale = zxgame->scale.cur * SCALE_1 / 100; /* % -> scale_t */
+
+    read_current_mode_vars(&screen_xeig, &screen_yeig, NULL);
+
+    if ((zxgame->flags & zxgame_FLAG_FIT) == 0)
     {
-      int min_w, min_h;
-      int game_w, game_h;
-      int minsize;
+      /* "Fixed scale" mode. */
 
-      /* Size the window. If a big window is configured then use it as the
-       * _minimum_ size of the window. */
-
-      if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
-        /* Not ideally named: reads max workarea size given current screen */
-        read_max_visible_area(zxgame->w, &min_w, &min_h);
-      else
-        min_w = min_h = 0;
-
-      /* Calculate dimensions of scaled game+border. */
-      game_w = ((GAMEWIDTH  + border * 2) << image_xeig) * scale / SCALE_1;
-      game_h = ((GAMEHEIGHT + border * 2) << image_yeig) * scale / SCALE_1;
-
-      extent_w = MAX(min_w, game_w);
-      extent_h = MAX(min_h, game_h);
-      snap2px(&extent_w, &extent_h);
-
-      minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
-      // TODO: If we hit minsize then read the size we minned out at.
-
-      /* Save the extent. */
-      zxgame->extent.x0 = 0;
-      zxgame->extent.y0 = -extent_h;
-      zxgame->extent.x1 = extent_w;
-      zxgame->extent.y1 = 0;
-    }
-
-    if (flags & zxgame_UPDATE_SCALING)
-    {
-      scale_t scaled_w, scaled_h;
-      int     left_x, bottom_y;
-
-      /* Calculate dimensions of scaled game only. */
-      scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
-      scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
-      snap2px(&scaled_w, &scaled_h);
-
-      /* Centre the box in the work area. */
-      extent_w = zxgame->extent.x1 - zxgame->extent.x0;
-      extent_h = zxgame->extent.y1 - zxgame->extent.y0;
-      left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
-      bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
-      snap2px(&left_x, &bottom_y);
-
-      zxgame->imgbox.x0 = left_x;
-      zxgame->imgbox.y0 = bottom_y;
-      zxgame->imgbox.x1 = left_x   + scaled_w;
-      zxgame->imgbox.y1 = bottom_y + scaled_h;
-      snapbox2px(&zxgame->imgbox);
-
-      /* Update sprite scaling. */
-      os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
-      zxgame->factors.xmul <<= image_xeig;
-      zxgame->factors.ymul <<= image_yeig;
-      zxgame->factors.xdiv <<= screen_xeig;
-      zxgame->factors.ydiv <<= screen_yeig;
-    }
-  }
-  else
-  {
-    /* "Scaled to fit" mode. */
-
-    if (flags & zxgame_UPDATE_EXTENT)
-    {
-      int minsize;
-
-      /* Window is to be sized to screen. */
-      read_max_visible_area(zxgame->w, &extent_w, &extent_h);
-
-      minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
-      // TODO: If we hit minsize then read the size we minned out at.
-
-      /* Save the extent. */
-      zxgame->extent.x0 = 0;
-      zxgame->extent.y0 = -extent_h;
-      zxgame->extent.x1 = extent_w;
-      zxgame->extent.y1 = 0;
-    }
-
-    if (flags & zxgame_UPDATE_WINDOW)
-    {
-      int     reduced_border_x, reduced_border_y;
-      int     games_per_window;
-      scale_t scaled_w, scaled_h;
-      int     left_x, bottom_y;
-
-      /* How many 1:1 games fit comfortably in the window (at this size)? */
-      reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels -> OS units */
-      do
+      if (flags & zxgame_UPDATE_EXTENT)
       {
-        fix16_t game_widths_per_window, game_heights_per_window;
+        int min_w, min_h;
+        int game_w, game_h;
+        int minsize;
 
-        game_widths_per_window  = (zxgame->window_w - reduced_border_x * 2) * FIX16_1 / (GAMEWIDTH  << GAMEEIG);
-        game_heights_per_window = (zxgame->window_h - reduced_border_y * 2) * FIX16_1 / (GAMEHEIGHT << GAMEEIG);
-        games_per_window = MIN(game_widths_per_window, game_heights_per_window);
-        if (reduced_border_x >= screen_xeig) reduced_border_x -= screen_xeig;
-        if (reduced_border_y >= screen_yeig) reduced_border_y -= screen_yeig;
+        /* Size the window. If a big window is configured then use it as the
+         * _minimum_ size of the window. */
+
+        if (zxgame->flags & zxgame_FLAG_BIG_WINDOW)
+          /* Not ideally named: reads max workarea size given current screen */
+          read_max_visible_area(zxgame->w, &min_w, &min_h);
+        else
+          min_w = min_h = 0;
+
+        /* Calculate dimensions of scaled game+border. */
+        game_w = ((GAMEWIDTH  + border * 2) << image_xeig) * scale / SCALE_1;
+        game_h = ((GAMEHEIGHT + border * 2) << image_yeig) * scale / SCALE_1;
+
+        extent_w = MAX(min_w, game_w);
+        extent_h = MAX(min_h, game_h);
+        snap2px(&extent_w, &extent_h);
+
+        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+        // TODO: If we hit minsize then read the size we minned out at.
+
+        /* Save the extent. */
+        zxgame->extent.x0 = 0;
+        zxgame->extent.y0 = -extent_h;
+        zxgame->extent.x1 = extent_w;
+        zxgame->extent.y1 = 0;
       }
-      /* Loop while there's borders to reduce and we're still struggling to
-       * fit a whole game in the window. */
-      while (games_per_window < FIX16_1 && (reduced_border_x > 0 || reduced_border_y > 0));
 
-      /* Snap the game scale to whole units. */
-      if (games_per_window >= FIX16_1 && (zxgame->flags & zxgame_FLAG_SNAP))
-        scale = (games_per_window >> 16) * SCALE_1;
-      else
-        scale = (games_per_window * SCALE_1) >> 16;
-      zxgame->scale.cur = scale * 100 / SCALE_1; /* scale_t -> % */
-      zxgame->scale.cur = CLAMP(zxgame->scale.cur, 1, 8000);
+      if (flags & zxgame_UPDATE_SCALING)
+      {
+        scale_t scaled_w, scaled_h;
+        int     left_x, bottom_y;
 
-      /* Calculate dimensions of scaled game only. */
-      scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
-      scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
-      snap2px(&scaled_w, &scaled_h);
+        /* Calculate dimensions of scaled game only. */
+        scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
+        scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
+        snap2px(&scaled_w, &scaled_h);
 
-      /* Centre the box in the visible area. */
-      left_x   = zxgame->xscroll + (zxgame->window_w - scaled_w) / 2;
-      bottom_y = zxgame->yscroll + (zxgame->window_h - scaled_h) / 2;
-      bottom_y -= zxgame->window_h;
-      snap2px(&left_x, &bottom_y);
+        /* Centre the box in the work area. */
+        extent_w = zxgame->extent.x1 - zxgame->extent.x0;
+        extent_h = zxgame->extent.y1 - zxgame->extent.y0;
+        left_x   = zxgame->extent.x0 + (extent_w - scaled_w) / 2;
+        bottom_y = zxgame->extent.y0 + (extent_h - scaled_h) / 2;
+        snap2px(&left_x, &bottom_y);
 
-      zxgame->imgbox.x0 = left_x;
-      zxgame->imgbox.y0 = bottom_y;
-      zxgame->imgbox.x1 = left_x   + scaled_w;
-      zxgame->imgbox.y1 = bottom_y + scaled_h;
-      snapbox2px(&zxgame->imgbox);
+        zxgame->imgbox.x0 = left_x;
+        zxgame->imgbox.y0 = bottom_y;
+        zxgame->imgbox.x1 = left_x   + scaled_w;
+        zxgame->imgbox.y1 = bottom_y + scaled_h;
+        snapbox2px(&zxgame->imgbox);
 
-      /* Update sprite scaling. */
-      os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
-      zxgame->factors.xmul <<= image_xeig;
-      zxgame->factors.ymul <<= image_yeig;
-      zxgame->factors.xdiv <<= screen_xeig;
-      zxgame->factors.ydiv <<= screen_yeig;
+        /* Update sprite scaling. */
+        os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
+        zxgame->factors.xmul <<= image_xeig;
+        zxgame->factors.ymul <<= image_yeig;
+        zxgame->factors.xdiv <<= screen_xeig;
+        zxgame->factors.ydiv <<= screen_yeig;
+      }
+    }
+    else
+    {
+      /* "Scaled to fit" mode. */
+
+      if (flags & zxgame_UPDATE_EXTENT)
+      {
+        int minsize;
+
+        /* Window is to be sized to screen. */
+        read_max_visible_area(zxgame->w, &extent_w, &extent_h);
+
+        minsize = window_set_extent2(zxgame->w, 0, -extent_h, extent_w, 0);
+        // TODO: If we hit minsize then read the size we minned out at.
+
+        /* Save the extent. */
+        zxgame->extent.x0 = 0;
+        zxgame->extent.y0 = -extent_h;
+        zxgame->extent.x1 = extent_w;
+        zxgame->extent.y1 = 0;
+      }
+
+      if (flags & zxgame_UPDATE_WINDOW)
+      {
+        int     reduced_border_x, reduced_border_y;
+        int     games_per_window;
+        scale_t scaled_w, scaled_h;
+        int     left_x, bottom_y;
+
+        /* How many 1:1 games fit comfortably in the window (at this size)? */
+        reduced_border_x = reduced_border_y = zxgame->border_size << GAMEEIG; /* pixels -> OS units */
+        do
+        {
+          fix16_t game_widths_per_window, game_heights_per_window;
+
+          game_widths_per_window  = (zxgame->window_w - reduced_border_x * 2) * FIX16_1 / (GAMEWIDTH  << GAMEEIG);
+          game_heights_per_window = (zxgame->window_h - reduced_border_y * 2) * FIX16_1 / (GAMEHEIGHT << GAMEEIG);
+          games_per_window = MIN(game_widths_per_window, game_heights_per_window);
+          if (reduced_border_x >= screen_xeig) reduced_border_x -= screen_xeig;
+          if (reduced_border_y >= screen_yeig) reduced_border_y -= screen_yeig;
+        }
+        /* Loop while there's borders to reduce and we're still struggling to
+         * fit a whole game in the window. */
+        while (games_per_window < FIX16_1 && (reduced_border_x > 0 || reduced_border_y > 0));
+
+        /* Snap the game scale to whole units. */
+        if (games_per_window >= FIX16_1 && (zxgame->flags & zxgame_FLAG_SNAP))
+          scale = (games_per_window >> 16) * SCALE_1;
+        else
+          scale = (games_per_window * SCALE_1) >> 16;
+        zxgame->scale.cur = scale * 100 / SCALE_1; /* scale_t -> % */
+        zxgame->scale.cur = CLAMP(zxgame->scale.cur, 1, 8000);
+
+        /* Calculate dimensions of scaled game only. */
+        scaled_w = (GAMEWIDTH  << image_xeig) * scale / SCALE_1;
+        scaled_h = (GAMEHEIGHT << image_yeig) * scale / SCALE_1;
+        snap2px(&scaled_w, &scaled_h);
+
+        /* Centre the box in the visible area. */
+        left_x   = zxgame->xscroll + (zxgame->window_w - scaled_w) / 2;
+        bottom_y = zxgame->yscroll + (zxgame->window_h - scaled_h) / 2;
+        bottom_y -= zxgame->window_h;
+        snap2px(&left_x, &bottom_y);
+
+        zxgame->imgbox.x0 = left_x;
+        zxgame->imgbox.y0 = bottom_y;
+        zxgame->imgbox.x1 = left_x   + scaled_w;
+        zxgame->imgbox.y1 = bottom_y + scaled_h;
+        snapbox2px(&zxgame->imgbox);
+
+        /* Update sprite scaling. */
+        os_factors_from_ratio(&zxgame->factors, scale, SCALE_1);
+        zxgame->factors.xmul <<= image_xeig;
+        zxgame->factors.ymul <<= image_yeig;
+        zxgame->factors.xdiv <<= screen_xeig;
+        zxgame->factors.ydiv <<= screen_yeig;
+      }
     }
   }
 

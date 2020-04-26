@@ -15,7 +15,11 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/SuperTiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * $5B00: Super tiles.
@@ -1770,5 +1774,7 @@ const supertile_t supertiles[supertileindex__LIMIT] =
     }
   },
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

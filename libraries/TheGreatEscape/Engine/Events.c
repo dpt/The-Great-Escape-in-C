@@ -15,9 +15,15 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#include <assert.h>
+/* ----------------------------------------------------------------------- */
+
 #include <string.h>
 
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Asserts.h"
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Messages.h"
 #include "TheGreatEscape/RoomDefs.h"
@@ -47,8 +53,6 @@ static void end_of_breakfast(tgestate_t *state);
 
 static void go_to_time_for_bed(tgestate_t *state);
 
-static void set_prisoners_and_guards_route(tgestate_t *state,
-                                     const route_t    *route);
 static void set_prisoners_and_guards_route_B(tgestate_t *state,
                                        const route_t    *route);
 static void set_character_route(tgestate_t *state,
@@ -305,8 +309,6 @@ found:
 
 static void event_time_for_bed(tgestate_t *state)
 {
-  assert(state != NULL);
-
   // Reverse route of below.
 
   static const route_t t = { routeindex_38_GUARD_12_BED | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was C,A */
@@ -315,8 +317,6 @@ static void event_time_for_bed(tgestate_t *state)
 
 static void event_search_light(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t = { routeindex_38_GUARD_12_BED, 0 }; /* was C,A */
   set_guards_route(state, t);
 }
@@ -393,8 +393,10 @@ static void wake_up(tgestate_t *state)
 
   state->hero_in_bed = 0;
 
+{
   static const route_t t42 = { routeindex_42_HUT2_LEFT_TO_RIGHT, 0 }; /* was BC */
   set_hero_route(state, &t42);
+}
 
   /* Position all six prisoners. */
   charstr = &state->character_structs[character_20_PRISONER_1];
@@ -413,8 +415,10 @@ static void wake_up(tgestate_t *state)
   }
   while (--iters);
 
+{
   static const route_t t5 = { routeindex_5_EXIT_HUT2, 0 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t5);
+}
 
   /* Update all the bed objects to be empty. */
   rda = &beds[0];
@@ -463,8 +467,10 @@ static void end_of_breakfast(tgestate_t *state)
     state->hero_in_breakfast = 0; /* Conv: Moved into if block. */
   }
 
+{
   static const route_t t = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was BC */
   set_hero_route(state, &t);
+}
 
   charstr = &state->character_structs[character_20_PRISONER_1];
   iters = 3;
@@ -482,8 +488,10 @@ static void end_of_breakfast(tgestate_t *state)
   }
   while (--iters);
 
+{
   static const route_t t2 = { routeindex_16_BREAKFAST_25 | ROUTEINDEX_REVERSE_FLAG, 3 }; /* was A',C */
   set_prisoners_and_guards_route_B(state, &t2);
+}
 
   /* Update all the benches to be empty. */
   set_roomdef(state, room_23_MESS_HALL, roomdef_23_BENCH_A, interiorobject_EMPTY_BENCH);
@@ -552,8 +560,6 @@ void set_hero_route_force(tgestate_t *state, const route_t *route)
  */
 static void go_to_time_for_bed(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t5 = { routeindex_5_EXIT_HUT2 | ROUTEINDEX_REVERSE_FLAG, 2 }; /* was BC */
   set_hero_route(state, &t5);
   set_prisoners_and_guards_route_B(state, &t5);
@@ -713,8 +719,6 @@ static void set_route(tgestate_t *state, vischar_t *vischar)
 
   state->entered_move_a_character = 0;
 
-  // sampled HL = $8003 $8043 $8023 $8063 $8083 $80A3
-
 #ifdef DEBUG_ROUTES
   printf("(%s) set_route > get_target(route=%d%s step=%d)\n",
          (vischar == &state->vischars[0]) ? "hero" : "non-hero",
@@ -819,7 +823,7 @@ void character_bed_vischar(tgestate_t *state, route_t *route)
   {
     // Hero moves to bed in reaction to the commandant...
 
-    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 0 }; /* was BC */ // route_hut2_right_to_left
+    static const route_t t = { routeindex_44_HUT2_RIGHT_TO_LEFT, 0 }; /* was BC */
     set_hero_route(state, &t);
   }
   else
@@ -1100,8 +1104,6 @@ static void hero_sit_sleep_common(tgestate_t *state, uint8_t *pflag)
  */
 static void set_route_go_to_yard(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t14 = { routeindex_14_GO_TO_YARD, 0 };
   set_hero_route(state, &t14);
   set_prisoners_and_guards_route_B(state, &t14);
@@ -1114,8 +1116,6 @@ static void set_route_go_to_yard(tgestate_t *state)
  */
 static void set_route_go_to_yard_reversed(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t14 = { routeindex_14_GO_TO_YARD | ROUTEINDEX_REVERSE_FLAG, 4 };
   set_hero_route(state, &t14);
   set_prisoners_and_guards_route_B(state, &t14);
@@ -1128,8 +1128,6 @@ static void set_route_go_to_yard_reversed(tgestate_t *state)
  */
 static void set_route_go_to_breakfast(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t16 = { routeindex_16_BREAKFAST_25, 0 };
   set_hero_route(state, &t16);
   set_prisoners_and_guards_route_B(state, &t16);
@@ -1231,12 +1229,10 @@ static void charevnt_breakfast_common(tgestate_t *state,
  */
 static void go_to_roll_call(tgestate_t *state)
 {
-  assert(state != NULL);
-
   static const route_t t26 = { routeindex_26_GUARD_12_ROLL_CALL, 0 }; /* was C,A' */
-  set_prisoners_and_guards_route(state, &t26);
-
   static const route_t t45 = { routeindex_45_HERO_ROLL_CALL, 0 };
+
+  set_prisoners_and_guards_route(state, &t26);
   set_hero_route(state, &t45);
 }
 

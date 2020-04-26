@@ -18,6 +18,8 @@
 #ifndef INTERIOR_OBJECTS_H
 #define INTERIOR_OBJECTS_H
 
+/* ----------------------------------------------------------------------- */
+
 /**
  * Identifiers of objects used to build interiors.
  *
@@ -93,6 +95,8 @@ enum interior_object
  * An object used to build interiors.
  */
 typedef enum interior_object object_t;
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* INTERIOR_OBJECTS_H */
 

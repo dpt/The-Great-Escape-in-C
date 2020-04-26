@@ -15,9 +15,17 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#include <assert.h>
+/* ----------------------------------------------------------------------- */
+
 #include <string.h>
 
+#include "C99/Types.h"
+
+#include "ZXSpectrum/Spectrum.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Asserts.h"
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/State.h"
@@ -143,8 +151,6 @@ void zoombox(tgestate_t *state)
  */
 static void zoombox_fill(tgestate_t *state)
 {
-  assert(state != NULL);
-
   uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added
 
   uint8_t   iters;      /* was B */
@@ -210,8 +216,6 @@ static void zoombox_fill(tgestate_t *state)
  */
 static void zoombox_draw_border(tgestate_t *state)
 {
-  assert(state != NULL);
-
   uint8_t *const screen_base = &state->speccy->screen.pixels[0]; // Conv: Added var.
 
   uint8_t *addr;  /* was HL */

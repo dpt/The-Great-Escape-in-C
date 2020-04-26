@@ -18,8 +18,13 @@
 #ifndef ROOM_DEFS_H
 #define ROOM_DEFS_H
 
-#include "TheGreatEscape/Types.h"
+/* ----------------------------------------------------------------------- */
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
 #include "TheGreatEscape/Rooms.h"
+
+/* ----------------------------------------------------------------------- */
 
 #define roomdef_2_BED          (14 +  4 * 3)
 
@@ -48,6 +53,8 @@ void set_roomdef(tgestate_t *state,
                  room_t      room_index,
                  int         offset,
                  int         new_byte);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* ROOM_DEFS_H */
 

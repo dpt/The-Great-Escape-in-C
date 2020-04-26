@@ -15,7 +15,13 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
 #include "TheGreatEscape/Music.h"
+
+/* ----------------------------------------------------------------------- */
 
 /* The menu screen music is a medley of:
  * - The Great Escape theme [Elmer Bernstein, 1963]

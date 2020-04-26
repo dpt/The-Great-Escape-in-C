@@ -18,16 +18,20 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <stdlib.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+#include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
-#include "TheGreatEscape/Asserts.h"
+#include "TheGreatEscape/Types.h"
 #include "TheGreatEscape/Doors.h"
 #include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/Routes.h"
-#include "TheGreatEscape/StaticGraphics.h"
-#include "TheGreatEscape/Types.h"
+#include "TheGreatEscape/SuperTiles.h"
+#include "TheGreatEscape/Tiles.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -442,6 +446,8 @@ int user_confirm(tgestate_t *state);
 /* $F000 onwards */
 
 void wipe_full_screen_and_attributes(tgestate_t *state);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MAIN_H */
 

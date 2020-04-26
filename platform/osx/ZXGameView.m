@@ -154,7 +154,7 @@
   memset(stamps, 0, sizeof(stamps));
   nstamps = 0;
 
-  keys            = 0ULL;
+  zxkeyset_clear(&keys);
   kempston        = 0;
 
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
@@ -321,9 +321,9 @@ failure:
     {
       // zxkeyset_set/clearchar converts generic keypresses for us
       if (down)
-        keys = zxkeyset_setchar(keys, u);
+        zxkeyset_setchar(&keys, u);
       else
-        keys = zxkeyset_clearchar(keys, u);
+        zxkeyset_clearchar(&keys, u);
     }
   }
 }
@@ -700,7 +700,7 @@ static int key_handler(uint16_t port, void *opaque)
     if (port == port_KEMPSTON_JOYSTICK)
       k = view->kempston;
     else
-      k = zxkeyset_for_port(port, view->keys);
+      k = zxkeyset_for_port(port, &view->keys);
   }
 
   return k;

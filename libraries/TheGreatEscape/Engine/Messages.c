@@ -15,13 +15,19 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
 #include <string.h>
 
-#include "TheGreatEscape/Main.h"
-#include "TheGreatEscape/Messages.h"
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
+
+#include "TheGreatEscape/Messages.h"
 
 /* ----------------------------------------------------------------------- */
 

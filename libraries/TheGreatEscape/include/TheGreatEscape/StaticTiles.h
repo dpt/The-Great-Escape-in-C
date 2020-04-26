@@ -18,11 +18,13 @@
 #ifndef STATIC_TILES_H
 #define STATIC_TILES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
 #include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 struct static_tile
 {
@@ -33,6 +35,8 @@ struct static_tile
 typedef struct static_tile static_tile_t;
 
 extern const static_tile_t static_tiles[];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* STATIC_TILES_H */
 

@@ -15,10 +15,15 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#include "TheGreatEscape/TheGreatEscape.h"
+/* ----------------------------------------------------------------------- */
+
+#include <stddef.h>
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/State.h"
 
 #include "TheGreatEscape/Screen.h"
-#include "TheGreatEscape/State.h"
 
 /* ----------------------------------------------------------------------- */
 

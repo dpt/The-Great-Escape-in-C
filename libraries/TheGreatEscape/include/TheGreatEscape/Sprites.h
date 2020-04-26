@@ -18,15 +18,19 @@
 #ifndef SPRITES_H
 #define SPRITES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * A spritedef defines a bitmap + mask pair;
  */
 typedef struct spritedef
 {
-  uint8_t        width;  /**< in bytes + 1 */
-  uint8_t        height; /**< in rows */
+  uint8_t        width;  /**< width in bytes + 1 */
+  uint8_t        height; /**< height in rows */
   const uint8_t *bitmap;
   const uint8_t *mask;
 }
@@ -81,6 +85,8 @@ enum
 };
 
 extern const spritedef_t sprites[sprite__LIMIT];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* SPRITES_H */
 

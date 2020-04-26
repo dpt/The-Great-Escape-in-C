@@ -8,12 +8,12 @@
 #ifndef ZXSPECTRUM_SCREEN_H
 #define ZXSPECTRUM_SCREEN_H
 
+#include "ZXSpectrum/Spectrum.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include "ZXSpectrum/Spectrum.h"
 
 /**
  * Convert the given ZX Spectrum format screen into 0x00BBGGRR pixel format

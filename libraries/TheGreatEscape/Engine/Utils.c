@@ -15,11 +15,16 @@
  * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "TheGreatEscape/Main.h"
 #include "TheGreatEscape/State.h"
+
 #include "TheGreatEscape/Utils.h"
+
+/* ----------------------------------------------------------------------- */
 
 int menudelay(tgestate_t *state, int duration)
 {
@@ -36,3 +41,5 @@ void gamedelay(tgestate_t *state, int duration)
   if (terminate)
     squash_stack_goto_main(state); /* exits from tge_main */
 }
+
+/* ----------------------------------------------------------------------- */

@@ -40,7 +40,7 @@ enum
   SPEED_SLOWER,
   SPEED_PAUSE,
 
-  SOUND_ENABLED         = 0,
+  SOUND_ENABLED         = 0
 };
 
 #endif /* MENUNAMES_H */

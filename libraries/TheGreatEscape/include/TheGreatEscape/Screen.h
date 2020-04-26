@@ -18,11 +18,16 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
-/* Invalidate (signal to redraw) the specified screen area where bitmap data
+/* ----------------------------------------------------------------------- */
+
+/**
+ * Invalidate (signal to redraw) the specified screen area where bitmap data
  * has changed.
  *
  * Conv: This helper function was added over the original game.
@@ -37,7 +42,8 @@ void invalidate_bitmap(tgestate_t *state,
                        int         width,
                        int         height);
 
-/* Invalidate (signal to redraw) the specified screen area where attribute
+/**
+ * Invalidate (signal to redraw) the specified screen area where attribute
  * data has changed.
  *
  * Conv: This helper function was added over the original game.
@@ -51,5 +57,7 @@ void invalidate_attrs(tgestate_t *state,
                       uint8_t    *addr,
                       int         width,
                       int         height);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* SCREEN_H */

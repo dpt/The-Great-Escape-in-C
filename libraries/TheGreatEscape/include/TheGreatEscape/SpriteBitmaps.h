@@ -18,6 +18,12 @@
 #ifndef SPRITE_BITMAPS_H
 #define SPRITE_BITMAPS_H
 
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
+
 extern const uint8_t bitmap_commandant_facing_top_left_4[];
 extern const uint8_t bitmap_commandant_facing_top_left_3[];
 extern const uint8_t bitmap_commandant_facing_top_left_2[];
@@ -72,6 +78,9 @@ extern const uint8_t bitmap_crate[];
 extern const uint8_t mask_crate[];
 extern const uint8_t bitmap_stove[];
 extern const uint8_t mask_stove[];
+
+/* ----------------------------------------------------------------------- */
+
 
 #endif /* SPRITE_BITMAPS_H */
 

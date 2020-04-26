@@ -52,47 +52,33 @@
 /* ----------------------------------------------------------------------- */
 
 #include <assert.h>
-#include <setjmp.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-#include "ZXSpectrum/Spectrum.h"
+#include "C99/Types.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "TheGreatEscape/Asserts.h"
 #include "TheGreatEscape/Debug.h"
-#include "TheGreatEscape/Doors.h"
 #include "TheGreatEscape/Events.h"
 #include "TheGreatEscape/ExteriorTiles.h"
 #include "TheGreatEscape/Input.h"
 #include "TheGreatEscape/InteriorObjectDefs.h"
-#include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/InteriorTiles.h"
 #include "TheGreatEscape/ItemBitmaps.h"
-#include "TheGreatEscape/Items.h"
 #include "TheGreatEscape/Map.h"
 #include "TheGreatEscape/Masks.h"
 #include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Messages.h"
-#include "TheGreatEscape/Music.h"
 #include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/RoomDefs.h"
-#include "TheGreatEscape/Rooms.h"
-#include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/Screen.h"
 #include "TheGreatEscape/SpriteBitmaps.h"
-#include "TheGreatEscape/Sprites.h"
 #include "TheGreatEscape/State.h"
 #include "TheGreatEscape/StaticGraphics.h"
-#include "TheGreatEscape/SuperTiles.h"
-#include "TheGreatEscape/TGEObject.h"
 #include "TheGreatEscape/Text.h"
-#include "TheGreatEscape/Tiles.h"
-#include "TheGreatEscape/Utils.h"
+#include "TheGreatEscape/TGEObject.h"
 #include "TheGreatEscape/Zoombox.h"
 
 #include "TheGreatEscape/Main.h"
@@ -1349,8 +1335,6 @@ void draw_all_items(tgestate_t *state)
  */
 void draw_item(tgestate_t *state, item_t item, size_t dstoff)
 {
-  assert(state != NULL);
-
   uint8_t *const screen = &state->speccy->screen.pixels[0];
 
   attribute_t       *attrs;  /* was HL */
@@ -1530,12 +1514,12 @@ void screen_wipe(tgestate_t *state,
  */
 uint8_t *get_next_scanline(tgestate_t *state, uint8_t *slp)
 {
-  assert(state != NULL);
-  assert(slp   != NULL);
-
   uint8_t *const screen = &state->speccy->screen.pixels[0]; /* added */
   uint16_t       offset; /* was HL */
   uint16_t       delta;  /* was DE */
+
+  assert(state != NULL);
+  assert(slp   != NULL);
 
   offset = slp - screen; // note: narrowing
 
@@ -2232,11 +2216,11 @@ void set_morale_flag_screen_attributes(tgestate_t *state, attribute_t attrs)
  */
 uint8_t *get_prev_scanline(tgestate_t *state, uint8_t *addr)
 {
-  assert(state != NULL);
-  assert(addr  != NULL);
-
   uint8_t *const screen = &state->speccy->screen.pixels[0];
   ptrdiff_t      raddr = addr - screen;
+
+  assert(state != NULL);
+  assert(addr  != NULL);
 
   if ((raddr & 0x0700) != 0)
   {
@@ -3519,10 +3503,10 @@ void move_map(tgestate_t *state)
   /* Conv: Simplified. */
   switch (move_map_y)
   {
-    case 0: game_window_offset = (pos8_t) {0x00, 0x00}; break;
-    case 1: game_window_offset = (pos8_t) {0x30, 0xFF}; break;
-    case 2: game_window_offset = (pos8_t) {0x60, 0x00}; break;
-    case 3: game_window_offset = (pos8_t) {0x90, 0xFF}; break;
+    case 0: game_window_offset.x = 0x00; game_window_offset.y = 0x00; break;
+    case 1: game_window_offset.x = 0x30; game_window_offset.y = 0xFF; break;
+    case 2: game_window_offset.x = 0x60; game_window_offset.y = 0x00; break;
+    case 3: game_window_offset.x = 0x90; game_window_offset.y = 0xFF; break;
   }
 
   state->game_window_offset = game_window_offset;
@@ -3910,13 +3894,13 @@ void searchlight_plot(tgestate_t  *state,
     ________,________
   };
 
-  assert(state != NULL);
   /* We can't ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs) here as expected as
    * the attrs pointer can be out of bounds... */
 
   attribute_t *const attrs_base = &state->speccy->screen.attributes[0];
   ASSERT_SCREEN_ATTRIBUTES_PTR_VALID(attrs_base);
 
+{
   const uint8_t *shape;       /* was DE' */
   uint8_t        iters;       /* was C' */
   ptrdiff_t      x;           /* was A */
@@ -4041,6 +4025,7 @@ exit:
     static const zxbox_t dirty = { 7 * 8, 2 * 8, 29 * 8, 17 * 8 };
     state->speccy->draw(state->speccy, &dirty);
   }
+}
 }
 
 /* ----------------------------------------------------------------------- */
@@ -4277,27 +4262,28 @@ collided_set_delay:
     }
 
     /* Pick a new direction for the vischar at state->IY. */
-
-    /** $B0F8: Inputs which move the character in the next anticlockwise
-     *         direction. */
-    static const uint8_t new_inputs[4] =
     {
-      input_DOWN + input_LEFT  + input_KICK, /* if facing TL, move D+L */
-      input_UP   + input_LEFT  + input_KICK, /* if facing TR, move U+L */
-      input_UP   + input_RIGHT + input_KICK, /* if facing BR, move U+R */
-      input_DOWN + input_RIGHT + input_KICK  /* if facing BL, move D+R */
-    };
+      /** $B0F8: Inputs which move the character in the next anticlockwise
+       *         direction. */
+      static const uint8_t new_inputs[4] =
+      {
+        input_DOWN + input_LEFT  + input_KICK, /* if facing TL, move D+L */
+        input_UP   + input_LEFT  + input_KICK, /* if facing TR, move U+L */
+        input_UP   + input_RIGHT + input_KICK, /* if facing BR, move U+R */
+        input_DOWN + input_RIGHT + input_KICK  /* if facing BL, move D+R */
+      };
 
-    /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
-     * new_inputs[] if we collide when crawling. */
-    new_direction = state->IY->direction & vischar_DIRECTION_MASK;
-    assert(new_direction < 4);
-    state->IY->input = new_inputs[new_direction];
-    assert((state->IY->input & ~input_KICK) < 9);
-    if ((new_direction & 1) == 0) /* if was facing TL or BR */
-      state->IY->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
-    else
+      /* BUG FIX: Mask 'direction' so that we don't access out-of-bounds in
+       * new_inputs[] if we collide when crawling. */
+      new_direction = state->IY->direction & vischar_DIRECTION_MASK;
+      assert(new_direction < 4);
+      state->IY->input = new_inputs[new_direction];
+      assert((state->IY->input & ~input_KICK) < 9);
+      if ((new_direction & 1) == 0) /* if was facing TL or BR */
+        state->IY->counter_and_flags &= ~vischar_BYTE7_V_DOMINANT;
+      else
       state->IY->counter_and_flags |= vischar_BYTE7_V_DOMINANT;
+    }
 
     goto collided_set_delay;
 
@@ -5870,6 +5856,7 @@ void render_mask_buffer(tgestate_t *state)
     pmask = &exterior_mask_data[0]; /* Conv: Original game points at pmask->bounds.x1. Fixed by propagation. */
   }
 
+{
   uint8_t        A;                   /* was A */
   const uint8_t *mask_pointer;        /* was DE */
   uint16_t       mask_skip;           /* was HL */
@@ -6100,6 +6087,7 @@ pop_next:
     pmask++;
   }
   while (--iters);
+}
 }
 
 /* ----------------------------------------------------------------------- */
@@ -7574,8 +7562,10 @@ void charevnt_hero_release(tgestate_t *state, route_t *route)
 
   state->automatic_player_counter = 0; /* Force automatic control */
 
-  static const route_t route_37 = { routeindex_37_HERO_LEAVE_SOLITARY, 0 }; /* was BC */
-  set_hero_route_force(state, &route_37);
+  {
+    static const route_t route_37 = { routeindex_37_HERO_LEAVE_SOLITARY, 0 }; /* was BC */
+    set_hero_route_force(state, &route_37);
+  }
 }
 
 /**
@@ -9104,7 +9094,7 @@ void is_item_discoverable(tgestate_t *state)
   else
   {
     /* Exterior. */
-    
+
     itemstruct = &state->item_structs[0];
     iters      = item__LIMIT;
     do
@@ -10874,8 +10864,6 @@ void scale_mappos_down(const mappos16_t *in, mappos8_t *out)
  */
 void plot_game_window(tgestate_t *state)
 {
-  assert(state != NULL);
-
   uint8_t *const  screen = &state->speccy->screen.pixels[0];
 
   uint8_t         y;         /* was A */
@@ -11183,7 +11171,7 @@ TGE_API void tge_setup2(tgestate_t *state)
     { 46, 46, 24 },       // pos
     0,                    // counter_and_flags
     &animations[0],       // animbase
-    animations[8],        // anim
+    (const anim_t *) anim_wait_tl,   //animations[8],        // anim
     0,                    // animindex
     0,                    // input
     direction_TOP_LEFT,   // direction

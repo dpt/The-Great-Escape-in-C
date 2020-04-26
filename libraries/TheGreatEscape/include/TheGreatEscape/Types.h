@@ -15,23 +15,20 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef TGE_TYPES_H
+#define TGE_TYPES_H
 
-#include <setjmp.h>
-#include <stddef.h>
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
 
 #include "TheGreatEscape/Items.h"
-#include "TheGreatEscape/Map.h"
 #include "TheGreatEscape/Rooms.h"
 #include "TheGreatEscape/Routes.h"
 #include "TheGreatEscape/Sprites.h"
-#include "TheGreatEscape/Tiles.h"
-#include "TheGreatEscape/Types.h"
 #include "TheGreatEscape/Utils.h"
-
-#include "TheGreatEscape/TheGreatEscape.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -423,7 +420,7 @@ enum escapeitem_flags
 enum morale
 {
   morale_MIN                           = 0,
-  morale_MAX                           = 112,
+  morale_MAX                           = 112
 };
 
 /**
@@ -436,7 +433,7 @@ enum
   map_MAIN_GATE_X                      = 0x696D, /* coords: 0x69..0x6D */
   map_MAIN_GATE_Y                      = 0x494B,
   map_ROLL_CALL_X                      = 0x727C,
-  map_ROLL_CALL_Y                      = 0x6A72,
+  map_ROLL_CALL_Y                      = 0x6A72
 };
 
 /**
@@ -450,7 +447,7 @@ typedef enum sound
   sound_CHARACTER_ENTERS_2             = 0x2040,
   sound_BELL_RINGER                    = 0x2530,
   sound_PICK_UP_ITEM                   = 0x3030,
-  sound_DROP_ITEM                      = 0x3040,
+  sound_DROP_ITEM                      = 0x3040
 }
 sound_t;
 
@@ -461,7 +458,7 @@ enum bellring
 {
   bell_RING_PERPETUAL                  = 0,
   bell_RING_40_TIMES                   = 40,
-  bell_STOP                            = 0xFF,
+  bell_STOP                            = 0xFF
 };
 
 /**
@@ -859,6 +856,6 @@ roomdef_address_t;
 
 /* ----------------------------------------------------------------------- */
 
-#endif /* TYPES_H */
+#endif /* TGE_TYPES_H */
 
 // vim: ts=8 sts=2 sw=2 et

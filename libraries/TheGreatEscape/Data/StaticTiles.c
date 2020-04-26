@@ -15,18 +15,19 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-/**
- * $7F00: Static tiles.
- *
- * These tiles are used to draw fixed screen elements such as medals.
- */
-
-#include "ZXSpectrum/Spectrum.h"
+/* ----------------------------------------------------------------------- */
 
 #include "TheGreatEscape/Pixels.h"
 
 #include "TheGreatEscape/StaticTiles.h"
 
+/* ----------------------------------------------------------------------- */
+
+/**
+ * $7F00: Static tiles.
+ *
+ * These tiles are used to draw fixed screen elements such as medals.
+ */
 const static_tile_t static_tiles[79] =
 {
   {
@@ -1216,5 +1217,6 @@ const static_tile_t static_tiles[79] =
   },
 };
 
-// vim: ts=8 sts=2 sw=2 et
+/* ----------------------------------------------------------------------- */
 
+// vim: ts=8 sts=2 sw=2 et

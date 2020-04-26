@@ -18,14 +18,20 @@
 #ifndef STATE_H
 #define STATE_H
 
+/* ----------------------------------------------------------------------- */
+
 #include <setjmp.h>
-#include <stdint.h>
+#include <stddef.h>
+
+#include "C99/Types.h"
+
+#include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/Types.h"
+#include "TheGreatEscape/SuperTiles.h"
+#include "TheGreatEscape/Tiles.h"
 
-#include "TheGreatEscape/TheGreatEscape.h"
-
-/* -------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
 
 #define MASK_BUFFER_WIDTHBYTES 4
 #define MASK_BUFFER_ROWBYTES   (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
@@ -37,7 +43,7 @@
 // 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
 #define MAX_INTERIOR_MASK_REFS 7
 
-/* -------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
 
 /**
  * Holds the current state of the game.
@@ -668,6 +674,8 @@ struct tgestate
    */
   supertileindex_t *map_buf;
 };
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* STATE_H */
 

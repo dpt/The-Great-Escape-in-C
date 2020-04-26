@@ -15,12 +15,16 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
 
+#include "C99/Types.h"
+
+#include "TheGreatEscape/Types.h"
 #include "TheGreatEscape/InteriorObjects.h"
 #include "TheGreatEscape/Rooms.h"
 #include "TheGreatEscape/State.h"
-#include "TheGreatEscape/Types.h"
 
 #include "TheGreatEscape/RoomDefs.h"
 

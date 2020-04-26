@@ -18,10 +18,11 @@
 #ifndef STATIC_GRAPHICS_H
 #define STATIC_GRAPHICS_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
-#include "TheGreatEscape/State.h"
-#include "TheGreatEscape/Types.h"
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
 
 /* ----------------------------------------------------------------------- */
 

@@ -15,10 +15,15 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
+#include "TheGreatEscape/InteriorTiles.h"
 #include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/Tiles.h"
 
 #include "TheGreatEscape/InteriorTiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * $9768: Interior tiles.
@@ -2354,5 +2359,7 @@ const tile_t interior_tiles[interiortile__LIMIT] =
     }
   },
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

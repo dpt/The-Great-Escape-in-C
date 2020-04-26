@@ -2,21 +2,21 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013-2018. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2020. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <limits.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "C99/Types.h"
+
 #include "ZXSpectrum/Screen.h"
+#include "ZXSpectrum/Macros.h"
 
 #include "ZXSpectrum/Spectrum.h"
-
-#include "ZXSpectrum/Macros.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -46,7 +46,7 @@
 
 #else
 
-#warning Default threading used
+//#warning Default threading used
 
 #define mutex_t          int
 #define mutex_init(M)
@@ -327,10 +327,10 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 
 void zxspectrum_destroy(zxspectrum_t *doomed)
 {
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
+
   if (doomed == NULL)
     return;
-
-  zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
 
   mutex_destroy(prv->lock);
 

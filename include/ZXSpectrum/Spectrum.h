@@ -8,12 +8,12 @@
 #ifndef ZXSPECTRUM_H
 #define ZXSPECTRUM_H
 
+#include "C99/Types.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include <stdint.h>
 
 /* Constants */
 
@@ -62,7 +62,7 @@ enum
   port_KEYBOARD_09876           = 0xEFFE, /* 11101111 */
   port_KEYBOARD_POIUY           = 0xDFFE, /* 11011111 */
   port_KEYBOARD_ENTERLKJH       = 0xBFFE, /* 10111111 */
-  port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE, /* 01111111 */
+  port_KEYBOARD_SPACESYMSHFTMNB = 0x7FFE  /* 01111111 */
 };
 
 /**
@@ -72,7 +72,7 @@ enum
 {
   port_MASK_BORDER  = 7 << 0,
   port_MASK_MIC     = 1 << 3,
-  port_MASK_EAR     = 1 << 4,
+  port_MASK_EAR     = 1 << 4
 };
 
 /* Memory map */

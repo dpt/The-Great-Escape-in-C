@@ -15,15 +15,23 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include <assert.h>
+#include <stddef.h>
 #include <string.h>
 
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Asserts.h"
 #include "TheGreatEscape/Main.h"
-#include "TheGreatEscape/Menu.h"
 #include "TheGreatEscape/Music.h"
 #include "TheGreatEscape/Screen.h"
-#include "TheGreatEscape/State.h"
 #include "TheGreatEscape/Text.h"
+
+#include "TheGreatEscape/Menu.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -118,9 +126,6 @@ static int check_menu_keys(tgestate_t *state)
  */
 static void wipe_game_window(tgestate_t *state)
 {
-  assert(state != NULL);
-  assert(state->speccy != NULL);
-
   uint8_t *const  screen = &state->speccy->screen.pixels[0];
   const uint16_t *poffsets; /* was SP */
   uint8_t         iters;    /* was A */
@@ -217,9 +222,6 @@ static int choose_keys(tgestate_t *state)
     0x08D5,
   };
 
-  assert(state != NULL);
-  assert(state->speccy != NULL);
-
   uint8_t *const screen = &state->speccy->screen.pixels[0]; /* Conv: Added */
 
   /* Loop while the user does not confirm. */
@@ -259,6 +261,7 @@ static int choose_keys(tgestate_t *state)
     /* Wipe key definitions. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
 
+{
     uint8_t Adash = 0; /* was A' */ // initialised to zero
     {
       const uint16_t *poffset; /* was HL */
@@ -395,6 +398,7 @@ assign_keydef:
       }
       while (--prompt_iters);
     }
+  }
 
     /* Conv: Timing: This was a delay loop counting to 0xFFFF. */
     if (menudelay(state, 3500000 / 10)) /* 10/sec */

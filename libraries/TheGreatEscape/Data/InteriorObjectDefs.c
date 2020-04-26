@@ -15,16 +15,17 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/InteriorObjectDefs.h"
+
+/* ----------------------------------------------------------------------- */
+
 /**
  * $7095: Interior object definitions.
  */
-
-#include <stdint.h>
-
-#include "TheGreatEscape/InteriorObjects.h"
-#include "TheGreatEscape/TGEObject.h"
-
-#include "TheGreatEscape/InteriorObjectDefs.h"
 
 // interiorobject_TUNNEL_0
 static const uint8_t intobjdef_0[] =
@@ -627,5 +628,7 @@ const tgeobject_t *interior_object_defs[interiorobject__LIMIT] =
   (const tgeobject_t *) &intobjdef_52,
   (const tgeobject_t *) &intobjdef_53,
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

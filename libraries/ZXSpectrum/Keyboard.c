@@ -2,28 +2,42 @@
  *
  * ZX Spectrum keyboard handling.
  *
- * Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2016-2020. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdint.h>
 
 #ifdef _WIN32
 #include <intrin.h>
 #include <windows.h>
 #endif
 
+#include "C99/Types.h"
+
 #include "ZXSpectrum/Keyboard.h"
 
-void zxkeyset_assign(zxkeyset_t *keystate,
-                     zxkey_t     index,
-                     int         on_off)
+void zxkeyset_clear(zxkeyset_t *keystate)
 {
-  assert(index < zxkey__LIMIT);
+  assert(keystate);
 
-  *keystate &= ~(1ULL << index);
-  *keystate |= (unsigned long long) on_off << index;
+  keystate->bits[0] = keystate->bits[1] = 0;
+}
+
+void zxkeyset_assign(zxkeyset_t *keystate, zxkey_t index, int on_off)
+{
+  unsigned int *pbits;
+
+  assert(keystate);
+  assert(index >= 0 && index < zxkey__LIMIT);
+  assert(on_off == 0 || on_off == 1);
+
+  // store 20 bits in each word
+  pbits = &keystate->bits[index / 20];
+  index %= 20;
+
+  *pbits &= ~(1U << index);
+  *pbits |= on_off << index;
 }
 
 static uint32_t __inline my_clz(uint32_t value)
@@ -38,16 +52,28 @@ static uint32_t __inline my_clz(uint32_t value)
 #elif defined(__GNUC__)
   return value ? __builtin_clz(value) : 32;
 #else
-  return 0; // FIXME
+  int c;
+
+  if (value == 0)
+    return 32;
+
+  c = 0;
+  if ((value & 0xFFFF0000U) == 0) { c += 16; value <<= 16; }
+  if ((value & 0xFF000000U) == 0) { c +=  8; value <<=  8; }
+  if ((value & 0xF0000000U) == 0) { c +=  4; value <<=  4; }
+  if ((value & 0xC0000000U) == 0) { c +=  2; value <<=  2; }
+  if ((value & 0x80000000U) == 0) { c +=  1; value <<=  1; }
+
+  return c;
 #endif
 }
 
-int zxkeyset_for_port(uint16_t port, zxkeyset_t keystate)
+int zxkeyset_for_port(uint16_t port, const zxkeyset_t *keystate)
 {
   int nzeroes;
 
   nzeroes = my_clz((uint32_t) ~port << 16);
-  return (~keystate >> (nzeroes * 5)) & 0x1F;
+  return (~keystate->bits[nzeroes >> 2] >> ((nzeroes & 3) * 5)) & 0x1F;
 }
 
 /**
@@ -151,20 +177,18 @@ static zxkey_t char_to_key(int c)
   }
 }
 
-zxkeyset_t zxkeyset_setchar(zxkeyset_t keystate, int c)
+void zxkeyset_setchar(zxkeyset_t *keystate, int c)
 {
-  zxkey_t sk = char_to_key(c);
-  if (sk != zxkey_UNKNOWN)
-    keystate |= 1ULL << sk;
-  return keystate;
+  zxkey_t index = char_to_key(c);
+  if (index != zxkey_UNKNOWN)
+    zxkeyset_assign(keystate, index, 1);
 }
 
-zxkeyset_t zxkeyset_clearchar(zxkeyset_t keystate, int c)
+void zxkeyset_clearchar(zxkeyset_t *keystate, int c)
 {
-  zxkey_t sk = char_to_key(c);
-  if (sk != zxkey_UNKNOWN)
-    keystate &= ~(1ULL << sk);
-  return keystate;
+  zxkey_t index = char_to_key(c);
+  if (index != zxkey_UNKNOWN)
+    zxkeyset_assign(keystate, index, 0);
 }
 
 // vim: ts=8 sts=2 sw=2 et

@@ -21,9 +21,13 @@
  * All are 16 pixels wide. Variable height.
  */
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/Pixels.h"
 
 #include "TheGreatEscape/ItemBitmaps.h"
+
+/* ----------------------------------------------------------------------- */
 
 const uint8_t bitmap_shovel[] =
 {
@@ -513,5 +517,7 @@ const uint8_t mask_food[] =
   XXXXX___,______XX,
   XXXXXXX_,_____XXX,
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et

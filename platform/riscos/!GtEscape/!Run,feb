@@ -24,4 +24,4 @@ WimpSlot -min 144K -max 144K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
-Run <GtEscape$Dir>.!RunImage %*0 ><GtEscape$Dir>.^.stdouterr 2>&1
+Run <GtEscape$Dir>.!RunImage %*0 >stdout 2>stderr

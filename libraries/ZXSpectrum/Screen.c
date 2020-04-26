@@ -2,15 +2,15 @@
  *
  * ZX Spectrum screen decoding.
  *
- * Copyright (c) David Thomas, 2013-2018. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2020. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <stdlib.h>
 
-#include "ZXSpectrum/Screen.h"
-
 #include "ZXSpectrum/Macros.h"
+
+#include "ZXSpectrum/Screen.h"
 
 /* Define to highlight dirty rectangles when they're drawn. */
 //#define SHOW_DIRTY_RECTS

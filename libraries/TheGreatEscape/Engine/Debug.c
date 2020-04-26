@@ -15,16 +15,22 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#include <assert.h>
+/* ----------------------------------------------------------------------- */
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/State.h"
+#include "TheGreatEscape/SuperTiles.h"
 
 #include "TheGreatEscape/Debug.h"
-#include "TheGreatEscape/State.h"
 
 /* ----------------------------------------------------------------------- */
 
 void check_map_buf(tgestate_t *state)
 {
-  for (int i = 0; i < state->st_columns * state->st_rows; i++)
+  int i;
+
+  for (i = 0; i < state->st_columns * state->st_rows; i++)
   {
     assert(state->map_buf[i] < supertileindex__LIMIT);
   }

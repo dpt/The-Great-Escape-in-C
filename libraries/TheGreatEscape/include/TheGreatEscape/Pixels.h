@@ -18,6 +18,8 @@
 #ifndef PIXELS_H
 #define PIXELS_H
 
+/* ----------------------------------------------------------------------- */
+
 /* Macros to use when defining graphics in code. */
 
 #define ________ 0
@@ -276,6 +278,8 @@
 #define XXXXXX_X 253
 #define XXXXXXX_ 254
 #define XXXXXXXX 255
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* PIXELS_H */
 

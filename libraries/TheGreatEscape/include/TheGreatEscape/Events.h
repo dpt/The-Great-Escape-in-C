@@ -18,7 +18,13 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
-#include "TheGreatEscape/State.h"
+/* ----------------------------------------------------------------------- */
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+#include "TheGreatEscape/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 void dispatch_timed_event(tgestate_t *state);
 
@@ -36,6 +42,8 @@ void hero_sleeps(tgestate_t *state);
 
 void charevnt_breakfast_state(tgestate_t *state, route_t *route);
 void charevnt_breakfast_vischar(tgestate_t *state, route_t *route);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* EVENTS_H */
 

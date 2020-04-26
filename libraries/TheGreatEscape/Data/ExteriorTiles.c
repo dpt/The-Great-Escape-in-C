@@ -15,14 +15,18 @@
  * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-/**
- * $8218: Exterior tiles.
- */
+/* ----------------------------------------------------------------------- */
 
 #include "TheGreatEscape/Pixels.h"
 #include "TheGreatEscape/Tiles.h"
 
 #include "TheGreatEscape/ExteriorTiles.h"
+
+/* ----------------------------------------------------------------------- */
+
+/**
+ * $8218: Exterior tiles.
+ */
 
 const tile_t mask_tiles[111] =
 {
@@ -8215,5 +8219,7 @@ const tile_t exterior_tiles[145 + 220 + 206] =
     }
   },
 };
+
+/* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
