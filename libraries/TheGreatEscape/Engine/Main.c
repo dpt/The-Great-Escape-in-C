@@ -7312,8 +7312,8 @@ trigger_event:
        *
        * Our current target is a door, so change to the door's target room. */
 
-      /* This unpleasant cast turns doorpos (assigned in get_target) back into a door_t. */
-      door = (door_t *)((char *) doormappos - 1);
+      /* Turn doormappos (assigned in get_target) back into a door_t. */
+      door = structof(doormappos, door_t, mappos);
       assert(door >= &doors[0]);
       assert(door < &doors[door_MAX * 2]);
 
@@ -8847,11 +8847,12 @@ void solitary(tgestate_t *state)
   /**
    * $CC31: Partial character struct.
    */
-  static const uint8_t solitary_commandant_reset_data[6] =
+  static const characterstruct_t commandant_reset_data =
   {
-    room_0_OUTDOORS,  // room
-    116, 100, 3, // pos
-    36, 0        // route
+    0,               /* character_and_flags */
+    room_0_OUTDOORS, /* room */
+    { 116, 100, 3 }, /* pos */
+    { 36, 0 }        /* route */
   };
 
   item_t       *pitem;       /* was HL */
@@ -8923,7 +8924,9 @@ next:
   reset_map_and_characters(state);
 
   /* Set the commandant on a path which results in the hero being released. */
-  memcpy(&state->character_structs[character_0_COMMANDANT].room, &solitary_commandant_reset_data, 6);
+  memcpy(&state->character_structs[character_0_COMMANDANT].room,
+         &commandant_reset_data.room,
+         sizeof(characterstruct_t) - offsetof(characterstruct_t, room));
 
   /* Queue solitary messages. */
   queue_message(state, message_YOU_ARE_IN_SOLITARY);

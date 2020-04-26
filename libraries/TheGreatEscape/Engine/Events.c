@@ -299,7 +299,7 @@ found:
   state->red_cross_parcel_current_contents = *item;
   memcpy(&state->item_structs[item_RED_CROSS_PARCEL].room_and_flags,
          &red_cross_parcel_reset_data.room_and_flags,
-         6);
+         sizeof(itemstruct_t) - offsetof(itemstruct_t, room_and_flags));
   queue_message(state, message_RED_CROSS_PARCEL);
 }
 
