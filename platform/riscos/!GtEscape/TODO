@@ -5,9 +5,25 @@ next up:
 
 - check that closing games works as expected (releasing mem)
 
+- reduce borders etc. when scale exceeds big window size
+- test for 0% scale factors being set
+- min window size flag
+
+
+- doc: cursor does work
+
+
+game bugs to check out:
+
+- saw: no other prisoners
+- saw: red cross parcel in wrong place visually
+- saw the hero trapped endlessly in solitary
+- saw character wander out of bounds
+
 
 longer term:
 
+- allocate the filetype
 - snapping /could/ snap more often on higher res screens
 - interactive help needs finishing
 - full screen mode (for speed) 
@@ -22,12 +38,6 @@ questions:
 - do i actually need wide colourtrans?
 - why didn't stubsg support long long for me?
 - concerns about speed - need to test on a real ARM2
-
-
-game bugs to check out:
-
-- saw the item room item mispositioned
-- saw the hero trapped endlessly in solitary
 
 
 done:
