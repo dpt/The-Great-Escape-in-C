@@ -233,16 +233,16 @@ How To Play (RISC OS)
 -----------
 
 Click on the icon bar icon to open a new game
-window. Choose either Keyboard or Kempston input
-method and press zero to start the game. (The
-Sinclair and Protek joystick methods are not
-connected up in this version).
+window. Choose either the Keyboard, Kempston or
+Sinclair input method and press zero to start the
+game. (The Protek joystick method is not connected
+up in this version).
 
 The Great Escape is an isometric game, so:
-  Left  moves DOWN-LEFT
-  Right moves UP-RIGHT
-  Up    moves UP-LEFT
-  Down  moves DOWN-RIGHT
+  Left  moves the hero DOWN-LEFT
+  Right moves the hero UP-RIGHT
+  Up    moves the hero UP-LEFT
+  Down  moves the hero DOWN-RIGHT
 
 Controls
 --------
@@ -300,6 +300,7 @@ Key Mapping
 
 The 40-key ZX Spectrum keyboard is mapped onto the
 Archimedes keyboard in the most 'obvious' manner.
+The non-obvious keys are:
 
 Return ... ENTER
 Shift  ... CAPS SHIFT
