@@ -22,6 +22,8 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale);
 
 void zxgame_open(zxgame_t *zxgame);
 
+error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name);
+
 enum
 {
   zxgame_UPDATE_COLOURS = 1 << 0, /* regenerate pixtrans */

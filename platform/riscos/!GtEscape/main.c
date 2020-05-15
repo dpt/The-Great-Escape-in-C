@@ -41,6 +41,7 @@
 #include "zxgames.h"
 #include "iconbar.h"
 #include "poll.h"
+#include "dataxfer.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -114,6 +115,7 @@ int main(void)
   /* Initialise subsystems */
   zxgame_init();
   tge_icon_bar_init();
+  dataxfer_init();
 
   templates_close();
 
@@ -125,6 +127,7 @@ int main(void)
   register_event_handlers(0);
 
   /* Finalise subsystems */
+  dataxfer_fin();
   tge_icon_bar_fin();
   zxgame_fin();
 

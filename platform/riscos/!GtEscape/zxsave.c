@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #include "oslib/types.h"
+#include "oslib/osfile.h"
 
 #include "appengine/dialogues/save.h"
 #include "appengine/wimp/dialogue.h"
@@ -31,8 +32,8 @@ static void zxgamesave_dlg_fillout(dialogue_t *d, void *opaque)
   if (zxgame == NULL)
     return;
 
-  save_set_file_name(d, "SaveGame");
-  save_set_file_type(d, 0x18E);
+  save_set_file_name(d, "Screenshot");
+  save_set_file_type(d, osfile_TYPE_SPRITE);
 }
 
 /* Called on 'Save' button clicks, but not on drag saves. */
@@ -46,7 +47,7 @@ static void zxgamesave_dlg_handler(dialogue_t *d, const char *file_name)
   if (zxgame == NULL)
     return;
 
-  //zxgame_save(zxgame, file_name);
+  zxgame_save_screenshot(zxgame, file_name);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -71,3 +72,7 @@ void zxgamesave_dlg_fin(void)
 {
   save_destroy(zxgamesave_dlg);
 }
+
+/* ----------------------------------------------------------------------- */
+
+// vim: ts=8 sts=2 sw=2 et

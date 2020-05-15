@@ -17,6 +17,7 @@
 #include "oslib/colourtrans.h"
 #include "oslib/os.h"
 #include "oslib/osbyte.h"
+#include "oslib/osfile.h"
 #include "oslib/osspriteop.h"
 #include "oslib/wimp.h"
 #include "oslib/wimpreadsysinfo.h"
@@ -814,8 +815,7 @@ static void action(action_t action)
       break;
 
     case OpenSaveScreenshot:
-      // TODO
-      // dialogue_show(zxgamesave_dlg);
+      dialogue_show(zxgamesave_dlg);
       break;
 
     case ZoomOut:
@@ -1703,6 +1703,21 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale)
 void zxgame_open(zxgame_t *zxgame)
 {
   window_open_at(zxgame->w, AT_CENTRE);
+}
+
+/* ----------------------------------------------------------------------- */
+
+error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
+{
+  os_error *err;
+
+  err = xosspriteop_save_sprite_file(osspriteop_PTR,
+                                     zxgame->sprite,
+                                     file_name);
+  if (err)
+    return error_OS;
+
+  return error_OK;
 }
 
 /* ----------------------------------------------------------------------- */

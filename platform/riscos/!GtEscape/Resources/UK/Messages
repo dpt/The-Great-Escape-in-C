@@ -10,7 +10,7 @@ icon:!gtescape
 # Menus
 
 menu.iconbar:The Great Escape,>Info,Help,Instructions,Quit
-menu.zxgame:The Great Escape,View{View,Fixed scale{Fixed scale,Selected     ^F|>Scale view  F11,Big window   ^G},Scaled to fit{Scaled to fit,Selected        ^V|Snap to pixels  ^S}|~Full screen F10|Monochrome   ^N},Save{Save,~>Game         F3,~>Screenshot  ‹F3},Sound{Sound,Enabled  ^O},Speed{Speed,100%     F6,Maximum ‹F7|Faster   F7,Slower   F5|Pause    ^P}
+menu.zxgame:The Great Escape,View{View,Fixed scale{Fixed scale,Selected     ^F|>Scale view  F11,Big window   ^G},Scaled to fit{Scaled to fit,Selected        ^V|Snap to pixels  ^S}|~Full screen F10|Monochrome   ^N},Save{Save,~>Game         F3,>Screenshot  ‹F3},Sound{Sound,Enabled  ^O},Speed{Speed,100%     F6,Maximum ‹F7|Faster   F7,Slower   F5|Pause    ^P}
 
 # Warnings
 
@@ -20,6 +20,10 @@ warn.drag.to.save:To save, drag the file icon to a directory display.
 
 error.unknown:Error %d.
 error.no.mem:There is not enough memory to perform the requested operation. Quit any unwanted applications or see the RISC OS User Guide for ways to maximise memory.
+
+# Errors (not numbered)
+
+error.no.scrap:<Wimp$Scrap> is not defined, cannot engage in scrap transfer.
 
 # Interactive Help
 

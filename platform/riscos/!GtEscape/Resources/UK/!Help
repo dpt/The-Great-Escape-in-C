@@ -1,4 +1,4 @@
-The Great Escape - Help for v0.91 (April 2020)
+The Great Escape - Help for v0.92 (May 2020)
 ==============================================
 This is The Great Escape application. It is a port
 to RISC OS of a classic isometric ZX Spectrum game
@@ -51,6 +51,7 @@ Changelog
 ---------
 v0.90 (April 2020) - First beta test release
 v0.91 (April 2020) - Fixed spawning issues
+v0.92 (May 2020)   - Added screenshot saving
 
 Background
 -----------
