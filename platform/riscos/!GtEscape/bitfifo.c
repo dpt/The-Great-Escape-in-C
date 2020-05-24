@@ -24,9 +24,11 @@
 /* A type to hold a chunk of bits. */
 typedef unsigned int bitfifo_T;
 
-#define BITFIFOT_WIDTH     (sizeof(unsigned int) * CHAR_BIT)
-#define BITFIFOT_1         1u
-#define BITFIFOT_LOG2WIDTH 5
+#define BITFIFOT_WIDTHBYTES sizeof(unsigned int)
+#define BITFIFOT_WIDTH     (BITFIFOT_WIDTHBYTES * CHAR_BIT)
+#define BITFIFOT_1         (1u)
+#define BITFIFOT_ALL1S     (~0u)
+#define BITFIFOT_LOG2WIDTH (5)
 
 /* memcpy() for bit-sized regions */
 static void bitcpy(bitfifo_T       *dst,
@@ -35,72 +37,36 @@ static void bitcpy(bitfifo_T       *dst,
                    unsigned int     srcbitoff,
                    size_t           nbits)
 {
-  size_t    nwords;
-  bitfifo_T mask;
-
-  if (nbits == 0)
-    return;
+//fprintf(stderr,"bitcpy dst=%p dstbitoff=%d src=%p srcbitoff=%d nbits=%d\n", (void*)dst, dstbitoff, (void*)src, srcbitoff, nbits);fflush(stderr);
 
   assert(dst);
   assert(dstbitoff < BITFIFOT_WIDTH);
   assert(src);
   assert(srcbitoff < BITFIFOT_WIDTH);
 
-  if (dstbitoff == srcbitoff)
+  /* this processes a single bit per iteration (slow) */
+  while (nbits--)
   {
-    /* source and destination offsets are aligned: easy case */
+    int          dstmask;
+    int          srcmask;
+    unsigned int dstbits;
+    unsigned int srcbits;
 
-    /* align to a word boundary */
-    if (dstbitoff)
-    {
-      mask = ~0u << dstbitoff;
-      *dst = (*dst & ~mask) | (*src & mask);
-      nbits -= dstbitoff;
-    }
+    dstmask = BITFIFOT_1 << dstbitoff;
+    srcmask = BITFIFOT_1 << srcbitoff;
 
-    /* copy whole words */
-    nwords = nbits >> BITFIFOT_LOG2WIDTH;
-    if (nwords)
-    {
-      memcpy(dst, src, nwords * sizeof(*src));
-      dst += nwords;
-      src += nwords;
-    }
+    dstbits = *dst & ~dstmask;
+    srcbits = *src & srcmask;
 
-    /* then copy trailing bits */
-    nbits &= BITFIFOT_WIDTH - 1;
-    if (nbits)
-    {
-      mask = (BITFIFOT_1 << nbits) - 1;
-      *dst = (*dst & ~mask) | (*src & mask);
-    }
-  }
-  else
-  {
-    /* source and destination offsets are not aligned: hard case */
+    if (srcbitoff > dstbitoff)
+      *dst = dstbits | (srcbits >> (srcbitoff - dstbitoff));
+    else
+      *dst = dstbits | (srcbits << (dstbitoff - srcbitoff));
 
-    /* this processes a single bit per iteration (slow) */
-    while (nbits--)
-    {
-      int          dstmask;
-      int          srcmask;
-      unsigned int dstbits;
-      unsigned int srcbits;
-
-      dstmask = BITFIFOT_1 << dstbitoff;
-      srcmask = BITFIFOT_1 << srcbitoff;
-
-      dstbits = *dst & ~dstmask;
-      srcbits = *src & srcmask;
-
-      if (srcbitoff > dstbitoff)
-        *dst = dstbits | (srcbits >> (srcbitoff - dstbitoff));
-      else
-        *dst = dstbits | (srcbits << (dstbitoff - srcbitoff));
-
-      dstbitoff = (dstbitoff + 1) & (BITFIFOT_WIDTH - 1); if (dstbitoff == 0) dst++;
-      srcbitoff = (srcbitoff + 1) & (BITFIFOT_WIDTH - 1); if (srcbitoff == 0) src++;
-    }
+    dstbitoff = (dstbitoff + 1) & (BITFIFOT_WIDTH - 1);
+    if (dstbitoff == 0) dst++;
+    srcbitoff = (srcbitoff + 1) & (BITFIFOT_WIDTH - 1);
+    if (srcbitoff == 0) src++;
   }
 }
 
@@ -243,6 +209,7 @@ result_t bitfifo_dequeue(bitfifo_t *fifo,
     size_t availablehead;
     size_t totalcopied;
     int    outbitsoffset = 0;
+//fprintf(stderr,"bitfifo dequeue split case\n");
 
     /* when head < tail there's two blocks to read from:
      * e.g. -> head      tail ->
@@ -262,6 +229,7 @@ result_t bitfifo_dequeue(bitfifo_t *fifo,
     if (availabletail > 0)
     {
       size_t copy = MIN(noutbits, availabletail);
+//fprintf(stderr,"tail has %d provides %d bits\n", availabletail, copy);
 
       bitcpy(outbits,
              0,
@@ -279,6 +247,7 @@ result_t bitfifo_dequeue(bitfifo_t *fifo,
     if (noutbits > 0)
     {
       assert(availablehead >= noutbits);
+//fprintf(stderr,"head has %d provides %d bits\n", availablehead, noutbits);
 
       bitcpy(outbits,
              outbitsoffset,
@@ -301,6 +270,8 @@ result_t bitfifo_dequeue(bitfifo_t *fifo,
 
     if (noutbits > fifo->head - fifo->tail)
       return result_BITFIFO_INSUFFICIENT;
+
+//fprintf(stderr,"head has %d provides %d bits\n", fifo->head - fifo->tail, noutbits);
 
     bitcpy(outbits,
            0,

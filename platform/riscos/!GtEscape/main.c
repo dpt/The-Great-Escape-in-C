@@ -74,6 +74,19 @@ static void register_event_handlers(int reg)
 
 /* ----------------------------------------------------------------------- */
 
+static void rmensure(void)
+{
+  /* ColourTrans 1.64 is the RISC OS 3.6 version,
+   * needed for wide translation table support. */
+  if (xos_cli("RMEnsure ColourTrans 1.64") == NULL)
+    GLOBALS.flags |= Flag_HaveWideColourTrans;
+
+  if (xos_cli("RMEnsure SharedSound 1.07 RMLoad System:Modules.SSound") == NULL &&
+      xos_cli("RMEnsure StreamManager 0.03 RMLoad System:Modules.StreamMan") == NULL &&
+      xos_cli("RMEnsure SharedSoundBuffer 0.07 RMLoad System:Modules.SSBuffer") == NULL)
+    GLOBALS.flags |= Flag_HaveSharedSoundBuffer;
+}
+
 int main(void)
 {
   static const wimp_MESSAGE_LIST(2) messages =
@@ -84,13 +97,7 @@ int main(void)
     message_QUIT
   }};
 
-  /* ColourTrans 1.64 is the RISC OS 3.6 version,
-   * needed for wide translation table support. */
-  if (xos_cli("RMEnsure ColourTrans 1.64") == NULL)
-    GLOBALS.flags |= Flag_HaveWideColourTrans;
-
-  if (xos_cli("RMEnsure SharedSoundBuffer 0.07") == NULL)
-    GLOBALS.flags |= Flag_HaveSharedSoundBuffer;
+  rmensure();
 
   open_messages(APPNAME "Res:Messages");
 

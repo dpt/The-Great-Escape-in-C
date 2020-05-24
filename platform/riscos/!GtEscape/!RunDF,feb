@@ -1,0 +1,27 @@
+| >!Run for The Great Escape
+| by David Thomas, © 2020
+
+Obey <Obey$Dir>.!Boot
+
+RMEnsure UtilityModule  3.10 Error The Great Escape requires RISC OS 3.1 or later
+
+RMEnsure AppEngine      0.16 RMLoad <GtEscape$Dir>.AppEngine
+RMEnsure AppEngine      0.16 Error The Great Escape requires AppEngine 0.16 or later
+
+RMEnsure TimerMod       4.17 RMLoad <GtEscape$Dir>.TimerMod
+RMEnsure TimerMod       4.17 Error The Great Escape requires TimerMod 4.17 or later
+
+|RMEnsure SharedSound    1.07 GtEscapeRMLoad System:Modules.SSound
+|RMEnsure SharedSound    1.07 Error The Great Escape requires SharedSound 1.07 or later
+
+|RMEnsure StreamManager  0.03 GtEscapeRMLoad System:Modules.StreamMan
+|RMEnsure StreamManager  0.03 Error The Great Escape requires StreamManager 0.03 or later
+
+|RMEnsure SharedSoundBuffer 0.07 GtEscapeRMLoad System:Modules.SSBuffer
+|RMEnsure SharedSoundBuffer 0.07 Error The Great Escape requires SharedSoundBuffer 0.07 or later
+
+WimpSlot -min 4144K -max 4144K
+
+Run <GtEscape$Dir>.Resources.ResFind GtEscape
+
+Run <GtEscape$Dir>.!RunImageDF %*0 >stdout 2>stderr

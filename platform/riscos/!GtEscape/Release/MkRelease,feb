@@ -2,7 +2,7 @@
 |
 
 Set APP GtEscape
-Set V 091
+Set V 092
 
 |
 
@@ -24,4 +24,4 @@ C AppEngine
 C Resources
 C TimerMod
 
-zip -r -9 -u -b <Wimp$ScrapDir> <Obey$Dir>.<APP>-<V>/zip !GtEscape
+zip -r -9 -u -b <Wimp$ScrapDir> <Obey$Dir>.<APP>-<V>/zip !GtEscape !System ReadMe

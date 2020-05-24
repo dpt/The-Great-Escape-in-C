@@ -37,14 +37,15 @@ unique to this reimplementation.
 TODOs / Missing Features
 ------------------------
 * Full screen mode
-* Sound support
+* Pre-Risc PC sound support
 * Save games
 * Joystick support
 
 Acknowledgements
 ----------------
-Thanks to Justin Fletcher for StubsG.
 Thanks to David Ruck for TimerMod.
+Thanks to John Duffell for SharedSoundBuffer.
+Thanks to Justin Fletcher for StubsG.
 Thanks to Richard Dymond for SkoolKit.
 
 Changelog
@@ -52,6 +53,7 @@ Changelog
 v0.90 (April 2020) - First beta test release
 v0.91 (April 2020) - Fixed spawning issues
 v0.92 (May 2020)   - Added screenshot saving
+                   - Added sound (16-bit hardware)
 
 Background
 -----------

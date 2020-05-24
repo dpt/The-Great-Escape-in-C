@@ -23,6 +23,7 @@
 #include "oslib/wimpreadsysinfo.h"
 
 #include "appengine/types.h"
+#include "appengine/base/bitwise.h"
 #include "appengine/base/bsearch.h"
 #include "appengine/base/messages.h"
 #include "appengine/base/os.h"
@@ -75,10 +76,12 @@
 /* Audio */
 
 #define SAMPLE_RATE     (44100)
-#define AVG             (5)     // average this many input bits to make an output sample {magic value}
-#define PERIOD          (10)    // process 10th sec at a time
-#define BITFIFO_LENGTH_BITS (SAMPLE_RATE * AVG / PERIOD)
-#define BITFIFO_LENGTH  (BITFIFO_LENGTH_BITS / 8)
+#define PERIOD          (10)    /* fraction of a second (10 => 0.1s) */
+#define BUFFER_SAMPLES  (SAMPLE_RATE / PERIOD)
+#define BITS_SAMPLE     (5)     /* magic value: we take the mean of this many input bits to make an output sample */
+#define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) /* in bits */
+
+#define MAXVOL          (32767 / 8)
 
 /* ----------------------------------------------------------------------- */
 
@@ -105,7 +108,7 @@ typedef int fix16_t;
 #define zxgame_FLAG_HAVE_CARET  (1u <<  8) /* we own the caret */
 #define zxgame_FLAG_BIG_WINDOW  (1u <<  9) /* size window to screen */
 #define zxgame_FLAG_HAVE_SOUND  (1u << 10) /* sound is available */
-#define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is enabled */
+#define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is required */
 #define zxgame_FLAG_WIDE_CTRANS (1u << 12) /* use wide ColourTrans table */
 
 /* ----------------------------------------------------------------------- */
@@ -157,8 +160,7 @@ struct zxgame
   {
     int                 index;
     bitfifo_t          *fifo;
-    int                 lastvol; /* Most recently output volume */
-    ssndbuf_t           buf;
+    ssndbuf_t           stream;
     unsigned int       *data;
   }
   audio;
@@ -576,55 +578,134 @@ static void border_handler(int colour, void *opaque)
   zxgame_update(zxgame, zxgame_UPDATE_REDRAW);
 }
 
+static result_t setup_sound(zxgame_t *zxgame)
+{
+  result_t         err;
+  _kernel_oserror *kerr;
+
+  if ((zxgame->flags & zxgame_FLAG_HAVE_SOUND) == 0)
+  {
+    zxgame->flags &= ~zxgame_FLAG_SOUND_ON; /* ensure sound deselected */
+    return error_NOT_SUPPORTED; /* no sound hardware */
+  }
+
+  if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
+    return error_NOT_SUPPORTED; /* not requested */
+
+  if (zxgame->audio.stream != 0)
+    return error_OK; /* already setup */
+
+  zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH);
+  if (zxgame->audio.fifo == NULL)
+  {
+     err = error_OOM;
+     goto Failure;
+  }
+
+  zxgame->audio.data = malloc(BUFFER_SAMPLES * 4);
+  if (zxgame->audio.data == NULL)
+  {
+     err = error_OOM;
+     goto Failure;
+  }
+
+  kerr = _swix(SharedSoundBuffer_OpenStream, _INR(0,1)|_OUT(0),
+               0,
+               message0("task"),
+              &zxgame->audio.stream);
+  if (kerr)
+  {
+    err = error_OS;
+    goto Failure;
+  }
+
+  return error_OK;
+
+
+Failure:
+  free(zxgame->audio.data);
+  zxgame->audio.data = NULL;
+
+  bitfifo_destroy(zxgame->audio.fifo);
+  zxgame->audio.fifo = NULL;
+
+  return err;
+}
+
+static void teardown_sound(zxgame_t *zxgame)
+{
+  zxgame->flags &= ~zxgame_FLAG_SOUND_ON; /* ensure sound deselected */
+
+  if ((zxgame->flags & zxgame_FLAG_HAVE_SOUND) == 0)
+    return; /* no sound hardware */
+
+  (void) _swix(SharedSoundBuffer_CloseStream, _IN(0),
+               zxgame->audio.stream);
+  zxgame->audio.stream = 0;
+
+  free(zxgame->audio.data);
+  zxgame->audio.data = NULL;
+
+  bitfifo_destroy(zxgame->audio.fifo);
+  zxgame->audio.fifo = NULL;
+}
+
+static void emit_sound(zxgame_t *zxgame)
+{
+  result_t      err;
+  int           fetch;
+  unsigned int *p;
+  size_t        databytes;
+
+  err = setup_sound(zxgame);
+  if (err)
+    return;
+
+  fetch = BITS_SAMPLE * zxgame->speed / NORMSPEED;
+  fetch = CLAMP(fetch, 1, 32);
+
+  p = zxgame->audio.data;
+  for (;;)
+  {
+    unsigned int bitqueue = 0;
+    unsigned int vol      = 0;
+
+    err = bitfifo_dequeue(zxgame->audio.fifo, &bitqueue, fetch);
+    if (err)
+      break;
+
+    vol = countbits(bitqueue) * MAXVOL / fetch;
+    *p++ = (vol << 0) | (vol << 16);
+    if (p >= zxgame->audio.data + BUFFER_SAMPLES * 4)
+      break;
+  }
+
+  databytes = (p - zxgame->audio.data) * 4;
+  if (databytes)
+    (void) _swix(SharedSoundBuffer_AddBlock, _INR(0,2), zxgame->audio.stream,
+                                                        zxgame->audio.data,
+                                                        databytes);
+
+}
+
 /* Game callback. */
 static void speaker_handler(int on_off, void *opaque)
 {
-  zxgame_t *zxgame = opaque;
+  const unsigned int SOUNDFLAGS = zxgame_FLAG_HAVE_SOUND | zxgame_FLAG_SOUND_ON;
 
-  NOT_USED(on_off);
+  error         err;
+  zxgame_t     *zxgame = opaque;
+  unsigned int  bits;
 
-  if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
+  if ((zxgame->flags & SOUNDFLAGS) != SOUNDFLAGS)
     return;
 
-#if 0
-  unsigned int bit = on_off;
-  size_t       bitsInFifo;
-
-  (void) bitfifo_enqueue(zxgame->audio.fifo, &bit, 0, 1);
-
-  bitsInFifo = bitfifo_used(zxgame->audio.fifo);
-  if (bitsInFifo < BITFIFO_LENGTH)
+  err = setup_sound(zxgame);
+  if (err)
     return;
 
-  static const unsigned char tab[32] =
-  {
-    0, 1, 1, 2,
-    1, 2, 2, 3,
-    1, 2, 2, 3,
-    2, 3, 3, 4,
-    1, 2, 2, 3,
-    2, 3, 3, 4,
-    2, 3, 3, 4,
-    3, 4, 4, 5
-  };
-
-  p = buf;
-  for (;;)
-  {
-    unsigned int bits;
-
-    err = bitfifo_dequeue(zxgame->audio.fifo, &bits, AVG);
-    if (err == result_BITFIFO_INSUFFICIENT || err == result_BITFIFO_EMPTY)
-      break;
-
-    vol = tab[bits] * maxVol / AVG;  // assumes avg is 5
-    *p++ = (vol << 0) | (vol << 16);
-  }
-
-  zxgame->audio.lastvol = vol;
-
-  _swi(SharedSoundBuffer_AddBlock, _INR(0,1), handle, buf, p - buf);
-#endif
+  bits = on_off;
+  (void) bitfifo_enqueue(zxgame->audio.fifo, &bits, 0, 1);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -806,7 +887,13 @@ static void action(action_t action)
 
     case ToggleSound:
       if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
+      {
         zxgame->flags ^= zxgame_FLAG_SOUND_ON;
+        if (zxgame->flags & zxgame_FLAG_SOUND_ON)
+          setup_sound(zxgame);
+        else
+          teardown_sound(zxgame);
+      }
       break;
 
     case OpenSaveGame:
@@ -877,6 +964,8 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
   {
     tge_main(zxgame->tge);
   }
+
+  emit_sound(zxgame);
 
   return event_PASS_ON;
 }
@@ -1557,7 +1646,7 @@ error zxgame_create(zxgame_t **new_zxgame)
   if (zxgame == NULL)
     goto NoMem;
 
-  zxgame->flags = zxgame_FLAG_FIRST | zxgame_FLAG_MENU;
+  zxgame->flags = zxgame_FLAG_FIRST | zxgame_FLAG_MENU | zxgame_FLAG_SOUND_ON;
 
   if (GLOBALS.flags & Flag_HaveWideColourTrans)
     zxgame->flags |= zxgame_FLAG_WIDE_CTRANS;
@@ -1612,19 +1701,6 @@ error zxgame_create(zxgame_t **new_zxgame)
   if (zxgame->tge == NULL)
     goto Failure;
 
-  if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
-  {
-    // maybe just do all the sound init lazily
-    zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH);
-    if (zxgame->audio.fifo == NULL)
-      goto NoMem;
-
-    _swi(SharedSoundBuffer_OpenStream, _INR(0,1)|_OUT(0),
-         0,
-         message0("task"),
-        &zxgame->audio.buf);
-  }
-
   tge_setup(zxgame->tge);
 
   set_handlers(zxgame);
@@ -1659,14 +1735,7 @@ void zxgame_destroy(zxgame_t *zxgame)
   if (zxgame == NULL)
     return;
 
-  bitfifo_destroy(zxgame->audio.fifo);
-
-  if (zxgame->flags & zxgame_FLAG_HAVE_SOUND)
-  {
-    _swi(SharedSoundBuffer_CloseStream, _IN(0),
-         zxgame->audio.buf); // stop audio dead
-  }
-
+  teardown_sound(zxgame);
   zxgame_remove(zxgame);
 
   /* Delete the window */
@@ -1691,6 +1760,8 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale)
 {
   if (scale == zxgame->scale.cur)
     return;
+
+  zxgame->flags &= ~zxgame_FLAG_FIT;
 
   zxgame->scale.prev = zxgame->scale.cur;
   zxgame->scale.cur = scale;
