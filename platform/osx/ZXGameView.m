@@ -41,12 +41,13 @@
 
 // Configuration
 //
-#define DEFAULTWIDTH      256
-#define DEFAULTHEIGHT     192
-#define DEFAULTBORDERSIZE  32
+#define GAMEWIDTH       (256)   // pixels
+#define GAMEHEIGHT      (192)   // pixels
+#define GAMEBORDER      (16)    // pixels
 
-#define MAXSTAMPS           4 /* depth of nested timestamp stack */
-
+#define MAXSTAMPS       (4)     // max depth of timestamps stack
+#define SPEEDQ          (20)    // smallest unit of speed (percent)sp
+#
 // -----------------------------------------------------------------------------
 
 #pragma mark - UIView
@@ -126,7 +127,7 @@
 {
   const zxconfig_t zxconfig =
   {
-    DEFAULTWIDTH / 8, DEFAULTHEIGHT / 8, // screen dimensions in UDGs
+    GAMEWIDTH / 8, GAMEHEIGHT / 8, // screen dimensions in UDGs
     (__bridge void *)(self),
     &draw_handler,
     &stamp_handler,
@@ -142,14 +143,14 @@
   thread          = NULL;
 
   doSetupDrawing  = YES;
-  borderSize      = DEFAULTBORDERSIZE;
+  borderSize      = GAMEBORDER;
   snap            = YES;
   monochromatic   = NO;
 
   quit            = NO;
   paused          = NO;
 
-  speed           = 100;
+  speed           = NORMSPEED;
 
   memset(stamps, 0, sizeof(stamps));
   nstamps = 0;
@@ -370,8 +371,8 @@ failure:
 
 - (IBAction)setSpeed:(id)sender
 {
-  const int min_speed = 10;     // percent
-  const int max_speed = 100000; // percent
+  const int min_speed = SPEEDQ;   // percent
+  const int max_speed = MAXSPEED; // percent
 
   NSInteger tag;
 
@@ -392,7 +393,7 @@ failure:
     {
       default:
       case 100: // normal speed
-        speed = 100;
+        speed = NORMSPEED;
         break;
 
       case -1: // maximum speed
@@ -400,11 +401,11 @@ failure:
         break;
 
       case 1: // increase speed
-        speed += 25;
+        speed += SPEEDQ;
         break;
 
       case 2: // decrease speed
-        speed -= 25;
+        speed -= SPEEDQ;
         break;
     }
 
@@ -521,7 +522,7 @@ failure:
 
   // Draw the image
   glPixelZoom(zsx, zsy);
-  glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+  glDrawPixels(GAMEWIDTH, GAMEHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   // Flush to screen
   glFinish();
