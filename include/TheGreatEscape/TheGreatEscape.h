@@ -33,7 +33,7 @@ extern "C"
 #      define TGE_API
 #    endif
 #  else
-#    if defined(__GNUC_) && __GNUC__ >= 4
+#    if defined(__GNUC__) && __GNUC__ >= 4
 #      define TGE_API __attribute__((visibility("default")))
 #    else
 #      define TGE_API
