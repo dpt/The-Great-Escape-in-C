@@ -24,4 +24,5 @@ C AppEngine
 C Resources
 C TimerMod
 
+Dir <Obey$Dir>
 zip -r -9 -u -b <Wimp$ScrapDir> <Obey$Dir>.<APP>-<V>/zip !GtEscape !System ReadMe
