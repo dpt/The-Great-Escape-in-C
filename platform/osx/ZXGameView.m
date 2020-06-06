@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/10/2014.
-//  Copyright (c) 2014-2018 David Thomas. All rights reserved.
+//  Copyright (c) 2014-2020 David Thomas. All rights reserved.
 //
 
 #import <ctype.h>
@@ -47,8 +47,20 @@
 
 #define MAXSTAMPS       (4)     // max depth of timestamps stack
 #define SPEEDQ          (20)    // smallest unit of speed (percent)sp
-#define NORMSPEED       (100)   /* normal speed (percent) */
-#define MAXSPEED        (99999) /* fastest possible game (percent) */
+#define NORMSPEED       (100)   // normal speed (percent)
+#define MAXSPEED        (99999) // fastest possible game (percent)
+
+// -----------------------------------------------------------------------------
+
+// Audio
+//
+#define SAMPLE_RATE     (44100)
+#define PERIOD          (10)    // fraction of a second (10 => 0.1s)
+#define BUFFER_SAMPLES  (SAMPLE_RATE / PERIOD)
+#define BITS_SAMPLE     (5)     // magic value: we take the mean of this many input bits to make an output sample
+#define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) // in bits
+
+#define MAXVOL          (32767 / 2)
 
 // -----------------------------------------------------------------------------
 
@@ -373,9 +385,6 @@ failure:
 
 - (IBAction)setSpeed:(id)sender
 {
-  const int min_speed = SPEEDQ;   // percent
-  const int max_speed = MAXSPEED; // percent
-
   NSInteger tag;
 
   tag = [sender tag];
@@ -399,7 +408,7 @@ failure:
         break;
 
       case -1: // maximum speed
-        speed = max_speed;
+        speed = MAXSPEED;
         break;
 
       case 1: // increase speed
@@ -411,10 +420,10 @@ failure:
         break;
     }
 
-    if (speed < min_speed)
-      speed = min_speed;
-    else if (speed > max_speed)
-      speed = max_speed;
+    if (speed < SPEEDQ)
+      speed = SPEEDQ;
+    else if (speed > MAXSPEED)
+      speed = MAXSPEED;
   }
 }
 
@@ -771,17 +780,13 @@ static void speaker_handler(int on_off, void *opaque)
 // averaging five value to produce a 44.1KHz signal. This certainly sounds
 // right but I'm not currently sure how accurate it really is.
 // To produce a 22.05KHz signal instead: average ten values, and so on.
-#define SAMPLE_RATE     (44100)
-#define BITFIFO_LENGTH  (220500 / 4) // one seconds' worth of input bits (fifo will be ~27KiB)
-#define AVG             (5) // average this many input bits to make an output sample
 
 // Z80 @ 3.5MHz
 // Each OUT takes 11 cycles
 // >>> 3.5e6 / 11
 // 318181.81 recurring OUTs/s theoretical max
 
-
-// This is the same as a AURenderCallback except it's not a pointer type.
+// This is the same as an AURenderCallback except it's not a pointer type.
 static OSStatus playbackCallback(void                       *inRefCon,
                                  AudioUnitRenderActionFlags *ioActionFlags,
                                  const AudioTimeStamp       *inTimeStamp,
@@ -836,7 +841,7 @@ static OSStatus playbackCallback(void                       *inRefCon,
   audioFormat.mFramesPerPacket  = 1;
   audioFormat.mBytesPerFrame    = 2;
   audioFormat.mChannelsPerFrame = 1;
-  audioFormat.mBitsPerChannel   = 16 * 1;
+  audioFormat.mBitsPerChannel   = 16;
   audioFormat.mReserved         = 0;
 
   // Apply the format
@@ -928,6 +933,7 @@ OSStatus playbackCallback(void                       *inRefCon,
 
   ZXGameView *view = (__bridge id) inRefCon;
   result_t    err;
+  int         fetch;
   OSStatus    rc;
   UInt32      i;
 
@@ -935,6 +941,9 @@ OSStatus playbackCallback(void                       *inRefCon,
   {
     // CHECK: Is this going to screw up with mNumberBuffers > 1 since i'm
     //        fetching from the fifo?
+
+    fetch = BITS_SAMPLE * view->speed / NORMSPEED;
+    fetch = (fetch < 1) ? 1 : (fetch > 32) ? 32 : fetch;
 
     for (i = 0; i < ioData->mNumberBuffers; i++)
     {
@@ -959,8 +968,6 @@ OSStatus playbackCallback(void                       *inRefCon,
         if (bitsInFifo == 0)
           goto no_data;
 
-        const signed short maxVolume = 32500; // tweak this down to quieten
-
         signed short      *p;
         signed short       vol;
         UInt32             j;
@@ -971,13 +978,13 @@ OSStatus playbackCallback(void                       *inRefCon,
           unsigned int bits;
 
           bits = 0;
-          err = bitfifo_dequeue(view->audio.fifo, &bits, AVG);
+          err = bitfifo_dequeue(view->audio.fifo, &bits, fetch);
           if (err == result_BITFIFO_INSUFFICIENT ||
               err == result_BITFIFO_EMPTY)
             // When the fifo empties maintain the most recent volume
             vol = view->audio.lastvol;
           else
-            vol = (int) __builtin_popcount(bits) * maxVolume / AVG;
+            vol = (int) __builtin_popcount(bits) * MAXVOL / fetch;
           *p++ = vol;
 
           view->audio.lastvol = vol;
