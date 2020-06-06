@@ -261,144 +261,144 @@ static int choose_keys(tgestate_t *state)
     /* Wipe key definitions. */
     memset(&state->keydefs.defs[0], 0, 5 * 2);
 
-{
-    uint8_t Adash = 0; /* was A' */ // initialised to zero
     {
-      const uint16_t *poffset; /* was HL */
-
-      prompt_iters = NELEMS(key_name_screen_offsets); /* L/R/U/D/F => 5 */
-      poffset = &key_name_screen_offsets[0];
-      do
-      {
-        uint16_t  screenoff;  /* was $F3E9 */
-        uint8_t   A; /* was A */
-
-        // this block moved up for scope
-        keydef_t *keydef;  /* was HL */
-        uint8_t   port;    /* was B */
-        uint8_t   mask;    /* was C */
-
-        screenoff = *poffset++; // self modify screen addr
-        A = 0xFF; /* debounce */
-
+        uint8_t Adash = 0; /* was A' */ // initialised to zero
         {
-          const uint8_t *hi_bytes;    /* was HL */
-          uint8_t        index;       /* was D */
-          int            carry = 0;
-          // uint8_t        hi_byte;     /* was A' */
-          // uint8_t        storedport;  /* was A' */
-          uint8_t        keyflags;    /* was E */
+          const uint16_t *poffset; /* was HL */
+
+          prompt_iters = NELEMS(key_name_screen_offsets); /* L/R/U/D/F => 5 */
+          poffset = &key_name_screen_offsets[0];
+          do
+          {
+            uint16_t  screenoff;  /* was $F3E9 */
+            uint8_t   A; /* was A */
+
+            // this block moved up for scope
+            keydef_t *keydef;  /* was HL */
+            uint8_t   port;    /* was B */
+            uint8_t   mask;    /* was C */
+
+            screenoff = *poffset++; // self modify screen addr
+            A = 0xFF; /* debounce */
+
+            {
+              const uint8_t *hi_bytes;    /* was HL */
+              uint8_t        index;       /* was D */
+              int            carry = 0;
+              // uint8_t        hi_byte;     /* was A' */
+              // uint8_t        storedport;  /* was A' */
+              uint8_t        keyflags;    /* was E */
 
 for_loop:
-          for (;;)
-          {
-            /* Conv: Timing: The original game keyscans as fast as it can. We
-             * can't have that so instead we introduce a short delay. */
-            if (menudelay(state, 3500000 / 50)) /* 50/sec */
-                return -1; /* Terminate the game thread */
+              for (;;)
+              {
+                /* Conv: Timing: The original game keyscans as fast as it can. We
+                 * can't have that so instead we introduce a short delay. */
+                if (menudelay(state, 3500000 / 50)) /* 50/sec */
+                    return -1; /* Terminate the game thread */
 
-            SWAP(uint8_t, A, Adash);
-            hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
-            index = 0xFF;
+                SWAP(uint8_t, A, Adash);
+                hi_bytes = &keyboard_port_hi_bytes[0]; /* Byte 0 is unused. */
+                index = 0xFF;
 try_next_port:
-            hi_bytes++;
-            index++;
-            A = *hi_bytes;
-            if (A == 0) /* Hit end of keyboard_port_hi_bytes. */
-              goto for_loop;
+                hi_bytes++;
+                index++;
+                A = *hi_bytes;
+                if (A == 0) /* Hit end of keyboard_port_hi_bytes. */
+                  goto for_loop;
 
-            port = A; // saved so it can be stored later
-            A = ~state->speccy->in(state->speccy, (port << 8) | 0xFE);
-            keyflags = A;
-            mask = 1 << 5;
+                port = A; // saved so it can be stored later
+                A = ~state->speccy->in(state->speccy, (port << 8) | 0xFE);
+                keyflags = A;
+                mask = 1 << 5;
 key_loop:
-            SRL(mask);
-            if (carry)
-              goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
+                SRL(mask);
+                if (carry)
+                  goto try_next_port; /* Masking loop ran out. Move to the next keyboard port. */
 
-            A = mask & keyflags;
-            if (A == 0) // temps: A'
-              goto key_loop; /* Key was not pressed. Move to next key. */
+                A = mask & keyflags;
+                if (A == 0) // temps: A'
+                  goto key_loop; /* Key was not pressed. Move to next key. */
 
-            SWAP(uint8_t, A, Adash);
+                SWAP(uint8_t, A, Adash);
 
-            /* Keep looping until we've done a full keyscan with no result - debounce */
-            if (A)
-              goto for_loop;
+                /* Keep looping until we've done a full keyscan with no result - debounce */
+                if (A)
+                  goto for_loop;
 
-            /* ... */
+                /* ... */
 
-            A = index;
+                A = index;
 
-            SWAP(uint8_t, A, Adash);
+                SWAP(uint8_t, A, Adash);
 
-            /* Check for an already defined key. */
-            keydef = &state->keydefs.defs[0] - 1;
-            do
-            {
-              keydef++;
+                /* Check for an already defined key. */
+                keydef = &state->keydefs.defs[0] - 1;
+                do
+                {
+                  keydef++;
 
-              A = keydef->port;
-              if (A == 0) /* If an empty slot, assign */
-                goto assign_keydef;
+                  A = keydef->port;
+                  if (A == 0) /* If an empty slot, assign */
+                    goto assign_keydef;
+                }
+                while (A != port || keydef->mask != mask);
+
+              } // for_loop
             }
-            while (A != port || keydef->mask != mask);
-
-          } // for_loop
-        }
 
 assign_keydef:
-        keydef->port = port;
-        keydef->mask = mask;
+            keydef->port = port;
+            keydef->mask = mask;
 
-        /* Plot */
-        {
-          const unsigned char *pglyph;          /* was HL */
-          const char          *pkeyname;        /* was HL */
-          int                  carry = 0;
-          uint8_t              length;          /* was B */
-          uint8_t              glyph_and_flags; /* was A */
-          unsigned char       *screenptr;       /* was DE */
+            /* Plot */
+            {
+              const unsigned char *pglyph;          /* was HL */
+              const char          *pkeyname;        /* was HL */
+              int                  carry = 0;
+              uint8_t              length;          /* was B */
+              uint8_t              glyph_and_flags; /* was A */
+              unsigned char       *screenptr;       /* was DE */
 
-          SWAP(uint8_t, A, Adash);
+              SWAP(uint8_t, A, Adash);
 
-          pglyph = &keycode_to_glyph[A][0] - 1; /* Off by one to compensate for pre-increment */
-          /* Skip entries until 'mask' carries out. */
-          do
-          {
-            pglyph++;
-            RR(mask);
+              pglyph = &keycode_to_glyph[A][0] - 1; /* Off by one to compensate for pre-increment */
+              /* Skip entries until 'mask' carries out. */
+              do
+              {
+                pglyph++;
+                RR(mask);
+              }
+              while (!carry);
+
+              // plot the byte at HL, string length is 1
+              length = 1;
+              glyph_and_flags = *pglyph;
+              pkeyname = (const char *) pglyph; // Conv: Added. For type reasons.
+
+              if (glyph_and_flags & (1 << 7))
+              {
+                /* If the top bit was set then it's a special key,
+                 * like BREAK or ENTER. */
+                pkeyname = &special_key_names[glyph_and_flags & ~(1 << 7)];
+                length = *pkeyname++;
+              }
+
+              /* Plot. */
+              screenptr = screen + screenoff; // self modified // screen offset
+              do
+              {
+                // glyph_and_flags = *pkeyname; // Conv: dead code? similar to other instances of calls to plot_glyph
+                ASSERT_SCREEN_PTR_VALID(screenptr);
+                screenptr = plot_glyph(state, pkeyname, screenptr);
+                pkeyname++;
+              }
+              while (--length);
+            }
           }
-          while (!carry);
-
-          // plot the byte at HL, string length is 1
-          length = 1;
-          glyph_and_flags = *pglyph;
-          pkeyname = (const char *) pglyph; // Conv: Added. For type reasons.
-
-          if (glyph_and_flags & (1 << 7))
-          {
-            /* If the top bit was set then it's a special key,
-             * like BREAK or ENTER. */
-            pkeyname = &special_key_names[glyph_and_flags & ~(1 << 7)];
-            length = *pkeyname++;
-          }
-
-          /* Plot. */
-          screenptr = screen + screenoff; // self modified // screen offset
-          do
-          {
-            // glyph_and_flags = *pkeyname; // Conv: dead code? similar to other instances of calls to plot_glyph
-            ASSERT_SCREEN_PTR_VALID(screenptr);
-            screenptr = plot_glyph(state, pkeyname, screenptr);
-            pkeyname++;
-          }
-          while (--length);
+          while (--prompt_iters);
         }
       }
-      while (--prompt_iters);
-    }
-  }
 
     /* Conv: Timing: This was a delay loop counting to 0xFFFF. */
     if (menudelay(state, 3500000 / 10)) /* 10/sec */
