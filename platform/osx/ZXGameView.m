@@ -187,7 +187,7 @@
   [self setupAudio];
 
   pthread_create(&thread,
-                 NULL /* pthread_attr_t */,
+                 NULL, // pthread_attr_t
                  tge_thread,
                  (__bridge void *)(self));
 
@@ -346,37 +346,32 @@ failure:
 - (void)keyUp:(NSEvent *)event
 {
   [self keyUpOrDown:event isDown:NO];
-  // NSLog(@"Key released: %@", event);
 }
 
 - (void)keyDown:(NSEvent *)event
 {
   [self keyUpOrDown:event isDown:YES];
-  // NSLog(@"Key pressed: %@", event);
 }
 
 - (void)flagsChanged:(NSEvent *)event
 {
-  /* Unlike keyDown and keyUp, flagsChanged is a single event delivered when
-   * any one of the modifier key states change, down or up. */
+  // Unlike keyDown and keyUp, flagsChanged is a single event delivered when
+  // any one of the modifier key states change, down or up.
 
   NSEventModifierFlags modifierFlags = [event modifierFlags];
   bool shift = (modifierFlags & NSEventModifierFlagShift)  != 0;
   bool alt   = (modifierFlags & NSEventModifierFlagOption) != 0;
 
-  /* For reference:
-   *
-   * bool control = (modifierFlags & NSControlKeyMask) != 0;
-   * bool command = (modifierFlags & NSCommandKeyMask) != 0;
-   */
+  // For reference:
+  //
+  // bool control = (modifierFlags & NSControlKeyMask) != 0;
+  // bool command = (modifierFlags & NSCommandKeyMask) != 0;
 
   @synchronized(self)
   {
     zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
     zxkeyset_assign(&keys, zxkey_SYMBOL_SHIFT, alt);
   }
-
-  // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }
 
 // -----------------------------------------------------------------------------
@@ -655,7 +650,7 @@ static int sleep_handler(int durationTStates, void *opaque)
       if (!paused)
         break;
 
-      usleep(500000); /* 0.5s */
+      usleep(500000); // 0.5s
     }
   }
   else
@@ -665,10 +660,10 @@ static int sleep_handler(int durationTStates, void *opaque)
     const double          tstatesPerSec = 3.5e6;
 
     struct timeval        now;
-    double                duration; /* seconds */
+    double                duration; // seconds
     const struct timeval *then;
     struct timeval        delta;
-    double                consumed; /* seconds */
+    double                consumed; // seconds
 
     gettimeofday(&now, NULL); // get time now before anything else
 
@@ -689,7 +684,7 @@ static int sleep_handler(int durationTStates, void *opaque)
     consumed = delta.tv_sec + delta.tv_usec / 1e6;
     if (consumed < duration)
     {
-      double     delay; /* seconds */
+      double     delay; // seconds
       useconds_t udelay;
 
       // We didn't take enough time - sleep for the remainder of our duration
