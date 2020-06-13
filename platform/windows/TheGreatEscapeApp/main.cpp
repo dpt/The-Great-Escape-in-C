@@ -2,7 +2,7 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2019. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2020. <dave@davespace.co.uk>
 //
 
 #include <cassert>
@@ -22,11 +22,14 @@
 
 // Configuration
 //
-#define DEFAULTWIDTH      256
-#define DEFAULTHEIGHT     192
-#define DEFAULTBORDERSIZE  32
+#define GAMEWIDTH       (256)   // pixels
+#define GAMEHEIGHT      (192)   // pixels
+#define GAMEBORDER      (16)    // pixels
 
-#define MAXSTAMPS           4 /* depth of nested timestamp stack */
+#define MAXSTAMPS       (4)     // max depth of timestamps stack
+#define SPEEDQ          (20)    // smallest unit of speed (percent)
+#define NORMSPEED       (100)   // normal speed (percent)
+#define MAXSPEED        (99999) // fastest possible game (percent)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +52,7 @@ typedef struct gamewin
 
   zxkeyset_t      keys;
 
-  int             speed;
+  int             speed;  // percent
   BOOL            paused;
 
   bool            quit;
@@ -126,7 +129,7 @@ static int sleep_handler(int durationTStates, void *opaque)
     // Turn T-state duration into seconds
     duration = durationTStates / tstatesPerSec;
     // Adjust the game speed
-    duration = duration * 100 / gamewin->speed;
+    duration = duration * NORMSPEED / gamewin->speed;
 
     then = gamewin->stamps[gamewin->nstamps];
 
@@ -202,8 +205,8 @@ static int CreateGame(gamewin_t *gamewin)
   DWORD             threadId;
   BITMAPINFOHEADER *bmih;
 
-  zxconfig.width  = DEFAULTWIDTH / 8;
-  zxconfig.height = DEFAULTHEIGHT / 8;
+  zxconfig.width  = GAMEWIDTH / 8;
+  zxconfig.height = GAMEHEIGHT / 8;
   zxconfig.opaque = gamewin;
   zxconfig.draw   = draw_handler;
   zxconfig.stamp  = stamp_handler;
@@ -231,8 +234,8 @@ static int CreateGame(gamewin_t *gamewin)
 
   bmih = &gamewin->bitmapinfo.bmiHeader;
   bmih->biSize          = sizeof(BITMAPINFOHEADER);
-  bmih->biWidth         = DEFAULTWIDTH;
-  bmih->biHeight        = -DEFAULTHEIGHT; // negative height flips the image
+  bmih->biWidth         = GAMEWIDTH;
+  bmih->biHeight        = -GAMEHEIGHT; // negative height flips the image
   bmih->biPlanes        = 1;
   bmih->biBitCount      = 32;
   bmih->biCompression   = BI_RGB;
@@ -250,7 +253,7 @@ static int CreateGame(gamewin_t *gamewin)
 
   zxkeyset_clear(&gamewin->keys);
 
-  gamewin->speed    = 100;
+  gamewin->speed    = NORMSPEED;
   gamewin->paused   = false;
 
   gamewin->quit     = false;
@@ -338,8 +341,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         windowHeight = clientrect.bottom - clientrect.top;
 
         // How many natural-scale games fit comfortably into the window?
-        gameWidthsPerWindow  = (windowWidth  - DEFAULTBORDERSIZE * 2) / gameWidth;
-        gameHeightsPerWindow = (windowHeight - DEFAULTBORDERSIZE * 2) / gameHeight;
+        gameWidthsPerWindow  = (windowWidth  - GAMEBORDER * 2) / gameWidth;
+        gameHeightsPerWindow = (windowHeight - GAMEBORDER * 2) / gameHeight;
         gamesPerWindow = min(gameWidthsPerWindow, gameHeightsPerWindow);
 
         // Try again without a border if the window is very small
@@ -368,7 +371,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                       xOffset, yOffset,
                       drawWidth, drawHeight,
                       0, 0,
-                      DEFAULTWIDTH, DEFAULTHEIGHT,
+                      GAMEWIDTH, GAMEHEIGHT,
                       pixels,
                       &gamewin->bitmapinfo,
                       DIB_RGB_COLORS,
@@ -474,8 +477,8 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin
   // Required window dimensions
   rect.left   = 0;
   rect.top    = 0;
-  rect.right  = DEFAULTWIDTH  + DEFAULTBORDERSIZE * 2;
-  rect.bottom = DEFAULTHEIGHT + DEFAULTBORDERSIZE * 2;
+  rect.right  = GAMEWIDTH  + GAMEBORDER * 2;
+  rect.bottom = GAMEHEIGHT + GAMEBORDER * 2;
 
   // Adjust window dimensions for window furniture
   result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
