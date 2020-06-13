@@ -13,6 +13,7 @@
 
 #include "ZXSpectrum/Spectrum.h"
 #include "ZXSpectrum/Keyboard.h"
+#include "ZXSpectrum/Kempston.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
@@ -51,6 +52,7 @@ typedef struct gamewin
   DWORD           threadId;
 
   zxkeyset_t      keys;
+  zxkempston_t    kempston;
 
   int             speed;  // percent
   BOOL            paused;
@@ -154,8 +156,14 @@ static int sleep_handler(int durationTStates, void *opaque)
 static int key_handler(uint16_t port, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
+  int        k;
 
-  return zxkeyset_for_port(port, &gamewin->keys);
+  if (port == port_KEMPSTON_JOYSTICK)
+    k = gamewin->kempston;
+  else
+    k = zxkeyset_for_port(port, &gamewin->keys);
+
+  return k;
 }
 
 static void border_handler(int colour, void *opaque)
@@ -252,6 +260,7 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->threadId = threadId;
 
   zxkeyset_clear(&gamewin->keys);
+  gamewin->kempston = 0;
 
   gamewin->speed    = NORMSPEED;
   gamewin->paused   = false;
@@ -392,18 +401,36 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
     case WM_KEYDOWN:
     case WM_KEYUP:
       {
-        bool down = (message == WM_KEYDOWN);
+        bool         down = (message == WM_KEYDOWN);
+        zxjoystick_t j;
 
-        if (wParam == VK_CONTROL)
-          zxkeyset_assign(&gamewin->keys, zxkey_CAPS_SHIFT,   down);
-        else if (wParam == VK_SHIFT)
-          zxkeyset_assign(&gamewin->keys, zxkey_SYMBOL_SHIFT, down);
+        switch (wParam)
+        {
+        case VK_UP:         j = zxjoystick_UP;      break;
+        case VK_DOWN:       j = zxjoystick_DOWN;    break;
+        case VK_LEFT:       j = zxjoystick_LEFT;    break;
+        case VK_RIGHT:      j = zxjoystick_RIGHT;   break;
+        case VK_OEM_PERIOD: j = zxjoystick_FIRE;    break;
+        default:            j = zxjoystick_UNKNOWN; break;
+        }
+
+        if (j != zxjoystick_UNKNOWN)
+        {
+          zxkempston_assign(&gamewin->kempston, j, down);
+        }
         else
         {
-          if (down)
-            zxkeyset_setchar(&gamewin->keys, wParam);
+          if (wParam == VK_CONTROL)
+            zxkeyset_assign(&gamewin->keys, zxkey_CAPS_SHIFT, down);
+          else if (wParam == VK_SHIFT)
+            zxkeyset_assign(&gamewin->keys, zxkey_SYMBOL_SHIFT, down);
           else
-            zxkeyset_clearchar(&gamewin->keys, wParam);
+          {
+            if (down)
+              zxkeyset_setchar(&gamewin->keys, wParam);
+            else
+              zxkeyset_clearchar(&gamewin->keys, wParam);
+          }
         }
       }
       break;
