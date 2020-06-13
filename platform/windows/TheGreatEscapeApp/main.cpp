@@ -152,7 +152,7 @@ static int key_handler(uint16_t port, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
 
-  return zxkeyset_for_port(port, gamewin->keys);
+  return zxkeyset_for_port(port, &gamewin->keys);
 }
 
 static void border_handler(int colour, void *opaque)
@@ -248,7 +248,7 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->thread   = thread;
   gamewin->threadId = threadId;
 
-  gamewin->keys     = 0;
+  zxkeyset_clear(&gamewin->keys);
 
   gamewin->speed    = 100;
   gamewin->paused   = false;
@@ -398,9 +398,9 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         else
         {
           if (down)
-            gamewin->keys = zxkeyset_setchar(gamewin->keys, wParam);
+            zxkeyset_setchar(&gamewin->keys, wParam);
           else
-            gamewin->keys = zxkeyset_clearchar(gamewin->keys, wParam);
+            zxkeyset_clearchar(&gamewin->keys, wParam);
         }
       }
       break;
