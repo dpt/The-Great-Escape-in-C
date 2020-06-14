@@ -1,0 +1,307 @@
+The Great Escape - Instructions
+===============================
+Note: These are the original instructions for the
+game. The instructions for RISC OS are at the
+bottom of this file.
+
+The Game
+--------
+The year is 1942, the place Germany. War has
+broken out and you have been captured and placed
+in a high security P.O.W. camp. Victory may be far
+away, so it is your duty to escape, but this will
+not be easy. It will take careful planning and
+much patience, culminating in a skilful and
+resourceful implementation.
+
+In the camp you are closely guarded but while you
+follow the daily routine you will need to slip
+away unnoticed to reconnoitre the situation and
+collect tools and materials necessary for your
+chosen escape route. There are many avenues of
+escape, some difficult, all certainly dangerous
+and each one requiring different skills or
+equipment.
+
+Camp Geography And Possible Escape Routes
+-----------------------------------------
+The camp is a small Castle on a promontory
+surrounded on three sides by cliffs and the cold
+North Sea. Official entry to the camp is by a
+narrow road through the gatehouse and all traffic
+must carry papers authorising their passage.
+Elsewhere the camp has been closed by either
+fences or walls and dogs are deployed to patrol
+the perimeter. These gates are watched by men from
+the observation towers and there are very few
+blind spots, at night powerful search lights comb
+the walls looking for any sign of movement.
+
+The prisoners are housed in pre-fabricated huts
+within the castle ground just to the side of the
+quadrangle that is used for roll calls and
+recreational purposes.
+
+In line with the Geneva Convention the prisoners
+must have exercise and so an area has been
+provided and this is conveniently situated on the
+island side allowing close up inspection of the
+southern fences.
+
+Beneath the camp is a labyrinth of old drains and
+tunnels dug out by past internees it could prove
+an ideal route to escape but entering without a
+torch is very dangerous as it is far too easy to
+get lost in the dark.
+
+Within The Camp There Are Four Main Character Types
+---------------------------------------------------
+1. The Commandant
+2. The German Guards
+3. Fellow prisoners
+4. The escaping prisoner
+
+1. The Commandant
+-----------------
+This daunting figure controls the camp, it is he
+who chooses the number of soldiers to place on
+particular patrols and the observation positions.
+At the beginning of the game security is fairly
+lax but the more times the player is caught out of
+bounds the more secure the camp will become.
+
+The Commandant is the least predictable of the
+security forces, he often inspects his guards to
+see if they are in the correct place and are
+following instructions and it is possible to bump
+into him almost anywhere in the camp. It is a good
+idea therefore to know his whereabouts at all
+times to avoid unfortunate encounters!
+
+2. The German Guards
+--------------------
+These characters are the work horses of the camp
+staff. They must either trudge along on patrol,
+shiver on observation towers or stand alert on
+sentry duty and ensure the prisoners keep to their
+daily routine.
+
+Once allotted to a patrol, they will dutifully
+pace up and down taking approximately the same
+time on each circuit. This will allow you to time
+the position of the guards and modify your escape
+plan accordingly. The hero will be detected within
+the lines of sight of any of the security forces
+so it is possible to sneak past a guard who is
+looking the other way, but they are very alert and
+you will have to be quick.
+
+The soldiers who look after the POW's escort the
+prisoners before they move about the camp, so two
+or three guards will follow them to the parade
+ground, the exercise area or the prisoners mess.
+
+3. Fellow Prisoners
+-------------------
+These unfortunate fellows have been in the camp
+for a long time, at first they were enthusiastic
+about escaping but a long series of failures have
+crushed their morale.
+
+They now seem happy to bide their time until the
+end of the war. However some of the men return a
+bit of spirit and can be bribed or persuaded to
+create a diversion allowing you to disappear
+unnoticed.
+
+Their life is ordered by alarm bells, these tell
+them when to get up and when to go to roll-call,
+when to eat and when to exercise. An analysis of
+this routine will enable you to estimate at what
+time your escape will be noticed and the alarm
+bells start ringing!
+
+4. The Escape - "Our Hero"
+--------------------------
+You control him by joystick or keyboard putting in
+several patterns of behaviour. If you are in
+bounds i.e. the morale flag is green you will
+follow the routine like any other prisoner and
+this allows you to become familiar with the camp
+and camp life without having to follow the other
+characters around manually.
+
+You will only diverge from this path by taking
+over the controls, but if you wander too far out
+of bounds the morale flag will be red; now you are
+liable to arrest and have total control. You can
+drop/pick up objects (press fire and joystick
+up/down) that you find in the camp but you can
+only carry two objects at any one time. When you
+have discovered places that are infrequently
+searched or unlikely to be discovered by the
+security forces you may leave a cache of useful
+objects there. Any objects that are found however
+by the Guards or Commandant, or that you are
+carrying when captured will be confiscated
+immediately.
+
+If you are spotted while on an escape you will
+have two choices, either to make a run for it or
+to surrender. Once caught you will lose all the
+objects that you were carrying and the camp
+security [will be] stepped up; you will be sent to
+the cells but so that the action of the game can
+continue this is only for a moment and you will
+then be escorted back to your comrades.
+
+[Screen display diagram omitted]
+
+Morale
+------
+The flag on the left of the screen is the morale
+indicator, its height on the flagpole denoting the
+current morale. Each time you find something
+useful or explore a different part of the camp
+your morale and score will increase accordingly,
+however each time one of your possessions is
+discovered and removed your morale will decrease.
+Red Cross parcels and other goodies will arrive
+randomly throughout the game and increases your
+morale level. Capture and consequent punishment
+will reduce your morale enormously and if it ever
+reaches zero you will lose control and our hero
+will become just another member of the camp
+prisoners. The only remedy for this situation is a
+new game.
+
+The Alarm Bells
+---------------
+The alarm bell has two functions, when it sounds
+in a short burst it denotes the commencement of
+meals, roll-calls etc and a message will appear at
+the bottom of the screen with the relevant
+information. When a potential escapee is
+discovered out of bounds the alarm bell will ring
+continuously and this is the signal to the guards
+that an escape is in progress.
+
+News Bulletin
+-------------
+Messages will appear on screen, keeping you fully
+informed of all news events within the camp, i.e.
+the discovery by the guards of hidden items etc.
+
+Scoring
+-------
+You score points and increase your morale by
+discovering objects, using them and escaping -
+each of these activities will increase your score.
+
+Controls
+--------
+Keyboard:
+Redefinable keys - follow screen instructions.
+
+Joystick:
+
+  DIAGONAL LEFT UP    DIAGONAL     DIAGONAL RIGHT UP
+                   \   LEFT UP   /
+                     \    |    /
+                       \  |  /
+                         \|/
+DIAGONAL LEFT DOWN -------+------- DIAGONAL RIGHT UP
+                         /|\
+                       /  |  \
+                     /    |    \
+                   /   DIAGONAL  \
+DIAGONAL LEFT DOWN    RIGHT DOWN   DIAGONAL RIGHT DOWN
+
+FIRE and UP is pick up.
+FIRE and DOWN is drop.
+FIRE LEFT/RIGHT is use object.
+
+Credits
+-------
+Produced by D. C. Ward.
+(c) 1986 Ocean Software Limited.
+Game Design Copyright Denton Designs 1986.
+
+==================================================
+
+How To Play (RISC OS)
+-----------
+
+Click on the icon bar icon to open a new game
+window. Choose either the Keyboard, Kempston or
+Sinclair input method and press zero to start the
+game. (The Protek joystick method is not connected
+up in this version).
+
+The Great Escape is an isometric game, so:
+  Left  moves the hero DOWN-LEFT
+  Right moves the hero UP-RIGHT
+  Up    moves the hero UP-LEFT
+  Down  moves the hero DOWN-RIGHT
+
+Controls
+--------
+
+Click SELECT on the window to gain input focus.
+Click ADJUST to lose input focus.
+
+Ctrl+Q   ... Halve the window scale (zoom out)
+Ctrl+W   ... Double the window scale (zoom in)
+Ctrl+T   ... Revert to the previously chosen
+             window scale
+Ctrl+D   ... Reset the window scale to 100%
+
+Ctrl+F   ... Set fixed scale mode
+F11      ... Open the 'Scale view' dialogue
+Ctrl+G   ... Use a big (desktop-sized) window
+
+Ctrl+V   ... Set scaled to fit mode
+Ctrl+S   ... Snap to whole pixels when scaling
+
+F10      ... Full screen mode [*]
+Ctrl+N   ... Monochrome palette
+
+F3       ... Save game [*]
+Shift+F3 ... Save screenshot
+
+Ctrl+O   ... Enable sound
+
+F6       ... Set speed to 100%
+Shift+F7 ... Set speed to maximum
+F5       ... Slow game down by 20%
+F7       ... Speed game up by 20%
+Ctrl+P   ... Pause game
+
+Ctrl+F2  ... Quit
+
+[*] Not currently implemented.
+
+If you choose Keyboard control the keys will be
+redefinable as per the original game. Consult the
+'Key Mapping' section below to understand how the
+ZX Spectrum keyboard is mapped onto the
+Archimedes.
+
+If you choose Kempston joystick control then the
+game can be controlled with the cursor keys and
+'.' for fire.
+
+During game play Caps Shift [Shift] + Space can be
+used to restart the game. It will prompt for
+confirmation first.
+
+Key Mapping
+-----------
+
+The 40-key ZX Spectrum keyboard is mapped onto the
+Archimedes keyboard in the most 'obvious' manner.
+The non-obvious keys are:
+
+Return ... ENTER
+Shift  ... CAPS SHIFT
+Alt    ... SYMBOL SHIFT

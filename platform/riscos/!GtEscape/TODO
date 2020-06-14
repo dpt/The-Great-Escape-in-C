@@ -1,0 +1,67 @@
+next up:
+
+- big windows must resized on mode changes
+- big windows must be a minimum size for huge zooms
+
+- check that closing games works as expected (releasing mem)
+
+- reduce borders etc. when scale exceeds big window size
+- test for 0% scale factors being set
+- min window size flag
+
+
+game bugs to check out:
+
+- saw a character wander out of bounds
+
+
+longer term:
+
+- allocate the filetype
+- snapping /could/ snap more often on higher res screens
+- interactive help needs finishing
+- full screen mode (for speed) 
+- sound support
+  - perhaps a prototype version first
+- save games, load games
+
+
+questions:
+
+- is squeeze ok to use now?
+- do i actually need wide colourtrans?
+- why didn't stubsg support long long for me?
+- concerns about speed - need to test on a real ARM2
+
+
+done:
+
+- main() should check for modules [done]
+- stretch to fit mode is broken [done]
+- fix window focus capture (gain/lose=select/adjust) [done]
+- set 144k wimpslot [done]
+- windows being off-screen after mode change [done - check]
+- doc in help: sinclair cursor does work
+- bug: red cross parcel in wrong place visually [fixed]
+- bug: saw no other prisoners [fixed]
+- bug: saw the hero trapped endlessly in solitary - no sign of commandant? [fixed]
+
+
+
+random crash:
+
+Internal error: abort on instruction fetch at &00001004
+
+Postmortem requested
+1000 in unknown procedure
+a3bc in anonymous function
+10e38 in anonymous function
+1460c in anonymous function
+164d0 in anonymous function
+161e0 in anonymous function
+137c0 in anonymous function
+13534 in anonymous function
+  Arg2: 0x00013464 78948 -> [0xe1a0c00d 0xe92dd880 0xe24cb004 0xe15d000a]
+  Arg1: 0x0002bd48 179528 -> [0x4574473c 0x70616373 0x69442465 0x212e3e72]
+fc1456c8 in shared library function
+1b60c in anonymous function

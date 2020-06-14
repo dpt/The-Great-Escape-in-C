@@ -12,15 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
-#ifndef TGE_OBJECT_H
-#define TGE_OBJECT_H
+#ifndef TGEOBJECT_H
+#define TGEOBJECT_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
 
 #include "TheGreatEscape/Utils.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * A game object.
@@ -36,6 +40,8 @@ struct tgeobject
  */
 typedef struct tgeobject tgeobject_t;
 
-#endif /* TGE_OBJECT_H */
+/* ----------------------------------------------------------------------- */
+
+#endif /* TGEOBJECT_H */
 
 // vim: ts=8 sts=2 sw=2 et

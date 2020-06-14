@@ -1,0 +1,8 @@
+| >!Help for The Great Escape
+| by David Thomas, © 2020
+
+Obey <Obey$Dir>.!Boot
+
+Run <GtEscape$Dir>.Resources.ResFind GtEscape
+
+Filer_Run GtEscapeRes:!Help

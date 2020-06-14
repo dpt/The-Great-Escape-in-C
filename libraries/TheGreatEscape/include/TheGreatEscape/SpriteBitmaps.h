@@ -12,11 +12,17 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef SPRITE_BITMAPS_H
 #define SPRITE_BITMAPS_H
+
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 extern const uint8_t bitmap_commandant_facing_top_left_4[];
 extern const uint8_t bitmap_commandant_facing_top_left_3[];
@@ -72,6 +78,9 @@ extern const uint8_t bitmap_crate[];
 extern const uint8_t mask_crate[];
 extern const uint8_t bitmap_stove[];
 extern const uint8_t mask_stove[];
+
+/* ----------------------------------------------------------------------- */
+
 
 #endif /* SPRITE_BITMAPS_H */
 

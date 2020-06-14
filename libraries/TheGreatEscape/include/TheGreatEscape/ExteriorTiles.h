@@ -12,16 +12,22 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef EXTERIOR_TILES_H
 #define EXTERIOR_TILES_H
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 extern const tile_t mask_tiles[111];
 extern const tile_t exterior_tiles[145 + 220 + 206];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* EXTERIOR_TILES_H */
 

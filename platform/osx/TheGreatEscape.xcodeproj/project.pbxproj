@@ -23,6 +23,9 @@
 /* Begin PBXBuildFile section */
 		551D73791D7775A0002F5E0B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 551D73781D7775A0002F5E0B /* Images.xcassets */; };
 		552049381B16831C0075ED47 /* Masks.c in Sources */ = {isa = PBXBuildFile; fileRef = 552049361B16831C0075ED47 /* Masks.c */; };
+		5541CD4423971113006FC753 /* Debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4323971113006FC753 /* Debug.c */; };
+		5541CD4723971BF0006FC753 /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4623971BF0006FC753 /* Screen.c */; };
+		5541CD4C239F1123006FC753 /* Zoombox.c in Sources */ = {isa = PBXBuildFile; fileRef = 5541CD4B239F1123006FC753 /* Zoombox.c */; };
 		554808D617E117CF00387328 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808D517E117CF00387328 /* Cocoa.framework */; };
 		554808E017E117CF00387328 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 554808DE17E117CF00387328 /* InfoPlist.strings */; };
 		554808E617E117CF00387328 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 554808E417E117CF00387328 /* Credits.rtf */; };
@@ -47,14 +50,16 @@
 		558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */; };
 		558FC6B61A0EE15B00A4F50F /* StaticTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A61A0EE15B00A4F50F /* StaticTiles.c */; };
 		558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A71A0EE15B00A4F50F /* SuperTiles.c */; };
-		558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */; };
+		558FC6B81A0EE15B00A4F50F /* Main.c in Sources */ = {isa = PBXBuildFile; fileRef = 558FC6A81A0EE15B00A4F50F /* Main.c */; };
 		559B69731F1C30B2006FC753 /* Kempston.c in Sources */ = {isa = PBXBuildFile; fileRef = 559B69721F1C30B2006FC753 /* Kempston.c */; };
+		55A22D4523C40C6B006FC753 /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 55A22D4423C40C6B006FC753 /* Utils.c */; };
 		55A827851F8D63F6006FC753 /* ZXGameWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 55A827841F8D63F6006FC753 /* ZXGameWindow.m */; };
 		55AF25C51D363695002F5E0B /* Keyboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C21D363695002F5E0B /* Keyboard.c */; };
 		55AF25C61D363695002F5E0B /* Screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C31D363695002F5E0B /* Screen.c */; };
 		55AF25C71D363695002F5E0B /* Spectrum.c in Sources */ = {isa = PBXBuildFile; fileRef = 55AF25C41D363695002F5E0B /* Spectrum.c */; };
 		55DD2D1D1FA550A8006FC753 /* bitfifo.c in Sources */ = {isa = PBXBuildFile; fileRef = 55DD2D1C1FA550A7006FC753 /* bitfifo.c */; };
 		55DD2D221FA68DB3006FC753 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55DD2D211FA68DB3006FC753 /* AudioUnit.framework */; };
+		55DE102523A04F86006FC753 /* Events.c in Sources */ = {isa = PBXBuildFile; fileRef = 55DE102423A04F86006FC753 /* Events.c */; };
 		55E492E42064595A00C8AA4A /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE7F13E91FBF5D1F004D102D /* CoreImage.framework */; };
 		55E492E52064595E00C8AA4A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 554808DA17E117CF00387328 /* Foundation.framework */; };
 		55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */ = {isa = PBXBuildFile; fileRef = 55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */; };
@@ -69,6 +74,13 @@
 		551E16A31F2955E4006FC753 /* Pixels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Pixels.h; path = TheGreatEscape/Pixels.h; sourceTree = "<group>"; };
 		552049361B16831C0075ED47 /* Masks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Masks.c; sourceTree = "<group>"; };
 		552049371B16831C0075ED47 /* Masks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Masks.h; path = TheGreatEscape/Masks.h; sourceTree = "<group>"; };
+		5541CD412395E470006FC753 /* Asserts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Asserts.h; path = TheGreatEscape/Asserts.h; sourceTree = "<group>"; };
+		5541CD4223971113006FC753 /* Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Debug.h; path = TheGreatEscape/Debug.h; sourceTree = "<group>"; };
+		5541CD4323971113006FC753 /* Debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Debug.c; sourceTree = "<group>"; };
+		5541CD4523971BF0006FC753 /* Screen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Screen.h; path = TheGreatEscape/Screen.h; sourceTree = "<group>"; };
+		5541CD4623971BF0006FC753 /* Screen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Screen.c; sourceTree = "<group>"; };
+		5541CD4A239F1123006FC753 /* Zoombox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Zoombox.h; path = TheGreatEscape/Zoombox.h; sourceTree = "<group>"; };
+		5541CD4B239F1123006FC753 /* Zoombox.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Zoombox.c; sourceTree = "<group>"; };
 		554808D217E117CF00387328 /* TheGreatEscape.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheGreatEscape.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		554808D517E117CF00387328 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		554808DA17E117CF00387328 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -126,9 +138,10 @@
 		558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = StaticGraphics.c; sourceTree = "<group>"; };
 		558FC6A61A0EE15B00A4F50F /* StaticTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = StaticTiles.c; sourceTree = "<group>"; };
 		558FC6A71A0EE15B00A4F50F /* SuperTiles.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SuperTiles.c; sourceTree = "<group>"; };
-		558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = TheGreatEscape.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		558FC6A81A0EE15B00A4F50F /* Main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = Main.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		559B69711F1C2FE6006FC753 /* Kempston.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Kempston.h; sourceTree = "<group>"; };
 		559B69721F1C30B2006FC753 /* Kempston.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Kempston.c; path = ../../libraries/ZXSpectrum/Kempston.c; sourceTree = "<group>"; };
+		55A22D4423C40C6B006FC753 /* Utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
 		55A827831F8D63F6006FC753 /* ZXGameWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameWindow.h; sourceTree = "<group>"; };
 		55A827841F8D63F6006FC753 /* ZXGameWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZXGameWindow.m; sourceTree = "<group>"; };
 		55AB651E207D764600A45AC9 /* Macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = ../../libraries/ZXSpectrum/include/ZXSpectrum/Macros.h; sourceTree = "<group>"; };
@@ -142,6 +155,8 @@
 		55DD2D1B1FA550A7006FC753 /* bitfifo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitfifo.h; sourceTree = "<group>"; };
 		55DD2D1C1FA550A7006FC753 /* bitfifo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bitfifo.c; sourceTree = "<group>"; };
 		55DD2D211FA68DB3006FC753 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		55DE102323A04F86006FC753 /* Events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Events.h; path = TheGreatEscape/Events.h; sourceTree = "<group>"; };
+		55DE102423A04F86006FC753 /* Events.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Events.c; sourceTree = "<group>"; };
 		55F0CA5C19E9E23C0033FC17 /* ZXGameView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZXGameView.m; sourceTree = "<group>"; };
 		55F0CA5E19E9E24D0033FC17 /* ZXGameView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZXGameView.h; sourceTree = "<group>"; };
 		55F0CA5F19E9E3640033FC17 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
@@ -170,6 +185,45 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5541CD48239727D9006FC753 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
+				558FC6841A0EE15B00A4F50F /* Font.c */,
+				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
+				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
+				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
+				558FC6A01A0EE15B00A4F50F /* Map.c */,
+				552049361B16831C0075ED47 /* Masks.c */,
+				558FC6A11A0EE15B00A4F50F /* Music.c */,
+				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
+				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
+				558FC6A41A0EE15B00A4F50F /* Sprites.c */,
+				558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */,
+				558FC6A61A0EE15B00A4F50F /* StaticTiles.c */,
+				558FC6A71A0EE15B00A4F50F /* SuperTiles.c */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		5541CD4923972887006FC753 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				558FC6821A0EE15B00A4F50F /* Create.c */,
+				5541CD4323971113006FC753 /* Debug.c */,
+				55DE102423A04F86006FC753 /* Events.c */,
+				556D1A191B135D900036AED0 /* Input.c */,
+				558FC6A81A0EE15B00A4F50F /* Main.c */,
+				556D1A1D1B13617B0036AED0 /* Menu.c */,
+				556D1A241B137A4C0036AED0 /* Messages.c */,
+				5541CD4623971BF0006FC753 /* Screen.c */,
+				556D1A211B1379CF0036AED0 /* Text.c */,
+				5541CD4B239F1123006FC753 /* Zoombox.c */,
+				55A22D4423C40C6B006FC753 /* Utils.c */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
 		554808C917E117CF00387328 = {
 			isa = PBXGroup;
 			children = (
@@ -283,26 +337,8 @@
 			children = (
 				558FC67F1A0EE15B00A4F50F /* include (public) */,
 				558FC6851A0EE15B00A4F50F /* include (private) */,
-				558FC6821A0EE15B00A4F50F /* Create.c */,
-				558FC6831A0EE15B00A4F50F /* ExteriorTiles.c */,
-				558FC6841A0EE15B00A4F50F /* Font.c */,
-				556D1A191B135D900036AED0 /* Input.c */,
-				558FC69D1A0EE15B00A4F50F /* InteriorObjectDefs.c */,
-				558FC69E1A0EE15B00A4F50F /* InteriorTiles.c */,
-				558FC69F1A0EE15B00A4F50F /* ItemBitmaps.c */,
-				558FC6A01A0EE15B00A4F50F /* Map.c */,
-				552049361B16831C0075ED47 /* Masks.c */,
-				556D1A1D1B13617B0036AED0 /* Menu.c */,
-				556D1A241B137A4C0036AED0 /* Messages.c */,
-				558FC6A11A0EE15B00A4F50F /* Music.c */,
-				558FC6A21A0EE15B00A4F50F /* RoomDefs.c */,
-				558FC6A31A0EE15B00A4F50F /* SpriteBitmaps.c */,
-				558FC6A41A0EE15B00A4F50F /* Sprites.c */,
-				558FC6A51A0EE15B00A4F50F /* StaticGraphics.c */,
-				558FC6A61A0EE15B00A4F50F /* StaticTiles.c */,
-				558FC6A71A0EE15B00A4F50F /* SuperTiles.c */,
-				556D1A211B1379CF0036AED0 /* Text.c */,
-				558FC6A81A0EE15B00A4F50F /* TheGreatEscape.c */,
+				5541CD4923972887006FC753 /* Engine */,
+				5541CD48239727D9006FC753 /* Data */,
 				551D73781D7775A0002F5E0B /* Images.xcassets */,
 			);
 			name = TheGreatEscape;
@@ -312,7 +348,10 @@
 		558FC6851A0EE15B00A4F50F /* include (private) */ = {
 			isa = PBXGroup;
 			children = (
+				5541CD412395E470006FC753 /* Asserts.h */,
+				5541CD4223971113006FC753 /* Debug.h */,
 				55C068B01AEAFD3700C2AA88 /* Doors.h */,
+				55DE102323A04F86006FC753 /* Events.h */,
 				558FC6881A0EE15B00A4F50F /* ExteriorTiles.h */,
 				558FC6891A0EE15B00A4F50F /* Font.h */,
 				556D1A1B1B135E3C0036AED0 /* Input.h */,
@@ -331,6 +370,7 @@
 				558FC6911A0EE15B00A4F50F /* RoomDefs.h */,
 				558FC6921A0EE15B00A4F50F /* Rooms.h */,
 				AE9957512023701E00897D44 /* Routes.h */,
+				5541CD4523971BF0006FC753 /* Screen.h */,
 				558FC6931A0EE15B00A4F50F /* SpriteBitmaps.h */,
 				558FC6941A0EE15B00A4F50F /* Sprites.h */,
 				558FC6951A0EE15B00A4F50F /* State.h */,
@@ -342,6 +382,7 @@
 				558FC69A1A0EE15B00A4F50F /* Tiles.h */,
 				558FC69B1A0EE15B00A4F50F /* Types.h */,
 				558FC69C1A0EE15B00A4F50F /* Utils.h */,
+				5541CD4A239F1123006FC753 /* Zoombox.h */,
 			);
 			name = "include (private)";
 			path = include;
@@ -415,6 +456,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 554808C917E117CF00387328;
@@ -466,6 +508,8 @@
 			files = (
 				558FC6B01A0EE15B00A4F50F /* Map.c in Sources */,
 				558FC6AA1A0EE15B00A4F50F /* ExteriorTiles.c in Sources */,
+				55DE102523A04F86006FC753 /* Events.c in Sources */,
+				55A22D4523C40C6B006FC753 /* Utils.c in Sources */,
 				55AF25C61D363695002F5E0B /* Screen.c in Sources */,
 				558FC6AE1A0EE15B00A4F50F /* InteriorTiles.c in Sources */,
 				55AF25C71D363695002F5E0B /* Spectrum.c in Sources */,
@@ -479,6 +523,7 @@
 				558FC6AF1A0EE15B00A4F50F /* ItemBitmaps.c in Sources */,
 				556D1A251B137A4C0036AED0 /* Messages.c in Sources */,
 				55F0CA5D19E9E23C0033FC17 /* ZXGameView.m in Sources */,
+				5541CD4423971113006FC753 /* Debug.c in Sources */,
 				AEF1A6991F33470900A33C89 /* ZXGameWindowController.m in Sources */,
 				55AF25C51D363695002F5E0B /* Keyboard.c in Sources */,
 				558FC6B31A0EE15B00A4F50F /* SpriteBitmaps.c in Sources */,
@@ -488,12 +533,14 @@
 				55DD2D1D1FA550A8006FC753 /* bitfifo.c in Sources */,
 				556D1A1E1B13617B0036AED0 /* Menu.c in Sources */,
 				558FC6AD1A0EE15B00A4F50F /* InteriorObjectDefs.c in Sources */,
+				5541CD4723971BF0006FC753 /* Screen.c in Sources */,
 				558FC6B11A0EE15B00A4F50F /* Music.c in Sources */,
 				558FC6B71A0EE15B00A4F50F /* SuperTiles.c in Sources */,
 				559B69731F1C30B2006FC753 /* Kempston.c in Sources */,
 				558FC6B21A0EE15B00A4F50F /* RoomDefs.c in Sources */,
 				558FC6B51A0EE15B00A4F50F /* StaticGraphics.c in Sources */,
-				558FC6B81A0EE15B00A4F50F /* TheGreatEscape.c in Sources */,
+				558FC6B81A0EE15B00A4F50F /* Main.c in Sources */,
+				5541CD4C239F1123006FC753 /* Zoombox.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

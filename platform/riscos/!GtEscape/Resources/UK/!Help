@@ -1,0 +1,75 @@
+The Great Escape - Help for v0.92 (May 2020)
+==============================================
+This is The Great Escape application. It is a port
+to RISC OS of a classic isometric ZX Spectrum game
+originally released in 1986.
+
+The game has been reverse engineered for the
+purposes of education from its original Z80
+assembly form, reimplemented as portable C code
+and finally rebuilt for the RISC OS desktop.
+
+Compatibility
+-------------
+* RISC OS 3.1 or later.
+* Since this is a desktop game, an ARM250 or
+  better system is recommended.
+
+How To Play
+-----------
+For the full instructions launch the game and
+choose 'Instructions' from the icon bar menu.
+
+Copyright
+---------
+The original game was developed by Denton Designs
+and published by Ocean Software. Since this is a
+reverse engineered game some thirty-odd years old
+it's not possible for someone doing this as a
+hobby (for the purposes of preservation and
+education) to determine the current legal owners
+of the game.
+
+While I claim no copyright over the original parts
+of the game, I do claim copyright over the parts
+unique to this reimplementation.
+
+TODOs / Missing Features
+------------------------
+* Full screen mode
+* Pre-Risc PC sound support
+* Save games
+* Joystick support
+
+Acknowledgements
+----------------
+Thanks to David Ruck for TimerMod.
+Thanks to John Duffell for SharedSoundBuffer.
+Thanks to Justin Fletcher for StubsG.
+Thanks to Richard Dymond for SkoolKit.
+
+Changelog
+---------
+v0.90 (April 2020) - First beta test release
+v0.91 (April 2020) - Fixed spawning issues
+v0.92 (May 2020)   - Added screenshot saving
+                   - Added sound (16-bit hardware)
+
+Background
+-----------
+Original game disassembly:
+http://dpt.github.io/The-Great-Escape/
+
+Disassembly project:
+https://github.com/dpt/The-Great-Escape/
+
+Porting the game to C project:
+https://github.com/dpt/The-Great-Escape-in-C/
+
+Project write-up:
+http://www.davespace.co.uk/the.great.escape/
+
+Contact
+-------
+dave@davespace.co.uk
+http://www.davespace.co.uk/

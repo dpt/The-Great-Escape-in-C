@@ -12,13 +12,17 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef TILES_H
 #define TILES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * A tile index.
@@ -38,6 +42,8 @@ typedef struct
   tilerow_t row[8];
 }
 tile_t;
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* TILES_H */
 

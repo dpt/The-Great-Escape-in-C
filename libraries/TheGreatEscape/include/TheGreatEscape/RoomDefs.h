@@ -12,14 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef ROOM_DEFS_H
 #define ROOM_DEFS_H
 
-#include "TheGreatEscape/Types.h"
+/* ----------------------------------------------------------------------- */
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
 #include "TheGreatEscape/Rooms.h"
+
+/* ----------------------------------------------------------------------- */
 
 #define roomdef_2_BED          (14 +  4 * 3)
 
@@ -48,6 +53,8 @@ void set_roomdef(tgestate_t *state,
                  room_t      room_index,
                  int         offset,
                  int         new_byte);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* ROOM_DEFS_H */
 

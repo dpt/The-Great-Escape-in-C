@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef THE_GREAT_ESCAPE_H
@@ -33,7 +33,7 @@ extern "C"
 #      define TGE_API
 #    endif
 #  else
-#    if __GNUC__ >= 4
+#    if defined(__GNUC__) && __GNUC__ >= 4
 #      define TGE_API __attribute__((visibility("default")))
 #    else
 #      define TGE_API
@@ -48,14 +48,6 @@ extern "C"
 /* Exports go here... */
 
 /**
- */
-typedef struct tgeconfig
-{
-  int width, height;
-}
-tgeconfig_t;
-
-/**
  * Holds the current state of the game.
  */
 typedef struct tgestate tgestate_t;
@@ -63,8 +55,7 @@ typedef struct tgestate tgestate_t;
 /**
  * Create a game instance.
  */
-TGE_API tgestate_t *tge_create(zxspectrum_t      *speccy,
-                               const tgeconfig_t *config);
+TGE_API tgestate_t *tge_create(zxspectrum_t *speccy);
 
 /**
  * Destroy a game instance.

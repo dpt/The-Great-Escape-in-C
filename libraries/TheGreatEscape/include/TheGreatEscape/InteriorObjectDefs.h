@@ -12,18 +12,22 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef INTERIOR_OBJECT_DEFS_H
 #define INTERIOR_OBJECT_DEFS_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
 #include "TheGreatEscape/TGEObject.h"
 #include "TheGreatEscape/InteriorObjects.h"
 
+/* ----------------------------------------------------------------------- */
+
 extern const tgeobject_t *interior_object_defs[interiorobject__LIMIT];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* INTERIOR_OBJECT_DEFS_H */
 

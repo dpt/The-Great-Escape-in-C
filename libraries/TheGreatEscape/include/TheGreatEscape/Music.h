@@ -12,18 +12,24 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef MUSIC_H
 #define MUSIC_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 extern const uint8_t music_channel0_data[80 * 8 + 1];
 extern const uint8_t music_channel1_data[80 * 8 + 1];
 
 uint16_t frequency_for_semitone(uint8_t semitone, uint8_t *beep);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MUSIC_H */
 

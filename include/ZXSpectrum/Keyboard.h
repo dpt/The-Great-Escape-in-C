@@ -2,11 +2,13 @@
  *
  * ZX Spectrum keyboard handling.
  *
- * Copyright (c) David Thomas, 2016. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2016-2020. <dave@davespace.co.uk>
  */
 
 #ifndef ZXSPECTRUM_KEYBOARD_H
 #define ZXSPECTRUM_KEYBOARD_H
+
+#include "C99/Types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -73,31 +75,38 @@ typedef enum zxkey
 zxkey_t;
 
 /**
- * A bitfield large enough to hold all 40 Spectrum keys using one bit each.
+ * A structure to hold all 40 Spectrum keys using one bit each.
  */
-typedef unsigned long long zxkeyset_t;
+typedef struct
+{
+  unsigned int bits[2];
+}
+zxkeyset_t;
+
+/**
+ * Clear the given keyset.
+ */
+void zxkeyset_clear(zxkeyset_t *keystate);
 
 /**
  * Mark or unmark the given key.
  */
-void zxkeyset_assign(zxkeyset_t *keystate,
-                     zxkey_t     index,
-                     int         on_off);
+void zxkeyset_assign(zxkeyset_t *keystate, zxkey_t index, int on_off);
 
 /**
  * Extract the current key state for the specified port and return it.
  */
-int zxkeyset_for_port(uint16_t port, zxkeyset_t keystate);
+int zxkeyset_for_port(uint16_t port, const zxkeyset_t *keystate);
 
 /**
  * Mark the given character c as a held down key.
  */
-zxkeyset_t zxkeyset_setchar(zxkeyset_t keystate, int c);
+void zxkeyset_setchar(zxkeyset_t *keystate, int c);
 
 /**
  * Mark the given character c as a released key.
  */
-zxkeyset_t zxkeyset_clearchar(zxkeyset_t keystate, int c);
+void zxkeyset_clearchar(zxkeyset_t *keystate, int c);
 
 #ifdef __cplusplus
 }

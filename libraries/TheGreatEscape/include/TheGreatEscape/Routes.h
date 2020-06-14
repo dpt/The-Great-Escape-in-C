@@ -12,18 +12,22 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef ROUTES_H
 #define ROUTES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 typedef uint8_t routeindex_t;
 
 /* Flag set to reverse a route. */
-#define routeindexflag_REVERSED (1 << 7)
+#define ROUTEINDEX_REVERSE_FLAG (1 << 7)
 
 enum
 {
@@ -92,6 +96,8 @@ enum
 
   routeindex_255_WANDER = 255
 };
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* ROUTES_H */
 

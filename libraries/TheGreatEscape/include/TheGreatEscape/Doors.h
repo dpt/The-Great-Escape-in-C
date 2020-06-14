@@ -12,13 +12,17 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef DOORS_H
 #define DOORS_H
 
+/* ----------------------------------------------------------------------- */
+
 #define door_MAX 62
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* DOORS_H */
 

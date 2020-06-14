@@ -12,11 +12,20 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef UTILS_H
 #define UTILS_H
+
+/* ----------------------------------------------------------------------- */
+
+#include <assert.h>
+#include <stddef.h>
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -29,8 +38,8 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 /**
- * Given a pointer p, its parent structure type t and structure member name f,
- * returns the parent structure.
+ * Given a pointer p, its parent structure type t and structure member name
+ * f, returns the parent structure.
  */
 #define structof(p,t,f) ((t*)((uintptr_t)(p) - offsetof(t,f)))
 
@@ -106,6 +115,30 @@ do {                \
   a = b;            \
   b = tmp;          \
 } while (0)
+
+/* ----------------------------------------------------------------------- */
+
+/**
+ * Performs an on-the-spot delay of the specified duration.
+ *
+ * Use this in the menu code when you don't care about accuracy
+ * (e.g. when waiting inbetween key presses).
+ *
+ * If the sleep() callback returns 'terminate game thread', this returns that
+ * value.
+ */
+int menudelay(tgestate_t *state, int duration);
+
+/**
+ * Performs an on-the-spot delay of the specified duration.
+ *
+ * Use this in the body of the game code when you don't care about accuracy
+ * (e.g. when waiting inbetween key presses).
+ *
+ * If the sleep() callback returns 'terminate game thread', this handles it by
+ * exiting from tge_main().
+ */
+void gamedelay(tgestate_t *state, int duration);
 
 /* ----------------------------------------------------------------------- */
 

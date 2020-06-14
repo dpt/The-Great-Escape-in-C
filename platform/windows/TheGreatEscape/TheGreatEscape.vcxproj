@@ -134,61 +134,38 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\TheGreatEscape\TheGreatEscape.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Doors.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\ExteriorTiles.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Font.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Input.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorObjectDefs.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorObjects.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\InteriorTiles.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\ItemBitmaps.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Items.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Main.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Map.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Masks.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Menu.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Messages.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Music.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\RoomDefs.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Rooms.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\SpriteBitmaps.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Sprites.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\State.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\StaticGraphics.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\StaticTiles.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\SuperTiles.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Text.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\TGEObject.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Tiles.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Types.h" />
-    <ClInclude Include="..\..\..\libraries\TheGreatEscape\include\TheGreatEscape\Utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Create.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\ExteriorTiles.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Font.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Input.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\InteriorObjectDefs.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\InteriorTiles.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\ItemBitmaps.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Map.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Masks.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Menu.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Messages.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Music.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\RoomDefs.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\SpriteBitmaps.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Sprites.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\StaticGraphics.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\StaticTiles.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\SuperTiles.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Text.c" />
-    <ClCompile Include="..\..\..\libraries\TheGreatEscape\TheGreatEscape.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ZXSpectrum\ZXSpectrum.vcxproj">
       <Project>{f9b26c4c-7dad-4e1a-b141-6b511cf879a5}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\ExteriorTiles.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Font.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\InteriorObjectDefs.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\InteriorTiles.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\ItemBitmaps.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Map.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Masks.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Music.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\RoomDefs.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\SpriteBitmaps.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\Sprites.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\StaticGraphics.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\StaticTiles.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Data\SuperTiles.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Create.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Debug.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Events.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Input.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Main.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Menu.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Messages.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Screen.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Text.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Utils.c" />
+    <ClCompile Include="..\..\..\libraries\TheGreatEscape\Engine\Zoombox.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

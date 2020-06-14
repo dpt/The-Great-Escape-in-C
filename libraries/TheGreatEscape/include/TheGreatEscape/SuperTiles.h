@@ -12,15 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef SUPER_TILES_H
 #define SUPER_TILES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
 
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * A supertile is a 4x4 array of tile indices.
@@ -46,6 +50,8 @@ enum
  * 'supertiles' defines all of the supertiles.
  */
 extern const supertile_t supertiles[supertileindex__LIMIT];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* SUPER_TILES_H */
 

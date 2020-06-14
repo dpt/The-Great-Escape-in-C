@@ -12,13 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef INTERIOR_TILES_H
 #define INTERIOR_TILES_H
 
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * Identifiers of tiles used to draw interior objects.
@@ -35,6 +41,8 @@ enum interiortileindex
 typedef uint8_t interiortileindex_t;
 
 extern const tile_t interior_tiles[interiortile__LIMIT];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* INTERIOR_TILES_H */
 

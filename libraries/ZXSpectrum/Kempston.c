@@ -2,12 +2,11 @@
  *
  * ZX Spectrum Kempston joystick handling.
  *
- * Copyright (c) David Thomas, 2017. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2017-2020. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdint.h>
 
 #ifdef _WIN32
 #include <windows.h>

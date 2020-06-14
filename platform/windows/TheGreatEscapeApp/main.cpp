@@ -2,7 +2,7 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2018. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2020. <dave@davespace.co.uk>
 //
 
 #include <cassert>
@@ -21,6 +21,7 @@
 
 #include "ZXSpectrum/Spectrum.h"
 #include "ZXSpectrum/Keyboard.h"
+#include "ZXSpectrum/Kempston.h"
 
 #include "TheGreatEscape/TheGreatEscape.h"
 
@@ -34,11 +35,14 @@
 
 // Configuration
 //
-#define DEFAULTWIDTH      256
-#define DEFAULTHEIGHT     192
-#define DEFAULTBORDERSIZE  32
+#define GAMEWIDTH       (256)   // pixels
+#define GAMEHEIGHT      (192)   // pixels
+#define GAMEBORDER      (16)    // pixels
 
-#define MAXSTAMPS           4 /* depth of nested timestamp stack */
+#define MAXSTAMPS       (4)     // max depth of timestamps stack
+#define SPEEDQ          (20)    // smallest unit of speed (percent)
+#define NORMSPEED       (100)   // normal speed (percent)
+#define MAXSPEED        (99999) // fastest possible game (percent)
 
 #define BUFSZ            (44100 / 50)  // 1/50th sec at 44.1kHz
 
@@ -59,7 +63,6 @@ typedef struct gamewin
   HWND            window;
   BITMAPINFO      bitmapinfo;
 
-  tgeconfig_t     config;
   zxspectrum_t   *zx;
   tgestate_t     *tge;
 
@@ -69,8 +72,9 @@ typedef struct gamewin
   bool            snap;
 
   zxkeyset_t      keys;
+  zxkempston_t    kempston;
 
-  int             speed;
+  int             speed;  // percent
   BOOL            paused;
 
   bool            quit;
@@ -322,15 +326,19 @@ static void stamp_handler(void *opaque)
   gamewin->stamps[gamewin->nstamps++] = GetTickCount64();
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
 
   // Unstack timestamps (even if we're paused)
   assert(gamewin->nstamps > 0);
   if (gamewin->nstamps <= 0)
-    return;
+    return gamewin->quit;
   --gamewin->nstamps;
+
+  // Quit straight away if signalled
+  if (gamewin->quit)
+    return TRUE;
 
   if (gamewin->paused)
   {
@@ -357,7 +365,7 @@ static void sleep_handler(int durationTStates, void *opaque)
     // Turn T-state duration into seconds
     duration = durationTStates / tstatesPerSec;
     // Adjust the game speed
-    duration = duration * 100 / gamewin->speed;
+    duration = duration * NORMSPEED / gamewin->speed;
 
     then = gamewin->stamps[gamewin->nstamps];
 
@@ -375,13 +383,21 @@ static void sleep_handler(int durationTStates, void *opaque)
       Sleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)
 {
   gamewin_t *gamewin = (gamewin_t *) opaque;
+  int        k;
 
-  return zxkeyset_for_port(port, gamewin->keys);
+  if (port == port_KEMPSTON_JOYSTICK)
+    k = gamewin->kempston;
+  else
+    k = zxkeyset_for_port(port, &gamewin->keys);
+
+  return k;
 }
 
 static void border_handler(int colour, void *opaque)
@@ -418,7 +434,7 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
   {
     if (tge_menu(game) > 0)
       break; // game begins
-    EmitSound(win);
+    // EmitSound(win);
   }
 
   // While in game state
@@ -445,6 +461,8 @@ static int CreateGame(gamewin_t *gamewin)
   DWORD             threadId;
   BITMAPINFOHEADER *bmih;
 
+  zxconfig.width  = GAMEWIDTH / 8;
+  zxconfig.height = GAMEHEIGHT / 8;
   zxconfig.opaque = gamewin;
   zxconfig.draw   = draw_handler;
   zxconfig.stamp  = stamp_handler;
@@ -457,10 +475,7 @@ static int CreateGame(gamewin_t *gamewin)
   if (zx == NULL)
     goto failure;
 
-  gamewin->config.width  = DEFAULTWIDTH  / 8;
-  gamewin->config.height = DEFAULTHEIGHT / 8;
-
-  tge = tge_create(zx, &gamewin->config);
+  tge = tge_create(zx);
   if (tge == NULL)
     goto failure;
 
@@ -477,8 +492,8 @@ static int CreateGame(gamewin_t *gamewin)
 
   bmih = &gamewin->bitmapinfo.bmiHeader;
   bmih->biSize          = sizeof(BITMAPINFOHEADER);
-  bmih->biWidth         = DEFAULTWIDTH;
-  bmih->biHeight        = -DEFAULTHEIGHT; // negative height flips the image
+  bmih->biWidth         = GAMEWIDTH;
+  bmih->biHeight        = -GAMEHEIGHT; // negative height flips the image
   bmih->biPlanes        = 1;
   bmih->biBitCount      = 32;
   bmih->biCompression   = BI_RGB;
@@ -496,9 +511,10 @@ static int CreateGame(gamewin_t *gamewin)
 
   gamewin->snap     = true;
 
-  gamewin->keys     = 0;
+  zxkeyset_clear(&gamewin->keys);
+  gamewin->kempston = 0;
 
-  gamewin->speed    = 100;
+  gamewin->speed    = NORMSPEED;
   gamewin->paused   = false;
 
   gamewin->quit     = false;
@@ -527,66 +543,8 @@ static void DestroyGame(gamewin_t *doomed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin)
-{
-  gamewin_t *gamewin;
-  RECT       rect;
-  BOOL       result;
-  HWND       window;
-
-  *new_gamewin = NULL;
-
-  gamewin = (gamewin_t *) calloc(sizeof(*gamewin), 1);
-  if (gamewin == NULL)
-    return FALSE;
-
-  gamewin->instance = hInstance;
-
-  // Required window dimensions
-  rect.left   = 0;
-  rect.top    = 0;
-  rect.right  = DEFAULTWIDTH  + DEFAULTBORDERSIZE * 2;
-  rect.bottom = DEFAULTHEIGHT + DEFAULTBORDERSIZE * 2;
-
-  // Adjust window dimensions for window furniture
-  result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-  if (result == 0)
-    goto failure;
-
-  window = CreateWindowEx(0,
-    szGameWindowClassName,
-    szGameWindowTitle,
-    WS_OVERLAPPEDWINDOW,
-    CW_USEDEFAULT,
-    CW_USEDEFAULT,
-    rect.right - rect.left, rect.bottom - rect.top,
-    NULL,
-    NULL,
-    hInstance,
-    gamewin);
-  if (!window)
-    goto failure;
-
-  ShowWindow(window, nCmdShow);
-
-  gamewin->window = window;
-
-  *new_gamewin = gamewin;
-
-  return TRUE;
-
-
-failure:
-  free(gamewin);
-
-  return FALSE;
-}
-
-void DestroyGameWindow(gamewin_t *doomed)
-{
-  //DestroyWindow(doomed->window);
-  free(doomed);
-}
+BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin);
+void DestroyGameWindow(gamewin_t *doomed);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -809,8 +767,8 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
         int           drawWidth, drawHeight;
         int           xOffset, yOffset;
 
-        gameWidth  = gamewin->config.width  * 8;
-        gameHeight = gamewin->config.height * 8;
+        gameWidth  = gamewin->zx->screen.width  * 8;
+        gameHeight = gamewin->zx->screen.height * 8;
 
         pixels = zxspectrum_claim_screen(gamewin->zx);
 
@@ -823,7 +781,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
 
         // How many natural-scale games fit comfortably into the window?
         // Try to fit while reducing the border if the window is very small
-        reducedBorder = DEFAULTBORDERSIZE;
+        reducedBorder = GAMEBORDER;
         do
         {
           gameWidthsPerWindow  = (windowWidth  - reducedBorder * 2) / gameWidth;
@@ -851,7 +809,7 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
                       xOffset, yOffset,
                       drawWidth, drawHeight,
                       0, 0,
-                      DEFAULTWIDTH, DEFAULTHEIGHT,
+                      GAMEWIDTH, GAMEHEIGHT,
                       pixels,
                       &gamewin->bitmapinfo,
                       DIB_RGB_COLORS,
@@ -874,18 +832,36 @@ LRESULT CALLBACK GameWindowProcedure(HWND   hwnd,
     case WM_KEYDOWN:
     case WM_KEYUP:
       {
-        bool down = (message == WM_KEYDOWN);
+        bool         down = (message == WM_KEYDOWN);
+        zxjoystick_t j;
 
-        if (wParam == VK_CONTROL)
-          zxkeyset_assign(&gamewin->keys, zxkey_CAPS_SHIFT,   down);
-        else if (wParam == VK_SHIFT)
-          zxkeyset_assign(&gamewin->keys, zxkey_SYMBOL_SHIFT, down);
+        switch (wParam)
+        {
+        case VK_UP:         j = zxjoystick_UP;      break;
+        case VK_DOWN:       j = zxjoystick_DOWN;    break;
+        case VK_LEFT:       j = zxjoystick_LEFT;    break;
+        case VK_RIGHT:      j = zxjoystick_RIGHT;   break;
+        case VK_OEM_PERIOD: j = zxjoystick_FIRE;    break;
+        default:            j = zxjoystick_UNKNOWN; break;
+        }
+
+        if (j != zxjoystick_UNKNOWN)
+        {
+          zxkempston_assign(&gamewin->kempston, j, down);
+        }
         else
         {
-          if (down)
-            gamewin->keys = zxkeyset_setchar(gamewin->keys, wParam);
+          if (wParam == VK_CONTROL)
+            zxkeyset_assign(&gamewin->keys, zxkey_CAPS_SHIFT, down);
+          else if (wParam == VK_SHIFT)
+            zxkeyset_assign(&gamewin->keys, zxkey_SYMBOL_SHIFT, down);
           else
-            gamewin->keys = zxkeyset_clearchar(gamewin->keys, wParam);
+          {
+            if (down)
+              zxkeyset_setchar(&gamewin->keys, wParam);
+            else
+              zxkeyset_clearchar(&gamewin->keys, wParam);
+          }
         }
       }
       break;
@@ -1001,6 +977,69 @@ BOOL RegisterGameWindowClass(HINSTANCE hInstance)
 
   return TRUE;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin)
+{
+  gamewin_t *gamewin;
+  RECT       rect;
+  BOOL       result;
+  HWND       window;
+
+  *new_gamewin = NULL;
+
+  gamewin = (gamewin_t *) malloc(sizeof(*gamewin));
+  if (gamewin == NULL)
+    return FALSE;
+
+  // Required window dimensions
+  rect.left   = 0;
+  rect.top    = 0;
+  rect.right  = GAMEWIDTH  + GAMEBORDER * 2;
+  rect.bottom = GAMEHEIGHT + GAMEBORDER * 2;
+
+  // Adjust window dimensions for window furniture
+  result = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+  if (result == 0)
+    goto failure;
+
+  window = CreateWindowEx(0,
+                          szGameWindowClassName,
+                          szGameWindowTitle,
+                          WS_OVERLAPPEDWINDOW,
+                          CW_USEDEFAULT,
+                          CW_USEDEFAULT,
+                          rect.right - rect.left, rect.bottom - rect.top,
+                          NULL,
+                          NULL,
+                          hInstance,
+                          gamewin);
+  if (!window)
+    goto failure;
+
+  ShowWindow(window, nCmdShow);
+  UpdateWindow(window);
+
+  gamewin->window = window;
+
+  *new_gamewin = gamewin;
+
+  return TRUE;
+
+
+failure:
+  free(gamewin);
+
+  return FALSE;
+}
+
+void DestroyGameWindow(gamewin_t *doomed)
+{
+  free(doomed);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 int WINAPI WinMain(__in     HINSTANCE hInstance,
                    __in_opt HINSTANCE hPrevInstance,

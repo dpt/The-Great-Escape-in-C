@@ -12,13 +12,17 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/TheGreatEscape.h"
+
+/* ----------------------------------------------------------------------- */
 
 /**
  * Identifiers of game messages.
@@ -50,11 +54,18 @@ typedef enum message
 }
 message_t;
 
+/**
+ * A flag set on state.messages.display_index to show the next message.
+ */
+#define MESSAGE_NEXT_FLAG (1 << 7)
+
 /* $7D15 */
 void queue_message(tgestate_t *state,
                    message_t   message_index);
 /* $7D48 */
 void message_display(tgestate_t *state);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MESSAGES_H */
 

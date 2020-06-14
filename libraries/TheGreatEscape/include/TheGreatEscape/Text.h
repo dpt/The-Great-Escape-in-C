@@ -12,13 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef TEXT_H
 #define TEXT_H
 
-#include "TheGreatEscape/State.h"
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+#include "TheGreatEscape/TheGreatEscape.h"
+
+/* ----------------------------------------------------------------------- */
 
 uint8_t *plot_glyph(tgestate_t *state,
                     const char *pcharacter,
@@ -26,6 +32,8 @@ uint8_t *plot_glyph(tgestate_t *state,
 uint8_t *plot_single_glyph(tgestate_t *state,
                            int         character,
                            uint8_t    *output);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* TEXT_H */
 

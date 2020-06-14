@@ -1,0 +1,7 @@
+| >!Boot for The Great Escape
+| by David Thomas, © 2020
+
+IconSprites <Obey$Dir>.!Sprites
+
+Set GtEscape$Dir <Obey$Dir>
+Set File$Type_18E GtEscape

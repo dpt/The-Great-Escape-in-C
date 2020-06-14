@@ -12,13 +12,17 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef ITEM_BITMAPS_H
 #define ITEM_BITMAPS_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
+
+#include "C99/Types.h"
+
+/* ----------------------------------------------------------------------- */
 
 extern const uint8_t bitmap_shovel[];
 extern const uint8_t bitmap_key[];
@@ -47,6 +51,8 @@ extern const uint8_t mask_poison[];
 extern const uint8_t mask_torch[];
 extern const uint8_t mask_radio[];
 extern const uint8_t mask_food[];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* ITEM_BITMAPS_H */
 

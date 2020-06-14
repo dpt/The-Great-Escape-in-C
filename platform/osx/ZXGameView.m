@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/10/2014.
-//  Copyright (c) 2014-2018 David Thomas. All rights reserved.
+//  Copyright (c) 2014-2020 David Thomas. All rights reserved.
 //
 
 #import <ctype.h>
@@ -41,11 +41,26 @@
 
 // Configuration
 //
-#define DEFAULTWIDTH      256
-#define DEFAULTHEIGHT     192
-#define DEFAULTBORDERSIZE  32
+#define GAMEWIDTH       (256)   // pixels
+#define GAMEHEIGHT      (192)   // pixels
+#define GAMEBORDER      (16)    // pixels
 
-#define MAXSTAMPS           4 /* depth of nested timestamp stack */
+#define MAXSTAMPS       (4)     // max depth of timestamps stack
+#define SPEEDQ          (20)    // smallest unit of speed (percent)sp
+#define NORMSPEED       (100)   // normal speed (percent)
+#define MAXSPEED        (99999) // fastest possible game (percent)
+
+// -----------------------------------------------------------------------------
+
+// Audio
+//
+#define SAMPLE_RATE     (44100)
+#define PERIOD          (10)    // fraction of a second (10 => 0.1s)
+#define BUFFER_SAMPLES  (SAMPLE_RATE / PERIOD)
+#define BITS_SAMPLE     (5)     // magic value: we take the mean of this many input bits to make an output sample
+#define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) // in bits
+
+#define MAXVOL          (32767 / 2)
 
 // -----------------------------------------------------------------------------
 
@@ -53,8 +68,6 @@
 
 @interface ZXGameView()
 {
-  tgeconfig_t     config;
-
   zxspectrum_t   *zx;
   tgestate_t     *game;
 
@@ -128,6 +141,7 @@
 {
   const zxconfig_t zxconfig =
   {
+    GAMEWIDTH / 8, GAMEHEIGHT / 8, // screen dimensions in UDGs
     (__bridge void *)(self),
     &draw_handler,
     &stamp_handler,
@@ -137,28 +151,25 @@
     &speaker_handler
   };
 
-  config.width  = DEFAULTWIDTH  / 8;
-  config.height = DEFAULTHEIGHT / 8;
-
   zx              = NULL;
   game            = NULL;
 
   thread          = NULL;
 
   doSetupDrawing  = YES;
-  borderSize      = DEFAULTBORDERSIZE;
+  borderSize      = GAMEBORDER;
   snap            = YES;
   monochromatic   = NO;
 
   quit            = NO;
   paused          = NO;
 
-  speed           = 100;
+  speed           = NORMSPEED;
 
   memset(stamps, 0, sizeof(stamps));
   nstamps = 0;
 
-  keys            = 0ULL;
+  zxkeyset_clear(&keys);
   kempston        = 0;
 
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
@@ -169,14 +180,14 @@
   if (zx == NULL)
     goto failure;
 
-  game = tge_create(zx, &config);
+  game = tge_create(zx);
   if (game == NULL)
     goto failure;
 
   [self setupAudio];
 
   pthread_create(&thread,
-                 NULL /* pthread_attr_t */,
+                 NULL, // pthread_attr_t
                  tge_thread,
                  (__bridge void *)(self));
 
@@ -190,6 +201,7 @@ failure:
 
 - (void)reshape
 {
+  [super reshape];
   doSetupDrawing = YES;
 }
 
@@ -324,9 +336,9 @@ failure:
     {
       // zxkeyset_set/clearchar converts generic keypresses for us
       if (down)
-        keys = zxkeyset_setchar(keys, u);
+        zxkeyset_setchar(&keys, u);
       else
-        keys = zxkeyset_clearchar(keys, u);
+        zxkeyset_clearchar(&keys, u);
     }
   }
 }
@@ -334,37 +346,32 @@ failure:
 - (void)keyUp:(NSEvent *)event
 {
   [self keyUpOrDown:event isDown:NO];
-  // NSLog(@"Key released: %@", event);
 }
 
 - (void)keyDown:(NSEvent *)event
 {
   [self keyUpOrDown:event isDown:YES];
-  // NSLog(@"Key pressed: %@", event);
 }
 
 - (void)flagsChanged:(NSEvent *)event
 {
-  /* Unlike keyDown and keyUp, flagsChanged is a single event delivered when
-   * any one of the modifier key states change, down or up. */
+  // Unlike keyDown and keyUp, flagsChanged is a single event delivered when
+  // any one of the modifier key states change, down or up.
 
   NSEventModifierFlags modifierFlags = [event modifierFlags];
   bool shift = (modifierFlags & NSEventModifierFlagShift)  != 0;
   bool alt   = (modifierFlags & NSEventModifierFlagOption) != 0;
 
-  /* For reference:
-   *
-   * bool control = (modifierFlags & NSControlKeyMask) != 0;
-   * bool command = (modifierFlags & NSCommandKeyMask) != 0;
-   */
+  // For reference:
+  //
+  // bool control = (modifierFlags & NSControlKeyMask) != 0;
+  // bool command = (modifierFlags & NSCommandKeyMask) != 0;
 
   @synchronized(self)
   {
     zxkeyset_assign(&keys, zxkey_CAPS_SHIFT,   shift);
     zxkeyset_assign(&keys, zxkey_SYMBOL_SHIFT, alt);
   }
-
-  // NSLog(@"Key shift=%d control=%d alt=%d command=%d", shift, control, alt, command);
 }
 
 // -----------------------------------------------------------------------------
@@ -373,9 +380,6 @@ failure:
 
 - (IBAction)setSpeed:(id)sender
 {
-  const int min_speed = 10;     // percent
-  const int max_speed = 100000; // percent
-
   NSInteger tag;
 
   tag = [sender tag];
@@ -395,26 +399,26 @@ failure:
     {
       default:
       case 100: // normal speed
-        speed = 100;
+        speed = NORMSPEED;
         break;
 
       case -1: // maximum speed
-        speed = max_speed;
+        speed = MAXSPEED;
         break;
 
       case 1: // increase speed
-        speed += 25;
+        speed += SPEEDQ;
         break;
 
       case 2: // decrease speed
-        speed -= 25;
+        speed -= SPEEDQ;
         break;
     }
 
-    if (speed < min_speed)
-      speed = min_speed;
-    else if (speed > max_speed)
-      speed = max_speed;
+    if (speed < SPEEDQ)
+      speed = SPEEDQ;
+    else if (speed > MAXSPEED)
+      speed = MAXSPEED;
   }
 }
 
@@ -448,8 +452,8 @@ failure:
   GLsizei xOffset, yOffset;
   GLsizei drawWidth, drawHeight;
 
-  gameSize.width  = config.width  * 8;
-  gameSize.height = config.height * 8;
+  gameSize.width  = zx->screen.width  * 8;
+  gameSize.height = zx->screen.height * 8;
 
   // Convert up to window space, which is in pixel units
   baseRect = [self bounds];
@@ -474,8 +478,8 @@ failure:
       gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
   }
 
-  drawWidth  = (config.width  * 8) * gamesPerView;
-  drawHeight = (config.height * 8) * gamesPerView;
+  drawWidth  = gameSize.width  * gamesPerView;
+  drawHeight = gameSize.height * gamesPerView;
   _scale = gamesPerView;
 
   // Centre the game within the view (note that conversion to int floors the values)
@@ -524,7 +528,7 @@ failure:
 
   // Draw the image
   glPixelZoom(zsx, zsy);
-  glDrawPixels(DEFAULTWIDTH, DEFAULTHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+  glDrawPixels(GAMEWIDTH, GAMEHEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   // Flush to screen
   glFinish();
@@ -544,26 +548,31 @@ static void *tge_thread(void *arg)
 
   tge_setup(game);
 
-  // While in menu state
+  // Run the menu
   for (;;)
   {
-    @synchronized(view)
+    int proceed;
+
+    proceed = tge_menu(game);
+    if (proceed > 0)
     {
-      quit = view->quit;
-    }
-
-    if (quit)
+      // Begin the game
+      quit = FALSE;
       break;
-
-    if (tge_menu(game) > 0)
-      break; // game begins
+    }
+    else if (proceed < 0)
+    {
+      // Game thread termination was signalled
+      quit = TRUE;
+      break;
+    }
   }
 
+  // Run the game
   if (!quit)
   {
     tge_setup2(game);
 
-    // While in game state
     for (;;)
     {
       @synchronized(view)
@@ -575,7 +584,7 @@ static void *tge_thread(void *arg)
         break;
 
       tge_main(game);
-      view->nstamps = 0; // reset all timing info
+      view->nstamps = 0; // Reset all timing info
     }
   }
 
@@ -608,7 +617,7 @@ static void stamp_handler(void *opaque)
   gettimeofday(&view->stamps[view->nstamps++], NULL);
 }
 
-static void sleep_handler(int durationTStates, void *opaque)
+static int sleep_handler(int durationTStates, void *opaque)
 {
   ZXGameView *view = (__bridge id) opaque;
   BOOL paused;
@@ -618,8 +627,12 @@ static void sleep_handler(int durationTStates, void *opaque)
     // Unstack timestamps (even if we're paused)
     assert(view->nstamps > 0);
     if (view->nstamps <= 0)
-      return;
+      return view->quit;
     --view->nstamps;
+
+    // Quit straight away if signalled
+    if (view->quit)
+      return TRUE;
 
     paused = view->paused;
   }
@@ -637,7 +650,7 @@ static void sleep_handler(int durationTStates, void *opaque)
       if (!paused)
         break;
 
-      usleep(500000); /* 0.5s */
+      usleep(500000); // 0.5s
     }
   }
   else
@@ -647,10 +660,10 @@ static void sleep_handler(int durationTStates, void *opaque)
     const double          tstatesPerSec = 3.5e6;
 
     struct timeval        now;
-    double                duration; /* seconds */
+    double                duration; // seconds
     const struct timeval *then;
     struct timeval        delta;
-    double                consumed; /* seconds */
+    double                consumed; // seconds
 
     gettimeofday(&now, NULL); // get time now before anything else
 
@@ -671,7 +684,7 @@ static void sleep_handler(int durationTStates, void *opaque)
     consumed = delta.tv_sec + delta.tv_usec / 1e6;
     if (consumed < duration)
     {
-      double     delay; /* seconds */
+      double     delay; // seconds
       useconds_t udelay;
 
       // We didn't take enough time - sleep for the remainder of our duration
@@ -680,6 +693,8 @@ static void sleep_handler(int durationTStates, void *opaque)
       usleep(udelay);
     }
   }
+
+  return FALSE;
 }
 
 static int key_handler(uint16_t port, void *opaque)
@@ -692,7 +707,7 @@ static int key_handler(uint16_t port, void *opaque)
     if (port == port_KEMPSTON_JOYSTICK)
       k = view->kempston;
     else
-      k = zxkeyset_for_port(port, view->keys);
+      k = zxkeyset_for_port(port, &view->keys);
   }
 
   return k;
@@ -741,8 +756,10 @@ static void speaker_handler(int on_off, void *opaque)
 
 - (void)getGameWidth:(int *)width height:(int *)height border:(int *)border
 {
-  *width  = config.width  * 8;
-  *height = config.height * 8;
+  assert(zx);
+
+  *width  = zx->screen.width  * 8;
+  *height = zx->screen.height * 8;
   *border = borderSize;
 }
 
@@ -758,17 +775,13 @@ static void speaker_handler(int on_off, void *opaque)
 // averaging five value to produce a 44.1KHz signal. This certainly sounds
 // right but I'm not currently sure how accurate it really is.
 // To produce a 22.05KHz signal instead: average ten values, and so on.
-#define SAMPLE_RATE     (44100)
-#define BITFIFO_LENGTH  (220500 / 4) // one seconds' worth of input bits (fifo will be ~27KiB)
-#define AVG             (5) // average this many input bits to make an output sample
 
 // Z80 @ 3.5MHz
 // Each OUT takes 11 cycles
 // >>> 3.5e6 / 11
 // 318181.81 recurring OUTs/s theoretical max
 
-
-// This is a AURenderCallback except that type is a pointer.
+// This is the same as an AURenderCallback except it's not a pointer type.
 static OSStatus playbackCallback(void                       *inRefCon,
                                  AudioUnitRenderActionFlags *ioActionFlags,
                                  const AudioTimeStamp       *inTimeStamp,
@@ -823,7 +836,7 @@ static OSStatus playbackCallback(void                       *inRefCon,
   audioFormat.mFramesPerPacket  = 1;
   audioFormat.mBytesPerFrame    = 2;
   audioFormat.mChannelsPerFrame = 1;
-  audioFormat.mBitsPerChannel   = 16 * 1;
+  audioFormat.mBitsPerChannel   = 16;
   audioFormat.mReserved         = 0;
 
   // Apply the format
@@ -915,6 +928,7 @@ OSStatus playbackCallback(void                       *inRefCon,
 
   ZXGameView *view = (__bridge id) inRefCon;
   result_t    err;
+  int         fetch;
   OSStatus    rc;
   UInt32      i;
 
@@ -922,6 +936,9 @@ OSStatus playbackCallback(void                       *inRefCon,
   {
     // CHECK: Is this going to screw up with mNumberBuffers > 1 since i'm
     //        fetching from the fifo?
+
+    fetch = BITS_SAMPLE * view->speed / NORMSPEED;
+    fetch = (fetch < 1) ? 1 : (fetch > 32) ? 32 : fetch;
 
     for (i = 0; i < ioData->mNumberBuffers; i++)
     {
@@ -946,8 +963,6 @@ OSStatus playbackCallback(void                       *inRefCon,
         if (bitsInFifo == 0)
           goto no_data;
 
-        const signed short maxVolume = 32500; // tweak this down to quieten
-
         signed short      *p;
         signed short       vol;
         UInt32             j;
@@ -958,13 +973,13 @@ OSStatus playbackCallback(void                       *inRefCon,
           unsigned int bits;
 
           bits = 0;
-          err = bitfifo_dequeue(view->audio.fifo, &bits, AVG);
+          err = bitfifo_dequeue(view->audio.fifo, &bits, fetch);
           if (err == result_BITFIFO_INSUFFICIENT ||
               err == result_BITFIFO_EMPTY)
             // When the fifo empties maintain the most recent volume
             vol = view->audio.lastvol;
           else
-            vol = (int) __builtin_popcount(bits) * maxVolume / AVG;
+            vol = (int) __builtin_popcount(bits) * MAXVOL / fetch;
           *p++ = vol;
 
           view->audio.lastvol = vol;

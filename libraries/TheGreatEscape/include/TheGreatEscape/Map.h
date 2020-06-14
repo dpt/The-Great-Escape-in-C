@@ -12,19 +12,23 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef MAP_H
 #define MAP_H
 
+/* ----------------------------------------------------------------------- */
+
 #include "TheGreatEscape/SuperTiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 /** Dimensions of the map. */
 enum
 {
   MAPX = 54,
-  MAPY = 34,
+  MAPY = 34
 };
 
 extern const supertileindex_t map[MAPX * MAPY];
@@ -34,6 +38,8 @@ extern const supertileindex_t map[MAPX * MAPY];
 /* These equate to (-136, 1088) in map coordinates. */
 #define MAP_WIDTH  217
 #define MAP_HEIGHT 137
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MAP_H */
 

@@ -12,19 +12,27 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef MENU_H
 #define MENU_H
 
+/* ----------------------------------------------------------------------- */
+
+#include "ZXSpectrum/Spectrum.h"
+
 #include "TheGreatEscape/State.h"
+
+/* ----------------------------------------------------------------------- */
 
 void set_menu_item_attributes(tgestate_t *state,
                               int         index,
                               attribute_t attrs);
 
 int menu_screen(tgestate_t *state);
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* MENU_H */
 

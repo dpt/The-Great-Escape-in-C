@@ -2,25 +2,25 @@
  *
  * Interface to a logical ZX Spectrum.
  *
- * Copyright (c) David Thomas, 2013-2018. <dave@davespace.co.uk>
+ * Copyright (c) David Thomas, 2013-2020. <dave@davespace.co.uk>
  */
 
 #include <assert.h>
 #include <limits.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "C99/Types.h"
+
 #include "ZXSpectrum/Screen.h"
+#include "ZXSpectrum/Macros.h"
 
 #include "ZXSpectrum/Spectrum.h"
 
-#include "ZXSpectrum/Macros.h"
-
 /* ----------------------------------------------------------------------- */
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #include <windows.h>
 
@@ -30,7 +30,11 @@
 #define mutex_lock(M)    EnterCriticalSection(&M)
 #define mutex_unlock(M)  LeaveCriticalSection(&M)
 
-#else
+#elif defined(_POSIX_THREADS) || \
+      defined(_POSIX_VERSION) || \
+      defined(__unix__)       || \
+      defined(__unix)         || \
+     (defined(__APPLE__) && defined(__MACH__))
 
 #include <pthread.h>
 
@@ -40,6 +44,24 @@
 #define mutex_unlock(M)  pthread_mutex_unlock(&M)
 #define mutex_destroy(M) pthread_mutex_destroy(&M)
 
+#else
+
+//#warning Default threading used
+
+#define mutex_t          int
+#define mutex_init(M)
+#define mutex_lock(M)
+#define mutex_unlock(M)
+#define mutex_destroy(M)
+
+#endif
+
+#ifdef __riscos
+typedef uint32_t outputpixel_t;
+#define OUTPUT_SCREEN_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 8) // 4bpp
+#else
+typedef uint32_t outputpixel_t;
+#define OUTPUT_SCREEN_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT)
 #endif
 
 /* ----------------------------------------------------------------------- */
@@ -104,8 +126,8 @@ typedef struct zxspectrum_private
 
   mutex_t         lock;
   zxbox_t         dirty;
-  zxscreen_t      screen_copy;
-  uint32_t        converted[SCREEN_WIDTH * SCREEN_HEIGHT];
+  zxscreen_t      screen_copy; // most recent 'complete' screen
+  outputpixel_t   converted[OUTPUT_SCREEN_SIZE];
 }
 zxspectrum_private_t;
 
@@ -196,7 +218,7 @@ static void zx_draw(zxspectrum_t *state, const zxbox_t *dirty)
   if (dirty == NULL || zxbox_exceeds(dirty, SCREEN_WIDTH, SCREEN_HEIGHT))
   {
     /* Entire screen has been modified - copy it all. */
-    memcpy(&prv->screen_copy, &prv->pub.screen, SCREEN_LENGTH);
+    memcpy(&prv->screen_copy, &prv->pub.screen, sizeof(prv->screen_copy));
 
     /* Maximise the overall dirty box that zxspectrum_claim_screen() will
      * use. */
@@ -267,11 +289,11 @@ static void zx_stamp(zxspectrum_t *state)
   prv->config.stamp(prv->config.opaque);
 }
 
-static void zx_sleep(zxspectrum_t *state, int duration)
+static int zx_sleep(zxspectrum_t *state, int duration)
 {
   zxspectrum_private_t *prv = (zxspectrum_private_t *) state;
 
-  prv->config.sleep(duration, prv->config.opaque);
+  return prv->config.sleep(duration, prv->config.opaque);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -284,11 +306,13 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
   if (prv == NULL)
     return NULL;
 
-  prv->pub.in    = zx_in;
-  prv->pub.out   = zx_out;
-  prv->pub.draw  = zx_draw;
-  prv->pub.stamp = zx_stamp;
-  prv->pub.sleep = zx_sleep;
+  prv->pub.in            = zx_in;
+  prv->pub.out           = zx_out;
+  prv->pub.draw          = zx_draw;
+  prv->pub.stamp         = zx_stamp;
+  prv->pub.sleep         = zx_sleep;
+  prv->pub.screen.width  = config->width;
+  prv->pub.screen.height = config->height;
 
   prv->config = *config;
 
@@ -303,10 +327,10 @@ zxspectrum_t *zxspectrum_create(const zxconfig_t *config)
 
 void zxspectrum_destroy(zxspectrum_t *doomed)
 {
+  zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
+
   if (doomed == NULL)
     return;
-
-  zxspectrum_private_t *prv = (zxspectrum_private_t *) doomed;
 
   mutex_destroy(prv->lock);
 
@@ -322,7 +346,12 @@ uint32_t *zxspectrum_claim_screen(zxspectrum_t *state)
   /* Check for any changes */
   if (zxbox_is_valid(&prv->dirty))
   {
+    // Convert the screen only when it's asked for
+#ifdef __riscos
+    zxscreen_convert16(prv->screen_copy.pixels, prv->converted, &prv->dirty);
+#else
     zxscreen_convert(prv->screen_copy.pixels, prv->converted, &prv->dirty);
+#endif
 
     /* Invalidate the dirty region once complete */
     zxbox_invalidate(&prv->dirty);

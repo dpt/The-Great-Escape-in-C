@@ -24,6 +24,7 @@
     <ClInclude Include="..\..\..\include\ZXSpectrum\Spectrum.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\libraries\ZXSpectrum\Kempston.c" />
     <ClCompile Include="..\..\..\libraries\ZXSpectrum\Keyboard.c" />
     <ClCompile Include="..\..\..\libraries\ZXSpectrum\Screen.c" />
     <ClCompile Include="..\..\..\libraries\ZXSpectrum\Spectrum.c" />

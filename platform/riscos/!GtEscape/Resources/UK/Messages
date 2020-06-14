@@ -1,0 +1,101 @@
+# Messages for The Great Escape
+# © David Thomas, 2020
+#
+
+version:0.92 (23 May 2020)
+
+task:The Great Escape
+icon:!gtescape
+
+# Menus
+
+menu.iconbar:The Great Escape,>Info,Help,Instructions,Quit
+menu.zxgame:The Great Escape,View{View,Fixed scale{Fixed scale,Selected     ^F|>Scale view  F11,Big window   ^G},Scaled to fit{Scaled to fit,Selected        ^V|Snap to pixels  ^S}|~Full screen F10|Monochrome   ^N},Save{Save,~>Game         F3,>Screenshot  ãF3},Sound{Sound,Enabled  ^O},Speed{Speed,100%     F6,Maximum ãF7|Faster   F7,Slower   F5|Pause    ^P}
+
+# Warnings
+
+warn.drag.to.save:To save, drag the file icon to a directory display.
+
+# Errors (numbered)
+
+error.unknown:Error %d.
+error.no.mem:There is not enough memory to perform the requested operation. Quit any unwanted applications or see the RISC OS User Guide for ways to maximise memory.
+
+# Errors (not numbered)
+
+error.no.scrap:<Wimp$Scrap> is not defined, cannot engage in scrap transfer.
+
+# Interactive Help
+
+# \S:Click SELECT to
+# \R:Move the pointer right to
+# \A:Click ADJUST to
+# \T:This is the
+# \G:This option is greyed out because
+# \W:This window is
+# \D:Drag SELECT to
+# \d:Drag ADJUST to
+# \w:window
+# \s:SELECT
+# \a:ADJUST
+
+#  Window help
+
+hw.iconbar:\TThe Great Escape application, a prison escape game.
+
+hw.prog_info.d_author:\Tauthor of the application.
+hw.prog_info.d_icon:\Ticon associated with the application.
+hw.prog_info.d_name:\Tname of the application.
+hw.prog_info.d_purpose:\Tpurpose of the application.
+hw.prog_info.d_version:\Tversion of the application.
+hw.prog_info:This \w displays information about The Great Escape.
+
+hw.save.b_cancel:\Sclose this box.
+hw.save.b_save:\Ssave the file with the current filename.|MIf it is not a full pathname, you must drag the icon to a directory display.
+hw.save.i_icon:Drag the file icon to a directory display to save it there.|MDrag the file icon to an application to transfer the file there.
+hw.save.w_filename:\Tfilename that your file will be saved with.
+hw.save:\Tsave \w.|MEdit the filename and drag the file icon to a directory display, or enter a full pathname and choose êSaveë (or press RETURN).
+
+hw.scale.b_cancel:\Scancel the dialogue box.
+hw.scale.b_down:\Sdecrease the scale.|MHold SHIFT to go faster.
+hw.scale.b_fitscr:\Sfit the game to the size of the screen.
+hw.scale.b_fitwin:\Sfit the game to the current size of the viewer window.
+hw.scale.b_scale:\Sapply the given scale.
+hw.scale.b_up:\Sincrease the scale.|MHold SHIFT to go faster.
+hw.scale.w_scale:\Tscale to use.
+hw.scale:\Tview scaling \w.|MUse this \w to alter the scale of the game.
+
+hw.zxgame:\Tgame \w.
+
+#  Menu help
+
+hm.iconbar.0:\Rsee information about The Great Escape.
+hm.iconbar.3:\Sto make The Great Escape go away.
+
+hm.zxgame.0:\Rsee view options.
+hm.zxgame.1:\Rsave the game, or save a screenshot.
+hm.zxgame.2:\Rsee sound options.
+hm.zxgame.3:\Rsee speed controls.
+
+hm.zxgame.0.0:\Sselect fixed scale mode for the game window.|M\Rsee options for fixed scale mode.
+hm.zxgame.0.1:\Sselect fit-to-window mode for the game window.|M\Rsee options for the fit-to-window mode.
+hm.zxgame.0.2:\Sgo into full screen mode.
+hm.zxgame.0.3:\Sturn on monochrome (black and white) mode.
+
+hm.zxgame.0.0.0:\Sselect fixed scale mode for the game window.
+hm.zxgame.0.0.1:\Rscale the game view.
+hm.zxgame.0.0.2:\Smake the game window use the entire screen, while preserving the chosen scale for the game.
+
+hm.zxgame.0.1.0:\Sselect fit-to-window mode for the game window.
+hm.zxgame.0.1.1:\Smake the game view only ever use whole pixels.
+
+hm.zxgame.1.0:\Rsave the game.
+hm.zxgame.1.1:\Rsave a screenshot of the game.
+
+hm.zxgame.2.0:\Senable or disable the game's sound.
+
+hm.zxgame.3.0:\Sset the game to normal speed.
+hm.zxgame.3.1:\Sset the game to the maximum possible speed.
+hm.zxgame.3.2:\Sspeed up the game by 20%.
+hm.zxgame.3.3:\Sslow down the game by 20%.
+hm.zxgame.3.4:\Spause or unpause the game.

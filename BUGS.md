@@ -6,6 +6,7 @@ Unfixed
 
 In progress:
 
+* Guards & commandant don't always catch the hero on contact. (prove)
 * Prove the game can be completed.
 
 Queue:
@@ -13,12 +14,12 @@ Queue:
 * The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
 * Have seen NPCs get stuck at night in hero's bedroom. (prove)
 * Have seen guards and prisoners getting bunched up in doorway. (prove)
-* Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps.
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
-* Guards & commandant don't always catch the hero on contact.
 * Undefined behaviour in `searchlight_plot` when producing the attribute address.
 * Enter the second tunnel system via the crate room and see the hero drawn standing up. Original bug.
 * Have seen the hero get wedged when randomly wandering - by the watchtower.
+
+* Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps. (can't repeat)
 
 Fixed
 -----

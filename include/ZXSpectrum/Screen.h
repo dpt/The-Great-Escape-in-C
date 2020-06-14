@@ -8,15 +8,16 @@
 #ifndef ZXSPECTRUM_SCREEN_H
 #define ZXSPECTRUM_SCREEN_H
 
+#include "ZXSpectrum/Spectrum.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "ZXSpectrum/Spectrum.h"
-
 /**
- * Convert the given screen into 0x00BBGGRR pixel format (or 0x00RRGGBB on Windows).
+ * Convert the given ZX Spectrum format screen into 0x00BBGGRR pixel format
+ * (or 0x00RRGGBB on Windows).
  *
  * \param[in] screen ZX Spectrum screen data.
  * \param[in] output Output screen pixels.
@@ -25,6 +26,11 @@ extern "C"
 void zxscreen_convert(const void    *screen,
                       unsigned int  *output,
                       const zxbox_t *dirty);
+
+// 4bpp variant
+void zxscreen_convert16(const void    *vscr,
+                        unsigned int  *poutput,
+                        const zxbox_t *dirty);
 
 #ifdef __cplusplus
 }

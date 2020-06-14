@@ -12,17 +12,19 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2018 David Thomas
+ * The recreated version is copyright (c) 2012-2019 David Thomas
  */
 
 #ifndef STATIC_TILES_H
 #define STATIC_TILES_H
 
-#include <stdint.h>
+/* ----------------------------------------------------------------------- */
 
 #include "ZXSpectrum/Spectrum.h"
 
 #include "TheGreatEscape/Tiles.h"
+
+/* ----------------------------------------------------------------------- */
 
 struct static_tile
 {
@@ -33,6 +35,8 @@ struct static_tile
 typedef struct static_tile static_tile_t;
 
 extern const static_tile_t static_tiles[];
+
+/* ----------------------------------------------------------------------- */
 
 #endif /* STATIC_TILES_H */
 
