@@ -44,11 +44,11 @@
 #define NORMSPEED       (100)   // normal speed (percent)
 #define MAXSPEED        (99999) // fastest possible game (percent)
 
-#define BUFSZ            (44100 / 50)  // 1/50th sec at 44.1kHz
+#define BUFSZ           (44100 / 50) // 1/50th sec at 44.1kHz
 
 #define SAMPLE_RATE     (44100)
 #define BITFIFO_LENGTH  (220500 / 4) // one seconds' worth of input bits (fifo will be ~27KiB)
-#define AVG             (5) // average this many input bits to make an output sample
+#define AVG             (5)     // average this many input bits to make an output sample
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -103,23 +103,23 @@ gamewin_t;
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797970(v=vs.85).aspx
 
 static void CALLBACK SoundCallback(HWAVEOUT  hwo,
-  UINT      uMsg,
-  DWORD_PTR dwInstance,
-  DWORD_PTR dwParam1,
-  DWORD_PTR dwParam2);
+                                   UINT      uMsg,
+                                   DWORD_PTR dwInstance,
+                                   DWORD_PTR dwParam1,
+                                   DWORD_PTR dwParam2);
 
 static void EmitSound(gamewin_t *state);
 
 static int OpenSound(gamewin_t *state)
 {
+  const WORD   nChannels      = 1; // mono
+  const DWORD  nSamplesPerSec = SAMPLE_RATE;
+  const WORD   wBitsPerSample = 16; // 8 or 16
+
+  const WORD   nBlockAlign    = nChannels * wBitsPerSample / 8;
+
   WAVEFORMATEX waveFormatEx; // wave format specifier
   HWAVEOUT     waveOut;      // device handle
-
-  const WORD  nChannels      = 1;
-  const DWORD nSamplesPerSec = 44100; //
-  const WORD  wBitsPerSample = 16;    // 8 or 16
-
-  WORD nBlockAlign = nChannels * wBitsPerSample / 8;
 
   // initialise in structure order
   waveFormatEx.wFormatTag      = WAVE_FORMAT_PCM;
@@ -130,7 +130,7 @@ static int OpenSound(gamewin_t *state)
   waveFormatEx.wBitsPerSample  = wBitsPerSample;
   waveFormatEx.cbSize          = 0;
 
-  // reset this: it's checked to unprepare
+  // reset this: it's tested in CloseSound()
   state->sound.waveHdr.dwFlags = 0;
 
   state->sound.bufferUsed = 0;
@@ -145,11 +145,11 @@ static int OpenSound(gamewin_t *state)
   state->sound.soundDoneSema = CreateSemaphore(NULL, 1, 1, NULL);
 
   if (waveOutOpen(&waveOut,
-    WAVE_MAPPER,
-    &waveFormatEx,
-    (DWORD_PTR) SoundCallback, // dwCallback
-    (DWORD_PTR) state, // dwCallbackInstance
-    CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
+                  WAVE_MAPPER,
+                  &waveFormatEx,
+                  (DWORD_PTR) SoundCallback, // dwCallback
+                  (DWORD_PTR) state, // dwCallbackInstance
+                  CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
   {
     MessageBox(NULL, _T("unable to open WAVE_MAPPER device"), _T("Some Caption"), MB_TOPMOST);  // check
     return -1;
@@ -205,10 +205,9 @@ static void EmitSound(gamewin_t *state)
   WaitForSingleObject(state->sound.soundDoneSema, INFINITE);
 
   {
-    result_t    err;
-
-    UINT outputCapacity;
-    UINT outputUsed;
+    result_t err;
+    UINT     outputCapacity;
+    UINT     outputUsed;
 
     outputCapacity = BUFSZ;
     outputUsed     = 0;
@@ -410,6 +409,8 @@ static void speaker_handler(int on_off, void *opaque)
   gamewin_t   *gamewin = (gamewin_t *) opaque;
   unsigned int bit = on_off;
 
+  return;
+
   EnterCriticalSection(&gamewin->sound.soundLock);
 
   // There's nothing we can do if the buffer is full, so ignore errors
@@ -424,8 +425,6 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
 {
   gamewin_t  *win  = (gamewin_t *) lpParam;
   tgestate_t *game = win->tge;
-
-  assert(win->sound.fifo);
 
   tge_setup(game);
 
@@ -445,7 +444,7 @@ static DWORD WINAPI gamewin_thread(LPVOID lpParam)
     {
       tge_main(game);
       win->nstamps = 0; // reset all timing info
-      EmitSound(win);
+     // EmitSound(win);
     }
   }
 
@@ -479,7 +478,7 @@ static int CreateGame(gamewin_t *gamewin)
   if (tge == NULL)
     goto failure;
 
-  OpenSound(gamewin);
+  //OpenSound(gamewin);
 
   thread = CreateThread(NULL,           // default security attributes
                         0,              // use default stack size
@@ -520,8 +519,6 @@ static int CreateGame(gamewin_t *gamewin)
   gamewin->quit     = false;
 
   gamewin->nstamps  = 0;
-
-  assert(gamewin->sound.fifo);
 
   return 0;
 
@@ -989,7 +986,7 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin
 
   *new_gamewin = NULL;
 
-  gamewin = (gamewin_t *) malloc(sizeof(*gamewin));
+  gamewin = (gamewin_t *) calloc(1, sizeof(*gamewin));
   if (gamewin == NULL)
     return FALSE;
 
@@ -1021,6 +1018,7 @@ BOOL CreateGameWindow(HINSTANCE hInstance, int nCmdShow, gamewin_t **new_gamewin
   ShowWindow(window, nCmdShow);
   UpdateWindow(window);
 
+  gamewin->instance = hInstance;
   gamewin->window = window;
 
   *new_gamewin = gamewin;
@@ -1036,6 +1034,7 @@ failure:
 
 void DestroyGameWindow(gamewin_t *doomed)
 {
+  // DestroyWindow(doomed->window); // required?
   free(doomed);
 }
 
