@@ -739,6 +739,42 @@ typedef struct itemstruct
 itemstruct_t;
 
 /**
+ * Holds the variables related to on-screen messages.
+ */
+typedef struct messages
+{
+  /**
+   * $7CFC: The queue of message indices.
+   *
+   * Each is a two-byte value. Terminated by a single message_QUEUE_END
+   * byte (0xFF).
+   */
+  uint8_t     queue[message_queue_LENGTH];
+
+  /**
+   * $7D0F: A decrementing counter which shows the next message when it
+   * reaches zero.
+   */
+  uint8_t     display_delay;
+
+  /**
+   * $7D10: The index into the message we're displaying or wiping.
+   */
+  uint8_t     display_index;
+
+  /**
+   * $7D11: A pointer to the next available slot in the message queue.
+   */
+  uint8_t    *queue_pointer;
+
+  /**
+   * $7D13: A pointer to the next message character to be displayed.
+   */
+  const char *current_character;
+}
+messages_t;
+
+/**
  * Maps a route to an event.
  */
 typedef struct route2event
