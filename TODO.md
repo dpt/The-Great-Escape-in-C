@@ -3,7 +3,7 @@ TODOs
 
 Core
 ----
-- [ ] Fix core game bugs (see BUGS.md).
+- [x] Fix core game bugs (see BUGS.md).
 - [ ] Fix analyser issues (vars assigned to but never read).
 - [x] Stop the core overwriting shared writable room defs to make things appear.
 - [ ] Made the code buildable with sdcc.
@@ -32,7 +32,7 @@ SDL
 
 RISC OS
 -------
-- [ ] Port.
+- [x] Port.
 
 General
 -------
