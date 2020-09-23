@@ -253,7 +253,7 @@ enum vischar_counter_and_flags_values
    * Set in touch(). */
   vischar_BYTE7_DONT_MOVE_MAP          = 1 << 6,
 
-  /** Bit 7 is set when touch() is entered, implying that vischar->mi etc.
+  /** Bit 7 is set when touch() is entered, implying that vischar.mi etc.
    * are setup.*/
   vischar_DRAWABLE                     = 1 << 7
 };
@@ -288,7 +288,7 @@ enum itemstruct_item_and_flags
   itemstruct_ITEM_MASK                 = 0x0F,
 
   /** Bit 4 is an unknown purpose flag used in a mask by pick_up_item(), but
-   * never set. It's possibly evidence of a larger ITEM_MASK.
+   * never set. It's possibly evidence of a larger itemstruct_ITEM_MASK.
    */
   itemstruct_ITEM_FLAG_UNKNOWN         = 1 << 4,
 
@@ -314,7 +314,7 @@ enum itemstruct_room_and_flags
 
   /** Indicates that the item is nowhere. This is (item_NONE &
    * itemstruct_ROOM_MASK). */
-  itemstruct_ROOM_NONE                 = 0x3F,  // can probably go
+  itemstruct_ROOM_NONE                 = 0x3F,  // TODO: Remove this
 
   /** Bit 6 is set when the item is nearby.
    * Cleared by mark_nearby_items() and get_next_drawable(). */
@@ -322,8 +322,8 @@ enum itemstruct_room_and_flags
 
   /** Bit 7 is set when the item is nearby.
    * Cleared by mark_nearby_items(). Enables find_nearby_item() for the item.
-   * follow_suspicious_character() uses it on item_FOOD to trigger guard dog
-   * stuff. */
+   * character_behaviour() uses it on item_FOOD to trigger guard dog behaviour.
+   */
   itemstruct_ROOM_FLAG_NEARBY_7        = 1 << 7
 };
 
