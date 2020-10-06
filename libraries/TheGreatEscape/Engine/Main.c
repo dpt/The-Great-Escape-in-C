@@ -5697,9 +5697,9 @@ void plot_sprites(tgestate_t *state)
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
           searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
-          masked_sprite_plotter_24_wide_vischar(state, vischar);
+          plot_masked_sprite_24px(state, vischar);
         else
-          masked_sprite_plotter_16_wide_vischar(state, vischar);
+          plot_masked_sprite_16px(state, vischar);
       }
     }
     else
@@ -5708,7 +5708,7 @@ void plot_sprites(tgestate_t *state)
       if (visible)
       {
         render_mask_buffer(state);
-        masked_sprite_plotter_16_wide_item(state);
+        plot_masked_sprite_16px_x_is_zero(state);
       }
     }
   }
@@ -9915,15 +9915,14 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
-                                           vischar_t  *vischar)
+void plot_masked_sprite_24px(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t        x;           /* was A */
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
   assert(state   != NULL);
   ASSERT_VISCHAR_VALID(vischar);
@@ -10198,9 +10197,9 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
  *
  * \param[in] state Pointer to game state.
  */
-void masked_sprite_plotter_16_wide_item(tgestate_t *state)
+void plot_masked_sprite_16px_x_is_zero(tgestate_t *state)
 {
-  masked_sprite_plotter_16_wide_left(state, 0 /* x */);
+  plot_masked_sprite_16px_right(state, 0 /* x */);
 }
 
 /**
@@ -10209,8 +10208,7 @@ void masked_sprite_plotter_16_wide_item(tgestate_t *state)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
-                                           vischar_t  *vischar)
+void plot_masked_sprite_16px(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t x; /* was A */
 
@@ -10218,9 +10216,9 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
 
   x = vischar->isopos.x & 7;
   if (x < 4)
-    masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
+    plot_masked_sprite_16px_right(state, x); /* was fallthrough */
   else
-    masked_sprite_plotter_16_wide_right(state, x);
+    plot_masked_sprite_16px_left(state, x);
 }
 
 /**
@@ -10229,13 +10227,13 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
  * \param[in] state Pointer to game state.
  * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
+void plot_masked_sprite_16px_right(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
   assert(state != NULL);
   // assert(x);
@@ -10368,13 +10366,13 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
  * \param[in] state Pointer to game state.
  * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
+void plot_masked_sprite_16px_left(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
   assert(state != NULL);
   // assert(x);
