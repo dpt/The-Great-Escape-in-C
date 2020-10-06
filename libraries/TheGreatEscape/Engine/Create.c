@@ -278,7 +278,6 @@ static void tge_initialise(tgestate_t *state)
  * Initialise the game state.
  *
  * \param[in] speccy Pointer to logical ZX Spectrum.
- * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
 TGE_API tgestate_t *tge_create(zxspectrum_t *speccy)

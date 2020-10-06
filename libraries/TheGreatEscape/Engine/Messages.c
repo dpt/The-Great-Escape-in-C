@@ -163,36 +163,6 @@ void wipe_message(tgestate_t *state)
  */
 void next_message(tgestate_t *state)
 {
-  /**
-   * $7DCD: Game messages.
-   *
-   * Conv: These are 0xFF terminated in the original game.
-   */
-  static const char *messages_table[message__LIMIT] =
-  {
-    "MISSED ROLL CALL",
-    "TIME TO WAKE UP",
-    "BREAKFAST TIME",
-    "EXERCISE TIME",
-    "TIME FOR BED",
-    "THE DOOR IS LOCKED",
-    "IT IS OPEN",
-    "INCORRECT KEY",
-    "ROLL CALL",
-    "RED CROSS PARCEL",
-    "PICKING THE LOCK",
-    "CUTTING THE WIRE",
-    "YOU OPEN THE BOX",
-    "YOU ARE IN SOLITARY",
-    "WAIT FOR RELEASE",
-    "MORALE IS ZERO",
-    "ITEM DISCOVERED",
-
-    "HE TAKES THE BRIBE", /* $F026 */
-    "AND ACTS AS DECOY",  /* $F039 */
-    "ANOTHER DAY DAWNS"   /* $F04B */
-  };
-
   uint8_t    *qp;      /* was DE */
   const char *message; /* was HL */
 
@@ -214,7 +184,36 @@ void next_message(tgestate_t *state)
   state->messages.display_index = 0;
 }
 
+/**
+ * $7DCD: Game messages.
+ *
+ * Conv: These are 0xFF terminated in the original game.
+ */
+const char *messages_table[message__LIMIT] =
+{
+  "MISSED ROLL CALL",
+  "TIME TO WAKE UP",
+  "BREAKFAST TIME",
+  "EXERCISE TIME",
+  "TIME FOR BED",
+  "THE DOOR IS LOCKED",
+  "IT IS OPEN",
+  "INCORRECT KEY",
+  "ROLL CALL",
+  "RED CROSS PARCEL",
+  "PICKING THE LOCK",
+  "CUTTING THE WIRE",
+  "YOU OPEN THE BOX",
+  "YOU ARE IN SOLITARY",
+  "WAIT FOR RELEASE",
+  "MORALE IS ZERO",
+  "ITEM DISCOVERED",
+
+  "HE TAKES THE BRIBE", /* $F026 */
+  "AND ACTS AS DECOY",  /* $F039 */
+  "ANOTHER DAY DAWNS"   /* $F04B */
+};
+
 /* ----------------------------------------------------------------------- */
 
 // vim: ts=8 sts=2 sw=2 et
-

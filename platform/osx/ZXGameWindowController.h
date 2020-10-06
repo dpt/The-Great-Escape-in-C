@@ -10,12 +10,12 @@
 
 #import "ZXGameView.h"
 
-@interface ZXGameWindowController : NSWindowController
+@interface ZXGameWindowController : NSWindowController<ZXGameViewDelegate>
 {
   IBOutlet ZXGameView *gameView;
 }
 
-- (void)resizeAndCentreGameWindow;
+- (void)setStartupGame:(NSURL *)saveGame;
 
 @end
 

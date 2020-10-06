@@ -60,7 +60,7 @@
 #define BITS_SAMPLE     (5)     // magic value: we take the mean of this many input bits to make an output sample
 #define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) // in bits
 
-#define MAXVOL          (32767 / 2)
+#define MAXVOL          (32767 / 5)
 
 // -----------------------------------------------------------------------------
 
@@ -82,6 +82,11 @@
 
   BOOL            quit;
   BOOL            paused;
+
+#ifdef TGE_SAVES
+  BOOL            save;
+  NSURL          *saveGameURL;
+#endif
 
   int             speed;    // percent
 
@@ -164,6 +169,11 @@
   quit            = NO;
   paused          = NO;
 
+#ifdef TGE_SAVES
+  save            = NO;
+  saveGameURL     = nil;
+#endif
+
   speed           = NORMSPEED;
 
   memset(stamps, 0, sizeof(stamps));
@@ -176,6 +186,7 @@
 
   _scale          = 1.0;
 
+
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
     goto failure;
@@ -185,11 +196,6 @@
     goto failure;
 
   [self setupAudio];
-
-  pthread_create(&thread,
-                 NULL, // pthread_attr_t
-                 tge_thread,
-                 (__bridge void *)(self));
 
   return;
 
@@ -206,6 +212,18 @@ failure:
 }
 
 // -----------------------------------------------------------------------------
+
+- (void)start
+{
+  assert(self.delegate);
+
+  saveGameURL = [self.delegate getStartupGame];
+
+  pthread_create(&thread,
+                 NULL, // pthread_attr_t
+                 tge_thread,
+                 (__bridge void *)(self));
+}
 
 - (void)stop
 {
@@ -225,6 +243,21 @@ failure:
 
   [self teardownAudio];
 }
+
+// -----------------------------------------------------------------------------
+
+#ifdef TGE_SAVES
+
+- (IBAction)saveDocumentAs:(id)sender
+{
+  // set a flag to schedule a save the next time the game loop completes
+  @synchronized(self)
+  {
+    save = YES;
+  }
+}
+
+#endif /* TGE_SAVES */
 
 // -----------------------------------------------------------------------------
 
@@ -544,27 +577,32 @@ static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
   tgestate_t *game = view->game;
-  BOOL        quit;
+  BOOL        quit = FALSE;
 
   tge_setup(game);
 
-  // Run the menu
-  for (;;)
+#ifdef TGE_SAVES
+  if (!view->saveGameURL)
+#endif
   {
-    int proceed;
+    // Run the menu
+    for (;;)
+    {
+      int proceed;
 
-    proceed = tge_menu(game);
-    if (proceed > 0)
-    {
-      // Begin the game
-      quit = FALSE;
-      break;
-    }
-    else if (proceed < 0)
-    {
-      // Game thread termination was signalled
-      quit = TRUE;
-      break;
+      proceed = tge_menu(game);
+      if (proceed > 0)
+      {
+        // Begin the game
+        quit = FALSE;
+        break;
+      }
+      else if (proceed < 0)
+      {
+        // Game thread termination was signalled
+        quit = TRUE;
+        break;
+      }
     }
   }
 
@@ -572,6 +610,14 @@ static void *tge_thread(void *arg)
   if (!quit)
   {
     tge_setup2(game);
+
+#ifdef TGE_SAVES
+    if (view->saveGameURL)
+    {
+      const char *filename = [view->saveGameURL fileSystemRepresentation];
+      tge_load(game, filename);
+    }
+#endif
 
     for (;;)
     {
@@ -585,6 +631,16 @@ static void *tge_thread(void *arg)
 
       tge_main(game);
       view->nstamps = 0; // Reset all timing info
+
+#ifdef TGE_SAVES
+      // need to put this chunk in the menu code too
+      if (view->save)
+      {
+        tge_save(game, "tmp.tge");
+        tge_load(game, "tmp.tge");
+        view->save = NO;
+      }
+#endif
     }
   }
 

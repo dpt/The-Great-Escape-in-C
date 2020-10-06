@@ -88,6 +88,19 @@ TGE_API void tge_setup2(tgestate_t *state);
  */
 TGE_API void tge_main(tgestate_t *state);
 
+#ifdef TGE_SAVES
+
+/**
+ * Save the game state to 'filename'.
+ */
+TGE_API int tge_save(tgestate_t *state, const char *filename);
+
+/**
+ * Load the game state from 'filename'.
+ */
+TGE_API void tge_load(tgestate_t *state, const char *filename);
+
+#endif
 
 #ifdef __cplusplus
 }

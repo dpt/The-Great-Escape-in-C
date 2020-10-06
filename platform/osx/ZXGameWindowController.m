@@ -15,6 +15,7 @@
 @implementation ZXGameWindowController
 {
   int gameWidth, gameHeight, gameBorder;
+  NSURL *saveGame;
 }
 
 static int ngames;
@@ -25,11 +26,6 @@ static int ngames;
 {
   self = [super initWithWindowNibName:@"ZXGameWindow" owner:self];
   ngames++;
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(windowWillCloseNotification:)
-                                               name:NSWindowWillCloseNotification
-                                             object:[self window]];
 
   return self;
 }
@@ -51,6 +47,14 @@ static int ngames;
   [gameView getGameWidth:&gameWidth height:&gameHeight border:&gameBorder];
 
   [self resizeAndCentreGameWindow];
+
+  gameView.delegate = self; // too late?
+  [gameView start];
+
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(windowWillCloseNotification:)
+                                               name:NSWindowWillCloseNotification
+                                             object:[self window]]; //[self window] will cause the gameview to load, so leave it to here
 }
 
 // -----------------------------------------------------------------------------
@@ -64,7 +68,7 @@ static int ngames;
 
 // -----------------------------------------------------------------------------
 
-#pragma mark - Action handlers
+#pragma mark - IBAction handlers
 
 - (IBAction)setZoomLevel:(id)sender
 {
@@ -164,6 +168,25 @@ static int ngames;
 
   [window setFrame:centeredFrame display:YES animate:NO];
 }
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - (we're fed savegame locations via this)
+
+- (void)setStartupGame:(NSURL *)saveGameURL
+{
+  saveGame = saveGameURL;
+}
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Load/Save Games (ZXGameViewDelegate)
+
+- (NSURL *)getStartupGame {
+  return saveGame;
+}
+
+// -----------------------------------------------------------------------------
 
 @end
 

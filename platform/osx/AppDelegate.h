@@ -11,6 +11,9 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 - (IBAction)newGame:(id)sender;
+#ifdef TGE_SAVES
+- (IBAction)open:(id)sender;
+#endif
 
 @end
 

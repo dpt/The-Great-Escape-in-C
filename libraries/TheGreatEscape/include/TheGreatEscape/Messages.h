@@ -65,6 +65,9 @@ void queue_message(tgestate_t *state,
 /* $7D48 */
 void message_display(tgestate_t *state);
 
+/* $7DCD */
+extern const char *messages_table[message__LIMIT];
+
 /* ----------------------------------------------------------------------- */
 
 #endif /* MESSAGES_H */
