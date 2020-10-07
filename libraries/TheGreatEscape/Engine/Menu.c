@@ -130,7 +130,7 @@ static void wipe_game_window(tgestate_t *state)
   const uint16_t *poffsets; /* was SP */
   uint8_t         iters;    /* was A */
 
-  poffsets = &state->game_window_start_offsets[0]; /* points to offsets */
+  poffsets = &game_window_start_offsets[0]; /* points to offsets */
   iters = (state->rows - 1) * 8;
   do
   {
@@ -143,7 +143,7 @@ static void wipe_game_window(tgestate_t *state)
 
   /* Conv: Invalidation added over the original game. */
   invalidate_bitmap(state,
-                    screen + state->game_window_start_offsets[0],
+                    screen + game_window_start_offsets[0],
                     state->columns * 8,
                     (state->rows - 1) * 8);
 }

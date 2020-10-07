@@ -26,6 +26,10 @@
 
 /* ----------------------------------------------------------------------- */
 
+extern const uint16_t game_window_start_offsets[128];
+
+/* ----------------------------------------------------------------------- */
+
 /**
  * Invalidate (signal to redraw) the specified screen area where bitmap data
  * has changed.

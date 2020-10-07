@@ -572,11 +572,6 @@ struct tgestate
   uint8_t         enable_16_right_3; /* was $E3EC - 16 case, rotate right, third  clip */
 
   /**
-   * $EDD3: Points to an array of start addresses for game screen (usually 128).
-   */
-  uint16_t       *game_window_start_offsets;
-
-  /**
    * $F05D: Holds the gates and doors which are initially locked.
    *
    * Each entry can have door_LOCKED set to indicate that it's locked.

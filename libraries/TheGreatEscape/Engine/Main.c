@@ -10887,7 +10887,7 @@ void plot_game_window(tgestate_t *state)
   {
     src = &state->window_buf[1] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
-    offsets = &state->game_window_start_offsets[0];
+    offsets = &game_window_start_offsets[0];
     y_iters_A = 128; /* iterations */
     do
     {
@@ -10926,7 +10926,7 @@ void plot_game_window(tgestate_t *state)
     src = &state->window_buf[0] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
     prev = *src++;
-    offsets = &state->game_window_start_offsets[0];
+    offsets = &game_window_start_offsets[0];
     y_iters_B = 128; /* iterations */
     do
     {
