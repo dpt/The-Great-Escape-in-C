@@ -272,14 +272,14 @@ failure:
     menuItem = (NSMenuItem *) anItem;
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
-      [menuItem setState:snap ? NSOnState : NSOffState];
+      [menuItem setState:snap ? NSControlStateValueOn : NSControlStateValueOff];
   }
   else if ([anItem action] == @selector(toggleMonochromatic:))
   {
     menuItem = (NSMenuItem *) anItem;
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
-      [menuItem setState:monochromatic ? NSOnState : NSOffState];
+      [menuItem setState:monochromatic ? NSControlStateValueOn : NSControlStateValueOff];
   }
 
   return YES;
@@ -427,7 +427,7 @@ failure:
   snap = !snap;
 
   // (un)tick the menu entry
-  [sender setState:snap ? NSOnState : NSOffState];
+  [sender setState:snap ? NSControlStateValueOn : NSControlStateValueOff];
 
   // invalidate drawing setup
   doSetupDrawing = YES;

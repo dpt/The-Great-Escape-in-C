@@ -23,7 +23,7 @@
   // window is moved.
 
   self.titleVisibility = NSWindowTitleVisible;
-  self.styleMask |= NSFullSizeContentViewWindowMask;
+  self.styleMask |= NSWindowStyleMaskFullSizeContentView;
   self.titlebarAppearsTransparent = YES;
 
   [self setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
