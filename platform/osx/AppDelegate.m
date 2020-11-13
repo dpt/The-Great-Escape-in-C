@@ -67,9 +67,9 @@
 
   openPanel = [NSOpenPanel openPanel];
   openPanel.allowedFileTypes = @[@"tge"];
-  openPanel.allowsMultipleSelection = FALSE;
-  openPanel.canChooseDirectories = FALSE;
-  openPanel.canChooseFiles = TRUE;
+  openPanel.allowsMultipleSelection = NO;
+  openPanel.canChooseDirectories = NO;
+  openPanel.canChooseFiles = YES;
   [openPanel beginWithCompletionHandler:^(NSInteger result) {
     if (result == NSModalResponseOK) {
       NSURL *saveGameURL = [[openPanel URLs] objectAtIndex:0];

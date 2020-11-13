@@ -84,7 +84,7 @@
   BOOL            paused;
 
 #ifdef TGE_SAVES
-  BOOL            save;
+  NSURL          *startupGameURL;
   NSURL          *saveGameURL;
 #endif
 
@@ -170,7 +170,7 @@
   paused          = NO;
 
 #ifdef TGE_SAVES
-  save            = NO;
+  startupGameURL  = nil;
   saveGameURL     = nil;
 #endif
 
@@ -217,7 +217,7 @@ failure:
 {
   assert(self.delegate);
 
-  saveGameURL = [self.delegate getStartupGame];
+  startupGameURL = [self.delegate getStartupGame];
 
   pthread_create(&thread,
                  NULL, // pthread_attr_t
@@ -250,10 +250,23 @@ failure:
 
 - (IBAction)saveDocumentAs:(id)sender
 {
-  // set a flag to schedule a save the next time the game loop completes
   @synchronized(self)
   {
-    save = YES;
+    NSSavePanel *savePanel = [NSSavePanel savePanel];
+    savePanel.allowedFileTypes = @[@"tge"];
+    savePanel.allowsOtherFileTypes = YES;
+    savePanel.canCreateDirectories = YES;
+    savePanel.delegate = self;
+    savePanel.nameFieldStringValue = @"EscapeAttempt";
+
+    [savePanel beginWithCompletionHandler:^(NSModalResponse result) {
+      if (result == NSModalResponseOK) {
+        NSURL *url = savePanel.URL;
+        if (url)
+          // The URL flags to cause a save when next able.
+          saveGameURL = url;
+      }
+    }];
   }
 }
 
@@ -582,7 +595,7 @@ static void *tge_thread(void *arg)
   tge_setup(game);
 
 #ifdef TGE_SAVES
-  if (!view->saveGameURL)
+  if (!view->startupGameURL)
 #endif
   {
     // Run the menu
@@ -612,9 +625,9 @@ static void *tge_thread(void *arg)
     tge_setup2(game);
 
 #ifdef TGE_SAVES
-    if (view->saveGameURL)
+    if (view->startupGameURL)
     {
-      const char *filename = [view->saveGameURL fileSystemRepresentation];
+      const char *filename = [view->startupGameURL fileSystemRepresentation];
       tge_load(game, filename);
     }
 #endif
@@ -634,11 +647,12 @@ static void *tge_thread(void *arg)
 
 #ifdef TGE_SAVES
       // need to put this chunk in the menu code too
-      if (view->save)
+      if (view->saveGameURL)
       {
-        tge_save(game, "tmp.tge");
-        tge_load(game, "tmp.tge");
-        view->save = NO;
+        const char *filename = [view->saveGameURL fileSystemRepresentation];
+        tge_save(game, filename);
+        tge_load(game, filename);
+        view->saveGameURL = nil;
       }
 #endif
     }

@@ -12,7 +12,7 @@
 - (NSURL *) getStartupGame;
 @end
 
-@interface ZXGameView : NSOpenGLView
+@interface ZXGameView : NSOpenGLView <NSOpenSavePanelDelegate>
 {
   IBOutlet NSMenuItem *snapMenuItem;
 }
