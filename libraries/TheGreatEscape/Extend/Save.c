@@ -529,13 +529,20 @@ TGE_API int tge_save(tgestate_t *state, const char *filename)
   savers[CUSTOM_ID_VISCHAR_ANIM]    = vischar_anim_saver;
   savers[CUSTOM_ID_MESSAGES_CURCHR] = messages_curptr_saver;
 
-  zt = zt_save(&meta_tgestate, state, filename, regions, NREGIONS, savers, NELEMS(savers));
-  printf("save: zt=%x\n", zt);
+  zt = zt_save(&meta_tgestate,
+               state,
+               filename,
+               regions,
+               NREGIONS,
+               savers,
+               NELEMS(savers));
+  if (zt != ztresult_OK)
+    return 1;
 
   return 0;
 }
 
-TGE_API void tge_load(tgestate_t *state, const char *filename)
+TGE_API int tge_load(tgestate_t *state, const char *filename)
 {
   ztresult_t  zt;
   ztregion_t  regions[NREGIONS];
@@ -564,8 +571,17 @@ TGE_API void tge_load(tgestate_t *state, const char *filename)
   loaders[CUSTOM_ID_VISCHAR_ANIM]    = vischar_anim_loader;
   loaders[CUSTOM_ID_MESSAGES_CURCHR] = messages_curptr_loader;
 
-  zt = zt_load(&meta_tgestate, state, filename, regions, NREGIONS, loaders, NELEMS(loaders));
-  printf("load: zt=%x\n", zt);
+  zt = zt_load(&meta_tgestate,
+               state,
+               filename,
+               regions,
+               NREGIONS,
+               loaders,
+               NELEMS(loaders));
+  if (zt != ztresult_OK)
+    return 1;
+
+  return 0;
 }
 
 /* ----------------------------------------------------------------------- */

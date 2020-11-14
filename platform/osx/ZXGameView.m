@@ -586,6 +586,19 @@ failure:
 
 #pragma mark - Game thread
 
+static void modalSheetAlert(const ZXGameView *view, NSString *message)
+{
+  dispatch_async(dispatch_get_main_queue(), ^(void) {
+    NSAlert *alert;
+
+    alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert addButtonWithTitle:@"OK"];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:view.window completionHandler:nil];
+  });
+}
+
 static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
@@ -595,6 +608,7 @@ static void *tge_thread(void *arg)
   tge_setup(game);
 
 #ifdef TGE_SAVES
+  // Bypass the menu if there's a game to load
   if (!view->startupGameURL)
 #endif
   {
@@ -627,8 +641,14 @@ static void *tge_thread(void *arg)
 #ifdef TGE_SAVES
     if (view->startupGameURL)
     {
-      const char *filename = [view->startupGameURL fileSystemRepresentation];
-      tge_load(game, filename);
+      int rc;
+
+      rc = tge_load(game, [view->startupGameURL fileSystemRepresentation]);
+      if (rc)
+      {
+        modalSheetAlert(view, @"Game failed to load");
+        return NULL; /* stop the game thread */
+      }
     }
 #endif
 
@@ -646,13 +666,17 @@ static void *tge_thread(void *arg)
       view->nstamps = 0; // Reset all timing info
 
 #ifdef TGE_SAVES
-      // need to put this chunk in the menu code too
+      // need to put this chunk in the menu code too, or disable saving there
       if (view->saveGameURL)
       {
-        const char *filename = [view->saveGameURL fileSystemRepresentation];
-        tge_save(game, filename);
-        tge_load(game, filename);
+        int rc;
+
+        rc = tge_save(game, [view->saveGameURL fileSystemRepresentation]);
         view->saveGameURL = nil;
+        if (rc)
+        {
+          modalSheetAlert(view, @"Game failed to save");
+        }
       }
 #endif
     }

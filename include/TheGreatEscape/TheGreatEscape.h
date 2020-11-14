@@ -98,7 +98,7 @@ TGE_API int tge_save(tgestate_t *state, const char *filename);
 /**
  * Load the game state from 'filename'.
  */
-TGE_API void tge_load(tgestate_t *state, const char *filename);
+TGE_API int tge_load(tgestate_t *state, const char *filename);
 
 #endif
 
