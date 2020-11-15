@@ -86,6 +86,7 @@
 #ifdef TGE_SAVES
   NSURL          *startupGameURL;
   NSURL          *saveGameURL;
+  BOOL            canSave;
 #endif
 
   int             speed;    // percent
@@ -172,6 +173,7 @@
 #ifdef TGE_SAVES
   startupGameURL  = nil;
   saveGameURL     = nil;
+  canSave         = NO;
 #endif
 
   speed           = NORMSPEED;
@@ -217,7 +219,9 @@ failure:
 {
   assert(self.delegate);
 
+#ifdef TGE_SAVES
   startupGameURL = [self.delegate getStartupGame];
+#endif
 
   pthread_create(&thread,
                  NULL, // pthread_attr_t
@@ -327,6 +331,13 @@ failure:
     if ([menuItem respondsToSelector:@selector(setState:)])
       [menuItem setState:monochromatic ? NSControlStateValueOn : NSControlStateValueOff];
   }
+#ifdef TGE_SAVES
+  else if ([anItem action] == @selector(saveDocumentAs:))
+  {
+    if (!self->canSave)
+      return NO;
+  }
+#endif
 
   return YES;
 }
@@ -599,6 +610,45 @@ static void modalSheetAlert(const ZXGameView *view, NSString *message)
   });
 }
 
+#ifdef TGE_SAVES
+
+static int loadIfRequested(const ZXGameView *view)
+{
+  if (view->startupGameURL)
+  {
+    int rc;
+
+    rc = tge_load(view->game, [view->startupGameURL fileSystemRepresentation]);
+    if (rc)
+    {
+      modalSheetAlert(view, @"Game failed to load");
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+static int saveIfRequested(const ZXGameView *view)
+{
+  if (view->saveGameURL)
+  {
+    int rc;
+
+    rc = tge_save(view->game, [view->saveGameURL fileSystemRepresentation]);
+    view->saveGameURL = nil;
+    if (rc)
+    {
+      modalSheetAlert(view, @"Game failed to save");
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+#endif /* TGE_SAVES */
+
 static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
@@ -608,7 +658,7 @@ static void *tge_thread(void *arg)
   tge_setup(game);
 
 #ifdef TGE_SAVES
-  // Bypass the menu if there's a game to load
+  // Bypass the menu if there's a saved game to load
   if (!view->startupGameURL)
 #endif
   {
@@ -633,23 +683,18 @@ static void *tge_thread(void *arg)
     }
   }
 
+#ifdef TGE_SAVES
+  view->canSave = YES;
+#endif
+
   // Run the game
   if (!quit)
   {
     tge_setup2(game);
 
 #ifdef TGE_SAVES
-    if (view->startupGameURL)
-    {
-      int rc;
-
-      rc = tge_load(game, [view->startupGameURL fileSystemRepresentation]);
-      if (rc)
-      {
-        modalSheetAlert(view, @"Game failed to load");
-        return NULL; /* stop the game thread */
-      }
-    }
+    if (loadIfRequested(view))
+      return NULL; // Stop the game thread if load fails
 #endif
 
     for (;;)
@@ -666,18 +711,7 @@ static void *tge_thread(void *arg)
       view->nstamps = 0; // Reset all timing info
 
 #ifdef TGE_SAVES
-      // need to put this chunk in the menu code too, or disable saving there
-      if (view->saveGameURL)
-      {
-        int rc;
-
-        rc = tge_save(game, [view->saveGameURL fileSystemRepresentation]);
-        view->saveGameURL = nil;
-        if (rc)
-        {
-          modalSheetAlert(view, @"Game failed to save");
-        }
-      }
+      (void) saveIfRequested(view);
 #endif
     }
   }

@@ -265,6 +265,12 @@ static ztresult_t vischar_anim_saver(const void *pvoidval,
   int           i;
 
   anim = *((const anim_t **) pvoidval);
+  if (anim == NULL)
+  {
+    sprintf(buf, "nil");
+    return ztresult_OK;
+  }
+
   for (i = 0; i < animations__LIMIT; i++)
     if (animations[i] == anim)
       break;
@@ -288,21 +294,32 @@ static ztresult_t vischar_anim_loader(const ztast_expr_t *expr,
     *syntax_error = "value type required (custom)"; /* ztsyntx_NEED_VALUE */
     return ztresult_SYNTAX_ERROR;
   }
-  if (expr->data.value->type != ZTVAL_INTEGER)
-  {
-    *syntax_error = "integer type required (custom)"; /* ztsyntx_NEED_INTEGER */
-    return ztresult_SYNTAX_ERROR;
-  }
-  index = expr->data.value->data.integer;
-  if (index < 0 || index >= animations__LIMIT)
-  {
-    *syntax_error = "value out of range (custom)"; /* ztsyntx_VALUE_RANGE */
-    return ztresult_SYNTAX_ERROR;
-  }
 
   anim = (const anim_t **) pvoidval;
-  *anim = animations[index];
+
+  switch (expr->data.value->type)
+  {
+  case ZTVAL_INTEGER:
+    index = expr->data.value->data.integer;
+    if (index < 0 || index >= animations__LIMIT)
+    {
+      *syntax_error = "value out of range (custom)"; /* ztsyntx_VALUE_RANGE */
+      return ztresult_SYNTAX_ERROR;
+    }
+
+    *anim = animations[index];
+    break;
+
+  case ZTVAL_NIL:
+    *anim = NULL;
+    break;
+
+  default:
+    *syntax_error = "integer or nil type required (custom)"; /* ztsyntx_NEED_INTEGER */
+    return ztresult_SYNTAX_ERROR;
+  }
   *syntax_error = NULL;
+
   return ztresult_OK;
 }
 
