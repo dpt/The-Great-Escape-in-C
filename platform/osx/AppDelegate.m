@@ -27,8 +27,8 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
-  // Once the app's finished launching start a new game
-  //[self newGame:self];
+  // Once the app's finished launching, start a new game
+  [self newGame:self];
 }
 
 // MARK: - IBAction handlers
