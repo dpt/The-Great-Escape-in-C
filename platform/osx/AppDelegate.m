@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 11/09/2013.
-//  Copyright (c) 2013-2018 David Thomas. All rights reserved.
+//  Copyright (c) 2013-2020 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -41,8 +41,8 @@
 // MARK: - Game
 
 /// Create a new game with optional save game specified
-/// @param saveGame Save game URL, or nil
-- (void)createGame:(NSURL *)saveGame
+/// @param url Save game URL, or nil
+- (void)createGame:(NSURL *)url
 {
   ZXGameWindowController *game;
 
@@ -52,8 +52,8 @@
     windowControllers = [[NSMutableArray alloc] initWithCapacity:1];
   [windowControllers addObject:game];
 
-  if (saveGame)
-    [game setStartupGame:saveGame];
+  if (url)
+    [game setStartupGame:url];
 
   // Show the window, make it key and order it front
   // This will create the lazily-loaded ZXGameWindow and its children
@@ -72,8 +72,8 @@
   openPanel.canChooseFiles = YES;
   [openPanel beginWithCompletionHandler:^(NSInteger result) {
     if (result == NSModalResponseOK) {
-      NSURL *savedGameURL = [[openPanel URLs] objectAtIndex:0];
-      [self createGame:savedGameURL];
+      NSURL *url = [[openPanel URLs] objectAtIndex:0];
+      [self createGame:url];
     }
   }];
 }

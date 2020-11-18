@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 03/08/2017.
-//  Copyright © 2017-2018 David Thomas. All rights reserved.
+//  Copyright © 2017-2020 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -15,7 +15,7 @@
   IBOutlet ZXGameView *gameView;
 }
 
-- (void)setStartupGame:(NSURL *)saveGame;
+- (void)setStartupGame:(NSURL *)url;
 
 @end
 

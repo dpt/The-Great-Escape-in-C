@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 03/08/2017.
-//  Copyright © 2017-2018 David Thomas. All rights reserved.
+//  Copyright © 2017-2020 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -15,7 +15,7 @@
 @implementation ZXGameWindowController
 {
   int gameWidth, gameHeight, gameBorder;
-  NSURL *saveGame;
+  NSURL *startupGame;
 }
 
 static int ngames;
@@ -48,13 +48,22 @@ static int ngames;
 
   [self resizeAndCentreGameWindow];
 
-  gameView.delegate = self; // too late?
+  gameView.delegate = self;
   [gameView start];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(windowWillCloseNotification:)
                                                name:NSWindowWillCloseNotification
-                                             object:[self window]]; //[self window] will cause the gameview to load, so leave it to here
+                                             object:[self window]];
+}
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Public Interface
+
+- (void)setStartupGame:(NSURL *)url
+{
+  startupGame = url;
 }
 
 // -----------------------------------------------------------------------------
@@ -171,19 +180,11 @@ static int ngames;
 
 // -----------------------------------------------------------------------------
 
-#pragma mark - (we're fed savegame locations via this)
-
-- (void)setStartupGame:(NSURL *)saveGameURL
-{
-  saveGame = saveGameURL;
-}
-
-// -----------------------------------------------------------------------------
-
 #pragma mark - Load/Save Games (ZXGameViewDelegate)
 
-- (NSURL *)getStartupGame {
-  return saveGame;
+- (NSURL *)getStartupGame
+{
+  return startupGame;
 }
 
 // -----------------------------------------------------------------------------
