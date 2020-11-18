@@ -1,12 +1,19 @@
 set(TARGET ${PROJECT_NAME})
 
 set(SOURCES
+  AppDelegate.h
   AppDelegate.m
+  ZXGameView.h
   ZXGameView.m
+  ZXGameWindow.h
   ZXGameWindow.m
+  ZXGameWindowController.h
   ZXGameWindowController.m
+  bitfifo.h
   bitfifo.c
   main.m
+  en.lproj/MainMenu.xib
+  en.lproj/ZXGameWindow.xib
 )
 
 set(GENERATED_ICNS
@@ -31,6 +38,16 @@ add_executable(${TARGET}
   ${SOURCES}
   ${RESOURCES}
 )
+
+target_compile_definitions(${TARGET} PRIVATE GL_SILENCE_DEPRECATION)
+
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES CACHE INTERNAL "Enable Objective-C ARC")
+endif()
+
+if(TGE_SAVES)
+  target_compile_definitions(${TARGET} PRIVATE TGE_SAVES)
+endif()
 
 set_target_properties(${TARGET}
   PROPERTIES

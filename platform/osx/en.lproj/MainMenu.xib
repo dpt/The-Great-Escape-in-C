@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -68,20 +67,33 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Game" id="WfA-JN-hHu">
                         <items>
-                            <menuItem title="New..." keyEquivalent="n" id="16Y-WM-myU">
+                            <menuItem title="New Game" keyEquivalent="n" id="16Y-WM-myU">
                                 <connections>
                                     <action selector="newGame:" target="gx9-ry-PZj" id="InU-aq-y6M"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Duplicate..." keyEquivalent="N" id="QRl-nU-mcF">
+                            <menuItem isSeparatorItem="YES" id="ueJ-Ft-2JA"/>
+                            <menuItem title="Open..." keyEquivalent="o" id="iHQ-sL-chV">
                                 <connections>
-                                    <action selector="closeGame:" target="-1" id="0iy-wf-fio"/>
+                                    <action selector="open:" target="-1" id="Ix4-LO-AFS"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="55x-bN-NZr"/>
                             <menuItem title="Close" keyEquivalent="w" id="GDn-TE-mAy">
                                 <connections>
                                     <action selector="performClose:" target="-1" id="rgx-sR-69F"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="e5l-kI-QIy"/>
+                            <menuItem title="Save As..." keyEquivalent="S" id="KLg-KC-p0L">
+                                <connections>
+                                    <action selector="saveDocumentAs:" target="-1" id="jIA-SF-y4N"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="ytq-v3-CqP"/>
+                            <menuItem title="Duplicate" keyEquivalent="s" id="QRl-nU-mcF">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="duplicateDocument:" target="-1" id="9kh-rq-eXc"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -119,7 +131,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="W0S-uf-Qes"/>
-                            <menuItem title="Snap to Whole Pixels" state="on" tag="-1" keyEquivalent="s" id="QC2-v8-HZj">
+                            <menuItem title="Snap to Whole Pixels" state="on" tag="-1" keyEquivalent="n" id="QC2-v8-HZj">
                                 <connections>
                                     <action selector="toggleSnap:" target="-1" id="xpJ-pP-VHj"/>
                                 </connections>
@@ -127,11 +139,11 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Sound" id="AbV-Vo-7s9" userLabel="Speed">
+                <menuItem title="Sound" id="AbV-Vo-7s9">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Sound" id="tkF-wC-aOq">
                         <items>
-                            <menuItem title="Enabled" keyEquivalent="o" id="Von-cc-Hw0">
+                            <menuItem title="Enabled" keyEquivalent="u" id="Von-cc-Hw0">
                                 <connections>
                                     <action selector="toggleSound:" target="-1" id="LNE-1Y-uCr"/>
                                 </connections>

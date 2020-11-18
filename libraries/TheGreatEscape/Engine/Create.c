@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 /* ----------------------------------------------------------------------- */
@@ -278,7 +278,6 @@ static void tge_initialise(tgestate_t *state)
  * Initialise the game state.
  *
  * \param[in] speccy Pointer to logical ZX Spectrum.
- * \param[in] config Pointer to game preferences structure.
  * \return Pointer to game state.
  */
 TGE_API tgestate_t *tge_create(zxspectrum_t *speccy)

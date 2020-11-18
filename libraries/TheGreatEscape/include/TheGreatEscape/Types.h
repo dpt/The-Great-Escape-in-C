@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 #ifndef TGE_TYPES_H
@@ -610,7 +610,7 @@ typedef struct vischar
   /** ($8008) pointer to animations (assigned once only) */
   const anim_t  **animbase;
 
-  /** ($800A) value in animations */
+  /** ($800A) current animation */
   const anim_t   *anim;
 
   /** ($800C) */
@@ -858,14 +858,16 @@ typedef struct mask
 mask_t;
 
 /**
- * Holds character meta data.
+ * Holds zoombox data.
  */
-typedef struct character_class_data
+typedef struct zoombox
 {
-  const anim_t     **animbase;
-  const spritedef_t *sprite;
+  uint8_t x;
+  uint8_t width;
+  uint8_t y;
+  uint8_t height;
 }
-character_class_data_t;
+zoombox_t;
 
 /**
  * Holds searchlight movement data.
@@ -881,14 +883,80 @@ typedef struct searchlight_movement
 searchlight_movement_t;
 
 /**
+ * Holds searchlight data.
+ */
+typedef struct searchlight
+{
+  /**
+   * $AD29: Holds searchlight movement data.
+   */
+  searchlight_movement_t states[3];
+
+  /**
+   * $AE76: The coordinates of the searchlight when hero is caught.
+   */
+  pos8_t        caught_coord;
+}
+searchlight_t;
+
+/**
+ * Holds character meta data.
+ */
+typedef struct character_class_data
+{
+  const anim_t     **animbase;
+  const spritedef_t *sprite;
+}
+character_class_data_t;
+
+/**
  * Holds a mapping of room index to offset.
  */
-typedef struct
+typedef struct roomdef_address
 {
   room_t  room_index;
   uint8_t offset;
 }
 roomdef_address_t;
+
+/**
+ * Holds values (formerly self-modified instructions) used by sprite plotters.
+ */
+typedef struct spriteplotter
+{
+  /**
+   * $E121..$E363: Sprite clipped heights.
+   */
+  uint8_t  height_24_right; /* masked_sprite_plotter_24_wide_vischar: in right shift case) */
+  uint8_t  height_24_left;  /* masked_sprite_plotter_24_wide_vischar: in left shift case)  */
+  uint8_t  height_16_left;  /* masked_sprite_plotter_16_wide_left:                         */
+  uint8_t  height_16_right; /* masked_sprite_plotter_16_wide_right:                        */
+
+  /* Note that in the original game these two groups of values are in regions
+   * which overlap but I've divided them up here for clarity. */
+
+  /**
+   * $E188..$E3EC: Sprite clipping enables.
+   */
+  uint8_t enable_24_right_1; /* was $E188 - 24 case, rotate right, first  clip */
+  uint8_t enable_24_right_2; /* was $E259 - 24 case, rotate right, second clip */
+  uint8_t enable_24_right_3; /* was $E199 - 24 case, rotate right, third  clip */
+  uint8_t enable_24_right_4; /* was $E26A - 24 case, rotate right, fourth clip */
+
+  uint8_t enable_24_left_1;  /* was $E1AA - 24 case, rotate left,  first  clip */
+  uint8_t enable_24_left_2;  /* was $E27B - 24 case, rotate left,  second clip */
+  uint8_t enable_24_left_3;  /* was $E1BF - 24 case, rotate left,  third  clip */
+  uint8_t enable_24_left_4;  /* was $E290 - 24 case, rotate left,  fourth clip */
+
+  uint8_t enable_16_left_1;  /* was $E319 - 16 case, rotate left,  first  clip */
+  uint8_t enable_16_left_2;  /* was $E32A - 16 case, rotate left,  second clip */
+  uint8_t enable_16_left_3;  /* was $E340 - 16 case, rotate left,  third  clip */
+
+  uint8_t enable_16_right_1; /* was $E3C5 - 16 case, rotate right, first  clip */
+  uint8_t enable_16_right_2; /* was $E3D6 - 16 case, rotate right, second clip */
+  uint8_t enable_16_right_3; /* was $E3EC - 16 case, rotate right, third  clip */
+}
+spriteplotter_t;
 
 /* ----------------------------------------------------------------------- */
 

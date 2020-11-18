@@ -60,7 +60,7 @@
 #define BITS_SAMPLE     (5)     // magic value: we take the mean of this many input bits to make an output sample
 #define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) // in bits
 
-#define MAXVOL          (32767 / 2)
+#define MAXVOL          (32767 / 5)
 
 // -----------------------------------------------------------------------------
 
@@ -82,6 +82,13 @@
 
   BOOL            quit;
   BOOL            paused;
+
+#ifdef TGE_SAVES
+  NSURL          *startupGameURL;
+  NSURL          *saveGameURL;
+  BOOL            gameStarted;
+  BOOL            oldPaused;
+#endif
 
   int             speed;    // percent
 
@@ -164,6 +171,13 @@
   quit            = NO;
   paused          = NO;
 
+#ifdef TGE_SAVES
+  startupGameURL  = nil;
+  saveGameURL     = nil;
+  gameStarted     = NO;
+  oldPaused       = NO;
+#endif
+
   speed           = NORMSPEED;
 
   memset(stamps, 0, sizeof(stamps));
@@ -176,6 +190,7 @@
 
   _scale          = 1.0;
 
+
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
     goto failure;
@@ -185,11 +200,6 @@
     goto failure;
 
   [self setupAudio];
-
-  pthread_create(&thread,
-                 NULL, // pthread_attr_t
-                 tge_thread,
-                 (__bridge void *)(self));
 
   return;
 
@@ -206,6 +216,20 @@ failure:
 }
 
 // -----------------------------------------------------------------------------
+
+- (void)start
+{
+  assert(self.delegate);
+
+#ifdef TGE_SAVES
+  startupGameURL = [self.delegate getStartupGame];
+#endif
+
+  pthread_create(&thread,
+                 NULL, // pthread_attr_t
+                 tge_thread,
+                 (__bridge void *)(self));
+}
 
 - (void)stop
 {
@@ -225,6 +249,43 @@ failure:
 
   [self teardownAudio];
 }
+
+// -----------------------------------------------------------------------------
+
+#ifdef TGE_SAVES
+
+- (IBAction)saveDocumentAs:(id)sender
+{
+  @synchronized(self)
+  {
+    // Immediately pause the game when a save is requested.
+    oldPaused = paused;
+    paused = YES;
+
+    NSSavePanel *savePanel = [NSSavePanel savePanel];
+    savePanel.allowedFileTypes = @[@"tge"];
+    savePanel.allowsOtherFileTypes = YES;
+    savePanel.canCreateDirectories = YES;
+    savePanel.delegate = self;
+    savePanel.nameFieldStringValue = @"EscapeAttempt";
+
+    [savePanel beginWithCompletionHandler:^(NSModalResponse result) {
+      if (result == NSModalResponseOK)
+      {
+        NSURL *url = savePanel.URL;
+        if (url)
+          // The URL flags to cause a save when next able.
+          saveGameURL = url;
+      }
+      else
+      {
+        paused = oldPaused;
+      }
+    }];
+  }
+}
+
+#endif /* TGE_SAVES */
 
 // -----------------------------------------------------------------------------
 
@@ -281,6 +342,13 @@ failure:
     if ([menuItem respondsToSelector:@selector(setState:)])
       [menuItem setState:monochromatic ? NSControlStateValueOn : NSControlStateValueOff];
   }
+#ifdef TGE_SAVES
+  else if ([anItem action] == @selector(saveDocumentAs:))
+  {
+    if (!self->gameStarted)
+      return NO;
+  }
+#endif
 
   return YES;
 }
@@ -540,38 +608,111 @@ failure:
 
 #pragma mark - Game thread
 
+#ifdef TGE_SAVES
+
+static void modalSheetAlert(const ZXGameView *view, NSString *message)
+{
+  dispatch_async(dispatch_get_main_queue(), ^(void) {
+    NSAlert *alert;
+
+    alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert addButtonWithTitle:@"OK"];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:view.window completionHandler:nil];
+  });
+}
+
+static int loadIfRequested(const ZXGameView *view)
+{
+  if (view->startupGameURL)
+  {
+    int rc;
+
+    rc = tge_load(view->game, [view->startupGameURL fileSystemRepresentation]);
+    if (rc)
+    {
+      modalSheetAlert(view, @"Game failed to load");
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+static int saveIfRequested(const ZXGameView *view)
+{
+  if (view->saveGameURL)
+  {
+    int rc;
+
+    rc = tge_save(view->game, [view->saveGameURL fileSystemRepresentation]);
+    view->saveGameURL = nil;
+    if (rc)
+    {
+      modalSheetAlert(view, @"Game failed to save");
+      return 1;
+    }
+
+    // Restore previous pause state
+    view->paused = view->oldPaused;
+  }
+
+  return 0;
+}
+
+#endif /* TGE_SAVES */
+
 static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
   tgestate_t *game = view->game;
-  BOOL        quit;
+  BOOL        quit = FALSE;
 
   tge_setup(game);
 
-  // Run the menu
-  for (;;)
+#ifdef TGE_SAVES
+  // Bypass the menu if there's a saved game to load
+  if (!view->startupGameURL)
+#endif
   {
-    int proceed;
+    // Run the menu
+    for (;;)
+    {
+      int proceed;
 
-    proceed = tge_menu(game);
-    if (proceed > 0)
-    {
-      // Begin the game
-      quit = FALSE;
-      break;
-    }
-    else if (proceed < 0)
-    {
-      // Game thread termination was signalled
-      quit = TRUE;
-      break;
+      proceed = tge_menu(game);
+      if (proceed > 0)
+      {
+        // Begin the game
+        quit = FALSE;
+        break;
+      }
+      else if (proceed < 0)
+      {
+        // Game thread termination was signalled
+        quit = TRUE;
+        break;
+      }
     }
   }
+
+#ifdef TGE_SAVES
+  @synchronized(view)
+  {
+    view->gameStarted = YES;
+  }
+#endif
 
   // Run the game
   if (!quit)
   {
     tge_setup2(game);
+
+#ifdef TGE_SAVES
+    if (loadIfRequested(view))
+      return NULL; // Stop the game thread if load fails
+#endif
 
     for (;;)
     {
@@ -639,9 +780,14 @@ static int sleep_handler(int durationTStates, void *opaque)
 
   if (paused)
   {
-    // Check twice per second for unpausing
+    // If paused, sit in this loop, checking twice per second for unpausing
     for (;;)
     {
+      // Saves are handled when the game is paused
+#ifdef TGE_SAVES
+      (void) saveIfRequested(view);
+#endif
+
       @synchronized(view)
       {
         paused = view->paused;
