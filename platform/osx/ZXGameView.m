@@ -86,7 +86,8 @@
 #ifdef TGE_SAVES
   NSURL          *startupGameURL;
   NSURL          *saveGameURL;
-  BOOL            canSave;
+  BOOL            gameStarted;
+  BOOL            oldPaused;
 #endif
 
   int             speed;    // percent
@@ -173,7 +174,8 @@
 #ifdef TGE_SAVES
   startupGameURL  = nil;
   saveGameURL     = nil;
-  canSave         = NO;
+  gameStarted     = NO;
+  oldPaused       = NO;
 #endif
 
   speed           = NORMSPEED;
@@ -256,6 +258,10 @@ failure:
 {
   @synchronized(self)
   {
+    // Immediately pause the game when a save is requested.
+    oldPaused = paused;
+    paused = YES;
+
     NSSavePanel *savePanel = [NSSavePanel savePanel];
     savePanel.allowedFileTypes = @[@"tge"];
     savePanel.allowsOtherFileTypes = YES;
@@ -264,11 +270,16 @@ failure:
     savePanel.nameFieldStringValue = @"EscapeAttempt";
 
     [savePanel beginWithCompletionHandler:^(NSModalResponse result) {
-      if (result == NSModalResponseOK) {
+      if (result == NSModalResponseOK)
+      {
         NSURL *url = savePanel.URL;
         if (url)
           // The URL flags to cause a save when next able.
           saveGameURL = url;
+      }
+      else
+      {
+        paused = oldPaused;
       }
     }];
   }
@@ -334,7 +345,7 @@ failure:
 #ifdef TGE_SAVES
   else if ([anItem action] == @selector(saveDocumentAs:))
   {
-    if (!self->canSave)
+    if (!self->gameStarted)
       return NO;
   }
 #endif
@@ -597,6 +608,8 @@ failure:
 
 #pragma mark - Game thread
 
+#ifdef TGE_SAVES
+
 static void modalSheetAlert(const ZXGameView *view, NSString *message)
 {
   dispatch_async(dispatch_get_main_queue(), ^(void) {
@@ -609,8 +622,6 @@ static void modalSheetAlert(const ZXGameView *view, NSString *message)
     [alert beginSheetModalForWindow:view.window completionHandler:nil];
   });
 }
-
-#ifdef TGE_SAVES
 
 static int loadIfRequested(const ZXGameView *view)
 {
@@ -642,6 +653,9 @@ static int saveIfRequested(const ZXGameView *view)
       modalSheetAlert(view, @"Game failed to save");
       return 1;
     }
+
+    // Restore previous pause state
+    view->paused = view->oldPaused;
   }
 
   return 0;
@@ -684,7 +698,10 @@ static void *tge_thread(void *arg)
   }
 
 #ifdef TGE_SAVES
-  view->canSave = YES;
+  @synchronized(view)
+  {
+    view->gameStarted = YES;
+  }
 #endif
 
   // Run the game
@@ -709,10 +726,6 @@ static void *tge_thread(void *arg)
 
       tge_main(game);
       view->nstamps = 0; // Reset all timing info
-
-#ifdef TGE_SAVES
-      (void) saveIfRequested(view);
-#endif
     }
   }
 
@@ -767,9 +780,14 @@ static int sleep_handler(int durationTStates, void *opaque)
 
   if (paused)
   {
-    // Check twice per second for unpausing
+    // If paused, sit in this loop, checking twice per second for unpausing
     for (;;)
     {
+      // Saves are handled when the game is paused
+#ifdef TGE_SAVES
+      (void) saveIfRequested(view);
+#endif
+
       @synchronized(view)
       {
         paused = view->paused;

@@ -72,8 +72,8 @@
   openPanel.canChooseFiles = YES;
   [openPanel beginWithCompletionHandler:^(NSInteger result) {
     if (result == NSModalResponseOK) {
-      NSURL *saveGameURL = [[openPanel URLs] objectAtIndex:0];
-      [self createGame:saveGameURL];
+      NSURL *savedGameURL = [[openPanel URLs] objectAtIndex:0];
+      [self createGame:savedGameURL];
     }
   }];
 }
