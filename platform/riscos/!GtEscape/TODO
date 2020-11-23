@@ -1,5 +1,10 @@
 next up:
 
+
+- load/save - some key defs lost on reload - structure padding issue, some fields lost
+- dataopen handler
+
+
 - big windows must resized on mode changes
 - big windows must be a minimum size for huge zooms
 

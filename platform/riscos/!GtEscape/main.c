@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fortify/fortify.h"
+
 #include "oslib/types.h"
 #include "oslib/os.h"
 #include "oslib/osspriteop.h"
@@ -87,7 +89,7 @@ static void rmensure(void)
     GLOBALS.flags |= Flag_HaveSharedSoundBuffer;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
   static const wimp_MESSAGE_LIST(2) messages =
   {{
@@ -96,6 +98,10 @@ int main(void)
                               this here, ColourPicker blows things up. */
     message_QUIT
   }};
+
+#ifdef FORTIFY
+  Fortify_EnterScope();
+#endif
 
   rmensure();
 
@@ -128,6 +134,22 @@ int main(void)
 
   register_event_handlers(1);
 
+  /* Process command line arguments */
+  while (--argc)
+  {
+    error     err;
+    zxgame_t *zxgame;
+
+    err = zxgame_create(&zxgame, argv[argc]);
+    if (err)
+    {
+      error_report(err);
+      continue;
+    }
+
+    zxgame_open(zxgame);
+  }
+
   while ((GLOBALS.flags & Flag_Quit) == 0)
     poll();
 
@@ -143,6 +165,12 @@ int main(void)
   wimp_close_down(GLOBALS.task_handle);
 
   close_messages();
+
+#ifdef FORTIFY
+  Fortify_LeaveScope();
+  Fortify_OutputStatistics();
+  Fortify_DumpAllMemory();
+#endif
 
   exit(EXIT_SUCCESS);
 }

@@ -4,4 +4,6 @@
 IconSprites <Obey$Dir>.!Sprites
 
 Set GtEscape$Dir <Obey$Dir>
+
 Set File$Type_18E GtEscape
+SetMacro Alias$@RunType_18E Run <GtEscape$Dir> %%*0

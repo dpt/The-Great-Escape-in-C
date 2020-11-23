@@ -29,7 +29,7 @@ link			= $(link_) $(linkflags)
 
 # Tool flags (specific cases)
 
-defines			=
+defines			= -DTGE_SAVES
 
 # Compiler options
 
@@ -39,13 +39,14 @@ throwback		= -throwback
 
 # Library references
 
-includes		= -I^.^.^.include -I^.^.^.libraries.ZXSpectrum.include -I^.^.^.libraries.TheGreatEscape.include -jStubsG_C: -ICLibs: -IOSLib:
+includes		= -I^.^.^.include -I^.^.^.libraries.ZXSpectrum.include -I^.^.^.libraries.TheGreatEscape.include -jStubsG_C: -ICLibs: -IOSLib: -Izerotape:
 
 lib_normal		= CLibs:appengine.o.AOFLib
 lib_debug		= CLibs:appengine.odf.AOFLib
 lib_fortify       	= CLibs:fortify.o.libfortify
 #lib_memcheck       	= MemCheck:o.MC
-lib_all			= OSLib:o.OSLib32 StubsG_C:o.flexlib StubsG_C:o.StubsGS
+lib_zerotape		= zerotape:o.zerotape
+lib_all			= $(lib_zerotape) OSLib:o.OSLib32 StubsG_C:o.flexlib StubsG_C:o.StubsGS
 
 libraries_normal	= $(lib_normal) $(lib_all)
 libraries_debug_fortify	= $(lib_debug) $(lib_fortify) $(lib_all)

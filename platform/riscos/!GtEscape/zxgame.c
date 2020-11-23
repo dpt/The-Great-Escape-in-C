@@ -15,6 +15,7 @@
 
 #include "oslib/types.h"
 #include "oslib/colourtrans.h"
+#include "oslib/hourglass.h"
 #include "oslib/os.h"
 #include "oslib/osbyte.h"
 #include "oslib/osfile.h"
@@ -897,12 +898,11 @@ static void action(action_t action)
       break;
 
     case OpenSaveGame:
-      // TODO
-      // dialogue_show(zxgamesave_dlg);
+      zxgamesave_show_game();
       break;
 
     case OpenSaveScreenshot:
-      dialogue_show(zxgamesave_dlg);
+      zxgamesave_show_screenshot();
       break;
 
     case ZoomOut:
@@ -1621,7 +1621,7 @@ static void set_palette(zxgame_t *zxgame)
   }
 }
 
-error zxgame_create(zxgame_t **new_zxgame)
+error zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
 {
   static const zxconfig_t zxconfigconsts =
   {
@@ -1705,6 +1705,13 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   set_handlers(zxgame);
 
+  if (startup_game)
+  {
+    tge_setup2(zxgame->tge);
+    zxgame->flags &= ~zxgame_FLAG_MENU;
+    zxgame_load_game(zxgame, startup_game); // fixme errs
+  }
+
   zxgame_add(zxgame);
 
   *new_zxgame = zxgame;
@@ -1777,6 +1784,33 @@ void zxgame_open(zxgame_t *zxgame)
 }
 
 /* ----------------------------------------------------------------------- */
+
+error zxgame_load_game(zxgame_t *zxgame, const char *file_name)
+{
+  os_error *err;
+
+  xhourglass_on();
+
+  tge_load(zxgame->tge, file_name); // handle errors
+
+  xhourglass_off();
+
+  return error_OK;
+}
+
+error zxgame_save_game(zxgame_t *zxgame, const char *file_name)
+{
+  os_error *err;
+
+  xhourglass_on();
+
+  tge_save(zxgame->tge, file_name); // handle errors
+  osfile_set_type(file_name, APPFILETYPE);
+
+  xhourglass_off();
+
+  return error_OK;
+}
 
 error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
 {

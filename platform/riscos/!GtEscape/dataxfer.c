@@ -24,8 +24,11 @@
 
 /* ----------------------------------------------------------------------- */
 
-static event_message_handler message_data_save_ack,
-                             message_data_load_ack;
+static event_message_handler message_data_save,
+                             message_data_save_ack,
+                             message_data_load,
+                             message_data_load_ack,
+                             message_data_open;
 
 /* ----------------------------------------------------------------------- */
 
@@ -33,8 +36,11 @@ static void register_event_handlers(int reg)
 {
   static const event_message_handler_spec message_handlers[] =
   {
+    { message_DATA_SAVE,     message_data_save     },
     { message_DATA_SAVE_ACK, message_data_save_ack },
+    { message_DATA_LOAD,     message_data_load     },
     { message_DATA_LOAD_ACK, message_data_load_ack },
+    { message_DATA_OPEN,     message_data_open     }
   };
 
   event_register_message_group(reg,
@@ -59,6 +65,11 @@ void dataxfer_fin(void)
 
 /* ----------------------------------------------------------------------- */
 
+static int message_data_save(wimp_message *message, void *handle)
+{
+  return event_HANDLED;
+}
+
 static int message_data_save_ack(wimp_message *message, void *handle)
 {
   zxgame_t *zxgame;
@@ -69,8 +80,17 @@ static int message_data_save_ack(wimp_message *message, void *handle)
   if (zxgame == NULL)
     return event_NOT_HANDLED;
 
-  if (zxgame_save_screenshot(zxgame, message->data.data_xfer.file_name))
-    return event_HANDLED; /* failure */
+  switch (message->data.data_xfer.file_type)
+  {
+    case APPFILETYPE:
+    if (zxgame_save_game(zxgame, message->data.data_xfer.file_name))
+      return event_HANDLED; /* attempted, but failed */
+    break;
+
+    case osfile_TYPE_SPRITE:
+    if (zxgame_save_screenshot(zxgame, message->data.data_xfer.file_name))
+      return event_HANDLED; /* attempted, but failed */
+  }
 
   message->your_ref = message->my_ref;
   message->action   = message_DATA_LOAD;
@@ -84,10 +104,66 @@ static int message_data_save_ack(wimp_message *message, void *handle)
 
 /* ----------------------------------------------------------------------- */
 
+static int message_data_load(wimp_message *message, void *handle)
+{
+  error     err;
+  zxgame_t *zxgame;
+
+  NOT_USED(handle);
+
+  if (message->data.data_xfer.file_type != APPFILETYPE)
+    return event_NOT_HANDLED;
+
+  /* acknowledge - even if we fail, we still tried to load it */
+  message->your_ref = message->my_ref;
+  message->action   = message_DATA_LOAD_ACK;
+  wimp_send_message(wimp_USER_MESSAGE, message, message->sender);
+
+  err = zxgame_create(&zxgame, message->data.data_xfer.file_name);
+  if (err)
+  {
+    error_report(err);
+    return event_HANDLED;
+  }
+
+  zxgame_open(zxgame);
+
+  return event_HANDLED;
+}
+
 static int message_data_load_ack(wimp_message *message, void *handle)
 {
   NOT_USED(message);
   NOT_USED(handle);
+
+  return event_HANDLED;
+}
+
+/* ----------------------------------------------------------------------- */
+
+static int message_data_open(wimp_message *message, void *handle)
+{
+  error     err;
+  zxgame_t *zxgame;
+
+  NOT_USED(handle);
+
+  if (message->data.data_xfer.file_type != APPFILETYPE)
+    return event_NOT_HANDLED;
+
+  /* acknowledge - even if we fail, we still tried to load it */
+  message->your_ref = message->my_ref;
+  message->action   = message_DATA_LOAD_ACK;
+  wimp_send_message(wimp_USER_MESSAGE, message, message->sender);
+
+  err = zxgame_create(&zxgame, message->data.data_xfer.file_name);
+  if (err)
+  {
+    error_report(err);
+    return event_HANDLED;
+  }
+
+  zxgame_open(zxgame);
 
   return event_HANDLED;
 }

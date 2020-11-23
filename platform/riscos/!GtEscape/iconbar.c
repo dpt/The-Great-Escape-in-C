@@ -25,7 +25,7 @@ static void icon_clicked(const wimp_pointer *pointer, void *opaque)
     error     err;
     zxgame_t *zxgame;
 
-    err = zxgame_create(&zxgame);
+    err = zxgame_create(&zxgame, NULL);
     if (err)
     {
       error_report(err);
