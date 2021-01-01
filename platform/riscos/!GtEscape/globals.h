@@ -16,7 +16,7 @@
 /* ----------------------------------------------------------------------- */
 
 #define APPNAME "GtEscape" /* short form for GtEscape$Dir etc. */
-#define APPFILETYPE (0x18E)
+#define APPFILETYPE (0x1E7) /* officially allocated */
 
 /* ----------------------------------------------------------------------- */
 
