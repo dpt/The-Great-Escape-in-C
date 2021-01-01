@@ -187,56 +187,41 @@ static ztresult_t messages_curptr_loader(const ztast_expr_t *arrayexpr,
                                          void               *pvoidval,
                                          char              **syntax_error)
 {
-  const char             **p;
-  int                      index;
-  const ztast_arrayelem_t *elem;
-  int                      elems[2] = { 0, 0 };
+  const char                 **p;
+  const ztast_intarrayinner_t *inner;
+  int                          i;
+  int                          elems[2] = { 0, 0 };
 
   p = (const char **) pvoidval;
 
-  if (arrayexpr->type != ZTEXPR_ARRAY)
+  if (arrayexpr->type != ZTEXPR_INTARRAY)
   {
-    *syntax_error = "array type required (custom)"; /* ztsyntx_NEED_ARRAY */
+    *syntax_error = "integer array type required (custom)"; /* ztsyntx_NEED_INTEGERARRAY */
     return ztresult_SYNTAX_ERROR;
   }
-  if (arrayexpr->data.array->elems == NULL)
+
+  inner = arrayexpr->data.intarray->inner;
+  if (inner == NULL)
   {
     *p = NULL;
     return ztresult_OK;
   }
 
-  index = -1;
-  for (elem = arrayexpr->data.array->elems; elem; elem = elem->next)
+  for (i = 0; i < inner->nused; i++)
   {
-    ztast_expr_t  *expr;
-    ztast_value_t *value;
-    unsigned int   integer;
+    unsigned int integer;
 
-    /* Elements without a specified position will have an index of -1 */
-    index = (elem->index >= 0) ? elem->index : index + 1;
+    integer = inner->ints[i];
 
-    expr = elem->expr;
-    if (expr->type != ZTEXPR_VALUE)
-    {
-      *syntax_error = "value type required (custom)"; /* ztsyntx_NEED_VALUE */
-      return ztresult_SYNTAX_ERROR;
-    }
-    value = expr->data.value;
-    if (value->type != ZTVAL_INTEGER)
-    {
-      *syntax_error = "non-integer in array (custom)"; /* ztsyntx_UNEXPECTED_TYPE */
-      return ztresult_SYNTAX_ERROR;
-    }
-    integer = value->data.integer;
-    if ((index == 0 && (integer < 0 || integer >= message__LIMIT)) ||
-        (index == 1 && (integer < 0 || integer >= strlen(messages_table[elems[0]]))) ||
-        (index >= 2))
+    if ((i == 0 && (integer < 0 || integer >= message__LIMIT)) ||
+        (i == 1 && (integer < 0 || integer >= strlen(messages_table[elems[0]]))) ||
+        (i >= 2))
     {
       *syntax_error = "value out of range (custom)"; /* ztsyntx_VALUE_RANGE */
       return ztresult_SYNTAX_ERROR;
     }
 
-    elems[index] = integer;
+    elems[i] = integer;
   }
 
   *p = messages_table[elems[0]] + elems[1];
@@ -564,6 +549,7 @@ TGE_API int tge_load(tgestate_t *state, const char *filename)
   ztresult_t  zt;
   ztregion_t  regions[NREGIONS];
   ztloader_t *loaders[CUSTOM_ID__LIMIT];
+  char       *syntax_error;
 
   regions[0].id          = messages_queue_id;
   regions[0].spec.base   = &state->messages.queue;
@@ -594,9 +580,13 @@ TGE_API int tge_load(tgestate_t *state, const char *filename)
                regions,
                NREGIONS,
                loaders,
-               NELEMS(loaders));
+               NELEMS(loaders),
+              &syntax_error);
   if (zt != ztresult_OK)
+  {
+    zt_freesyntax(syntax_error); // TODO: Pass the error back
     return 1;
+  }
 
   return 0;
 }

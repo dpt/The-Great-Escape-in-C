@@ -39,10 +39,12 @@ endif()
 
 if(TGE_SAVES)
   set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
-  ExternalProject_Add(zerotape 
-      GIT_REPOSITORY https://github.com/dpt/zerotape/
-      GIT_TAG 0.3.0
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR})
+  ExternalProject_Add(zerotape
+      GIT_REPOSITORY /Users/dave/SyncProjects/github/zerotape
+      GIT_TAG 0.4.0
+      CMAKE_ARGS
+          -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR}
+          -DCMAKE_BUILD_TYPE=Release)
   set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
   set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
 endif()
