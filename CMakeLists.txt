@@ -41,7 +41,7 @@ if(TGE_SAVES)
   set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
   ExternalProject_Add(zerotape
       GIT_REPOSITORY /Users/dave/SyncProjects/github/zerotape
-      GIT_TAG 0.4.0
+      GIT_TAG master
       CMAKE_ARGS
           -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR}
           -DCMAKE_BUILD_TYPE=Release)

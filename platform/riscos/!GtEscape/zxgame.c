@@ -1788,10 +1788,12 @@ void zxgame_open(zxgame_t *zxgame)
 error zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 {
   os_error *err;
+  char     *errormsg;
 
   xhourglass_on();
 
-  tge_load(zxgame->tge, file_name); // handle errors
+  tge_load(zxgame->tge, file_name, &errormsg); // handle errors
+  tge_disposeoferror(errormsg);
 
   xhourglass_off();
 

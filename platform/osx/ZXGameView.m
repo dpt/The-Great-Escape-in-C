@@ -627,12 +627,26 @@ static int loadIfRequested(const ZXGameView *view)
 {
   if (view->startupGameURL)
   {
-    int rc;
+    char *errormsg;
+    int   rc;
 
-    rc = tge_load(view->game, [view->startupGameURL fileSystemRepresentation]);
+    rc = tge_load(view->game,
+                  [view->startupGameURL fileSystemRepresentation],
+                  &errormsg);
     if (rc)
     {
-      modalSheetAlert(view, @"Game failed to load");
+      NSString *alert;
+
+      if (errormsg)
+      {
+        alert = [NSString stringWithFormat:@"The game failed to load: %s", errormsg];
+        tge_disposeoferror(errormsg);
+      }
+      else
+      {
+        alert = [NSString stringWithFormat:@"The game failed to load"];
+      }
+      modalSheetAlert(view, alert);
       return 1;
     }
   }
@@ -650,7 +664,7 @@ static int saveIfRequested(const ZXGameView *view)
     view->saveGameURL = nil;
     if (rc)
     {
-      modalSheetAlert(view, @"Game failed to save");
+      modalSheetAlert(view, @"The game failed to save");
       return 1;
     }
 

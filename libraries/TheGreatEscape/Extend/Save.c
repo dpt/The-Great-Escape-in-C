@@ -183,9 +183,9 @@ static ztresult_t messages_curptr_saver(const void *pvoidval,
   return ztresult_OK;
 }
 
-static ztresult_t messages_curptr_loader(const ztast_expr_t *arrayexpr,
+static ztresult_t messages_curptr_loader(const ztast_expr_t *expr,
                                          void               *pvoidval,
-                                         char              **syntax_error)
+                                         char               *errbuf)
 {
   const char                 **p;
   const ztast_intarrayinner_t *inner;
@@ -194,13 +194,13 @@ static ztresult_t messages_curptr_loader(const ztast_expr_t *arrayexpr,
 
   p = (const char **) pvoidval;
 
-  if (arrayexpr->type != ZTEXPR_INTARRAY)
+  if (expr->type != ZTEXPR_INTARRAY)
   {
-    *syntax_error = "integer array type required (custom)"; /* ztsyntx_NEED_INTEGERARRAY */
+    strcpy(errbuf, "integer array type required (custom)"); /* ztsyntx_NEED_INTEGERARRAY */
     return ztresult_SYNTAX_ERROR;
   }
 
-  inner = arrayexpr->data.intarray->inner;
+  inner = expr->data.intarray->inner;
   if (inner == NULL)
   {
     *p = NULL;
@@ -217,7 +217,7 @@ static ztresult_t messages_curptr_loader(const ztast_expr_t *arrayexpr,
         (i == 1 && (integer < 0 || integer >= strlen(messages_table[elems[0]]))) ||
         (i >= 2))
     {
-      *syntax_error = "value out of range (custom)"; /* ztsyntx_VALUE_RANGE */
+      strcpy(errbuf, "value out of range (custom)"); /* ztsyntx_VALUE_RANGE */
       return ztresult_SYNTAX_ERROR;
     }
 
@@ -269,14 +269,14 @@ static ztresult_t vischar_anim_saver(const void *pvoidval,
 
 static ztresult_t vischar_anim_loader(const ztast_expr_t *expr,
                                       void               *pvoidval,
-                                      char              **syntax_error)
+                                      char               *errbuf)
 {
   const anim_t **anim;
   int            index;
 
   if (expr->type != ZTEXPR_VALUE)
   {
-    *syntax_error = "value type required (custom)"; /* ztsyntx_NEED_VALUE */
+    strcpy(errbuf, "value type required (custom)"); /* ztsyntx_NEED_VALUE */
     return ztresult_SYNTAX_ERROR;
   }
 
@@ -288,7 +288,7 @@ static ztresult_t vischar_anim_loader(const ztast_expr_t *expr,
     index = expr->data.value->data.integer;
     if (index < 0 || index >= animations__LIMIT)
     {
-      *syntax_error = "value out of range (custom)"; /* ztsyntx_VALUE_RANGE */
+      strcpy(errbuf, "value out of range (custom)"); /* ztsyntx_VALUE_RANGE */
       return ztresult_SYNTAX_ERROR;
     }
 
@@ -300,10 +300,9 @@ static ztresult_t vischar_anim_loader(const ztast_expr_t *expr,
     break;
 
   default:
-    *syntax_error = "integer or nil type required (custom)"; /* ztsyntx_NEED_INTEGER */
+    strcpy(errbuf, "integer or nil type required (custom)"); /* ztsyntx_NEED_INTEGER */
     return ztresult_SYNTAX_ERROR;
   }
-  *syntax_error = NULL;
 
   return ztresult_OK;
 }
@@ -544,12 +543,13 @@ TGE_API int tge_save(tgestate_t *state, const char *filename)
   return 0;
 }
 
-TGE_API int tge_load(tgestate_t *state, const char *filename)
+TGE_API int tge_load(tgestate_t *state,
+                     const char *filename,
+                     char      **error)
 {
   ztresult_t  zt;
   ztregion_t  regions[NREGIONS];
   ztloader_t *loaders[CUSTOM_ID__LIMIT];
-  char       *syntax_error;
 
   regions[0].id          = messages_queue_id;
   regions[0].spec.base   = &state->messages.queue;
@@ -581,14 +581,16 @@ TGE_API int tge_load(tgestate_t *state, const char *filename)
                NREGIONS,
                loaders,
                NELEMS(loaders),
-              &syntax_error);
+               error);
   if (zt != ztresult_OK)
-  {
-    zt_freesyntax(syntax_error); // TODO: Pass the error back
     return 1;
-  }
 
   return 0;
+}
+
+TGE_API void tge_disposeoferror(char *error)
+{
+  zt_freesyntax(error);
 }
 
 /* ----------------------------------------------------------------------- */
