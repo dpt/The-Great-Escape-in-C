@@ -74,6 +74,8 @@ target_include_directories(${TARGET}
 if(TGE_SAVES)
   target_sources(${TARGET} PRIVATE Extend/Save.c)
   target_compile_definitions(${TARGET} PRIVATE TGE_SAVES)
+
+  # zerotape
   add_dependencies(${TARGET} zerotape)
   target_include_directories(${TARGET} PRIVATE ${ZEROTAPE_INCLUDE})
   target_link_libraries(${TARGET} ${ZEROTAPE_LIB})
