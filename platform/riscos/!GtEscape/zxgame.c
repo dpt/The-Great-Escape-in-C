@@ -1665,7 +1665,7 @@ error zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
   zxgame->speed = NORMSPEED;
   zxgame->border_size = GAMEBORDER;
 
-  sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 4, TRUE);
+  sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 2, TRUE);
 
   zxgame->sprite = malloc(sprareasz);
   if (zxgame->sprite == NULL)
