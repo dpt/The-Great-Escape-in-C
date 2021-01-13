@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 
+#include "fortify/fortify.h"
+
 #include "appengine/datastruct/list.h"
 
 #include "zxgame.h"

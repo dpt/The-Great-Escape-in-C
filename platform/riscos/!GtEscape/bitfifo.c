@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "fortify/fortify.h"
+
 //#include "base/utils.h"
 /**
  * Divide while rounding upwards.

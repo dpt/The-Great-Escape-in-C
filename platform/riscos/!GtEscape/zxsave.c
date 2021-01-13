@@ -5,6 +5,8 @@
 
 #include <stddef.h>
 
+#include "fortify/fortify.h"
+
 #include "oslib/types.h"
 #include "oslib/osfile.h"
 
