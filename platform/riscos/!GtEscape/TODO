@@ -1,5 +1,11 @@
 next up:
 
+- savegames defining keys aren't working properly
+- shadow bytes aren't in savegames
+- excessive memory use
+- streammanager heap da's not being thrown away
+- grey save options when on menu
+
 
 - load/save - some key defs lost on reload - structure padding issue, some fields lost
 - dataopen handler
