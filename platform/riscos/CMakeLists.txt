@@ -33,9 +33,16 @@ set(SOURCES
   ./!GtEscape/zxscale.h
 )
 
+# Avoid a warning from CMake
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
 add_executable(${TARGET}
   ${SOURCES}
 )
+
+set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME_MINSIZEREL !RunImageMn,ff8)
+set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME_RELEASE !RunImage,ff8)
+set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME_DEBUG !RunImageDb,ff8)
 
 # OSLib
 target_include_directories(${TARGET} PRIVATE
@@ -62,3 +69,22 @@ target_link_libraries(${TARGET}
   LibZXSpectrum
   LibTheGreatEscape
 )
+
+# Install into build directory
+set(CMAKE_INSTALL_PREFIX . CACHE PATH "CMake install prefix" FORCE)
+
+install(TARGETS TheGreatEscape
+	CONFIGURATIONS MinSizeRel Release Debug
+	RUNTIME DESTINATION !GtEscape)
+install(FILES
+	./!GtEscape/!Boot,feb
+	./!GtEscape/!Run,feb
+	./!GtEscape/!Help,feb
+	./!GtEscape/!Sprites,ff9
+	./!GtEscape/!Sprites22,ff9
+	./!GtEscape/AppEngine,ffa
+	./!GtEscape/TimerMod,ffa
+	DESTINATION !GtEscape)
+install(DIRECTORY
+	./!GtEscape/Resources
+	DESTINATION !GtEscape)

@@ -23,3 +23,5 @@ echo "Configuring..."
 cmake $GENERATOR -DCMAKE_TOOLCHAIN_FILE=../cmake/riscos.cmake ..
 echo "Building..."
 cmake --build . $PARALLEL
+echo "Installing..."
+cmake --install .

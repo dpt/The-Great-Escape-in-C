@@ -4,8 +4,10 @@ set(tools $ENV{GCCSDK_INSTALL_CROSSBIN})
 set(CMAKE_C_COMPILER ${tools}/arm-unknown-riscos-gcc)
 set(CMAKE_CXX_COMPILER ${tools}/arm-unknown-riscos-g++)
 
-set(CMAKE_C_FLAGS "-std=c99 -mlibscl -mhard-float -mpoke-function-name -march=armv2 -mtune=arm2" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "-std=c99 -mlibscl -mhard-float" CACHE STRING "" FORCE)
+# I would prefer to use -Os for size but that made GCCSDK explode when I tried it.
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -march=armv2 -mtune=arm2 -mno-poke-function-name" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_DEBUG "-mpoke-function-name" CACHE STRING "" FORCE)
 
 set(CMAKE_FIND_ROOT_PATH ${tools})
 
