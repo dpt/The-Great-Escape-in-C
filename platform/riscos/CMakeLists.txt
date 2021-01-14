@@ -1,3 +1,11 @@
+if (NOT DEFINED ENV{GCCSDK_INSTALL_ENV})
+    message(FATAL_ERROR "GCCSDK_INSTALL_ENV is not set")
+endif()
+
+if (NOT DEFINED ENV{APPENGINE_ROOT})
+    message(FATAL_ERROR "APPENGINE_ROOT is not set")
+endif()
+
 set(TARGET ${PROJECT_NAME})
 
 set(SOURCES
