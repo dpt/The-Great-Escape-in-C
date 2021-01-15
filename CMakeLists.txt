@@ -42,7 +42,7 @@ endif()
 
 # Referencing CMAKE_TOOLCHAIN_FILE avoids a warning on rebuilds
 if(NOT ${CMAKE_TOOLCHAIN_FILE} STREQUAL "")
-    message(STATUS "zerotape: Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+    message(STATUS "The Great Escape: Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
 
