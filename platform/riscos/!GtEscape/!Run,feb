@@ -1,5 +1,5 @@
 | >!Run for The Great Escape
-| by David Thomas, © 2020
+| by David Thomas, © 2020-2021
 
 Obey <Obey$Dir>.!Boot
 
@@ -24,4 +24,4 @@ WimpSlot -min 144K -max 144K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
-Run <GtEscape$Dir>.!RunImage %*0 >stdout 2>stderr
+Run <GtEscape$Dir>.!RunImage %*0 ><GtEscape$Dir>.stdout 2><GtEscape$Dir>.stderr

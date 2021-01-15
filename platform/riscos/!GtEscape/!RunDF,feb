@@ -1,5 +1,5 @@
 | >!Run for The Great Escape
-| by David Thomas, © 2020
+| by David Thomas, © 2020-2021
 
 Obey <Obey$Dir>.!Boot
 
@@ -20,8 +20,8 @@ RMEnsure TimerMod       4.17 Error The Great Escape requires TimerMod 4.17 or la
 |RMEnsure SharedSoundBuffer 0.07 GtEscapeRMLoad System:Modules.SSBuffer
 |RMEnsure SharedSoundBuffer 0.07 Error The Great Escape requires SharedSoundBuffer 0.07 or later
 
-WimpSlot -min 4144K -max 4144K
+WimpSlot -min 1024K -max 1024K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
-Run <GtEscape$Dir>.!RunImageDF %*0 >stdout 2>stderr
+Run <GtEscape$Dir>.!RunImageDF %*0 ><GtEscape$Dir>.stdout 2><GtEscape$Dir>.stderr
