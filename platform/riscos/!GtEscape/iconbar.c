@@ -22,13 +22,13 @@ static void icon_clicked(const wimp_pointer *pointer, void *opaque)
 
   if (pointer->buttons & wimp_CLICK_SELECT)
   {
-    error     err;
+    result_t  err;
     zxgame_t *zxgame;
 
     err = zxgame_create(&zxgame, NULL);
     if (err)
     {
-      error_report(err);
+      result_report(err);
       return;
     }
 
@@ -56,9 +56,9 @@ static void menu_selected(const wimp_selection *selection, void *opaque)
   }
 }
 
-error tge_icon_bar_init(void)
+result_t tge_icon_bar_init(void)
 {
-  error err;
+  result_t err;
 
   err = icon_bar_init();
   if (err)
@@ -66,7 +66,7 @@ error tge_icon_bar_init(void)
 
   icon_bar_set_handlers(icon_clicked, menu_selected, NULL, NULL);
 
-  return error_OK;
+  return result_OK;
 }
 
 void tge_icon_bar_fin(void)

@@ -8,7 +8,7 @@
 
 #include "fortify/fortify.h"
 
-#include "appengine/datastruct/list.h"
+#include "datastruct/list.h"
 
 #include "zxgame.h"
 #include "zxgames.h"
@@ -23,7 +23,7 @@ static list_t list_anchor = { NULL };
 void zxgame_map(zxgame_map_callback *fn, void *opaque)
 {
   /* Note that the callback signatures are identical, so we can cast. */
-  list_walk(&list_anchor, (list_walk_callback *) fn, opaque);
+  list_walk(&list_anchor, (list_walk_callback_t *) fn, opaque);
 }
 
 /* ----------------------------------------------------------------------- */

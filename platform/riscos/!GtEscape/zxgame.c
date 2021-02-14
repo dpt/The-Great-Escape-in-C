@@ -25,6 +25,10 @@
 #include "oslib/wimp.h"
 #include "oslib/wimpreadsysinfo.h"
 
+#include "datastruct/bitfifo.h"
+#include "datastruct/list.h"
+#include "geom/box.h"
+
 #include "appengine/types.h"
 #include "appengine/base/bitwise.h"
 #include "appengine/base/bsearch.h"
@@ -32,9 +36,7 @@
 #include "appengine/base/os.h"
 #include "appengine/base/oserror.h"
 #include "appengine/base/strings.h"
-#include "appengine/datastruct/list.h"
 #include "appengine/dialogues/scale.h"
-#include "appengine/geom/box.h"
 #include "appengine/vdu/screen.h"
 #include "appengine/vdu/sprite.h"
 #include "appengine/wimp/event.h"
@@ -50,7 +52,6 @@
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "globals.h"
-#include "bitfifo.h"
 #include "menunames.h"
 #include "poll.h"
 #include "ssbuffer.h"
@@ -589,26 +590,26 @@ static result_t setup_sound(zxgame_t *zxgame)
   if ((zxgame->flags & zxgame_FLAG_HAVE_SOUND) == 0)
   {
     zxgame->flags &= ~zxgame_FLAG_SOUND_ON; /* ensure sound deselected */
-    return error_NOT_SUPPORTED; /* no sound hardware */
+    return result_NOT_SUPPORTED; /* no sound hardware */
   }
 
   if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
-    return error_NOT_SUPPORTED; /* not requested */
+    return result_NOT_SUPPORTED; /* not requested */
 
   if (zxgame->audio.stream != 0)
-    return error_OK; /* already setup */
+    return result_OK; /* already setup */
 
   zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH);
   if (zxgame->audio.fifo == NULL)
   {
-     err = error_OOM;
+     err = result_OOM;
      goto Failure;
   }
 
   zxgame->audio.data = malloc(BUFFER_SAMPLES * 4);
   if (zxgame->audio.data == NULL)
   {
-     err = error_OOM;
+     err = result_OOM;
      goto Failure;
   }
 
@@ -618,11 +619,11 @@ static result_t setup_sound(zxgame_t *zxgame)
               &zxgame->audio.stream);
   if (kerr)
   {
-    err = error_OS;
+    err = result_OS;
     goto Failure;
   }
 
-  return error_OK;
+  return result_OK;
 
 
 Failure:
@@ -696,7 +697,7 @@ static void speaker_handler(int on_off, void *opaque)
 {
   const unsigned int SOUNDFLAGS = zxgame_FLAG_HAVE_SOUND | zxgame_FLAG_SOUND_ON;
 
-  error         err;
+  result_t         err;
   zxgame_t     *zxgame = opaque;
   unsigned int  bits;
 
@@ -746,9 +747,9 @@ static void register_handlers(int reg, const zxgame_t *zxgame)
                             zxgame);
 }
 
-static error set_handlers(zxgame_t *zxgame)
+static result_t set_handlers(zxgame_t *zxgame)
 {
-  error err;
+  result_t err;
 
   register_handlers(1, zxgame);
 
@@ -798,8 +799,10 @@ typedef enum action
   Slower,
   TogglePause,
   ToggleSound,
+#ifdef TGE_SAVES
   OpenSaveGame,
   OpenSaveScreenshot,
+#endif
   ZoomOut,
   ZoomIn,
   ToggleZoom,
@@ -899,6 +902,7 @@ static void action(action_t action)
       }
       break;
 
+#ifdef TGE_SAVES
     case OpenSaveGame:
       zxgamesave_show_game();
       break;
@@ -906,6 +910,7 @@ static void action(action_t action)
     case OpenSaveScreenshot:
       zxgamesave_show_screenshot();
       break;
+#endif
 
     case ZoomOut:
       zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) / 2);
@@ -1182,12 +1187,14 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
       action(ToggleMonochrome);
       break;
 
+#ifdef TGE_SAVES
     case wimp_KEY_F3: /* Save > Save */
       action(OpenSaveGame);
       break;
     case wimp_KEY_SHIFT | wimp_KEY_F3: /* Save > Screenshot */
       action(OpenSaveScreenshot);
       break;
+#endif
 
     case 'O' - 64: /* Sound > Enabled */
       action(ToggleSound);
@@ -1338,7 +1345,7 @@ static int zxgame_event_losegain_caret(wimp_event_no event_no,
 
 /* ----------------------------------------------------------------------- */
 
-static error gentranstab(zxgame_t *zxgame)
+static result_t gentranstab(zxgame_t *zxgame)
 {
   osspriteop_id           id;
   colourtrans_table_flags flags;
@@ -1363,7 +1370,7 @@ static error gentranstab(zxgame_t *zxgame)
 
   zxgame->trans_tab = malloc(size);
   if (zxgame->trans_tab == NULL)
-    return error_OOM;
+    return result_OOM;
 
   colourtrans_generate_table_for_sprite(zxgame->sprite,
                                         id,
@@ -1373,7 +1380,7 @@ static error gentranstab(zxgame_t *zxgame)
                                         flags,
                                         NULL,
                                         NULL);
-  return error_OK;
+  return result_OK;
 }
 
 void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
@@ -1623,7 +1630,7 @@ static void set_palette(zxgame_t *zxgame)
   }
 }
 
-error zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
+result_t zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
 {
   static const zxconfig_t zxconfigconsts =
   {
@@ -1637,7 +1644,7 @@ error zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
     &speaker_handler
   };
 
-  error      err      = error_OK;
+  result_t      err      = result_OK;
   zxgame_t  *zxgame   = NULL;
   size_t     sprareasz;
   zxconfig_t zxconfig = zxconfigconsts;
@@ -1707,23 +1714,25 @@ error zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
 
   set_handlers(zxgame);
 
+#ifdef TGE_SAVES
   if (startup_game)
   {
     tge_setup2(zxgame->tge);
     zxgame->flags &= ~zxgame_FLAG_MENU;
     zxgame_load_game(zxgame, startup_game); // fixme errs
   }
+#endif
 
   zxgame_add(zxgame);
 
   *new_zxgame = zxgame;
 
-  return error_OK;
+  return result_OK;
 
 
 NoMem:
 
-  err = error_OOM;
+  err = result_OOM;
 
   goto Failure;
 
@@ -1734,7 +1743,7 @@ Failure:
 
   free(zxgame);
 
-  error_report(err);
+  result_report(err);
 
   return err;
 }
@@ -1787,7 +1796,9 @@ void zxgame_open(zxgame_t *zxgame)
 
 /* ----------------------------------------------------------------------- */
 
-error zxgame_load_game(zxgame_t *zxgame, const char *file_name)
+#ifdef TGE_SAVES
+
+result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 {
   os_error *err;
   char     *errormsg;
@@ -1799,10 +1810,10 @@ error zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 
   xhourglass_off();
 
-  return error_OK;
+  return result_OK;
 }
 
-error zxgame_save_game(zxgame_t *zxgame, const char *file_name)
+result_t zxgame_save_game(zxgame_t *zxgame, const char *file_name)
 {
   os_error *err;
 
@@ -1813,10 +1824,10 @@ error zxgame_save_game(zxgame_t *zxgame, const char *file_name)
 
   xhourglass_off();
 
-  return error_OK;
+  return result_OK;
 }
 
-error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
+result_t zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
 {
   os_error *err;
 
@@ -1824,16 +1835,18 @@ error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
                                      zxgame->sprite,
                                      file_name);
   if (err)
-    return error_OS;
+    return result_OS;
 
-  return error_OK;
+  return result_OK;
 }
+
+#endif /* TGE_SAVES */
 
 /* ----------------------------------------------------------------------- */
 
-error zxgame_init(void)
+result_t zxgame_init(void)
 {
-  error err;
+  result_t err;
 
   /* Dependencies */
 
@@ -1849,8 +1862,10 @@ error zxgame_init(void)
 
   /* Internal dependencies */
 
+#ifdef TGE_SAVES
   err = zxgamesave_dlg_init();
   if (!err)
+#endif
     err = zxgamescale_dlg_init();
   if (err)
     return err;
@@ -1858,15 +1873,18 @@ error zxgame_init(void)
   /* Menu */
 
   GLOBALS.zxgame_m = menu_create_from_desc(message0("menu.zxgame"),
-                                           dialogue_get_window(zxgamescale_dlg),
-                                           dialogue_get_window(zxgamesave_dlg),
-                                           dialogue_get_window(zxgamesave_dlg));
+                                           dialogue_get_window(zxgamescale_dlg)
+#ifdef TGE_SAVES
+                                          ,dialogue_get_window(zxgamesave_dlg)
+                                          ,dialogue_get_window(zxgamesave_dlg)
+#endif
+  );
 
   err = help_add_menu(GLOBALS.zxgame_m, "zxgame");
   if (err)
     return err;
 
-  return error_OK;
+  return result_OK;
 }
 
 void zxgame_fin(void)
@@ -1876,7 +1894,9 @@ void zxgame_fin(void)
   menu_destroy(GLOBALS.zxgame_m);
 
   zxgamescale_dlg_fin();
+#ifdef TGE_SAVES
   zxgamesave_dlg_fin();
+#endif
 
   register_single_handlers(0);
 

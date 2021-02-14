@@ -51,11 +51,11 @@ static void register_event_handlers(int reg)
                                NULL);
 }
 
-error dataxfer_init(void)
+result_t dataxfer_init(void)
 {
   register_event_handlers(1);
 
-  return error_OK;
+  return result_OK;
 }
 
 void dataxfer_fin(void)
@@ -106,7 +106,7 @@ static int message_data_save_ack(wimp_message *message, void *handle)
 
 static int message_data_load(wimp_message *message, void *handle)
 {
-  error     err;
+  result_t  err;
   zxgame_t *zxgame;
 
   NOT_USED(handle);
@@ -122,7 +122,7 @@ static int message_data_load(wimp_message *message, void *handle)
   err = zxgame_create(&zxgame, message->data.data_xfer.file_name);
   if (err)
   {
-    error_report(err);
+    result_report(err);
     return event_HANDLED;
   }
 
@@ -143,7 +143,7 @@ static int message_data_load_ack(wimp_message *message, void *handle)
 
 static int message_data_open(wimp_message *message, void *handle)
 {
-  error     err;
+  result_t  err;
   zxgame_t *zxgame;
 
   NOT_USED(handle);
@@ -159,7 +159,7 @@ static int message_data_open(wimp_message *message, void *handle)
   err = zxgame_create(&zxgame, message->data.data_xfer.file_name);
   if (err)
   {
-    error_report(err);
+    result_report(err);
     return event_HANDLED;
   }
 

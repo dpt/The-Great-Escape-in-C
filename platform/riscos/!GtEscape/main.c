@@ -20,6 +20,8 @@
 #include "oslib/wimp.h"
 #include "oslib/wimpspriteop.h"
 
+#include "geom/box.h"
+
 #include "appengine/types.h"
 #include "appengine/app/choices.h"
 #include "appengine/base/bsearch.h"
@@ -29,7 +31,6 @@
 #include "appengine/base/strings.h"
 #include "appengine/dialogues/scale.h"
 #include "appengine/gadgets/iconbar.h"
-#include "appengine/geom/box.h"
 #include "appengine/vdu/screen.h"
 #include "appengine/vdu/sprite.h"
 #include "appengine/wimp/event.h"
@@ -43,7 +44,9 @@
 #include "zxgames.h"
 #include "iconbar.h"
 #include "poll.h"
+#ifdef TGE_SAVES
 #include "dataxfer.h"
+#endif
 
 /* ----------------------------------------------------------------------- */
 
@@ -128,7 +131,9 @@ int main(int argc, char *argv[])
   /* Initialise subsystems */
   zxgame_init();
   tge_icon_bar_init();
+#ifdef TGE_SAVES
   dataxfer_init();
+#endif
 
   templates_close();
 
@@ -137,13 +142,13 @@ int main(int argc, char *argv[])
   /* Process command line arguments */
   while (--argc)
   {
-    error     err;
+    result_t  err;
     zxgame_t *zxgame;
 
     err = zxgame_create(&zxgame, argv[argc]);
     if (err)
     {
-      error_report(err);
+      result_report(err);
       continue;
     }
 
@@ -156,7 +161,9 @@ int main(int argc, char *argv[])
   register_event_handlers(0);
 
   /* Finalise subsystems */
+#ifdef TGE_SAVES
   dataxfer_fin();
+#endif
   tge_icon_bar_fin();
   zxgame_fin();
 

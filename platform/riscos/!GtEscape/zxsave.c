@@ -109,13 +109,13 @@ void zxgamesave_show_screenshot(void)
 
 /* ----------------------------------------------------------------------- */
 
-error zxgamesave_dlg_init(void)
+result_t zxgamesave_dlg_init(void)
 {
   dialogue_t *save;
 
   save = save_create();
   if (save == NULL)
-    return error_OOM;
+    return result_OOM;
 
   dialogue_set_fillout_handler(save, zxgamesave_dlg_fillout, NULL);
   dialogue_set_menu_warning_handler(save, zxgamesave_menu_warning);
@@ -123,7 +123,7 @@ error zxgamesave_dlg_init(void)
 
   zxgamesave_dlg = save;
 
-  return error_OK;
+  return result_OK;
 }
 
 void zxgamesave_dlg_fin(void)

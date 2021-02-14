@@ -213,8 +213,8 @@ static ztresult_t messages_curptr_loader(const ztast_expr_t *expr,
 
     integer = inner->ints[i];
 
-    if ((i == 0 && (integer < 0 || integer >= message__LIMIT)) ||
-        (i == 1 && (integer < 0 || integer >= strlen(messages_table[elems[0]]))) ||
+    if ((i == 0 && integer >= message__LIMIT) ||
+        (i == 1 && integer >= strlen(messages_table[elems[0]])) ||
         (i >= 2))
     {
       strcpy(errbuf, "value out of range (custom)"); /* ztsyntx_VALUE_RANGE */

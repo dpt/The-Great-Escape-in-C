@@ -11,10 +11,10 @@
 
 typedef struct zxgame zxgame_t;
 
-error zxgame_init(void);
+result_t zxgame_init(void);
 void zxgame_fin(void);
 
-error zxgame_create(zxgame_t **zxgame, const char *startup_game);
+result_t zxgame_create(zxgame_t **zxgame, const char *startup_game);
 void zxgame_destroy(zxgame_t *zxgame);
 
 int zxgame_get_scale(zxgame_t *zxgame);
@@ -22,9 +22,9 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale);
 
 void zxgame_open(zxgame_t *zxgame);
 
-error zxgame_load_game(zxgame_t *zxgame, const char *file_name);
-error zxgame_save_game(zxgame_t *zxgame, const char *file_name);
-error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name);
+result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name);
+result_t zxgame_save_game(zxgame_t *zxgame, const char *file_name);
+result_t zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name);
 
 enum
 {
