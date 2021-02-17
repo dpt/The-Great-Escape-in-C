@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# The Great Escape
+# The Great Escape in C
 #
 # Copyright (c) David Thomas, 2017-2021
 #
@@ -65,8 +65,7 @@ if(TGE_SAVES)
         GIT_REPOSITORY $ENV{HOME}/SyncProjects/github/zerotape
         GIT_TAG master
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-        BUILD_BYPRODUCTS ${ZEROTAPE_LIB}
-        EXCLUDE_FROM_ALL 1)
+        BUILD_BYPRODUCTS ${ZEROTAPE_LIB})
 endif()
 
 
