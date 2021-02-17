@@ -11262,11 +11262,14 @@ TGE_API void tge_setup2(tgestate_t *state)
 TGE_API void tge_main(tgestate_t *state)
 {
   if (setjmp(state->jmpbuf_main) == 0)
+  {
     /* On entry we run the main loop. */
     main_loop(state);
+  }
   else
+  {
     /* If something wanted to exit quickly we arrive here. */
-    ;
+  }
 }
 
 /* ----------------------------------------------------------------------- */

@@ -577,7 +577,7 @@ static void border_handler(int colour, void *opaque)
     default: c = os_COLOUR_ORANGE;  break;
   }
 
-  zxgame->background.colour = colour;
+  zxgame->background.colour = c;
 
   zxgame_update(zxgame, zxgame_UPDATE_REDRAW);
 }
@@ -1152,12 +1152,11 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
                                     void         *handle)
 {
   wimp_key *key;
-  zxgame_t *zxgame;
 
   NOT_USED(event_no);
+  NOT_USED(handle);
 
-  key    = &block->key;
-  zxgame = handle;
+  key = &block->key;
 
   switch (key->c)
   {
@@ -1327,12 +1326,11 @@ static int zxgame_event_losegain_caret(wimp_event_no event_no,
                                        wimp_block   *block,
                                        void         *handle)
 {
-  wimp_caret *caret;
-  zxgame_t   *zxgame;
+  zxgame_t *zxgame;
 
   NOT_USED(event_no);
+  NOT_USED(block);
 
-  caret  = &block->caret;
   zxgame = handle;
 
   if (event_no == wimp_GAIN_CARET)
@@ -1800,8 +1798,7 @@ void zxgame_open(zxgame_t *zxgame)
 
 result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 {
-  os_error *err;
-  char     *errormsg;
+  char *errormsg;
 
   xhourglass_on();
 
@@ -1815,8 +1812,6 @@ result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 
 result_t zxgame_save_game(zxgame_t *zxgame, const char *file_name)
 {
-  os_error *err;
-
   xhourglass_on();
 
   tge_save(zxgame->tge, file_name); // handle errors
