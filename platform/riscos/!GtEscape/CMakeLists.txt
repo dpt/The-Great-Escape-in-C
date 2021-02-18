@@ -164,7 +164,7 @@ endif()
 # Library dependencies
 #
 
-target_link_libraries(GtEscape PRIVATE LibZXSpectrum LibTheGreatEscape)
+target_link_libraries(GtEscape PRIVATE ZXSpectrum TheGreatEscape)
 
 if(TARGET_RISCOS)
     # OSLib (& anything else in GCCSDK)
