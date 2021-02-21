@@ -428,6 +428,7 @@ static const ztstruct_t meta_keydefs =
 
 static const ztfield_t meta_tgestate_fields[] =
 {
+  ZTUCHARARRAY(roomdef_shadow_bytes, tgestate_t, 16),
   ZTUCHAR(room_index, tgestate_t),
   ZTUCHAR(current_door, tgestate_t),
   ZTSTRUCTARRAY(movable_items, tgestate_t, movableitem_t, movable_item__LIMIT, &meta_movableitem),
