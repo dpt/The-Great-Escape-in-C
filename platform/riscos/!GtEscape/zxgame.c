@@ -904,7 +904,8 @@ static void action(action_t action)
 
 #ifdef TGE_SAVES
     case OpenSaveGame:
-      zxgamesave_show_game();
+      if (zxgame_can_save(zxgame))
+        zxgamesave_show_game();
       break;
 
     case OpenSaveScreenshot:
@@ -1097,6 +1098,10 @@ static void zxgame_menu_update(void)
 
   tick(m, SCALED_SELECTED, (zxgame->flags & zxgame_FLAG_FIT)  != 0);
   tick(m, SCALED_SNAP,     (zxgame->flags & zxgame_FLAG_SNAP) != 0);
+
+  /* "Save" menu */
+  m = GLOBALS.zxgame_m->entries[ZXGAME_SAVE].sub_menu;
+  shade(m, SAVE_GAME, zxgame_can_save(zxgame) == 0);
 
   /* "Sound" menu */
 
@@ -1795,6 +1800,11 @@ void zxgame_open(zxgame_t *zxgame)
 /* ----------------------------------------------------------------------- */
 
 #ifdef TGE_SAVES
+
+int zxgame_can_save(zxgame_t *zxgame)
+{
+  return (zxgame->flags & zxgame_FLAG_MENU) == 0;
+}
 
 result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name)
 {

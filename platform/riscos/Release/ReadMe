@@ -1,6 +1,16 @@
 The Great Escape - Installation
 ===============================
 
+General
+-------
+The Great Escape requires CallASWI 0.03 and
+SharedCLibrary 5.17 or newer to be available in
+your !System.
+
+If you don't have them installed you can obtain a
+copy in 'System resources' here:
+https://www.riscosopen.org/content/downloads/common
+
 Sound
 -----
 The Great Escape can play its menu screen music

@@ -189,11 +189,14 @@ endif()
 #
 
 # (force this for now)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/!GtEscape" CACHE PATH "CMake install prefix" FORCE)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "CMake install prefix" FORCE)
 
 install(TARGETS GtEscape RUNTIME
-    DESTINATION ${CMAKE_INSTALL_PREFIX})
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
 install(FILES !Boot,feb !Help,feb !Run,feb !Sprites,ff9 !Sprites22,ff9 AppEngine,ffa TimerMod,ffa
-    DESTINATION ${CMAKE_INSTALL_PREFIX})
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
 install(DIRECTORY Resources
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
+install(DIRECTORY ../Release
     DESTINATION ${CMAKE_INSTALL_PREFIX})
+

@@ -22,9 +22,12 @@ void zxgame_set_scale(zxgame_t *zxgame, int scale);
 
 void zxgame_open(zxgame_t *zxgame);
 
+#ifdef TGE_SAVES
+int zxgame_can_save(zxgame_t *zxgame);
 result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name);
 result_t zxgame_save_game(zxgame_t *zxgame, const char *file_name);
 result_t zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name);
+#endif /* TGE_SAVES */
 
 enum
 {

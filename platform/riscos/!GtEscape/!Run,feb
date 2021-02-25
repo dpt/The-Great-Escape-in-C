@@ -26,7 +26,7 @@ RMEnsure TimerMod           4.17 Error The Great Escape requires TimerMod 4.17 o
 |RMEnsure SharedSoundBuffer 0.07 RMLoad System:Modules.SSBuffer
 |RMEnsure SharedSoundBuffer 0.07 Error The Great Escape requires SharedSoundBuffer 0.07 or later
 
-WimpSlot -min 144K -max 144K
+WimpSlot -min 192K -max 192K
 
 Run <GtEscape$Dir>.Resources.ResFind GtEscape
 
