@@ -14,8 +14,7 @@ the RISC OS desktop.
 Compatibility
 -------------
 * RISC OS 3.1 or later.
-* Since this is a desktop game, an ARM250 or
-  better system is recommended as a minimum.
+* ARM250 or better.
 
 How To Play
 -----------
@@ -61,6 +60,9 @@ game. You can alter save games to cheat, produce
 odd effects, etc. It's like using POKEs, but at a
 more descriptive level.
 
+Note that altering the game state in this way can
+easily cause the game to go haywire.
+
 ### Example: Gaining Items
 
 Set `items_held` to the numbers of the items you
@@ -72,9 +74,6 @@ Look at the first `vischar` entry and set its
 `mi.sprite` to 14 (this selects the dog sprite
 set) and its `mappos.w` to 8 (this adjusts the
 player's height).
-
-Note that altering the game state in this way can
-easily cause the game to go haywire.
 
 TODOs / Missing Features
 ------------------------
@@ -95,7 +94,7 @@ v0.90 (Apr 2020) - First beta test release
 v0.91 (Apr 2020) - Fixed spawning issues
 v0.92 (May 2020) - Added screenshot saving
                  - Added sound on 16-bit hardware
-v0.93 (Jan 2021) - Added save games
+v0.93 (Nov 2021) - Added save games
 v0.94 (Feb 2021) - Rebuilt using GCCSDK
 
 Background
