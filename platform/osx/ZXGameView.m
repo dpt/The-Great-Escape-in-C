@@ -46,7 +46,7 @@
 #define GAMEBORDER      (16)    // pixels
 
 #define MAXSTAMPS       (4)     // max depth of timestamps stack
-#define SPEEDQ          (20)    // smallest unit of speed (percent)sp
+#define SPEEDQ          (20)    // smallest unit of speed (percent)
 #define NORMSPEED       (100)   // normal speed (percent)
 #define MAXSPEED        (99999) // fastest possible game (percent)
 
