@@ -3,22 +3,45 @@ The Great Escape - Installation
 
 General
 -------
-The Great Escape requires CallASWI 0.03 and
-SharedCLibrary 5.17 or newer to be available in
+The Great Escape is built using GCCSDK. It
+requires the modules CallASWI 0.03 and
+SharedCLibrary 5.17 or greater to be available in
 your !System.
 
 If you don't have them installed you can obtain a
-copy in 'System resources' here:
+copy from RISC OS Open Ltd's 'System resources'
+package, available here:
 https://www.riscosopen.org/content/downloads/common
 
 Sound
 -----
 The Great Escape can play its menu screen music
 and make in-game sound effects if your RISC OS
-computer has 16-bit audio support. If that's the
-case then use Configure's System window to merge
-in the supplied !System. It contains the
-SharedSoundBuffer modules required by the game.
+computer has 16-bit audio support. However, the
+SharedSoundBuffer module I use to play the sound
+requires SharedSound 1.07, or later, which seems
+to only exist for relatively recent versions of
+RISC OS...
+
+So if you have SharedSound >= 1.07 then use
+Configure's System window to merge in the supplied
+!System. It contains the SharedSoundBuffer modules
+required by the game.
+
+Multiple Games
+--------------
+You can start up multiple games in this version by
+repeatedly clicking on the icon bar icon. I've
+left this enabled in this build out of interest,
+and to demonstrate that multiple running games
+will not interfere with each other.
+
+In practice, due to the structure of the original
+game, and RISC OS's lack of threading, multiple
+concurrent running games will not currently
+cooperate in a smooth manner. The games can be
+played, but will be choppy.
+
 
 Contact
 -------
