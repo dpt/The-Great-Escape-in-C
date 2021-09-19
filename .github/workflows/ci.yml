@@ -56,7 +56,7 @@ jobs:
           # Note awkwardly duplicated path due to build location
           cd platform/riscos/build/platform/riscos/!GtEscape/install
           find . -type f -not -name '*,*' -exec mv '{}' '{},fff' \;  # ensure that type-less files come out as Text
-          python3 -m rozipfile --verbose --create ../../../../${{ steps.version.outputs.leafname }} *
+          python3 -m rozipfile --verbose --create ../../../../../../../${{ steps.version.outputs.leafname }} *
 
       - uses: actions/upload-artifact@v2
         with:
