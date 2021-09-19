@@ -62,8 +62,8 @@ if(TGE_SAVES)
     # BUILD_BYPRODUCTS must be specified in this command otherwise ninja won't
     # know when to build zerotape.
     ExternalProject_Add(zerotape
-        GIT_REPOSITORY $ENV{HOME}/SyncProjects/github/zerotape
-        GIT_TAG master
+        GIT_REPOSITORY https://github.com/dpt/zerotape
+        GIT_TAG 0.5.0
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
         BUILD_BYPRODUCTS ${ZEROTAPE_LIB})
 endif()
