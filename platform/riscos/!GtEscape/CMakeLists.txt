@@ -189,14 +189,18 @@ endif()
 #
 
 # (force this for now)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "CMake install prefix" FORCE)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "CMake install prefix" FORCE)
+set(INSTALL_APPDIR ${CMAKE_INSTALL_PREFIX}/Apps/Games/!GtEscape)
 
 install(TARGETS GtEscape RUNTIME
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
+    DESTINATION ${INSTALL_APPDIR})
 install(FILES !Boot,feb !Help,feb !Run,feb !Sprites,ff9 !Sprites22,ff9 AppEngine,ffa TimerMod,ffa
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
+    DESTINATION ${INSTALL_APPDIR})
 install(DIRECTORY Resources
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/!GtEscape)
+    DESTINATION ${INSTALL_APPDIR})
+install(DIRECTORY ../Package
+    DESTINATION ${CMAKE_INSTALL_PREFIX})
+# this release stuff needs reorganising for RiscPkg
 install(DIRECTORY ../Release
     DESTINATION ${CMAKE_INSTALL_PREFIX})
 
