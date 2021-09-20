@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH ${APPENGINE_REPO_ROOT}/cmake/Modules)
 
 include(FetchContent)
 
+
 project(GtEscape VERSION 0.9.3 DESCRIPTION "Escape game" LANGUAGES C)
 
 # If a host tools build was requested, then build them alone
@@ -198,9 +199,8 @@ install(FILES !Boot,feb !Help,feb !Run,feb !Sprites,ff9 !Sprites22,ff9 AppEngine
     DESTINATION ${INSTALL_APPDIR})
 install(DIRECTORY Resources
     DESTINATION ${INSTALL_APPDIR})
-install(DIRECTORY ../Package
+install(DIRECTORY ../Package/RiscPkg
     DESTINATION ${CMAKE_INSTALL_PREFIX})
 # this release stuff needs reorganising for RiscPkg
 install(DIRECTORY ../Release
     DESTINATION ${CMAKE_INSTALL_PREFIX})
-
