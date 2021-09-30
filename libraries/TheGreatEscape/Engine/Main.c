@@ -543,7 +543,6 @@ void setup_room(tgestate_t *state)
 
   wipe_visible_tiles(state);
 
-  assert(state->room_index >= 0);
   assert(state->room_index < room__LIMIT);
   room_index = state->room_index; /* local cached copy */
   offset     = 0;
@@ -632,7 +631,7 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
   int                val;           /* was A' */
 
   assert(state  != NULL);
-  assert(index >= 0 && index < interiorobject__LIMIT);
+  assert(index < interiorobject__LIMIT);
   assert(output != NULL); // assert within tilebuf?
 
   columns     = state->columns; // Conv: Added.
@@ -3264,9 +3263,9 @@ uint8_t *plot_tile(tgestate_t             *state,
   supertileindex = *maptiles; /* get supertile index */
   assert(supertileindex < supertileindex__LIMIT);
 
-  // Supertiles 44 and lower         use tiles   0..249 (249 tile span)
-  // Supertiles 45..138 and 204..218 use tiles 145..400 (255 tile span)
-  // Supertiles 139..203             use tiles 365..570 (205 tile span)
+  /* Supertiles 44 and lower         use tiles   0..249 (249 tile span) */
+  /* Supertiles 45..138 and 204..218 use tiles 145..400 (255 tile span) */
+  /* Supertiles 139..203             use tiles 365..570 (205 tile span) */
 
   if (supertileindex <= 44)
   {
@@ -3275,7 +3274,7 @@ uint8_t *plot_tile(tgestate_t             *state,
   }
   else if (supertileindex <= 138 || supertileindex >= 204)
   {
-    assert(tile_index <= 255);
+    /* assert(tile_index <= 255) is always true */
     tileset = &exterior_tiles[145];
   }
   else
@@ -3647,7 +3646,6 @@ void searchlight_movement(searchlight_movement_t *slstate)
     {
       slstate->index = ++index; /* count up */
     }
-    assert(index >= 0);
     assert(index <= 8); // movement_1 is the longest
     ptr = slstate->ptr + index * 2;
     if (*ptr == 255) /* end of list? */
@@ -9141,7 +9139,7 @@ int is_item_discoverable_interior(tgestate_t *state,
   item_t              item;    /* was A */
 
   assert(state != NULL);
-  assert((room >= 0 && room < room__LIMIT) || (room == room_NONE));
+  ASSERT_ROOM_VALID(room);
   /* pitem may be NULL */
 
   itemstr = &state->item_structs[0];
@@ -10234,7 +10232,7 @@ void plot_masked_sprite_16px_right(tgestate_t *state, uint8_t x)
   uint8_t       *screenptr;   /* was HL */
 
   assert(state != NULL);
-  assert(x >= 0 && x < 4);
+  assert(x < 4);
 
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
