@@ -82,18 +82,17 @@ do {                                                                        \
 
 #define ASSERT_CHARACTER_VALID(c)                                           \
 do {                                                                        \
-  assert(c >= 0 && c < character__LIMIT);                                   \
+  assert(c < character__LIMIT);                                             \
 } while (0)
 
 #define ASSERT_ROOM_VALID(r)                                                \
 do {                                                                        \
-  assert((r) == room_NONE ||                                                \
-         ((r) >= 0 && (r) < room__LIMIT));                                  \
+  assert((r) == room_NONE || (r) < room__LIMIT);                            \
 } while (0)
 
 #define ASSERT_ITEM_VALID(i)                                                \
 do {                                                                        \
-  assert(i >= 0 && i < item__LIMIT);                                        \
+  assert(i < item__LIMIT);                                                  \
 } while (0)
 
 #define ASSERT_INTERIOR_TILES_VALID(p)                                      \
@@ -123,7 +122,6 @@ do {                                                                        \
 /* These are approximate limits determined by checking the original game. */
 #define ASSERT_MAP_POSITION_VALID(p)                                        \
 do {                                                                        \
-  assert(p.x >= 0);                                                         \
   assert(p.x < 200);                                                        \
   assert(p.y >= 6);                                                         \
   assert(p.y < 130);                                                        \
