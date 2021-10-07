@@ -33,6 +33,8 @@ jobs:
       # Step intended to be reused in CI pipelines.
       - name: Cross compile The Great Escape
         run: |
+          apt-get update
+          apt-get install -y ca-certificates
           ./riscos-ci-build.sh
 
       - name: Give the output a versioned name
