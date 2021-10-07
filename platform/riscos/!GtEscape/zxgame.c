@@ -9,19 +9,21 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "fortify/fortify.h"
 
-#include "oslib/types.h"
 #include "oslib/colourtrans.h"
 #include "oslib/hourglass.h"
 #include "oslib/os.h"
 #include "oslib/osbyte.h"
 #include "oslib/osfile.h"
 #include "oslib/osspriteop.h"
+#include "oslib/portable.h"
+#include "oslib/types.h"
 #include "oslib/wimp.h"
 #include "oslib/wimpreadsysinfo.h"
 
@@ -114,6 +116,7 @@ typedef int fix16_t;
 #define zxgame_FLAG_HAVE_SOUND  (1u << 10) /* sound is available */
 #define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is required */
 #define zxgame_FLAG_WIDE_CTRANS (1u << 12) /* use wide ColourTrans table */
+#define zxgame_FLAG_FULL_SCREEN (1u << 13) /* in full-screen mode */
 
 /* ----------------------------------------------------------------------- */
 
@@ -341,7 +344,10 @@ static void draw_handler(const zxbox_t *dirty,
   zxspectrum_release_screen(zxgame->zx);
 
   /* Convert the dirty region into work area coordinates. */
+  if ((zxgame->flags & zxgame_FLAG_FULL_SCREEN) == 0)
   {
+    /* Desktop mode */
+
     int       x0, y0;
     scale_t   scale;
     wimp_draw draw;
@@ -358,6 +364,41 @@ static void draw_handler(const zxbox_t *dirty,
     draw.box.y1 = y0 + (dirty->y1 << GAMEEIG) * scale / SCALE_1;
     snapbox2px(&draw.box);
     redrawfn(zxgame, &draw, wimp_update_window(&draw));
+  }
+  else
+  {
+    /* Full-screen mode */
+
+    osspriteop_action action;
+    osspriteop_id     id;
+    int               x,y;
+    os_box            clip;
+
+    action = os_ACTION_OVERWRITE;
+    if (zxgame->flags & zxgame_FLAG_WIDE_CTRANS)
+      action |= osspriteop_GIVEN_WIDE_ENTRIES;
+
+    id = (osspriteop_id) sprite_select(zxgame->sprite, 0);
+
+    x = zxgame->imgbox.x0;
+    y = zxgame->imgbox.y0;
+
+    // TODO: wait for vsync? or not needed in TGE?
+
+    clip.x0 = x + (dirty->x0 << GAMEEIG);
+    clip.y0 = y + (dirty->y0 << GAMEEIG);
+    clip.x1 = x + (dirty->x1 << GAMEEIG);
+    clip.y1 = y + (dirty->y1 << GAMEEIG);
+    snapbox2px(&clip);
+    screen_clip(&clip);
+
+    osspriteop_put_sprite_scaled(osspriteop_PTR,
+                                 zxgame->sprite,
+                                 id,
+                                 x,y,
+                                 action,
+                                &zxgame->factors,
+                                 zxgame->trans_tab);
   }
 }
 
@@ -377,6 +418,31 @@ static int should_quit(const zxgame_t *zxgame)
 {
   return (GLOBALS.flags & Flag_Quit) != 0 ||
          (zxgame->flags & zxgame_FLAG_QUIT) != 0;
+}
+
+static int do_sleep(zxgame_t *zxgame, int target_cs)
+{
+  if ((zxgame->flags & zxgame_FLAG_FULL_SCREEN) == 0)
+  {
+    int quit;
+
+    do
+    {
+      poll_set_target(target_cs);
+      poll();
+      quit = should_quit(zxgame);
+    }
+    while (!quit && os_read_monotonic_time() < target_cs);
+
+    return quit;
+  }
+  else
+  {
+    while (os_read_monotonic_time() < target_cs)
+      (void) xportable_idle(); // ok to call when portable isn't around (e.g. RPCEmu)
+
+    return 0;
+  }
 }
 
 /* Game callback. */
@@ -404,9 +470,7 @@ static int sleep_handler(int durationTStates, void *opaque)
     do
     {
       target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
-      poll_set_target(target_cs);
-      poll();
-      quit = should_quit(zxgame);
+      quit = do_sleep(zxgame, target_cs);
       paused = (zxgame->flags & zxgame_FLAG_PAUSED) != 0;
     }
     while (!quit && paused && os_read_monotonic_time() < target_cs);
@@ -442,19 +506,12 @@ static int sleep_handler(int durationTStates, void *opaque)
       /* If we need to sleep then delay here by polling the Wimp. */
 
       os_t now_cs, target_cs;
-      int  quit;
 
       now_cs    = os_read_monotonic_time();
       target_cs = now_cs + (os_t) (sleep_s * 100.0f); /* sec -> centisec */
       //fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
       zxgame->flags |= zxgame_FLAG_SLEEPING;
-      do
-      {
-        poll_set_target(target_cs);
-        poll();
-        quit = should_quit(zxgame);
-      }
-      while (!quit && os_read_monotonic_time() < target_cs);
+      (void) do_sleep(zxgame, target_cs);
       zxgame->flags &= ~zxgame_FLAG_SLEEPING;
     }
   }
@@ -811,6 +868,8 @@ typedef enum action
 }
 action_t;
 
+static void fullscreen(zxgame_t *zxgame);
+
 static void action(action_t action)
 {
   zxgame_t *zxgame = GLOBALS.current_zxgame;
@@ -858,7 +917,7 @@ static void action(action_t action)
       break;
 
     case FullScreen:
-      // TODO
+      fullscreen(zxgame);
       break;
 
     case ToggleMonochrome:
@@ -1580,13 +1639,13 @@ static void set_palette(zxgame_t *zxgame)
   BRIGHT(YLW), \
   BRIGHT(WHT),
 
-  static const os_SPRITE_PALETTE(16) stdpalette =
+  static const os_SPRITE_PALETTE(16) zxpalette =
   {{
 #define BRIGHT(C) { C * 0xAA, C * 0xAA }
-    DEFINE_PALETTE
+     DEFINE_PALETTE
 #undef BRIGHT
 #define BRIGHT(C) { C * 0xFF, C * 0xFF }
-    DEFINE_PALETTE
+     DEFINE_PALETTE
 #undef BRIGHT
   }};
 
@@ -1600,8 +1659,8 @@ static void set_palette(zxgame_t *zxgame)
                               &palette,
                                NULL);
 
-  assert(palette_size * 8 == sizeof(stdpalette));
-  memcpy(palette, &stdpalette, sizeof(stdpalette));
+  assert(palette_size * 8 == sizeof(zxpalette));
+  memcpy(palette, &zxpalette, sizeof(zxpalette));
 
   if (zxgame->flags & zxgame_FLAG_MONOCHROME)
   {
@@ -1909,5 +1968,125 @@ void zxgame_fin(void)
 }
 
 /* ----------------------------------------------------------------------- */
+
+/* This ought to be a sig_atomic_t, not int, but GCCSDK isn't finding that
+ * symbol... */
+static volatile int escape_pressed;
+
+static void escape_handler(int type)
+{
+  escape_pressed = 1;
+}
+
+// todo: appengine - make closest_mode use the MAX_MODE vdu var
+
+static void fullscreen(zxgame_t *zxgame)
+{
+  os_mode     desktopmode;
+  const char *screenmodevar;
+  os_mode     closestmode;
+  int         sw,sh;
+  int         xeig,yeig,log2bpp;
+  void      (*old_escape_handler)(int);
+
+  desktopmode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
+
+  screenmodevar = getenv(APPNAME "$ScreenMode");
+  if (screenmodevar)
+    closestmode = (os_mode) atoi(screenmodevar);
+  else
+    if ((int) (closestmode = closest_mode(GAMEWIDTH, GAMEHEIGHT, 2)) < 0) // fixme: awkward cast
+      closestmode = os_MODE4BPP45X45; /* default to mode 9 (should find it anyway - raise an error instead?) */
+
+  set_mode(closestmode);
+  os_remove_cursors();
+  read_screen_dimensions(&sw, &sh);
+  read_current_mode_vars(&xeig, &yeig, &log2bpp);
+
+  /* In 4bpp modes program the palette to match the game sprite */
+  if (log2bpp == 2)
+  {
+    os_sprite_palette *palette;
+    int                i;
+    char               buf[16 * 6];
+    char              *p;
+
+    osspriteop_read_palette_size(osspriteop_PTR,
+                                 zxgame->sprite,
+                 (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                                 NULL,
+                                &palette,
+                                 NULL);
+
+    p = buf;
+    for (i = 0; i < 16; i++)
+    {
+      *p++ = 19;
+      *p++ = i;
+      *p++ = 16;
+      *p++ = (palette->entries[i].on >>  8) & 0xFF;
+      *p++ = (palette->entries[i].on >> 16) & 0xFF;
+      *p++ = (palette->entries[i].on >> 24) & 0xFF;
+    }
+    os_writen(buf, p - buf);
+  }
+
+  gentranstab(zxgame);
+  
+  /* TODO: If the eventually chosen screen mode is not a good fit for the TGE
+   *       game screen then adjust the scaling factors here (using whole-pixel
+   *       scaling). If this changes then note that the clipping in the redraw
+   *       function will have to be updated too. */
+
+  zxgame->factors.xmul = GAMEEIG;
+  zxgame->factors.ymul = GAMEEIG;
+  zxgame->factors.xdiv = xeig;
+  zxgame->factors.ydiv = yeig;
+
+  /* Centre the game on-screen.
+   * Note that we re-use imgbox to store the screen offset when in full-screen
+   * mode. */
+  zxgame->imgbox.x0 = (sw - (GAMEWIDTH  << GAMEEIG)) / 2;
+  zxgame->imgbox.y0 = (sh - (GAMEHEIGHT << GAMEEIG)) / 2;
+
+  /* Let handlers know that we're running full-screen.
+   * Set zxgame_FLAG_FIRST so that we re-paint the entire screen when next
+   * drawn (otherwise we'd just do partial updates). */
+  zxgame->flags |= zxgame_FLAG_FULL_SCREEN | zxgame_FLAG_FIRST;
+
+  /* Setup escape handling */
+  escape_pressed = 0;
+  old_escape_handler = signal(SIGINT, escape_handler);
+  osbyte(osbyte_VAR_ESCAPE_STATE, 0, 0); /* enable escape conditions */
+
+  for (;;)
+  {
+    if (escape_pressed)
+      break;
+
+    if (zxgame->flags & zxgame_FLAG_MENU)
+    {
+      if (tge_menu(zxgame->tge) > 0)
+      {
+        tge_setup2(zxgame->tge);
+        zxgame->flags &= ~zxgame_FLAG_MENU;
+      }
+    }
+    else
+    {
+      tge_main(zxgame->tge);
+    }
+
+    emit_sound(zxgame);
+  }
+
+  /* Restore escape handling */
+  osbyte(osbyte_VAR_ESCAPE_STATE, 1, 0); /* disable escape conditions */
+  signal(SIGINT, old_escape_handler);
+
+  zxgame->flags &= ~zxgame_FLAG_FULL_SCREEN;
+
+  wimp_set_mode(desktopmode);
+}
 
 // vim: ts=8 sts=2 sw=2 et
