@@ -1,4 +1,4 @@
-The Great Escape - Help for v0.94 (Feb 2021)
+The Great Escape - Help for v0.95 (Oct 2021)
 ============================================
 This is The Great Escape application. It is a
 classic isometric ZX Spectrum game, originally
@@ -46,11 +46,11 @@ While I claim no copyright over the original game
 logic and assets of the game, I do claim copyright
 over the parts unique to this reimplementation.
 
-Notes
------
-You can open up multiple games and they will work
-but they won't reliably multitask and will be
-choppy.
+Multiple Games
+--------------
+While you can open up instances of the game from
+the icon bar they won't reliably cooperate with
+each other and will be choppy.
 
 Save Games
 ----------
@@ -75,9 +75,19 @@ Look at the first `vischar` entry and set its
 set) and its `mappos.w` to 8 (this adjusts the
 player's height).
 
+Full Screen Mode
+----------------
+When you enter full screen mode the computer's
+screen modes are enumerated to find the best match
+for a ZX Spectrum style 256x192 resolution. If for
+whatever reason this produces a poor result on
+your computer you can set the system variable
+GtEscape$ScreenMode to the number of your
+preferred screen mode to override the automatic
+full screen mode selection.
+
 TODOs / Missing Features
 ------------------------
-* Full screen mode
 * Pre-Risc PC sound support
 * Joystick support
 
@@ -96,6 +106,7 @@ v0.92 (May 2020) - Added screenshot saving
                  - Added sound on 16-bit hardware
 v0.93 (Nov 2021) - Added save games
 v0.94 (Feb 2021) - Rebuilt using GCCSDK
+v0.95 (Oct 2021) - Added full screen mode
 
 Background
 -----------

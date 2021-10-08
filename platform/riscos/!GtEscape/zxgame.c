@@ -1978,24 +1978,51 @@ static void escape_handler(int type)
   escape_pressed = 1;
 }
 
-// todo: appengine - make closest_mode use the MAX_MODE vdu var
+static os_mode desktop_mode;
+static int     desktop_mode_selector[32];
+
+static void save_desktop_mode(void)
+{
+  const int *pair;
+  int        len;
+
+  desktop_mode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
+  if ((int) desktop_mode < 128)
+    return;
+
+  /* Calculate length of desktop's mode selector, in words */
+  pair = &((const int *) desktop_mode)[5];
+  while (*pair != -1)
+    pair += 2;
+  len = pair + 1 - (int *) desktop_mode;
+
+  /* Copy the desktop's mode selector */
+  memcpy(desktop_mode_selector, desktop_mode, len * sizeof(int));
+}
+
+static void restore_desktop_mode(void)
+{
+  if ((int) desktop_mode < 128)
+    wimp_set_mode(desktop_mode);
+  else
+    wimp_set_mode((os_mode) desktop_mode_selector);
+}
 
 static void fullscreen(zxgame_t *zxgame)
 {
-  os_mode     desktopmode;
   const char *screenmodevar;
   os_mode     closestmode;
   int         sw,sh;
   int         xeig,yeig,log2bpp;
   void      (*old_escape_handler)(int);
 
-  desktopmode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
+  save_desktop_mode();
 
   screenmodevar = getenv(APPNAME "$ScreenMode");
   if (screenmodevar)
     closestmode = (os_mode) atoi(screenmodevar);
   else
-    if ((int) (closestmode = closest_mode(GAMEWIDTH, GAMEHEIGHT, 2)) < 0) // fixme: awkward cast
+    if ((int) (closestmode = closest_mode(GAMEWIDTH, GAMEHEIGHT, 2)) < 0)
       closestmode = os_MODE4BPP45X45; /* default to mode 9 (should find it anyway - raise an error instead?) */
 
   set_mode(closestmode);
@@ -2086,7 +2113,8 @@ static void fullscreen(zxgame_t *zxgame)
 
   zxgame->flags &= ~zxgame_FLAG_FULL_SCREEN;
 
-  wimp_set_mode(desktopmode);
+  os_restore_cursors();
+  restore_desktop_mode();
 }
 
 // vim: ts=8 sts=2 sw=2 et
