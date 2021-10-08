@@ -71,7 +71,6 @@ fi
 cd $scriptdir
 
 # The Great Escape
-cd ${scriptdir}/platform/riscos
-mkdir -p build && cd build
-cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=${APPENGINE_ROOT}/cmake/riscos.cmake ../../../ || bash -i
+mkdir -p build-riscos && cd build-riscos
+cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=${APPENGINE_ROOT}/cmake/riscos.cmake .. || bash -i
 ninja install || bash -i
