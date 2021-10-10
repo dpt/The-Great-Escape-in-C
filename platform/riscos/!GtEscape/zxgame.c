@@ -116,7 +116,21 @@ typedef int fix16_t;
 #define zxgame_FLAG_HAVE_SOUND  (1u << 10) /* sound is available */
 #define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is required */
 #define zxgame_FLAG_WIDE_CTRANS (1u << 12) /* use wide ColourTrans table */
-#define zxgame_FLAG_FULL_SCREEN (1u << 13) /* in full-screen mode */
+#define zxgame_FLAG_FULL_SCREEN (1u << 13) /* full-screen mode active */
+#define zxgame_FLAG_GO_FULL_SCR (1u << 14) /* full-screen mode requested */
+
+/* ----------------------------------------------------------------------- */
+
+static struct
+{
+  /* This ought to be a sig_atomic_t, not int, but GCCSDK isn't finding that
+   * symbol... */
+  volatile int  escape_pressed;
+
+  os_mode       desktop_mode;
+  int           desktop_mode_selector[32];
+}
+LOCALS;
 
 /* ----------------------------------------------------------------------- */
 
@@ -383,7 +397,7 @@ static void draw_handler(const zxbox_t *dirty,
     x = zxgame->imgbox.x0;
     y = zxgame->imgbox.y0;
 
-    // TODO: wait for vsync? or not needed in TGE?
+    // TODO: Wait for vsync? Or do we not care for TGE?
 
     clip.x0 = x + (dirty->x0 << GAMEEIG);
     clip.y0 = y + (dirty->y0 << GAMEEIG);
@@ -422,10 +436,11 @@ static int should_quit(const zxgame_t *zxgame)
 
 static int do_sleep(zxgame_t *zxgame, int target_cs)
 {
+  int quit = 0;
+
+  zxgame->flags |= zxgame_FLAG_SLEEPING;
   if ((zxgame->flags & zxgame_FLAG_FULL_SCREEN) == 0)
   {
-    int quit;
-
     do
     {
       poll_set_target(target_cs);
@@ -433,16 +448,15 @@ static int do_sleep(zxgame_t *zxgame, int target_cs)
       quit = should_quit(zxgame);
     }
     while (!quit && os_read_monotonic_time() < target_cs);
-
-    return quit;
   }
   else
   {
-    while (os_read_monotonic_time() < target_cs)
-      (void) xportable_idle(); // ok to call when portable isn't around (e.g. RPCEmu)
-
-    return 0;
+    while (!LOCALS.escape_pressed && os_read_monotonic_time() < target_cs)
+      /* This is ok to call when the Portable module isn't around */
+      (void) xportable_idle();
   }
+  zxgame->flags &= ~zxgame_FLAG_SLEEPING;
+  return quit;
 }
 
 /* Game callback. */
@@ -459,25 +473,6 @@ static int sleep_handler(int durationTStates, void *opaque)
 
   if (should_quit(zxgame))
     return 1;
-
-  /* Handle pausing. */
-  if ((zxgame->flags & zxgame_FLAG_PAUSED) != 0)
-  {
-    os_t target_cs;
-    int  quit;
-    int  paused;
-
-    do
-    {
-      target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
-      quit = do_sleep(zxgame, target_cs);
-      paused = (zxgame->flags & zxgame_FLAG_PAUSED) != 0;
-    }
-    while (!quit && paused && os_read_monotonic_time() < target_cs);
-
-    if (quit)
-      return 1;
-  }
 
   /* Handle actual sleeping. */
   {
@@ -510,9 +505,7 @@ static int sleep_handler(int durationTStates, void *opaque)
       now_cs    = os_read_monotonic_time();
       target_cs = now_cs + (os_t) (sleep_s * 100.0f); /* sec -> centisec */
       //fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
-      zxgame->flags |= zxgame_FLAG_SLEEPING;
       (void) do_sleep(zxgame, target_cs);
-      zxgame->flags &= ~zxgame_FLAG_SLEEPING;
     }
   }
 
@@ -917,7 +910,10 @@ static void action(action_t action)
       break;
 
     case FullScreen:
-      fullscreen(zxgame);
+      /* If we started full screen mode here then we'd risk re-entering the
+       * game code, so instead set a flag which will activate full screen mode
+       * when there's no risk of that happening. */
+      zxgame->flags |= zxgame_FLAG_GO_FULL_SCR;
       break;
 
     case ToggleMonochrome:
@@ -1014,6 +1010,17 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
     return event_HANDLED;
   }
 
+  /* When we're not sleeping (i.e. the game code is not entered) then we're
+   * ready to activate full screen mode. */
+  if ((zxgame->flags & (zxgame_FLAG_SLEEPING | zxgame_FLAG_GO_FULL_SCR)) == zxgame_FLAG_GO_FULL_SCR)
+  {
+    fullscreen(zxgame);
+    zxgame->flags &= ~zxgame_FLAG_GO_FULL_SCR;
+    return event_PASS_ON;
+  }
+
+  emit_sound(zxgame);
+
   /* Paused flag set => Game is paused by the user.
    * Sleeping flag set => Game is idling until next run. */
   if (zxgame->flags & (zxgame_FLAG_PAUSED | zxgame_FLAG_SLEEPING))
@@ -1031,8 +1038,6 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
   {
     tge_main(zxgame->tge);
   }
-
-  emit_sound(zxgame);
 
   return event_PASS_ON;
 }
@@ -1706,7 +1711,7 @@ result_t zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
     &speaker_handler
   };
 
-  result_t      err      = result_OK;
+  result_t   err      = result_OK;
   zxgame_t  *zxgame   = NULL;
   size_t     sprareasz;
   zxconfig_t zxconfig = zxconfigconsts;
@@ -1969,43 +1974,39 @@ void zxgame_fin(void)
 
 /* ----------------------------------------------------------------------- */
 
-/* This ought to be a sig_atomic_t, not int, but GCCSDK isn't finding that
- * symbol... */
-static volatile int escape_pressed;
-
 static void escape_handler(int type)
 {
-  escape_pressed = 1;
-}
+  LOCALS.escape_pressed = 1;
 
-static os_mode desktop_mode;
-static int     desktop_mode_selector[32];
+  // Might need to signal(SIGINT, ...) again here otherwise if the game
+  // doesn't react fast enough the process will be terminated.
+}
 
 static void save_desktop_mode(void)
 {
   const int *pair;
   int        len;
 
-  desktop_mode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
-  if ((int) desktop_mode < 128)
+  LOCALS.desktop_mode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
+  if ((int) LOCALS.desktop_mode < 128)
     return;
 
   /* Calculate length of desktop's mode selector, in words */
-  pair = &((const int *) desktop_mode)[5];
+  pair = &((const int *) LOCALS.desktop_mode)[5];
   while (*pair != -1)
     pair += 2;
-  len = pair + 1 - (int *) desktop_mode;
+  len = pair + 1 - (int *) LOCALS.desktop_mode;
 
   /* Copy the desktop's mode selector */
-  memcpy(desktop_mode_selector, desktop_mode, len * sizeof(int));
+  memcpy(LOCALS.desktop_mode_selector, LOCALS.desktop_mode, len * sizeof(int));
 }
 
 static void restore_desktop_mode(void)
 {
-  if ((int) desktop_mode < 128)
-    wimp_set_mode(desktop_mode);
+  if ((int) LOCALS.desktop_mode < 128)
+    wimp_set_mode(LOCALS.desktop_mode);
   else
-    wimp_set_mode((os_mode) desktop_mode_selector);
+    wimp_set_mode((os_mode) LOCALS.desktop_mode_selector);
 }
 
 static void fullscreen(zxgame_t *zxgame)
@@ -2015,6 +2016,8 @@ static void fullscreen(zxgame_t *zxgame)
   int         sw,sh;
   int         xeig,yeig,log2bpp;
   void      (*old_escape_handler)(int);
+
+  assert((zxgame->flags & zxgame_FLAG_SLEEPING) == 0);
 
   save_desktop_mode();
 
@@ -2082,29 +2085,36 @@ static void fullscreen(zxgame_t *zxgame)
   zxgame->flags |= zxgame_FLAG_FULL_SCREEN | zxgame_FLAG_FIRST;
 
   /* Setup escape handling */
-  escape_pressed = 0;
+  LOCALS.escape_pressed = 0;
   old_escape_handler = signal(SIGINT, escape_handler);
   osbyte(osbyte_VAR_ESCAPE_STATE, 0, 0); /* enable escape conditions */
 
-  for (;;)
+  while (!LOCALS.escape_pressed)
   {
-    if (escape_pressed)
-      break;
+    emit_sound(zxgame);
 
-    if (zxgame->flags & zxgame_FLAG_MENU)
+    if (zxgame->flags & zxgame_FLAG_PAUSED)
     {
-      if (tge_menu(zxgame->tge) > 0)
-      {
-        tge_setup2(zxgame->tge);
-        zxgame->flags &= ~zxgame_FLAG_MENU;
-      }
+      os_t target_cs;
+
+      target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
+      (void) do_sleep(zxgame, target_cs);
     }
     else
     {
-      tge_main(zxgame->tge);
+      if (zxgame->flags & zxgame_FLAG_MENU)
+      {
+        if (tge_menu(zxgame->tge) > 0)
+        {
+          tge_setup2(zxgame->tge);
+          zxgame->flags &= ~zxgame_FLAG_MENU;
+        }
+      }
+      else
+      {
+        tge_main(zxgame->tge);
+      }
     }
-
-    emit_sound(zxgame);
   }
 
   /* Restore escape handling */
