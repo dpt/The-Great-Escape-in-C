@@ -747,7 +747,7 @@ static void speaker_handler(int on_off, void *opaque)
 {
   const unsigned int SOUNDFLAGS = zxgame_FLAG_HAVE_SOUND | zxgame_FLAG_SOUND_ON;
 
-  result_t         err;
+  result_t      err;
   zxgame_t     *zxgame = opaque;
   unsigned int  bits;
 
@@ -1978,8 +1978,10 @@ static void escape_handler(int type)
 {
   LOCALS.escape_pressed = 1;
 
-  // Might need to signal(SIGINT, ...) again here otherwise if the game
-  // doesn't react fast enough the process will be terminated.
+  /* The signal handler will evaporate once used, so install another in case
+   * that escape events arrive too quickly for us to cope with and we're
+   * brutally escaped to death. */
+  signal(SIGINT, escape_handler);
 }
 
 static void save_desktop_mode(void)
