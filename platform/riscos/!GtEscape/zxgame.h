@@ -32,15 +32,13 @@ result_t zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name);
 enum
 {
   zxgame_UPDATE_COLOURS = 1 << 0, /* regenerate pixtrans */
-  zxgame_UPDATE_SCALING = 1 << 2, /* game scale factor has changed */
+  zxgame_UPDATE_SCALING = 1 << 2, /* regenerate imgbox and factors */
   zxgame_UPDATE_EXTENT  = 1 << 4, /* ok to move windows */
-  zxgame_UPDATE_WINDOW  = 1 << 6, /* window dimensions have changed */
   zxgame_UPDATE_REDRAW  = 1 << 8, /* redraw the whole window */
 
   zxgame_UPDATE_ALL     = zxgame_UPDATE_COLOURS |
                           zxgame_UPDATE_SCALING |
                           zxgame_UPDATE_EXTENT  |
-                          zxgame_UPDATE_WINDOW  |
                           zxgame_UPDATE_REDRAW
 };
 

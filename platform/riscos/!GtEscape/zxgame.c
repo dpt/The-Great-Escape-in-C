@@ -175,7 +175,7 @@ struct zxgame
   int                   xscroll, yscroll;
 
   os_box                extent; /* Extent of window w */
-  os_box                imgbox; /* Ewhere to draw the image, positioned within the window extent */
+  os_box                imgbox; /* Where to draw the image, positioned within the window extent */
 
   struct
   {
@@ -873,8 +873,6 @@ static void action(action_t action)
 {
   zxgame_t *zxgame = GLOBALS.current_zxgame;
 
-  // TODO: Narrow these update flags down where possible.
-
   switch (action)
   {
     case SelectFixedScale:
@@ -905,14 +903,14 @@ static void action(action_t action)
         zxgame->yscroll  = state.yscroll;
 
         zxgame->flags |= zxgame_FLAG_FIT;
-        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
+        zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
       }
       break;
 
     case ToggleSnapToPixels:
       zxgame->flags ^= zxgame_FLAG_SNAP;
       if (zxgame->flags & zxgame_FLAG_FIT)
-        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+        zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_REDRAW);
       break;
 
     case FullScreen:
@@ -1092,7 +1090,7 @@ static int zxgame_event_open_window_request(wimp_event_no event_no,
       zxgame->xscroll  = open->xscroll;
       zxgame->yscroll  = open->yscroll;
 
-      zxgame_update(zxgame, zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
+      zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_REDRAW);
     }
 
     /* Inhibit scrolling. */
@@ -1461,9 +1459,7 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
   if (flags & zxgame_UPDATE_COLOURS)
     gentranstab(zxgame);
 
-
-  // put if (scaling/extent/window) ... around this big block
-
+  if (flags & (zxgame_UPDATE_EXTENT | zxgame_UPDATE_SCALING))
   {
     const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
     const int border = zxgame->border_size; /* pixels */
@@ -1565,7 +1561,7 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
         zxgame->extent.y1 = 0;
       }
 
-      if (flags & zxgame_UPDATE_WINDOW)
+      if (flags & zxgame_UPDATE_SCALING)
       {
         int     reduced_border_x, reduced_border_y;
         int     games_per_window;
@@ -1792,7 +1788,7 @@ result_t zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
   {
     tge_setup2(zxgame->tge);
     zxgame->flags &= ~zxgame_FLAG_MENU;
-    zxgame_load_game(zxgame, startup_game); // fixme errs
+    zxgame_load_game(zxgame, startup_game); // FIXME Errs
   }
 #endif
 
