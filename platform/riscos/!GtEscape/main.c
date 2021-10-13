@@ -220,7 +220,7 @@ static int kick_update_event_null_reason_code(wimp_event_no event_no,
                                 kick_update_event_null_reason_code,
                                 NULL);
 
-  return event_HANDLED;
+  return event_PASS_ON;
 }
 
 static int message_mode_change(wimp_message *message, void *handle)
