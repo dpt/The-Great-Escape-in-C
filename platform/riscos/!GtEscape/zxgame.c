@@ -464,7 +464,9 @@ static int sleep_handler(int durationTStates, void *opaque)
 {
   zxgame_t *zxgame = opaque;
 
-  //fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
+#ifdef DEBUG
+  fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
+#endif
 
   /* Unstack timestamps. */
   assert(zxgame->nstamps > 0);
@@ -492,7 +494,9 @@ static int sleep_handler(int durationTStates, void *opaque)
     then = &zxgame->stamps[zxgame->nstamps];
     read_timer(&now);
     consumed_s = diff_timer(&now, then);
-    //fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
+#ifdef DEBUG
+    fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
+#endif
 
     /* How much remains? */
     sleep_s = duration_s - consumed_s;
@@ -504,7 +508,9 @@ static int sleep_handler(int durationTStates, void *opaque)
 
       now_cs    = os_read_monotonic_time();
       target_cs = now_cs + (os_t) (sleep_s * 100.0f); /* sec -> centisec */
-      //fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
+#ifdef DEBUG
+      fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
+#endif
       (void) do_sleep(zxgame, target_cs);
     }
   }
