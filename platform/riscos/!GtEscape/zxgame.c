@@ -2088,6 +2088,10 @@ static void fullscreen(zxgame_t *zxgame)
    * drawn (otherwise we'd just do partial updates). */
   zxgame->flags |= zxgame_FLAG_FULL_SCREEN | zxgame_FLAG_FIRST;
 
+  /* Draw the screen in case we're paused. */
+  if (zxgame->flags & zxgame_FLAG_PAUSED)
+    draw_handler(NULL, zxgame);
+
   /* Setup escape handling */
   LOCALS.escape_pressed = 0;
   old_escape_handler = signal(SIGINT, escape_handler);
