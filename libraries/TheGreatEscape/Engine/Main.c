@@ -3685,8 +3685,7 @@ void searchlight_movement(searchlight_movement_t *slstate)
 }
 
 /**
- * $ADBD: Turns white screen elements light blue and tracks the hero with a
- * searchlight.
+ * $ADBD: Tracks the hero with a searchlight.
  *
  * \param[in] state Pointer to game state.
  */
@@ -7703,7 +7702,6 @@ void charevnt_hero_sleeps(tgestate_t *state, route_t *route)
  *
  * Causes characters to follow the hero if he's being suspicious.
  * Also: Food item discovery.
- * Also: Automatic hero behaviour.
  *
  * \param[in] state Pointer to game state.
  */
