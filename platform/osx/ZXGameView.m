@@ -209,9 +209,9 @@ failure:
   zxspectrum_destroy(zx);
 }
 
-- (void)reshape
+- (void)update
 {
-  [super reshape];
+  [super update];
   doSetupDrawing = YES;
 }
 
