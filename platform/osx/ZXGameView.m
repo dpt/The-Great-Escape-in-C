@@ -527,6 +527,10 @@ failure:
   baseRect = [self bounds];
   viewSize = baseRect.size;
 
+  CGFloat screenScale = self.window.screen.backingScaleFactor ?: 1;
+  viewSize.width *= screenScale;
+  viewSize.height *= screenScale;
+  
   // How many 1:1 game windows fit comfortably into the view?
   // Try to fit while reducing the border if the view is very small
   reducedBorder = borderSize;
