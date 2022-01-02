@@ -108,7 +108,7 @@ zxbox_t;
  */
 typedef struct zxscreen
 {
-  int         width, height;
+  int         width, height; /* columns, rows */
   uint8_t     pixels[SCREEN_BITMAP_LENGTH];
   attribute_t attributes[SCREEN_ATTRIBUTES_LENGTH];
 }

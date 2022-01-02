@@ -19,9 +19,6 @@
 
 @property (nonatomic, retain) id<ZXGameViewDelegate> delegate;
 
-/// Current game scale factor
-@property (nonatomic, readonly) CGFloat scale;
-
 #ifdef TGE_SAVES
 - (IBAction)saveDocumentAs:(id)sender;
 #endif /* TGE_SAVES */
@@ -37,7 +34,8 @@
 - (IBAction)toggleSnap:(id)sender;
 - (IBAction)toggleSound:(id)sender;
 
-- (void)getGameWidth:(int *)width height:(int *)height border:(int *)border;
+- (void)getDefaultViewSize:(CGSize *)size border:(int *)border;
+- (void)getSuggestedViewSize:(CGSize *)size border:(int *)border forSize:(CGSize)maximum direction:(int)direction;
 
 @end
 
