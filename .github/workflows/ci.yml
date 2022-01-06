@@ -16,5 +16,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Compile The Great Escape
+      - name: Compile The Great Escape (via xcodebuild)
         run: xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData build
+
+  macos-cmake-build:
+    runs-on: macos-10.15
+    steps:
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - uses: actions/checkout@v2
+
+      - name: Compile The Great Escape (via CMake)
+        run: |
+          mkdir -p build && cd build
+          cmake -GNinja ..
+          cmake --build .

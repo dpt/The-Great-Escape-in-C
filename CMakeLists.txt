@@ -2,10 +2,10 @@
 #
 # The Great Escape
 #
-# Copyright (c) David Thomas, 2017-2020
+# Copyright (c) David Thomas, 2017-2022
 #
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -39,12 +39,13 @@ endif()
 
 if(TGE_SAVES)
   set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
+  set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
+  set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
   ExternalProject_Add(zerotape 
       GIT_REPOSITORY https://github.com/dpt/zerotape/
       GIT_TAG 0.3.0
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR})
-  set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
-  set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR}
+      BUILD_BYPRODUCTS ${ZEROTAPE_LIB})
 endif()
 
 
