@@ -6,7 +6,7 @@ name: The Great Escape
 
 on:
   push:
-    branches: [macos-ci]
+    branches: [master]
   pull_request:
     branches: [master]
 
