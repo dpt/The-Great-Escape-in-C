@@ -2,7 +2,7 @@
 #
 # The Great Escape in C
 #
-# Copyright (c) David Thomas, 2017-2021
+# Copyright (c) David Thomas, 2017-2022
 #
 # vim: sw=4 ts=8 et
 

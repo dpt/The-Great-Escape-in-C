@@ -74,6 +74,7 @@
   pthread_t       thread;
 
   BOOL            doSetupDrawing;
+  CGFloat         scale;
   int             borderSize;
   BOOL            snap;
   BOOL            monochromatic;
@@ -112,8 +113,6 @@
 
   // -- End of variables accessed from game thread must be @synchronized
 }
-
-@property (nonatomic, readwrite) CGFloat scale;
 
 @end
 
@@ -188,7 +187,7 @@
 
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
 
-  _scale          = 1.0;
+  scale           = 1.0;
 
 
   zx = zxspectrum_create(&zxconfig);
@@ -209,9 +208,9 @@ failure:
   zxspectrum_destroy(zx);
 }
 
-- (void)reshape
+- (void)update
 {
-  [super reshape];
+  [super update];
   doSetupDrawing = YES;
 }
 
@@ -527,6 +526,11 @@ failure:
   baseRect = [self bounds];
   viewSize = baseRect.size;
 
+  // Cope with retina screens
+  CGFloat screenScale = self.window.screen.backingScaleFactor ?: 1;
+  viewSize.width  *= screenScale;
+  viewSize.height *= screenScale;
+  
   // How many 1:1 game windows fit comfortably into the view?
   // Try to fit while reducing the border if the view is very small
   reducedBorder = borderSize;
@@ -542,13 +546,13 @@ failure:
   // Snap the game scale to whole units
   if (gamesPerView > 1.0 && snap)
   {
-      const CGFloat snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
-      gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
+    const CGFloat snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
+    gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
   }
 
   drawWidth  = gameSize.width  * gamesPerView;
   drawHeight = gameSize.height * gamesPerView;
-  _scale = gamesPerView;
+  scale = gamesPerView;
 
   // Centre the game within the view (note that conversion to int floors the values)
   xOffset = (viewSize.width  - drawWidth)  / 2;
@@ -573,7 +577,7 @@ failure:
   // Note: NSOpenGLViews would appear to never receive a graphics context, so
   // we must draw exclusively in terms of GL ops.
 
-  if (_scale == 0.0)
+  if (scale <= 0.0)
     return;
 
   if (doSetupDrawing)
@@ -582,8 +586,8 @@ failure:
     doSetupDrawing = NO;
   }
 
-  GLfloat zsx =  _scale;
-  GLfloat zsy = -_scale;
+  GLfloat zsx =  scale;
+  GLfloat zsy = -scale;
 
   (void) dirtyRect;
 
@@ -914,13 +918,49 @@ static void speaker_handler(int on_off, void *opaque)
 
 #pragma mark - Queries
 
-- (void)getGameWidth:(int *)width height:(int *)height border:(int *)border
+- (void)getDefaultViewSize:(CGSize *)size border:(int *)border
 {
   assert(zx);
 
-  *width  = zx->screen.width  * 8;
-  *height = zx->screen.height * 8;
-  *border = borderSize;
+  size->width  = zx->screen.width  * 8;
+  size->height = zx->screen.height * 8;
+  *border      = borderSize;
+}
+
+- (void)getSuggestedViewSize:(CGSize *)size border:(int *)border forSize:(CGSize)maxSizePoints direction:(int)direction
+{
+  static const CGFloat scales[] = { 0.125, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
+  const int            nscales  = (int) (sizeof(scales) / sizeof(scales[0]));
+
+  int     game_w_px,game_h_px;
+  CGFloat minscale;
+  int     i;
+  int     w_pt,h_pt;
+  CGFloat scaleFactor;
+
+  assert(zx);
+
+  direction = MIN(MAX(direction, -1), 1); // clamp
+
+  game_w_px = zx->screen.width  * 8;
+  game_h_px = zx->screen.height * 8;
+
+  minscale = MIN(maxSizePoints.width / game_w_px, maxSizePoints.height / game_h_px);
+  for (i = 0; i < nscales; i++)
+    if (scales[i] > minscale)
+    {
+      i--;
+      break;
+    }
+  i = MIN(MAX(i + direction, 0), nscales - 1); // clamp
+  scaleFactor = scales[i];
+
+  w_pt = game_w_px * scaleFactor;
+  h_pt = game_h_px * scaleFactor;
+
+  size->width  = w_pt;
+  size->height = h_pt;
+  *border = borderSize; // doesn't scale
 }
 
 // -----------------------------------------------------------------------------
