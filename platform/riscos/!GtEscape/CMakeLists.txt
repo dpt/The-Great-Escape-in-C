@@ -190,7 +190,7 @@ endif()
 #
 
 # (force this for now)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/install" CACHE PATH "CMake install prefix" FORCE)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "CMake install prefix" FORCE)
 set(INSTALL_APPDIR ${CMAKE_INSTALL_PREFIX}/Apps/Games/!GtEscape)
 
 install(TARGETS GtEscape RUNTIME
