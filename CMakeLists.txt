@@ -44,9 +44,13 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+endif()
 
 set_property(GLOBAL PROPERTY C_STANDARD 90)
 
