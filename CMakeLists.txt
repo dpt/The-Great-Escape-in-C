@@ -24,7 +24,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(ExternalProject)
 
 
-project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C)
+project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
 
 set(DESCRIPTION "The Great Escape")
 set(AUTHOR "David Thomas")
@@ -87,7 +87,7 @@ if(APPLE)
     add_subdirectory(platform/osx)
 elseif(TARGET_RISCOS)
     add_subdirectory(platform/riscos/!GtEscape)
-elseif(WIN32)
+elseif(MSVC)
     add_subdirectory(platform/windows)
 else()
     add_subdirectory(platform/generic)
