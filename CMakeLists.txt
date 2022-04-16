@@ -69,7 +69,11 @@ endif()
 if(TGE_SAVES)
     set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
     set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
-    set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
+    if(MSVC)
+        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/zerotape.lib)
+    else()
+        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
+    endif()
     # BUILD_BYPRODUCTS must be specified in this command otherwise ninja won't
     # know when to build zerotape.
     ExternalProject_Add(zerotape
