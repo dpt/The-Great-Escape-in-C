@@ -76,7 +76,7 @@ target_include_directories(TheGreatEscape
     include/)
 
 if(MSVC)
-    target_compile_definitions(TheGreatEscape PRIVATE TGE_BUILD_STATIC)
+    target_compile_definitions(TheGreatEscape PUBLIC TGE_BUILD_STATIC)
 endif()
 
 if(TGE_SAVES)
