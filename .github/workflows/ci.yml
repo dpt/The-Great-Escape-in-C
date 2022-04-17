@@ -9,13 +9,34 @@ name: The Great Escape
 #   * any tag.
 on:
   push:
-    branches: ["risc-os-saves"] # temporary - replace with * when merged to master
+    branches: ["risc-os-saves","windows-cmake"] # temporary - replace with * when merged to master
     tags: ["*"]
   # Pull request events happen on pull request state transitions, so we probably don't want this here.
   #pull_request:
   #  branches: ["*"]
 
 jobs:
+  windows-cmake-build:
+    runs-on: windows-latest
+    steps:
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - uses: actions/checkout@v2
+      
+      - name: Compile The Great Escape (via CMake) 1
+        run: |
+          cmake -E make_directory ${{github.workspace}}\build
+      - name: Compile The Great Escape (via CMake) 2
+        run: |
+          cd ${{github.workspace}}\build
+      - name: Compile The Great Escape (via CMake) 3
+        run: |
+          cmake ${{github.workspace}}
+      - name: Compile The Great Escape (via CMake) 4
+        run: |
+          cmake --build .
+
   macos-build:
     runs-on: macos-10.15
     steps:

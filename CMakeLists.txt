@@ -24,7 +24,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(ExternalProject)
 
 
-project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C)
+project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
 
 set(DESCRIPTION "The Great Escape")
 set(AUTHOR "David Thomas")
@@ -44,9 +44,13 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+endif()
 
 set_property(GLOBAL PROPERTY C_STANDARD 90)
 
@@ -65,12 +69,16 @@ endif()
 if(TGE_SAVES)
     set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
     set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
-    set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
+    if(MSVC)
+        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/zerotape.lib)
+    else()
+        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
+    endif()
     # BUILD_BYPRODUCTS must be specified in this command otherwise ninja won't
     # know when to build zerotape.
     ExternalProject_Add(zerotape
         GIT_REPOSITORY https://github.com/dpt/zerotape
-        GIT_TAG 0.5.0
+        GIT_TAG 0.6.0
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
         BUILD_BYPRODUCTS ${ZEROTAPE_LIB})
 endif()
@@ -83,7 +91,7 @@ if(APPLE)
     add_subdirectory(platform/osx)
 elseif(TARGET_RISCOS)
     add_subdirectory(platform/riscos/!GtEscape)
-elseif(WIN32)
+elseif(MSVC)
     add_subdirectory(platform/windows)
 else()
     add_subdirectory(platform/generic)

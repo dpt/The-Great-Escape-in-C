@@ -75,6 +75,10 @@ target_include_directories(TheGreatEscape
     PRIVATE
     include/)
 
+if(MSVC)
+    target_compile_definitions(TheGreatEscape PUBLIC TGE_BUILD_STATIC)
+endif()
+
 if(TGE_SAVES)
     target_sources(TheGreatEscape PRIVATE Extend/Save.c)
     target_compile_definitions(TheGreatEscape PRIVATE TGE_SAVES)

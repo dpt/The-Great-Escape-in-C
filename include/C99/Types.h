@@ -8,7 +8,7 @@
 #ifndef C99_TYPES_H
 #define C99_TYPES_H
 
-#if __STDC_VERSION__ >= 199901
+#if __STDC_VERSION__ >= 199901 || defined(_MSC_VER)
 #include <stdint.h>
 #else
 typedef signed   char  int8_t;
