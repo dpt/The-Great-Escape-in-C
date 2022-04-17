@@ -9,7 +9,7 @@ name: The Great Escape
 #   * any tag.
 on:
   push:
-    branches: ["risc-os-saves","windows-cmake"] # temporary - replace with * when merged to master
+    branches: ["*"]
     tags: ["*"]
   # Pull request events happen on pull request state transitions, so we probably don't want this here.
   #pull_request:
@@ -24,17 +24,11 @@ jobs:
 
       - uses: actions/checkout@v2
       
-      - name: Compile The Great Escape (via CMake) 1
+      - name: Compile The Great Escape for Windows (via CMake)
         run: |
           cmake -E make_directory ${{github.workspace}}\build
-      - name: Compile The Great Escape (via CMake) 2
-        run: |
           cd ${{github.workspace}}\build
-      - name: Compile The Great Escape (via CMake) 3
-        run: |
           cmake ${{github.workspace}}
-      - name: Compile The Great Escape (via CMake) 4
-        run: |
           cmake --build .
 
   macos-build:
@@ -42,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Compile The Great Escape (via xcodebuild)
+      - name: Compile The Great Escape for macOS (via xcodebuild)
         run: xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData build
 
   macos-cmake-build:
@@ -53,7 +47,7 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - name: Compile The Great Escape (via CMake)
+      - name: Compile The Great Escape for macOS (via CMake)
         run: |
           mkdir -p build && cd build
           cmake -GNinja ..
@@ -74,7 +68,7 @@ jobs:
       - uses: actions/checkout@v2
 
       # Step intended to be reused in CI pipelines.
-      - name: Cross compile The Great Escape
+      - name: Cross compile The Great Escape for RISC OS
         run: |
           apt-get update
           apt-get install -y ca-certificates
