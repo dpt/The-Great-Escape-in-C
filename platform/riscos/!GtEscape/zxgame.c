@@ -9,18 +9,27 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "oslib/types.h"
+#include "fortify/fortify.h"
+
 #include "oslib/colourtrans.h"
+#include "oslib/hourglass.h"
 #include "oslib/os.h"
 #include "oslib/osbyte.h"
 #include "oslib/osfile.h"
 #include "oslib/osspriteop.h"
+#include "oslib/portable.h"
+#include "oslib/types.h"
 #include "oslib/wimp.h"
 #include "oslib/wimpreadsysinfo.h"
+
+#include "datastruct/bitfifo.h"
+#include "datastruct/list.h"
+#include "geom/box.h"
 
 #include "appengine/types.h"
 #include "appengine/base/bitwise.h"
@@ -29,9 +38,7 @@
 #include "appengine/base/os.h"
 #include "appengine/base/oserror.h"
 #include "appengine/base/strings.h"
-#include "appengine/datastruct/list.h"
 #include "appengine/dialogues/scale.h"
-#include "appengine/geom/box.h"
 #include "appengine/vdu/screen.h"
 #include "appengine/vdu/sprite.h"
 #include "appengine/wimp/event.h"
@@ -47,7 +54,6 @@
 #include "TheGreatEscape/TheGreatEscape.h"
 
 #include "globals.h"
-#include "bitfifo.h"
 #include "menunames.h"
 #include "poll.h"
 #include "ssbuffer.h"
@@ -110,6 +116,21 @@ typedef int fix16_t;
 #define zxgame_FLAG_HAVE_SOUND  (1u << 10) /* sound is available */
 #define zxgame_FLAG_SOUND_ON    (1u << 11) /* sound is required */
 #define zxgame_FLAG_WIDE_CTRANS (1u << 12) /* use wide ColourTrans table */
+#define zxgame_FLAG_FULL_SCREEN (1u << 13) /* full-screen mode active */
+#define zxgame_FLAG_GO_FULL_SCR (1u << 14) /* full-screen mode requested */
+
+/* ----------------------------------------------------------------------- */
+
+static struct
+{
+  /* This ought to be a sig_atomic_t, not int, but GCCSDK isn't finding that
+   * symbol... */
+  volatile int  escape_pressed;
+
+  os_mode       desktop_mode;
+  int           desktop_mode_selector[32];
+}
+LOCALS;
 
 /* ----------------------------------------------------------------------- */
 
@@ -154,7 +175,7 @@ struct zxgame
   int                   xscroll, yscroll;
 
   os_box                extent; /* Extent of window w */
-  os_box                imgbox; /* Ewhere to draw the image, positioned within the window extent */
+  os_box                imgbox; /* Where to draw the image, positioned within the window extent */
 
   struct
   {
@@ -337,7 +358,10 @@ static void draw_handler(const zxbox_t *dirty,
   zxspectrum_release_screen(zxgame->zx);
 
   /* Convert the dirty region into work area coordinates. */
+  if ((zxgame->flags & zxgame_FLAG_FULL_SCREEN) == 0)
   {
+    /* Desktop mode */
+
     int       x0, y0;
     scale_t   scale;
     wimp_draw draw;
@@ -354,6 +378,41 @@ static void draw_handler(const zxbox_t *dirty,
     draw.box.y1 = y0 + (dirty->y1 << GAMEEIG) * scale / SCALE_1;
     snapbox2px(&draw.box);
     redrawfn(zxgame, &draw, wimp_update_window(&draw));
+  }
+  else
+  {
+    /* Full-screen mode */
+
+    osspriteop_action action;
+    osspriteop_id     id;
+    int               x,y;
+    os_box            clip;
+
+    action = os_ACTION_OVERWRITE;
+    if (zxgame->flags & zxgame_FLAG_WIDE_CTRANS)
+      action |= osspriteop_GIVEN_WIDE_ENTRIES;
+
+    id = (osspriteop_id) sprite_select(zxgame->sprite, 0);
+
+    x = zxgame->imgbox.x0;
+    y = zxgame->imgbox.y0;
+
+    // TODO: Wait for vsync? Or do we not care for TGE?
+
+    clip.x0 = x + (dirty->x0 << GAMEEIG);
+    clip.y0 = y + (dirty->y0 << GAMEEIG);
+    clip.x1 = x + (dirty->x1 << GAMEEIG);
+    clip.y1 = y + (dirty->y1 << GAMEEIG);
+    snapbox2px(&clip);
+    screen_clip(&clip);
+
+    osspriteop_put_sprite_scaled(osspriteop_PTR,
+                                 zxgame->sprite,
+                                 id,
+                                 x,y,
+                                 action,
+                                &zxgame->factors,
+                                 zxgame->trans_tab);
   }
 }
 
@@ -375,12 +434,39 @@ static int should_quit(const zxgame_t *zxgame)
          (zxgame->flags & zxgame_FLAG_QUIT) != 0;
 }
 
+static int do_sleep(zxgame_t *zxgame, int target_cs)
+{
+  int quit = 0;
+
+  zxgame->flags |= zxgame_FLAG_SLEEPING;
+  if ((zxgame->flags & zxgame_FLAG_FULL_SCREEN) == 0)
+  {
+    do
+    {
+      poll_set_target(target_cs);
+      poll();
+      quit = should_quit(zxgame);
+    }
+    while (!quit && os_read_monotonic_time() < target_cs);
+  }
+  else
+  {
+    while (!LOCALS.escape_pressed && os_read_monotonic_time() < target_cs)
+      /* This is ok to call when the Portable module isn't around */
+      (void) xportable_idle();
+  }
+  zxgame->flags &= ~zxgame_FLAG_SLEEPING;
+  return quit;
+}
+
 /* Game callback. */
 static int sleep_handler(int durationTStates, void *opaque)
 {
   zxgame_t *zxgame = opaque;
 
-  //fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
+#ifdef DEBUG
+  fprintf(stderr, "sleep @ %d (os_mono)\n", os_read_monotonic_time());
+#endif
 
   /* Unstack timestamps. */
   assert(zxgame->nstamps > 0);
@@ -389,27 +475,6 @@ static int sleep_handler(int durationTStates, void *opaque)
 
   if (should_quit(zxgame))
     return 1;
-
-  /* Handle pausing. */
-  if ((zxgame->flags & zxgame_FLAG_PAUSED) != 0)
-  {
-    os_t target_cs;
-    int  quit;
-    int  paused;
-
-    do
-    {
-      target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
-      poll_set_target(target_cs);
-      poll();
-      quit = should_quit(zxgame);
-      paused = (zxgame->flags & zxgame_FLAG_PAUSED) != 0;
-    }
-    while (!quit && paused && os_read_monotonic_time() < target_cs);
-
-    if (quit)
-      return 1;
-  }
 
   /* Handle actual sleeping. */
   {
@@ -429,7 +494,9 @@ static int sleep_handler(int durationTStates, void *opaque)
     then = &zxgame->stamps[zxgame->nstamps];
     read_timer(&now);
     consumed_s = diff_timer(&now, then);
-    //fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
+#ifdef DEBUG
+    fprintf(stderr, "consumed(sec)=%f, duration(sec)=%f\n", consumed_s, duration_s);
+#endif
 
     /* How much remains? */
     sleep_s = duration_s - consumed_s;
@@ -438,20 +505,13 @@ static int sleep_handler(int durationTStates, void *opaque)
       /* If we need to sleep then delay here by polling the Wimp. */
 
       os_t now_cs, target_cs;
-      int  quit;
 
       now_cs    = os_read_monotonic_time();
       target_cs = now_cs + (os_t) (sleep_s * 100.0f); /* sec -> centisec */
-      //fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
-      zxgame->flags |= zxgame_FLAG_SLEEPING;
-      do
-      {
-        poll_set_target(target_cs);
-        poll();
-        quit = should_quit(zxgame);
-      }
-      while (!quit && os_read_monotonic_time() < target_cs);
-      zxgame->flags &= ~zxgame_FLAG_SLEEPING;
+#ifdef DEBUG
+      fprintf(stderr, "sleep(sec)=%f now(csec)=%d target(csec)=%d\n", sleep_s, now_cs, target);
+#endif
+      (void) do_sleep(zxgame, target_cs);
     }
   }
 
@@ -573,7 +633,7 @@ static void border_handler(int colour, void *opaque)
     default: c = os_COLOUR_ORANGE;  break;
   }
 
-  zxgame->background.colour = colour;
+  zxgame->background.colour = c;
 
   zxgame_update(zxgame, zxgame_UPDATE_REDRAW);
 }
@@ -586,26 +646,26 @@ static result_t setup_sound(zxgame_t *zxgame)
   if ((zxgame->flags & zxgame_FLAG_HAVE_SOUND) == 0)
   {
     zxgame->flags &= ~zxgame_FLAG_SOUND_ON; /* ensure sound deselected */
-    return error_NOT_SUPPORTED; /* no sound hardware */
+    return result_NOT_SUPPORTED; /* no sound hardware */
   }
 
   if ((zxgame->flags & zxgame_FLAG_SOUND_ON) == 0)
-    return error_NOT_SUPPORTED; /* not requested */
+    return result_NOT_SUPPORTED; /* not requested */
 
   if (zxgame->audio.stream != 0)
-    return error_OK; /* already setup */
+    return result_OK; /* already setup */
 
   zxgame->audio.fifo = bitfifo_create(BITFIFO_LENGTH);
   if (zxgame->audio.fifo == NULL)
   {
-     err = error_OOM;
+     err = result_OOM;
      goto Failure;
   }
 
   zxgame->audio.data = malloc(BUFFER_SAMPLES * 4);
   if (zxgame->audio.data == NULL)
   {
-     err = error_OOM;
+     err = result_OOM;
      goto Failure;
   }
 
@@ -615,11 +675,11 @@ static result_t setup_sound(zxgame_t *zxgame)
               &zxgame->audio.stream);
   if (kerr)
   {
-    err = error_OS;
+    err = result_OS;
     goto Failure;
   }
 
-  return error_OK;
+  return result_OK;
 
 
 Failure:
@@ -693,7 +753,7 @@ static void speaker_handler(int on_off, void *opaque)
 {
   const unsigned int SOUNDFLAGS = zxgame_FLAG_HAVE_SOUND | zxgame_FLAG_SOUND_ON;
 
-  error         err;
+  result_t      err;
   zxgame_t     *zxgame = opaque;
   unsigned int  bits;
 
@@ -743,9 +803,9 @@ static void register_handlers(int reg, const zxgame_t *zxgame)
                             zxgame);
 }
 
-static error set_handlers(zxgame_t *zxgame)
+static result_t set_handlers(zxgame_t *zxgame)
 {
-  error err;
+  result_t err;
 
   register_handlers(1, zxgame);
 
@@ -795,8 +855,10 @@ typedef enum action
   Slower,
   TogglePause,
   ToggleSound,
+#ifdef TGE_SAVES
   OpenSaveGame,
   OpenSaveScreenshot,
+#endif
   ZoomOut,
   ZoomIn,
   ToggleZoom,
@@ -805,11 +867,11 @@ typedef enum action
 }
 action_t;
 
+static void fullscreen(zxgame_t *zxgame);
+
 static void action(action_t action)
 {
   zxgame_t *zxgame = GLOBALS.current_zxgame;
-
-  // TODO: Narrow these update flags down where possible.
 
   switch (action)
   {
@@ -841,18 +903,21 @@ static void action(action_t action)
         zxgame->yscroll  = state.yscroll;
 
         zxgame->flags |= zxgame_FLAG_FIT;
-        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
+        zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
       }
       break;
 
     case ToggleSnapToPixels:
       zxgame->flags ^= zxgame_FLAG_SNAP;
       if (zxgame->flags & zxgame_FLAG_FIT)
-        zxgame_update(zxgame, zxgame_UPDATE_EXTENT | zxgame_UPDATE_WINDOW | zxgame_UPDATE_EXTENT | zxgame_UPDATE_REDRAW);
+        zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_REDRAW);
       break;
 
     case FullScreen:
-      // TODO
+      /* If we started full screen mode here then we'd risk re-entering the
+       * game code, so instead set a flag which will activate full screen mode
+       * when there's no risk of that happening. */
+      zxgame->flags |= zxgame_FLAG_GO_FULL_SCR;
       break;
 
     case ToggleMonochrome:
@@ -896,14 +961,16 @@ static void action(action_t action)
       }
       break;
 
+#ifdef TGE_SAVES
     case OpenSaveGame:
-      // TODO
-      // dialogue_show(zxgamesave_dlg);
+      if (zxgame_can_save(zxgame))
+        zxgamesave_show_game();
       break;
 
     case OpenSaveScreenshot:
-      dialogue_show(zxgamesave_dlg);
+      zxgamesave_show_screenshot();
       break;
+#endif
 
     case ZoomOut:
       zxgame_set_scale(zxgame, zxgame_get_scale(zxgame) / 2);
@@ -947,6 +1014,17 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
     return event_HANDLED;
   }
 
+  /* When we're not sleeping (i.e. the game code is not entered) then we're
+   * ready to activate full screen mode. */
+  if ((zxgame->flags & (zxgame_FLAG_SLEEPING | zxgame_FLAG_GO_FULL_SCR)) == zxgame_FLAG_GO_FULL_SCR)
+  {
+    fullscreen(zxgame);
+    zxgame->flags &= ~zxgame_FLAG_GO_FULL_SCR;
+    return event_PASS_ON;
+  }
+
+  emit_sound(zxgame);
+
   /* Paused flag set => Game is paused by the user.
    * Sleeping flag set => Game is idling until next run. */
   if (zxgame->flags & (zxgame_FLAG_PAUSED | zxgame_FLAG_SLEEPING))
@@ -964,8 +1042,6 @@ static int zxgame_event_null_reason_code(wimp_event_no event_no,
   {
     tge_main(zxgame->tge);
   }
-
-  emit_sound(zxgame);
 
   return event_PASS_ON;
 }
@@ -1014,7 +1090,7 @@ static int zxgame_event_open_window_request(wimp_event_no event_no,
       zxgame->xscroll  = open->xscroll;
       zxgame->yscroll  = open->yscroll;
 
-      zxgame_update(zxgame, zxgame_UPDATE_WINDOW | zxgame_UPDATE_REDRAW);
+      zxgame_update(zxgame, zxgame_UPDATE_SCALING | zxgame_UPDATE_REDRAW);
     }
 
     /* Inhibit scrolling. */
@@ -1091,6 +1167,10 @@ static void zxgame_menu_update(void)
   tick(m, SCALED_SELECTED, (zxgame->flags & zxgame_FLAG_FIT)  != 0);
   tick(m, SCALED_SNAP,     (zxgame->flags & zxgame_FLAG_SNAP) != 0);
 
+  /* "Save" menu */
+  m = GLOBALS.zxgame_m->entries[ZXGAME_SAVE].sub_menu;
+  shade(m, SAVE_GAME, zxgame_can_save(zxgame) == 0);
+
   /* "Sound" menu */
 
   m = GLOBALS.zxgame_m->entries[ZXGAME_SOUND].sub_menu;
@@ -1145,12 +1225,11 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
                                     void         *handle)
 {
   wimp_key *key;
-  zxgame_t *zxgame;
 
   NOT_USED(event_no);
+  NOT_USED(handle);
 
-  key    = &block->key;
-  zxgame = handle;
+  key = &block->key;
 
   switch (key->c)
   {
@@ -1180,12 +1259,14 @@ static int zxgame_event_key_pressed(wimp_event_no event_no,
       action(ToggleMonochrome);
       break;
 
+#ifdef TGE_SAVES
     case wimp_KEY_F3: /* Save > Save */
       action(OpenSaveGame);
       break;
     case wimp_KEY_SHIFT | wimp_KEY_F3: /* Save > Screenshot */
       action(OpenSaveScreenshot);
       break;
+#endif
 
     case 'O' - 64: /* Sound > Enabled */
       action(ToggleSound);
@@ -1318,12 +1399,11 @@ static int zxgame_event_losegain_caret(wimp_event_no event_no,
                                        wimp_block   *block,
                                        void         *handle)
 {
-  wimp_caret *caret;
-  zxgame_t   *zxgame;
+  zxgame_t *zxgame;
 
   NOT_USED(event_no);
+  NOT_USED(block);
 
-  caret  = &block->caret;
   zxgame = handle;
 
   if (event_no == wimp_GAIN_CARET)
@@ -1336,7 +1416,7 @@ static int zxgame_event_losegain_caret(wimp_event_no event_no,
 
 /* ----------------------------------------------------------------------- */
 
-static error gentranstab(zxgame_t *zxgame)
+static result_t gentranstab(zxgame_t *zxgame)
 {
   osspriteop_id           id;
   colourtrans_table_flags flags;
@@ -1361,7 +1441,7 @@ static error gentranstab(zxgame_t *zxgame)
 
   zxgame->trans_tab = malloc(size);
   if (zxgame->trans_tab == NULL)
-    return error_OOM;
+    return result_OOM;
 
   colourtrans_generate_table_for_sprite(zxgame->sprite,
                                         id,
@@ -1371,7 +1451,7 @@ static error gentranstab(zxgame_t *zxgame)
                                         flags,
                                         NULL,
                                         NULL);
-  return error_OK;
+  return result_OK;
 }
 
 void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
@@ -1379,9 +1459,7 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
   if (flags & zxgame_UPDATE_COLOURS)
     gentranstab(zxgame);
 
-
-  // put if (scaling/extent/window) ... around this big block
-
+  if (flags & (zxgame_UPDATE_EXTENT | zxgame_UPDATE_SCALING))
   {
     const int image_xeig = GAMEEIG, image_yeig = GAMEEIG;
     const int border = zxgame->border_size; /* pixels */
@@ -1483,7 +1561,7 @@ void zxgame_update(zxgame_t *zxgame, zxgame_update_flags flags)
         zxgame->extent.y1 = 0;
       }
 
-      if (flags & zxgame_UPDATE_WINDOW)
+      if (flags & zxgame_UPDATE_SCALING)
       {
         int     reduced_border_x, reduced_border_y;
         int     games_per_window;
@@ -1568,13 +1646,13 @@ static void set_palette(zxgame_t *zxgame)
   BRIGHT(YLW), \
   BRIGHT(WHT),
 
-  static const os_SPRITE_PALETTE(16) stdpalette =
+  static const os_SPRITE_PALETTE(16) zxpalette =
   {{
 #define BRIGHT(C) { C * 0xAA, C * 0xAA }
-    DEFINE_PALETTE
+     DEFINE_PALETTE
 #undef BRIGHT
 #define BRIGHT(C) { C * 0xFF, C * 0xFF }
-    DEFINE_PALETTE
+     DEFINE_PALETTE
 #undef BRIGHT
   }};
 
@@ -1588,8 +1666,8 @@ static void set_palette(zxgame_t *zxgame)
                               &palette,
                                NULL);
 
-  assert(palette_size * 8 == sizeof(stdpalette));
-  memcpy(palette, &stdpalette, sizeof(stdpalette));
+  assert(palette_size * 8 == sizeof(zxpalette));
+  memcpy(palette, &zxpalette, sizeof(zxpalette));
 
   if (zxgame->flags & zxgame_FLAG_MONOCHROME)
   {
@@ -1621,7 +1699,7 @@ static void set_palette(zxgame_t *zxgame)
   }
 }
 
-error zxgame_create(zxgame_t **new_zxgame)
+result_t zxgame_create(zxgame_t **new_zxgame, const char *startup_game)
 {
   static const zxconfig_t zxconfigconsts =
   {
@@ -1635,7 +1713,7 @@ error zxgame_create(zxgame_t **new_zxgame)
     &speaker_handler
   };
 
-  error      err      = error_OK;
+  result_t   err      = result_OK;
   zxgame_t  *zxgame   = NULL;
   size_t     sprareasz;
   zxconfig_t zxconfig = zxconfigconsts;
@@ -1663,7 +1741,7 @@ error zxgame_create(zxgame_t **new_zxgame)
   zxgame->speed = NORMSPEED;
   zxgame->border_size = GAMEBORDER;
 
-  sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 4, TRUE);
+  sprareasz = sprite_size(GAMEWIDTH, GAMEHEIGHT, 2, TRUE);
 
   zxgame->sprite = malloc(sprareasz);
   if (zxgame->sprite == NULL)
@@ -1705,16 +1783,25 @@ error zxgame_create(zxgame_t **new_zxgame)
 
   set_handlers(zxgame);
 
+#ifdef TGE_SAVES
+  if (startup_game)
+  {
+    tge_setup2(zxgame->tge);
+    zxgame->flags &= ~zxgame_FLAG_MENU;
+    zxgame_load_game(zxgame, startup_game); // FIXME Errs
+  }
+#endif
+
   zxgame_add(zxgame);
 
   *new_zxgame = zxgame;
 
-  return error_OK;
+  return result_OK;
 
 
 NoMem:
 
-  err = error_OOM;
+  err = result_OOM;
 
   goto Failure;
 
@@ -1725,7 +1812,7 @@ Failure:
 
   free(zxgame);
 
-  error_report(err);
+  result_report(err);
 
   return err;
 }
@@ -1778,7 +1865,40 @@ void zxgame_open(zxgame_t *zxgame)
 
 /* ----------------------------------------------------------------------- */
 
-error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
+#ifdef TGE_SAVES
+
+int zxgame_can_save(zxgame_t *zxgame)
+{
+  return (zxgame->flags & zxgame_FLAG_MENU) == 0;
+}
+
+result_t zxgame_load_game(zxgame_t *zxgame, const char *file_name)
+{
+  char *errormsg;
+
+  xhourglass_on();
+
+  tge_load(zxgame->tge, file_name, &errormsg); // handle errors
+  tge_disposeoferror(errormsg);
+
+  xhourglass_off();
+
+  return result_OK;
+}
+
+result_t zxgame_save_game(zxgame_t *zxgame, const char *file_name)
+{
+  xhourglass_on();
+
+  tge_save(zxgame->tge, file_name); // handle errors
+  osfile_set_type(file_name, APPFILETYPE);
+
+  xhourglass_off();
+
+  return result_OK;
+}
+
+result_t zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
 {
   os_error *err;
 
@@ -1786,16 +1906,18 @@ error zxgame_save_screenshot(zxgame_t *zxgame, const char *file_name)
                                      zxgame->sprite,
                                      file_name);
   if (err)
-    return error_OS;
+    return result_OS;
 
-  return error_OK;
+  return result_OK;
 }
+
+#endif /* TGE_SAVES */
 
 /* ----------------------------------------------------------------------- */
 
-error zxgame_init(void)
+result_t zxgame_init(void)
 {
-  error err;
+  result_t err;
 
   /* Dependencies */
 
@@ -1811,8 +1933,10 @@ error zxgame_init(void)
 
   /* Internal dependencies */
 
+#ifdef TGE_SAVES
   err = zxgamesave_dlg_init();
   if (!err)
+#endif
     err = zxgamescale_dlg_init();
   if (err)
     return err;
@@ -1820,15 +1944,18 @@ error zxgame_init(void)
   /* Menu */
 
   GLOBALS.zxgame_m = menu_create_from_desc(message0("menu.zxgame"),
-                                           dialogue_get_window(zxgamescale_dlg),
-                                           dialogue_get_window(zxgamesave_dlg),
-                                           dialogue_get_window(zxgamesave_dlg));
+                                           dialogue_get_window(zxgamescale_dlg)
+#ifdef TGE_SAVES
+                                          ,dialogue_get_window(zxgamesave_dlg)
+                                          ,dialogue_get_window(zxgamesave_dlg)
+#endif
+  );
 
   err = help_add_menu(GLOBALS.zxgame_m, "zxgame");
   if (err)
     return err;
 
-  return error_OK;
+  return result_OK;
 }
 
 void zxgame_fin(void)
@@ -1838,7 +1965,9 @@ void zxgame_fin(void)
   menu_destroy(GLOBALS.zxgame_m);
 
   zxgamescale_dlg_fin();
+#ifdef TGE_SAVES
   zxgamesave_dlg_fin();
+#endif
 
   register_single_handlers(0);
 
@@ -1846,5 +1975,164 @@ void zxgame_fin(void)
 }
 
 /* ----------------------------------------------------------------------- */
+
+static void escape_handler(int type)
+{
+  LOCALS.escape_pressed = 1;
+
+  /* The signal handler will evaporate once used, so install another in case
+   * that escape events arrive too quickly for us to cope with and we're
+   * brutally escaped to death. */
+  signal(SIGINT, escape_handler);
+}
+
+static void save_desktop_mode(void)
+{
+  const int *pair;
+  int        len;
+
+  LOCALS.desktop_mode = (os_mode) osbyte2(osbyte_SCREEN_CHAR, 0, 0); /* works for new modes */
+  if ((int) LOCALS.desktop_mode < 128)
+    return;
+
+  /* Calculate length of desktop's mode selector, in words */
+  pair = &((const int *) LOCALS.desktop_mode)[5];
+  while (*pair != -1)
+    pair += 2;
+  len = pair + 1 - (int *) LOCALS.desktop_mode;
+
+  /* Copy the desktop's mode selector */
+  memcpy(LOCALS.desktop_mode_selector, LOCALS.desktop_mode, len * sizeof(int));
+}
+
+static void restore_desktop_mode(void)
+{
+  if ((int) LOCALS.desktop_mode < 128)
+    wimp_set_mode(LOCALS.desktop_mode);
+  else
+    wimp_set_mode((os_mode) LOCALS.desktop_mode_selector);
+}
+
+static void fullscreen(zxgame_t *zxgame)
+{
+  const char *screenmodevar;
+  os_mode     closestmode;
+  int         sw,sh;
+  int         xeig,yeig,log2bpp;
+  void      (*old_escape_handler)(int);
+
+  assert((zxgame->flags & zxgame_FLAG_SLEEPING) == 0);
+
+  save_desktop_mode();
+
+  screenmodevar = getenv(APPNAME "$ScreenMode");
+  if (screenmodevar)
+    closestmode = (os_mode) atoi(screenmodevar);
+  else
+    if ((int) (closestmode = closest_mode(GAMEWIDTH, GAMEHEIGHT, 2)) < 0)
+      closestmode = os_MODE4BPP45X45; /* default to mode 9 (should find it anyway - raise an error instead?) */
+
+  set_mode(closestmode);
+  os_remove_cursors();
+  read_screen_dimensions(&sw, &sh);
+  read_current_mode_vars(&xeig, &yeig, &log2bpp);
+
+  /* In 4bpp modes program the palette to match the game sprite */
+  if (log2bpp == 2)
+  {
+    os_sprite_palette *palette;
+    int                i;
+    char               buf[16 * 6];
+    char              *p;
+
+    osspriteop_read_palette_size(osspriteop_PTR,
+                                 zxgame->sprite,
+                 (osspriteop_id) sprite_select(zxgame->sprite, 0),
+                                 NULL,
+                                &palette,
+                                 NULL);
+
+    p = buf;
+    for (i = 0; i < 16; i++)
+    {
+      *p++ = 19;
+      *p++ = i;
+      *p++ = 16;
+      *p++ = (palette->entries[i].on >>  8) & 0xFF;
+      *p++ = (palette->entries[i].on >> 16) & 0xFF;
+      *p++ = (palette->entries[i].on >> 24) & 0xFF;
+    }
+    os_writen(buf, p - buf);
+  }
+
+  gentranstab(zxgame);
+  
+  /* TODO: If the eventually chosen screen mode is not a good fit for the TGE
+   *       game screen then adjust the scaling factors here (using whole-pixel
+   *       scaling). If this changes then note that the clipping in the redraw
+   *       function will have to be updated too. */
+
+  zxgame->factors.xmul = GAMEEIG;
+  zxgame->factors.ymul = GAMEEIG;
+  zxgame->factors.xdiv = xeig;
+  zxgame->factors.ydiv = yeig;
+
+  /* Centre the game on-screen.
+   * Note that we re-use imgbox to store the screen offset when in full-screen
+   * mode. */
+  zxgame->imgbox.x0 = (sw - (GAMEWIDTH  << GAMEEIG)) / 2;
+  zxgame->imgbox.y0 = (sh - (GAMEHEIGHT << GAMEEIG)) / 2;
+
+  /* Let handlers know that we're running full-screen.
+   * Set zxgame_FLAG_FIRST so that we re-paint the entire screen when next
+   * drawn (otherwise we'd just do partial updates). */
+  zxgame->flags |= zxgame_FLAG_FULL_SCREEN | zxgame_FLAG_FIRST;
+
+  /* Draw the screen in case we're paused. */
+  if (zxgame->flags & zxgame_FLAG_PAUSED)
+    draw_handler(NULL, zxgame);
+
+  /* Setup escape handling */
+  LOCALS.escape_pressed = 0;
+  old_escape_handler = signal(SIGINT, escape_handler);
+  osbyte(osbyte_VAR_ESCAPE_STATE, 0, 0); /* enable escape conditions */
+
+  while (!LOCALS.escape_pressed)
+  {
+    emit_sound(zxgame);
+
+    if (zxgame->flags & zxgame_FLAG_PAUSED)
+    {
+      os_t target_cs;
+
+      target_cs = os_read_monotonic_time() + 100; /* sleep 1s */
+      (void) do_sleep(zxgame, target_cs);
+    }
+    else
+    {
+      if (zxgame->flags & zxgame_FLAG_MENU)
+      {
+        if (tge_menu(zxgame->tge) > 0)
+        {
+          tge_setup2(zxgame->tge);
+          zxgame->flags &= ~zxgame_FLAG_MENU;
+        }
+      }
+      else
+      {
+        tge_main(zxgame->tge);
+      }
+    }
+  }
+
+  /* Restore escape handling */
+  osbyte(osbyte_VAR_ESCAPE_STATE, 1, 0); /* disable escape conditions */
+  signal(SIGINT, old_escape_handler);
+
+  zxgame->flags &= ~zxgame_FLAG_FULL_SCREEN;
+
+  os_restore_cursors();
+  restore_desktop_mode();
+}
 
 // vim: ts=8 sts=2 sw=2 et

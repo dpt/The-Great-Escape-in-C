@@ -1,7 +1,9 @@
 | >!Boot for The Great Escape
-| by David Thomas, © 2020
+| by David Thomas, © 2020-2021
 
 IconSprites <Obey$Dir>.!Sprites
 
 Set GtEscape$Dir <Obey$Dir>
-Set File$Type_18E GtEscape
+
+Set File$Type_1E7 GtEscape
+SetMacro Alias$@RunType_1E7 Run <GtEscape$Dir> %%*0

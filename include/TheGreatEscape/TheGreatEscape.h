@@ -97,8 +97,18 @@ TGE_API int tge_save(tgestate_t *state, const char *filename);
 
 /**
  * Load the game state from 'filename'.
+ *
+ * If an error was encountered while loading the game then 'error' _may_ be
+ * populated with an error message. It will be NULL otherwise.
  */
-TGE_API int tge_load(tgestate_t *state, const char *filename);
+TGE_API int tge_load(tgestate_t *state,
+                     const char *filename,
+                     char      **error);
+
+/**
+ * Dispose of an error message returned by tge_load().
+ */
+TGE_API void tge_disposeoferror(char *error);
 
 #endif /* TGE_SAVES */
 

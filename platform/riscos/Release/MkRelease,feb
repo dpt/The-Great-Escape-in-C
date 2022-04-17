@@ -2,12 +2,12 @@
 |
 
 Set APP GtEscape
-Set V 092
+Set V 094
 
 |
 
-Set In$Path <Obey$Dir>.^.
-Set Out$Dir <Obey$Dir>.^.Release.!<APP>
+Set In$Path <Obey$Dir>.^.!<APP>.
+Set Out$Dir <Obey$Dir>.!<APP>
 SetMacro Out$Path <Out$Dir>.
 
 CDir <Out$Dir>

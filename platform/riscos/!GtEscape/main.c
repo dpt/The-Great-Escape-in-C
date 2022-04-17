@@ -12,11 +12,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fortify/fortify.h"
+
 #include "oslib/types.h"
 #include "oslib/os.h"
 #include "oslib/osspriteop.h"
 #include "oslib/wimp.h"
 #include "oslib/wimpspriteop.h"
+
+#include "geom/box.h"
 
 #include "appengine/types.h"
 #include "appengine/app/choices.h"
@@ -27,7 +31,6 @@
 #include "appengine/base/strings.h"
 #include "appengine/dialogues/scale.h"
 #include "appengine/gadgets/iconbar.h"
-#include "appengine/geom/box.h"
 #include "appengine/vdu/screen.h"
 #include "appengine/vdu/sprite.h"
 #include "appengine/wimp/event.h"
@@ -41,7 +44,9 @@
 #include "zxgames.h"
 #include "iconbar.h"
 #include "poll.h"
+#ifdef TGE_SAVES
 #include "dataxfer.h"
+#endif
 
 /* ----------------------------------------------------------------------- */
 
@@ -87,7 +92,7 @@ static void rmensure(void)
     GLOBALS.flags |= Flag_HaveSharedSoundBuffer;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
   static const wimp_MESSAGE_LIST(2) messages =
   {{
@@ -96,6 +101,10 @@ int main(void)
                               this here, ColourPicker blows things up. */
     message_QUIT
   }};
+
+#ifdef FORTIFY
+  Fortify_EnterScope();
+#endif
 
   rmensure();
 
@@ -122,11 +131,29 @@ int main(void)
   /* Initialise subsystems */
   zxgame_init();
   tge_icon_bar_init();
+#ifdef TGE_SAVES
   dataxfer_init();
+#endif
 
   templates_close();
 
   register_event_handlers(1);
+
+  /* Process command line arguments */
+  while (--argc)
+  {
+    result_t  err;
+    zxgame_t *zxgame;
+
+    err = zxgame_create(&zxgame, argv[argc]);
+    if (err)
+    {
+      result_report(err);
+      continue;
+    }
+
+    zxgame_open(zxgame);
+  }
 
   while ((GLOBALS.flags & Flag_Quit) == 0)
     poll();
@@ -134,7 +161,9 @@ int main(void)
   register_event_handlers(0);
 
   /* Finalise subsystems */
+#ifdef TGE_SAVES
   dataxfer_fin();
+#endif
   tge_icon_bar_fin();
   zxgame_fin();
 
@@ -143,6 +172,12 @@ int main(void)
   wimp_close_down(GLOBALS.task_handle);
 
   close_messages();
+
+#ifdef FORTIFY
+  Fortify_LeaveScope();
+  Fortify_OutputStatistics();
+  Fortify_DumpAllMemory();
+#endif
 
   exit(EXIT_SUCCESS);
 }
@@ -185,7 +220,7 @@ static int kick_update_event_null_reason_code(wimp_event_no event_no,
                                 kick_update_event_null_reason_code,
                                 NULL);
 
-  return event_HANDLED;
+  return event_PASS_ON;
 }
 
 static int message_mode_change(wimp_message *message, void *handle)

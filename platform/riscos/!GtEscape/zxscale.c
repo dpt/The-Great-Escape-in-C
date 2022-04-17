@@ -66,13 +66,13 @@ static void zxgamescale_dlg_handler(dialogue_t *d,
 
 /* ----------------------------------------------------------------------- */
 
-error zxgamescale_dlg_init(void)
+result_t zxgamescale_dlg_init(void)
 {
   dialogue_t *scale;
 
   scale = scale_create();
   if (scale == NULL)
-    return error_OOM;
+    return result_OOM;
 
   dialogue_set_fillout_handler(scale, zxgamescale_dlg_fillout, NULL);
   scale_set_range(scale, 10, 800);
@@ -81,7 +81,7 @@ error zxgamescale_dlg_init(void)
 
   zxgamescale_dlg = scale;
 
-  return error_OK;
+  return result_OK;
 }
 
 void zxgamescale_dlg_fin(void)

@@ -1,8 +1,8 @@
 # Messages for The Great Escape
-# © David Thomas, 2020
+# © David Thomas, 2020-2021
 #
 
-version:0.92 (23 May 2020)
+version:0.94 (25 Feb 2021)
 
 task:The Great Escape
 icon:!gtescape
@@ -10,7 +10,7 @@ icon:!gtescape
 # Menus
 
 menu.iconbar:The Great Escape,>Info,Help,Instructions,Quit
-menu.zxgame:The Great Escape,View{View,Fixed scale{Fixed scale,Selected     ^F|>Scale view  F11,Big window   ^G},Scaled to fit{Scaled to fit,Selected        ^V|Snap to pixels  ^S}|~Full screen F10|Monochrome   ^N},Save{Save,~>Game         F3,>Screenshot  ‹F3},Sound{Sound,Enabled  ^O},Speed{Speed,100%     F6,Maximum ‹F7|Faster   F7,Slower   F5|Pause    ^P}
+menu.zxgame:The Great Escape,View{View,Fixed scale{Fixed scale,Selected     ^F|>Scale view  F11,Big window   ^G},Scaled to fit{Scaled to fit,Selected        ^V|Snap to pixels  ^S}|Full screen F10|Monochrome   ^N},Save{Save,>Game         F3,>Screenshot  ‹F3},Sound{Sound,Enabled  ^O},Speed{Speed,100%     F6,Maximum ‹F7|Faster   F7,Slower   F5|Pause    ^P}
 
 # Warnings
 

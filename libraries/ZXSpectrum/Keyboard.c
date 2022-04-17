@@ -40,7 +40,7 @@ void zxkeyset_assign(zxkeyset_t *keystate, zxkey_t index, int on_off)
   *pbits |= on_off << index;
 }
 
-static uint32_t __inline my_clz(uint32_t value)
+static __inline uint32_t my_clz(uint32_t value)
 {
 #if defined(_MSC_VER)
   DWORD leading_zero = 0;

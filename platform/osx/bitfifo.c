@@ -116,13 +116,14 @@ struct bitfifo
 
 bitfifo_t *bitfifo_create(int nbits)
 {
+  size_t     bufsz;
   bitfifo_t *fifo;
 
   /* allocate one more bit than requested so we can represent buffer full correctly */
   nbits++;
 
-  fifo = malloc(offsetof(bitfifo_t, buffer) +
-                DIVIDE_ROUNDING_UP(nbits, BITFIFOT_WIDTH) * sizeof(fifo->buffer[0]));
+  bufsz = offsetof(bitfifo_t, buffer) + DIVIDE_ROUNDING_UP(nbits, BITFIFOT_WIDTH) * sizeof(fifo->buffer[0]);
+  fifo = malloc(bufsz);
   if (fifo == NULL)
     return NULL;
 
