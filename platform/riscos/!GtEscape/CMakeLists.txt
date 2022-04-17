@@ -199,8 +199,7 @@ install(FILES !Boot,feb !Help,feb !Run,feb !Sprites,ff9 !Sprites22,ff9 AppEngine
     DESTINATION ${INSTALL_APPDIR})
 install(DIRECTORY Resources
     DESTINATION ${INSTALL_APPDIR})
-install(DIRECTORY ../Package/RiscPkg
+install(FILES ../Package/ReadMe
     DESTINATION ${CMAKE_INSTALL_PREFIX})
-# this release stuff needs reorganising for RiscPkg
-install(DIRECTORY ../Release
+install(DIRECTORY ../Package/System ../Package/RiscPkg
     DESTINATION ${CMAKE_INSTALL_PREFIX})
