@@ -89,7 +89,12 @@ Defines an interface to a virtual ZX Spectrum to which the game talks, replacing
 
 ## Chat
 [![Join the chat at https://gitter.im/The-Great-Escape/Lobby](https://badges.gitter.im/The-Great-Escape/Lobby.svg)](https://gitter.im/The-Great-Escape/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdpt%2FThe-Great-Escape-in-C.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdpt%2FThe-Great-Escape-in-C?ref=badge_shield)
 
 
 # Related Links
 [Porting Chuckie Egg](http://marklomas.net/ch-egg/articles/porting-ch-egg.htm)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdpt%2FThe-Great-Escape-in-C.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdpt%2FThe-Great-Escape-in-C?ref=badge_large)
