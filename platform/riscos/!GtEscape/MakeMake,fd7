@@ -1,8 +1,0 @@
-| !GtEscape.MakeMake
-|
-WimpSlot -min 4096K
-Dir <Obey$Dir>
-CDir o
-CDir odf
-CDir omc
-Makatic.Makatic3 -e

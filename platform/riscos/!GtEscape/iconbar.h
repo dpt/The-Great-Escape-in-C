@@ -9,7 +9,7 @@
 
 #include "appengine/base/errors.h"
 
-error tge_icon_bar_init(void);
+result_t tge_icon_bar_init(void);
 void tge_icon_bar_fin(void);
 
 #endif /* TGE_ICONBAR_H */

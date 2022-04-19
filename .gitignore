@@ -46,3 +46,7 @@ build.ninja
 
 libraries/*/o/*
 libraries/*/odf/*
+build*
+.DS_Store
+*.DS_Store
+*.swp

@@ -46,7 +46,7 @@
 #define GAMEBORDER      (16)    // pixels
 
 #define MAXSTAMPS       (4)     // max depth of timestamps stack
-#define SPEEDQ          (20)    // smallest unit of speed (percent)sp
+#define SPEEDQ          (20)    // smallest unit of speed (percent)
 #define NORMSPEED       (100)   // normal speed (percent)
 #define MAXSPEED        (99999) // fastest possible game (percent)
 
@@ -60,7 +60,7 @@
 #define BITS_SAMPLE     (5)     // magic value: we take the mean of this many input bits to make an output sample
 #define BITFIFO_LENGTH  (BUFFER_SAMPLES * BITS_SAMPLE) // in bits
 
-#define MAXVOL          (32767 / 2)
+#define MAXVOL          (32767 / 5)
 
 // -----------------------------------------------------------------------------
 
@@ -74,6 +74,7 @@
   pthread_t       thread;
 
   BOOL            doSetupDrawing;
+  CGFloat         scale;
   int             borderSize;
   BOOL            snap;
   BOOL            monochromatic;
@@ -82,6 +83,13 @@
 
   BOOL            quit;
   BOOL            paused;
+
+#ifdef TGE_SAVES
+  NSURL          *startupGameURL;
+  NSURL          *saveGameURL;
+  BOOL            gameStarted;
+  BOOL            oldPaused;
+#endif
 
   int             speed;    // percent
 
@@ -105,8 +113,6 @@
 
   // -- End of variables accessed from game thread must be @synchronized
 }
-
-@property (nonatomic, readwrite) CGFloat scale;
 
 @end
 
@@ -164,6 +170,13 @@
   quit            = NO;
   paused          = NO;
 
+#ifdef TGE_SAVES
+  startupGameURL  = nil;
+  saveGameURL     = nil;
+  gameStarted     = NO;
+  oldPaused       = NO;
+#endif
+
   speed           = NORMSPEED;
 
   memset(stamps, 0, sizeof(stamps));
@@ -174,7 +187,8 @@
 
   backgroundRed = backgroundGreen = backgroundBlue = 0.0;
 
-  _scale          = 1.0;
+  scale           = 1.0;
+
 
   zx = zxspectrum_create(&zxconfig);
   if (zx == NULL)
@@ -186,11 +200,6 @@
 
   [self setupAudio];
 
-  pthread_create(&thread,
-                 NULL, // pthread_attr_t
-                 tge_thread,
-                 (__bridge void *)(self));
-
   return;
 
 
@@ -199,13 +208,27 @@ failure:
   zxspectrum_destroy(zx);
 }
 
-- (void)reshape
+- (void)update
 {
-  [super reshape];
+  [super update];
   doSetupDrawing = YES;
 }
 
 // -----------------------------------------------------------------------------
+
+- (void)start
+{
+  assert(self.delegate);
+
+#ifdef TGE_SAVES
+  startupGameURL = [self.delegate getStartupGame];
+#endif
+
+  pthread_create(&thread,
+                 NULL, // pthread_attr_t
+                 tge_thread,
+                 (__bridge void *)(self));
+}
 
 - (void)stop
 {
@@ -225,6 +248,43 @@ failure:
 
   [self teardownAudio];
 }
+
+// -----------------------------------------------------------------------------
+
+#ifdef TGE_SAVES
+
+- (IBAction)saveDocumentAs:(id)sender
+{
+  @synchronized(self)
+  {
+    // Immediately pause the game when a save is requested.
+    oldPaused = paused;
+    paused = YES;
+
+    NSSavePanel *savePanel = [NSSavePanel savePanel];
+    savePanel.allowedFileTypes = @[@"tge"];
+    savePanel.allowsOtherFileTypes = YES;
+    savePanel.canCreateDirectories = YES;
+    savePanel.delegate = self;
+    savePanel.nameFieldStringValue = @"EscapeAttempt";
+
+    [savePanel beginWithCompletionHandler:^(NSModalResponse result) {
+      if (result == NSModalResponseOK)
+      {
+        NSURL *url = savePanel.URL;
+        if (url)
+          // The URL flags to cause a save when next able.
+          saveGameURL = url;
+      }
+      else
+      {
+        paused = oldPaused;
+      }
+    }];
+  }
+}
+
+#endif /* TGE_SAVES */
 
 // -----------------------------------------------------------------------------
 
@@ -272,15 +332,22 @@ failure:
     menuItem = (NSMenuItem *) anItem;
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
-      [menuItem setState:snap ? NSOnState : NSOffState];
+      [menuItem setState:snap ? NSControlStateValueOn : NSControlStateValueOff];
   }
   else if ([anItem action] == @selector(toggleMonochromatic:))
   {
     menuItem = (NSMenuItem *) anItem;
     // Ensure that it's a menu item
     if ([menuItem respondsToSelector:@selector(setState:)])
-      [menuItem setState:monochromatic ? NSOnState : NSOffState];
+      [menuItem setState:monochromatic ? NSControlStateValueOn : NSControlStateValueOff];
   }
+#ifdef TGE_SAVES
+  else if ([anItem action] == @selector(saveDocumentAs:))
+  {
+    if (!self->gameStarted)
+      return NO;
+  }
+#endif
 
   return YES;
 }
@@ -427,7 +494,7 @@ failure:
   snap = !snap;
 
   // (un)tick the menu entry
-  [sender setState:snap ? NSOnState : NSOffState];
+  [sender setState:snap ? NSControlStateValueOn : NSControlStateValueOff];
 
   // invalidate drawing setup
   doSetupDrawing = YES;
@@ -459,6 +526,11 @@ failure:
   baseRect = [self bounds];
   viewSize = baseRect.size;
 
+  // Cope with retina screens
+  CGFloat screenScale = self.window.screen.backingScaleFactor ?: 1;
+  viewSize.width  *= screenScale;
+  viewSize.height *= screenScale;
+  
   // How many 1:1 game windows fit comfortably into the view?
   // Try to fit while reducing the border if the view is very small
   reducedBorder = borderSize;
@@ -474,13 +546,13 @@ failure:
   // Snap the game scale to whole units
   if (gamesPerView > 1.0 && snap)
   {
-      const CGFloat snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
-      gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
+    const CGFloat snapSteps = 1.0; // set to 2.0 for scales of 1.0 / 1.5 / 2.0 etc.
+    gamesPerView = floor(gamesPerView * snapSteps) / snapSteps;
   }
 
   drawWidth  = gameSize.width  * gamesPerView;
   drawHeight = gameSize.height * gamesPerView;
-  _scale = gamesPerView;
+  scale = gamesPerView;
 
   // Centre the game within the view (note that conversion to int floors the values)
   xOffset = (viewSize.width  - drawWidth)  / 2;
@@ -505,7 +577,7 @@ failure:
   // Note: NSOpenGLViews would appear to never receive a graphics context, so
   // we must draw exclusively in terms of GL ops.
 
-  if (_scale == 0.0)
+  if (scale <= 0.0)
     return;
 
   if (doSetupDrawing)
@@ -514,8 +586,8 @@ failure:
     doSetupDrawing = NO;
   }
 
-  GLfloat zsx =  _scale;
-  GLfloat zsy = -_scale;
+  GLfloat zsx =  scale;
+  GLfloat zsy = -scale;
 
   (void) dirtyRect;
 
@@ -540,38 +612,125 @@ failure:
 
 #pragma mark - Game thread
 
+#ifdef TGE_SAVES
+
+static void modalSheetAlert(const ZXGameView *view, NSString *message)
+{
+  dispatch_async(dispatch_get_main_queue(), ^(void) {
+    NSAlert *alert;
+
+    alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert addButtonWithTitle:@"OK"];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:view.window completionHandler:nil];
+  });
+}
+
+static int loadIfRequested(const ZXGameView *view)
+{
+  if (view->startupGameURL)
+  {
+    char *errormsg;
+    int   rc;
+
+    rc = tge_load(view->game,
+                  [view->startupGameURL fileSystemRepresentation],
+                  &errormsg);
+    if (rc)
+    {
+      NSString *alert;
+
+      if (errormsg)
+      {
+        alert = [NSString stringWithFormat:@"The game failed to load: %s", errormsg];
+        tge_disposeoferror(errormsg);
+      }
+      else
+      {
+        alert = [NSString stringWithFormat:@"The game failed to load"];
+      }
+      modalSheetAlert(view, alert);
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+static int saveIfRequested(const ZXGameView *view)
+{
+  if (view->saveGameURL)
+  {
+    int rc;
+
+    rc = tge_save(view->game, [view->saveGameURL fileSystemRepresentation]);
+    view->saveGameURL = nil;
+    if (rc)
+    {
+      modalSheetAlert(view, @"The game failed to save");
+      return 1;
+    }
+
+    // Restore previous pause state
+    view->paused = view->oldPaused;
+  }
+
+  return 0;
+}
+
+#endif /* TGE_SAVES */
+
 static void *tge_thread(void *arg)
 {
   ZXGameView *view = (__bridge id) arg;
   tgestate_t *game = view->game;
-  BOOL        quit;
+  BOOL        quit = FALSE;
 
   tge_setup(game);
 
-  // Run the menu
-  for (;;)
+#ifdef TGE_SAVES
+  // Bypass the menu if there's a saved game to load
+  if (!view->startupGameURL)
+#endif
   {
-    int proceed;
+    // Run the menu
+    for (;;)
+    {
+      int proceed;
 
-    proceed = tge_menu(game);
-    if (proceed > 0)
-    {
-      // Begin the game
-      quit = FALSE;
-      break;
-    }
-    else if (proceed < 0)
-    {
-      // Game thread termination was signalled
-      quit = TRUE;
-      break;
+      proceed = tge_menu(game);
+      if (proceed > 0)
+      {
+        // Begin the game
+        quit = FALSE;
+        break;
+      }
+      else if (proceed < 0)
+      {
+        // Game thread termination was signalled
+        quit = TRUE;
+        break;
+      }
     }
   }
+
+#ifdef TGE_SAVES
+  @synchronized(view)
+  {
+    view->gameStarted = YES;
+  }
+#endif
 
   // Run the game
   if (!quit)
   {
     tge_setup2(game);
+
+#ifdef TGE_SAVES
+    if (loadIfRequested(view))
+      return NULL; // Stop the game thread if load fails
+#endif
 
     for (;;)
     {
@@ -639,9 +798,14 @@ static int sleep_handler(int durationTStates, void *opaque)
 
   if (paused)
   {
-    // Check twice per second for unpausing
+    // If paused, sit in this loop, checking twice per second for unpausing
     for (;;)
     {
+      // Saves are handled when the game is paused
+#ifdef TGE_SAVES
+      (void) saveIfRequested(view);
+#endif
+
       @synchronized(view)
       {
         paused = view->paused;
@@ -754,13 +918,49 @@ static void speaker_handler(int on_off, void *opaque)
 
 #pragma mark - Queries
 
-- (void)getGameWidth:(int *)width height:(int *)height border:(int *)border
+- (void)getDefaultViewSize:(CGSize *)size border:(int *)border
 {
   assert(zx);
 
-  *width  = zx->screen.width  * 8;
-  *height = zx->screen.height * 8;
-  *border = borderSize;
+  size->width  = zx->screen.width  * 8;
+  size->height = zx->screen.height * 8;
+  *border      = borderSize;
+}
+
+- (void)getSuggestedViewSize:(CGSize *)size border:(int *)border forSize:(CGSize)maxSizePoints direction:(int)direction
+{
+  static const CGFloat scales[] = { 0.125, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
+  const int            nscales  = (int) (sizeof(scales) / sizeof(scales[0]));
+
+  int     game_w_px,game_h_px;
+  CGFloat minscale;
+  int     i;
+  int     w_pt,h_pt;
+  CGFloat scaleFactor;
+
+  assert(zx);
+
+  direction = MIN(MAX(direction, -1), 1); // clamp
+
+  game_w_px = zx->screen.width  * 8;
+  game_h_px = zx->screen.height * 8;
+
+  minscale = MIN(maxSizePoints.width / game_w_px, maxSizePoints.height / game_h_px);
+  for (i = 0; i < nscales; i++)
+    if (scales[i] > minscale)
+    {
+      i--;
+      break;
+    }
+  i = MIN(MAX(i + direction, 0), nscales - 1); // clamp
+  scaleFactor = scales[i];
+
+  w_pt = game_w_px * scaleFactor;
+  h_pt = game_h_px * scaleFactor;
+
+  size->width  = w_pt;
+  size->height = h_pt;
+  *border = borderSize; // doesn't scale
 }
 
 // -----------------------------------------------------------------------------

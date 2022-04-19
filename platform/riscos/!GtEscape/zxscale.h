@@ -12,7 +12,7 @@
 
 extern dialogue_t *zxgamescale_dlg;
 
-error zxgamescale_dlg_init(void);
+result_t zxgamescale_dlg_init(void);
 void zxgamescale_dlg_fin(void);
 
 #endif /* ZXGAMESCALE_DLG_H */

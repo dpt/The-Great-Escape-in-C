@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 /* ----------------------------------------------------------------------- */
@@ -543,7 +543,6 @@ void setup_room(tgestate_t *state)
 
   wipe_visible_tiles(state);
 
-  assert(state->room_index >= 0);
   assert(state->room_index < room__LIMIT);
   room_index = state->room_index; /* local cached copy */
   offset     = 0;
@@ -632,7 +631,7 @@ void expand_object(tgestate_t *state, object_t index, uint8_t *output)
   int                val;           /* was A' */
 
   assert(state  != NULL);
-  assert(index >= 0 && index < interiorobject__LIMIT);
+  assert(index < interiorobject__LIMIT);
   assert(output != NULL); // assert within tilebuf?
 
   columns     = state->columns; // Conv: Added.
@@ -3264,9 +3263,9 @@ uint8_t *plot_tile(tgestate_t             *state,
   supertileindex = *maptiles; /* get supertile index */
   assert(supertileindex < supertileindex__LIMIT);
 
-  // Supertiles 44 and lower         use tiles   0..249 (249 tile span)
-  // Supertiles 45..138 and 204..218 use tiles 145..400 (255 tile span)
-  // Supertiles 139..203             use tiles 365..570 (205 tile span)
+  /* Supertiles 44 and lower         use tiles   0..249 (249 tile span) */
+  /* Supertiles 45..138 and 204..218 use tiles 145..400 (255 tile span) */
+  /* Supertiles 139..203             use tiles 365..570 (205 tile span) */
 
   if (supertileindex <= 44)
   {
@@ -3275,7 +3274,7 @@ uint8_t *plot_tile(tgestate_t             *state,
   }
   else if (supertileindex <= 138 || supertileindex >= 204)
   {
-    assert(tile_index <= 255);
+    /* assert(tile_index <= 255) is always true */
     tileset = &exterior_tiles[145];
   }
   else
@@ -3300,10 +3299,6 @@ uint8_t *plot_tile(tgestate_t             *state,
 
 /* ----------------------------------------------------------------------- */
 
-// Fixed constants for now.
-#define tile_buf_length   (24 * 17)
-#define window_buf_length (24 * 8 * 17)
-
 /**
  * $A9E4: Shunt the map left.
  *
@@ -3317,8 +3312,8 @@ void shunt_map_left(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[0], &state->tile_buf[1], tile_buf_length - 1);
-  memmove(&state->window_buf[0], &state->window_buf[1], window_buf_length - 1);
+  memmove(&state->tile_buf[0], &state->tile_buf[1], TILE_BUF_LENGTH - 1);
+  memmove(&state->window_buf[0], &state->window_buf[1], WINDOW_BUF_LENGTH - 1);
 
   plot_rightmost_tiles(state);
 }
@@ -3336,8 +3331,8 @@ void shunt_map_right(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[1], &state->tile_buf[0], tile_buf_length - 1);
-  memmove(&state->window_buf[1], &state->window_buf[0], window_buf_length - 1); // orig uses window_buf_length which can't be right
+  memmove(&state->tile_buf[1], &state->tile_buf[0], TILE_BUF_LENGTH - 1);
+  memmove(&state->window_buf[1], &state->window_buf[0], WINDOW_BUF_LENGTH - 1); // orig uses window_buf_length which can't be right
 
   plot_leftmost_tiles(state);
 }
@@ -3358,8 +3353,8 @@ void shunt_map_up_right(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[1], &state->tile_buf[24], tile_buf_length - 24);
-  memmove(&state->window_buf[1], &state->window_buf[24 * 8], window_buf_length - 24 * 8);
+  memmove(&state->tile_buf[1], &state->tile_buf[24], TILE_BUF_LENGTH - 24);
+  memmove(&state->window_buf[1], &state->window_buf[24 * 8], WINDOW_BUF_LENGTH - 24 * 8);
 
   plot_bottommost_tiles(state);
   plot_leftmost_tiles(state);
@@ -3378,8 +3373,8 @@ void shunt_map_up(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[0], &state->tile_buf[24], tile_buf_length - 24);
-  memmove(&state->window_buf[0], &state->window_buf[24 * 8], window_buf_length - 24 * 8);
+  memmove(&state->tile_buf[0], &state->tile_buf[24], TILE_BUF_LENGTH - 24);
+  memmove(&state->window_buf[0], &state->window_buf[24 * 8], WINDOW_BUF_LENGTH - 24 * 8);
 
   plot_bottommost_tiles(state);
 }
@@ -3397,9 +3392,9 @@ void shunt_map_down(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[24], &state->tile_buf[0], tile_buf_length - 24);
+  memmove(&state->tile_buf[24], &state->tile_buf[0], TILE_BUF_LENGTH - 24);
   // Conv: Original code uses LDDR
-  memmove(&state->window_buf[24 * 8], &state->window_buf[0], window_buf_length - 24 * 8);
+  memmove(&state->window_buf[24 * 8], &state->window_buf[0], WINDOW_BUF_LENGTH - 24 * 8);
 
   plot_topmost_tiles(state);
 }
@@ -3418,8 +3413,8 @@ void shunt_map_down_left(tgestate_t *state)
 
   get_supertiles(state);
 
-  memmove(&state->tile_buf[24], &state->tile_buf[1], tile_buf_length - 24 - 1);
-  memmove(&state->window_buf[24 * 8], &state->window_buf[1], window_buf_length - 24 * 8 - 1);
+  memmove(&state->tile_buf[24], &state->tile_buf[1], TILE_BUF_LENGTH - 24 - 1);
+  memmove(&state->window_buf[24 * 8], &state->window_buf[1], WINDOW_BUF_LENGTH - 24 * 8 - 1);
 
   plot_topmost_tiles(state);
   plot_rightmost_tiles(state);
@@ -3651,7 +3646,6 @@ void searchlight_movement(searchlight_movement_t *slstate)
     {
       slstate->index = ++index; /* count up */
     }
-    assert(index >= 0);
     assert(index <= 8); // movement_1 is the longest
     ptr = slstate->ptr + index * 2;
     if (*ptr == 255) /* end of list? */
@@ -3691,8 +3685,7 @@ void searchlight_movement(searchlight_movement_t *slstate)
 }
 
 /**
- * $ADBD: Turns white screen elements light blue and tracks the hero with a
- * searchlight.
+ * $ADBD: Tracks the hero with a searchlight.
  *
  * \param[in] state Pointer to game state.
  */
@@ -5697,9 +5690,9 @@ void plot_sprites(tgestate_t *state)
         if (state->searchlight_state != searchlight_STATE_SEARCHING)
           searchlight_mask_test(state, vischar);
         if (vischar->width_bytes != 3)
-          masked_sprite_plotter_24_wide_vischar(state, vischar);
+          plot_masked_sprite_24px(state, vischar);
         else
-          masked_sprite_plotter_16_wide_vischar(state, vischar);
+          plot_masked_sprite_16px(state, vischar);
       }
     }
     else
@@ -5708,7 +5701,7 @@ void plot_sprites(tgestate_t *state)
       if (visible)
       {
         render_mask_buffer(state);
-        masked_sprite_plotter_16_wide_item(state);
+        plot_masked_sprite_16px_x_is_zero(state);
       }
     }
   }
@@ -7709,7 +7702,6 @@ void charevnt_hero_sleeps(tgestate_t *state, route_t *route)
  *
  * Causes characters to follow the hero if he's being suspicious.
  * Also: Food item discovery.
- * Also: Automatic hero behaviour.
  *
  * \param[in] state Pointer to game state.
  */
@@ -9145,7 +9137,7 @@ int is_item_discoverable_interior(tgestate_t *state,
   item_t              item;    /* was A */
 
   assert(state != NULL);
-  assert((room >= 0 && room < room__LIMIT) || (room == room_NONE));
+  ASSERT_ROOM_VALID(room);
   /* pitem may be NULL */
 
   itemstr = &state->item_structs[0];
@@ -9582,7 +9574,7 @@ uint8_t setup_item_plotting(tgestate_t   *state,
   // PUSH left_skip + clipped_width
   // PUSH top_skip + clipped_height
 
-  state->self_E2C2 = clipped_height; // self modify masked_sprite_plotter_16_wide_left
+  state->spriteplotter.height_16_left = clipped_height; // self modify masked_sprite_plotter_16_wide_left
 
   if (left_skip == 0)
   {
@@ -9896,12 +9888,12 @@ const spritedef_t item_definitions[item__LIMIT] =
  */
 const size_t masked_sprite_plotter_16_enables[2 * 3] =
 {
-  offsetof(tgestate_t, enable_16_left_1),
-  offsetof(tgestate_t, enable_16_right_1),
-  offsetof(tgestate_t, enable_16_left_2),
-  offsetof(tgestate_t, enable_16_right_2),
-  offsetof(tgestate_t, enable_16_left_3),
-  offsetof(tgestate_t, enable_16_right_3),
+  offsetof(tgestate_t, spriteplotter.enable_16_left_1),
+  offsetof(tgestate_t, spriteplotter.enable_16_right_1),
+  offsetof(tgestate_t, spriteplotter.enable_16_left_2),
+  offsetof(tgestate_t, spriteplotter.enable_16_right_2),
+  offsetof(tgestate_t, spriteplotter.enable_16_left_3),
+  offsetof(tgestate_t, spriteplotter.enable_16_right_3),
 };
 
 /* ----------------------------------------------------------------------- */
@@ -9915,24 +9907,23 @@ const size_t masked_sprite_plotter_16_enables[2 * 3] =
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
-                                           vischar_t  *vischar)
+void plot_masked_sprite_24px(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t        x;           /* was A */
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
-  assert(state   != NULL);
+  assert(state != NULL);
   ASSERT_VISCHAR_VALID(vischar);
 
   if ((x = (vischar->isopos.x & 7)) < 4)
   {
-    /* Shift right? */
+    /* Shift right */
 
-    x = ~x & 3; // jump table offset (on input, A is 0..3)
+    x = ~x & 3; /* jump table offset (on input, x is 0..3) */
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -9940,7 +9931,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
     assert(maskptr   != NULL);
     assert(bitmapptr != NULL);
 
-    iters = state->self_E121; // clipped_height & 0xFF
+    iters = state->spriteplotter.height_24_right;
     assert(iters <= MASK_BUFFER_HEIGHT * 8);
     do
     {
@@ -9962,15 +9953,15 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
         flip_24_masked_pixels(state, &mask2, &mask1, &mask0, &bm2, &bm1, &bm0);
 
       foremaskptr = state->foreground_mask_pointer;
-      screenptr   = state->window_buf_pointer; // moved compared to the other routines
+      screenptr   = state->window_buf_pointer; /* Conv: Moved compared to the other routines. */
 
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
 
-      /* Shift bitmap. */
+      /* Shift bitmap */
 
       bm3 = 0;
-      // Conv: Replaced self-modified goto with if-else chain.
+      /* Conv: Replaced self-modified goto with if-else chain. */
       if (x <= 0)
       {
         SRL(bm0);
@@ -9993,11 +9984,11 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
         RR(bm3);
       }
 
-      /* Shift mask. */
+      /* Shift mask */
 
       mask3 = 0xFF;
       carry = 1;
-      // Conv: Replaced self-modified goto with if-else chain.
+      /* Conv: Replaced self-modified goto with if-else chain. */
       if (x <= 0)
       {
         RR(mask0);
@@ -10022,25 +10013,25 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
 
       /* Plot, using foreground mask. */
 
-      // Conv: We form 'mask' inside of the enable_* condition. The original
-      // game got away with accessing out-of-bounds memory but we can't.
+      /* Conv: We form 'mask' inside of the enable_* condition. The original
+       * game got away with accessing out-of-bounds memory but we can't. */
 
-      if (state->enable_24_right_1)
+      if (state->spriteplotter.enable_24_right_1)
         *screenptr = MASK(bm0, mask0);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_right_2)
+      if (state->spriteplotter.enable_24_right_2)
         *screenptr = MASK(bm1, mask1);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_right_3)
+      if (state->spriteplotter.enable_24_right_3)
         *screenptr = MASK(bm2, mask2);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_right_4)
+      if (state->spriteplotter.enable_24_right_4)
         *screenptr = MASK(bm3, mask3);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
@@ -10054,9 +10045,9 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
   }
   else
   {
-    /* Shift left? */
+    /* Shift left */
 
-    x -= 4; // (on input, A is 4..7 -> 0..3)
+    x -= 4; /* jump table offset (on input, x is 4..7) */
 
     maskptr   = state->mask_pointer;
     bitmapptr = state->bitmap_pointer;
@@ -10064,7 +10055,7 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
     assert(maskptr   != NULL);
     assert(bitmapptr != NULL);
 
-    iters = state->self_E1E2; // clipped_height & 0xFF
+    iters = state->spriteplotter.height_24_left;
     assert(iters <= MASK_BUFFER_HEIGHT * 8);
     do
     {
@@ -10092,10 +10083,10 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
       ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
       ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 3);
 
-      /* Shift bitmap. */
+      /* Shift bitmap bytes */
 
       bm3 = 0;
-      // Conv: Replaced self-modified goto with if-else chain.
+      /* Conv: Replaced self-modified goto with if-else chain. */
       if (x <= 0)
       {
         SLA(bm0);
@@ -10125,11 +10116,11 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
         RL(bm3);
       }
 
-      /* Shift mask. */
+      /* Shift mask bytes */
 
-      mask3 = 0xFF;
-      carry = 1;
-      // Conv: Replaced self-modified goto with if-else chain.
+      mask3 = 0xFF; /* all bits set => mask off */
+      carry = 1; /* mask off */
+      /* Conv: Replaced self-modified goto with if-else chain. */
       if (x <= 0)
       {
         RL(mask0);
@@ -10161,25 +10152,25 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
 
       /* Plot, using foreground mask. */
 
-      // Conv: We form 'mask' inside of the enable_* condition. The original
-      // game got away with accessing out-of-bounds memory but we can't.
+      /* Conv: We form 'mask' inside of the enable_* condition. The original
+       * game got away with accessing out-of-bounds memory but we can't. */
 
-      if (state->enable_24_left_1)
+      if (state->spriteplotter.enable_24_left_1)
         *screenptr = MASK(bm3, mask3);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_left_2)
+      if (state->spriteplotter.enable_24_left_2)
         *screenptr = MASK(bm2, mask2);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_left_3)
+      if (state->spriteplotter.enable_24_left_3)
         *screenptr = MASK(bm1, mask1);
       foremaskptr++;
       screenptr++;
 
-      if (state->enable_24_left_4)
+      if (state->spriteplotter.enable_24_left_4)
         *screenptr = MASK(bm0, mask0);
       foremaskptr++;
       state->foreground_mask_pointer = foremaskptr;
@@ -10198,9 +10189,9 @@ void masked_sprite_plotter_24_wide_vischar(tgestate_t *state,
  *
  * \param[in] state Pointer to game state.
  */
-void masked_sprite_plotter_16_wide_item(tgestate_t *state)
+void plot_masked_sprite_16px_x_is_zero(tgestate_t *state)
 {
-  masked_sprite_plotter_16_wide_left(state, 0 /* x */);
+  plot_masked_sprite_16px_right(state, 0 /* x */);
 }
 
 /**
@@ -10209,8 +10200,7 @@ void masked_sprite_plotter_16_wide_item(tgestate_t *state)
  * \param[in] state   Pointer to game state.
  * \param[in] vischar Pointer to visible character. (was IY)
  */
-void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
-                                           vischar_t  *vischar)
+void plot_masked_sprite_16px(tgestate_t *state, vischar_t *vischar)
 {
   uint8_t x; /* was A */
 
@@ -10218,31 +10208,33 @@ void masked_sprite_plotter_16_wide_vischar(tgestate_t *state,
 
   x = vischar->isopos.x & 7;
   if (x < 4)
-    masked_sprite_plotter_16_wide_left(state, x); /* was fallthrough */
+    plot_masked_sprite_16px_right(state, x); /* was fallthrough */
   else
-    masked_sprite_plotter_16_wide_right(state, x);
+    plot_masked_sprite_16px_left(state, x);
 }
 
 /**
- * $E2AC: Sprite plotter. Shifts left/right (unsure).
+ * $E2AC: Sprite plotter for 16 pixel wide sprites. Shifts right.
+ *
+ * Used for items and vischars. Counterpart of below routine.
  *
  * \param[in] state Pointer to game state.
  * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
+void plot_masked_sprite_16px_right(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
   assert(state != NULL);
-  // assert(x);
+  assert(x < 4);
 
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
-  x = (~x & 3); // jump table offset (on input, A is 0..3 => 3..0)
+  x = (~x & 3); /* jump table offset (on input, x is 0..3) */
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -10250,7 +10242,7 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
   assert(maskptr   != NULL);
   assert(bitmapptr != NULL);
 
-  iters = state->self_E2C2; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
+  iters = state->spriteplotter.height_16_left; /* self modified by $E49D (setup_vischar_plotting) */
   assert(iters <= MASK_BUFFER_HEIGHT * 8);
 
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 2);
@@ -10272,19 +10264,17 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
     if (state->sprite_index & sprite_FLAG_FLIP)
       flip_16_masked_pixels(state, &mask0, &mask1, &bm0, &bm1);
 
-    // I'm assuming foremaskptr to be a foreground mask pointer based on it being
-    // incremented by four each step, like a supertile wide thing.
     foremaskptr = state->foreground_mask_pointer;
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    // 24 version does bitmap rotates then mask rotates.
-    // Is this the opposite way around to save a bank switch?
+    /* In the 24 pixel-wide plotter it does bitmap rotates THEN mask rotates.
+     * Is this the opposite way around to save a bank switch? */
 
-    /* Shift mask. */
+    /* Shift mask bytes */
 
-    mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
-    carry = 1; // mask OFF
-    // Conv: Replaced self-modified goto with if-else chain.
+    mask2 = 0xFF; /* all bits set => mask off */
+    carry = 1; /* mask off */
+    /* Conv: Replaced self-modified goto with if-else chain. */
     if (x <= 0)
     {
       RR(mask0);
@@ -10304,11 +10294,11 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
       RR(mask2);
     }
 
-    /* Shift bitmap. */
+    /* Shift bitmap bytes */
 
-    bm2 = 0; // all bits clear => pixels OFF
+    bm2 = 0; /* all bits clear => pixels off */
     //carry = 0; in original code but never read in practice
-    // Conv: Replaced self-modified goto with if-else chain.
+    /* Conv: Replaced self-modified goto with if-else chain. */
     if (x <= 0)
     {
       SRL(bm0);
@@ -10330,24 +10320,24 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
+    screenptr = state->window_buf_pointer; // line moved relative to the 24 version
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    // Conv: We form 'mask' inside of the enable_* condition. The original
-    // game got away with accessing out-of-bounds memory but we can't.
+    /* Conv: We form 'mask' inside of the enable_* condition. The original
+     * game got away with accessing out-of-bounds memory but we can't. */
 
-    if (state->enable_16_left_1)
+    if (state->spriteplotter.enable_16_left_1)
       *screenptr = MASK(bm0, mask0);
     foremaskptr++;
     screenptr++;
 
-    if (state->enable_16_left_2)
+    if (state->spriteplotter.enable_16_left_2)
       *screenptr = MASK(bm1, mask1);
     foremaskptr++;
     screenptr++;
 
-    if (state->enable_16_left_3)
+    if (state->spriteplotter.enable_16_left_3)
       *screenptr = MASK(bm2, mask2);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
@@ -10361,27 +10351,29 @@ void masked_sprite_plotter_16_wide_left(tgestate_t *state, uint8_t x)
 }
 
 /**
- * $E34E: Sprite plotter. Shifts left/right (unsure). Used for characters and objects. Counterpart of above routine.
+ * $E34E: Sprite plotter for 16 pixel wide sprites. Shifts left.
+ *
+ * Used for vischars only. Counterpart of above routine.
  *
  * Only called by masked_sprite_plotter_16_wide_vischar.
  *
  * \param[in] state Pointer to game state.
  * \param[in] x     X offset. (was A)
  */
-void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
+void plot_masked_sprite_16px_left(tgestate_t *state, uint8_t x)
 {
   uint8_t        iters;       /* was B */
-  const uint8_t *maskptr;     /* was ? */
-  const uint8_t *bitmapptr;   /* was ? */
-  const uint8_t *foremaskptr; /* was ? */
-  uint8_t       *screenptr;   /* was ? */
+  const uint8_t *maskptr;     /* was HL' */
+  const uint8_t *bitmapptr;   /* was HL */
+  const uint8_t *foremaskptr; /* was HL */
+  uint8_t       *screenptr;   /* was HL */
 
   assert(state != NULL);
-  // assert(x);
+  assert(x >= 4 && x < 8);
 
   ASSERT_MASK_BUF_PTR_VALID(state->foreground_mask_pointer);
 
-  x = (x - 4); // jump table offset (on input, 'x' is 4..7 => 0..3) // 6 = length of asm chunk
+  x -= 4; /* jump table offset (on input, x is 4..7) */
 
   maskptr   = state->mask_pointer;
   bitmapptr = state->bitmap_pointer;
@@ -10389,14 +10381,14 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
   assert(maskptr   != NULL);
   assert(bitmapptr != NULL);
 
-  iters = state->self_E363; // (clipped height & 0xFF) // self modified by $E49D (setup_vischar_plotting)
+  iters = state->spriteplotter.height_16_right; /* self modified by $E49D (setup_vischar_plotting) */
   assert(iters <= MASK_BUFFER_HEIGHT * 8);
 
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer, 2);
   ASSERT_WINDOW_BUF_PTR_VALID(state->window_buf_pointer + (iters - 1) * state->columns + 2 - 1, 2);
   do
   {
-    /* Note the different variable order to the 'left' case above. */
+    /* Note the different variable order to the right shifting case above. */
     uint8_t bm0, bm1, bm2;       /* was E, D, C */
     uint8_t mask0, mask1, mask2; /* was E', D', C' */
     int     carry = 0;
@@ -10415,11 +10407,11 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
     foremaskptr = state->foreground_mask_pointer;
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    /* Shift mask. */
+    /* Shift mask bytes */
 
-    mask2 = 0xFF; // all bits set => mask OFF (that would match the observed stored mask format)
-    carry = 1; // mask OFF
-    // Conv: Replaced self-modified goto with if-else chain.
+    mask2 = 0xFF; /* all bits set => mask off */
+    carry = 1; /* mask off */
+    /* Conv: Replaced self-modified goto with if-else chain. */
     if (x <= 0)
     {
       RL(mask0);
@@ -10445,10 +10437,11 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
       RL(mask2);
     }
 
-    /* Shift bitmap. */
+    /* Shift bitmap bytes */
 
-    bm2 = 0; // all bits clear => pixels OFF
+    bm2 = 0; /* all bits clear => pixels off */
     // no carry reset in this variant?
+    /* Conv: Replaced self-modified goto with if-else chain. */
     if (x <= 0)
     {
       SLA(bm0);
@@ -10476,24 +10469,24 @@ void masked_sprite_plotter_16_wide_right(tgestate_t *state, uint8_t x)
 
     /* Plot, using foreground mask. */
 
-    screenptr = state->window_buf_pointer; // this line is moved relative to the 24 version
+    screenptr = state->window_buf_pointer; // line moved relative to the 24 version
     ASSERT_WINDOW_BUF_PTR_VALID(screenptr, 2);
     ASSERT_MASK_BUF_PTR_VALID(foremaskptr);
 
-    // Conv: We form 'mask' inside of the enable_* condition. The original
-    // game got away with accessing out-of-bounds memory but we can't.
+    /* Conv: We form 'mask' inside of the enable_* condition. The original
+     * game got away with accessing out-of-bounds memory but we can't. */
 
-    if (state->enable_16_right_1)
+    if (state->spriteplotter.enable_16_right_1)
       *screenptr = MASK(bm2, mask2);
     foremaskptr++;
     screenptr++;
 
-    if (state->enable_16_right_2)
+    if (state->spriteplotter.enable_16_right_2)
       *screenptr = MASK(bm1, mask1);
     foremaskptr++;
     screenptr++;
 
-    if (state->enable_16_right_3)
+    if (state->spriteplotter.enable_16_right_3)
       *screenptr = MASK(bm0, mask0);
     foremaskptr += 2;
     state->foreground_mask_pointer = foremaskptr;
@@ -10614,14 +10607,14 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
    */
   static const size_t masked_sprite_plotter_24_enables[4 * 2] =
   {
-    offsetof(tgestate_t, enable_24_right_1),
-    offsetof(tgestate_t, enable_24_left_1),
-    offsetof(tgestate_t, enable_24_right_2),
-    offsetof(tgestate_t, enable_24_left_2),
-    offsetof(tgestate_t, enable_24_right_3),
-    offsetof(tgestate_t, enable_24_left_3),
-    offsetof(tgestate_t, enable_24_right_4),
-    offsetof(tgestate_t, enable_24_left_4),
+    offsetof(tgestate_t, spriteplotter.enable_24_right_1),
+    offsetof(tgestate_t, spriteplotter.enable_24_left_1),
+    offsetof(tgestate_t, spriteplotter.enable_24_right_2),
+    offsetof(tgestate_t, spriteplotter.enable_24_left_2),
+    offsetof(tgestate_t, spriteplotter.enable_24_right_3),
+    offsetof(tgestate_t, spriteplotter.enable_24_left_3),
+    offsetof(tgestate_t, spriteplotter.enable_24_right_4),
+    offsetof(tgestate_t, spriteplotter.enable_24_left_4),
 
     /* These two addresses are present here in the original game but are
      * unreferenced. */
@@ -10642,7 +10635,6 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   uint8_t            enable_count;   /* was $E4C0 */
   uint8_t            counter;        /* was A' */
   uint8_t            iters;          /* was B' */
-  uint8_t            E;              /* was E */
   uint8_t            instr;          /* was A */
   uint8_t            A;              /* was A */
   int16_t            x;              /* was HL */
@@ -10706,23 +10698,21 @@ int setup_vischar_plotting(tgestate_t *state, vischar_t *vischar)
   // PUSH clipped_width
   // PUSH clipped_height
 
-  E = clipped_height; // must be no of visible rows? // Conv: added
-
   assert(clipped_width < 100);
-  assert(E < 100);
+  assert(clipped_height < 100);
 
   if (vischar->width_bytes == 3) // 3 => 16 wide, 4 => 24 wide
   {
-    state->self_E2C2 = E; // self modify masked_sprite_plotter_16_wide_left
-    state->self_E363 = E; // self-modify masked_sprite_plotter_16_wide_right
+    state->spriteplotter.height_16_left  = clipped_height; // self modify masked_sprite_plotter_16_wide_left
+    state->spriteplotter.height_16_right = clipped_height; // self-modify masked_sprite_plotter_16_wide_right
 
     enable_count = 3;
     enables = &masked_sprite_plotter_16_enables[0];
   }
   else
   {
-    state->self_E121 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift right case)
-    state->self_E1E2 = E; // self-modify masked_sprite_plotter_24_wide_vischar (shift left case)
+    state->spriteplotter.height_24_right = clipped_height; // self-modify masked_sprite_plotter_24_wide_vischar (shift right case)
+    state->spriteplotter.height_24_left  = clipped_height; // self-modify masked_sprite_plotter_24_wide_vischar (shift left case)
 
     enable_count = 4;
     enables = &masked_sprite_plotter_24_enables[0];
@@ -10887,7 +10877,7 @@ void plot_game_window(tgestate_t *state)
   {
     src = &state->window_buf[1] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
-    offsets = &state->game_window_start_offsets[0];
+    offsets = &game_window_start_offsets[0];
     y_iters_A = 128; /* iterations */
     do
     {
@@ -10926,7 +10916,7 @@ void plot_game_window(tgestate_t *state)
     src = &state->window_buf[0] + state->game_window_offset.x;
     ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
     prev = *src++;
-    offsets = &state->game_window_start_offsets[0];
+    offsets = &game_window_start_offsets[0];
     y_iters_B = 128; /* iterations */
     do
     {
@@ -11268,11 +11258,14 @@ TGE_API void tge_setup2(tgestate_t *state)
 TGE_API void tge_main(tgestate_t *state)
 {
   if (setjmp(state->jmpbuf_main) == 0)
+  {
     /* On entry we run the main loop. */
     main_loop(state);
+  }
   else
+  {
     /* If something wanted to exit quickly we arrive here. */
-    ;
+  }
 }
 
 /* ----------------------------------------------------------------------- */

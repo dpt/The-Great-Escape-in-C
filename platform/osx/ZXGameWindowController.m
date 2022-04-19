@@ -3,7 +3,7 @@
 //  The Great Escape
 //
 //  Created by David Thomas on 03/08/2017.
-//  Copyright © 2017-2018 David Thomas. All rights reserved.
+//  Copyright © 2017-2020 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -14,7 +14,9 @@
 
 @implementation ZXGameWindowController
 {
-  int gameWidth, gameHeight, gameBorder;
+  CGSize defaultGameSize;
+  int    defaultGameBorder;
+  NSURL *startupGame;
 }
 
 static int ngames;
@@ -25,11 +27,6 @@ static int ngames;
 {
   self = [super initWithWindowNibName:@"ZXGameWindow" owner:self];
   ngames++;
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(windowWillCloseNotification:)
-                                               name:NSWindowWillCloseNotification
-                                             object:[self window]];
 
   return self;
 }
@@ -48,9 +45,26 @@ static int ngames;
   self.shouldCascadeWindows = YES; // (default)
 
   // Get the configured game dimensions
-  [gameView getGameWidth:&gameWidth height:&gameHeight border:&gameBorder];
+  [gameView getDefaultViewSize:&defaultGameSize border:&defaultGameBorder];
 
   [self resizeAndCentreGameWindow];
+
+  gameView.delegate = self;
+  [gameView start];
+
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(windowWillCloseNotification:)
+                                               name:NSWindowWillCloseNotification
+                                             object:[self window]];
+}
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Public Interface
+
+- (void)setStartupGame:(NSURL *)url
+{
+  startupGame = url;
 }
 
 // -----------------------------------------------------------------------------
@@ -64,7 +78,7 @@ static int ngames;
 
 // -----------------------------------------------------------------------------
 
-#pragma mark - Action handlers
+#pragma mark - IBAction handlers
 
 - (IBAction)setZoomLevel:(id)sender
 {
@@ -95,75 +109,85 @@ static int ngames;
   int       borderedWidth, borderedHeight;
   NSRect    contentRect;
   NSRect    frame;
-  int       nwidth, nheight;
+  int       w, h;
   NSRect    screenFrame;
   CGFloat   x,y;
   NSRect    centeredFrame;
 
   window = [self window];
 
-  borderedWidth  = gameWidth  + gameBorder * 2;
-  borderedHeight = gameHeight + gameBorder * 2;
+  borderedWidth  = defaultGameSize.width  + defaultGameBorder * 2;
+  borderedHeight = defaultGameSize.height + defaultGameBorder * 2;
   contentRect = NSMakeRect(0, 0, borderedWidth, borderedHeight);
   frame = [window frameRectForContentRect:contentRect];
-  nwidth  = frame.size.width;
-  nheight = frame.size.height;
+  w = frame.size.width;
+  h = frame.size.height;
 
   screenFrame = [[NSScreen mainScreen] frame];
-  x = screenFrame.origin.x + (screenFrame.size.width  - nwidth)  / 2;
-  y = screenFrame.origin.y + (screenFrame.size.height - nheight) / 2;
-  centeredFrame = NSMakeRect(x, y, nwidth, nheight);
+  x = screenFrame.origin.x + (screenFrame.size.width  - w) / 2;
+  y = screenFrame.origin.y + (screenFrame.size.height - h) / 2;
+  centeredFrame = NSMakeRect(x, y, w, h);
 
   [window setFrame:centeredFrame display:YES animate:NO];
 }
 
 /// Rescale the window frame size either up or down by one game width.
 ///
-/// We calculate and set the window frame dimensions but don't set the 'scale' value.
+/// We calculate and set the window frame dimensions but don't set the 'scale' value directly - instead relying
+/// on ZXGameView::setupDrawing to react to our changes.
 ///
 - (void)scaleWindow:(int)direction
 {
   NSWindow *window;
   NSRect    frameRect;
-  NSRect    currentContentRect;
-  CGFloat   scale;
-  NSRect    newContentRect;
-  NSRect    newFrameRect;
+  CGSize    contentSize;
+  int       gameBorder;
   CGFloat   x,y;
   NSRect    centeredFrame;
 
-  window = [self window];
+  window    = [self window];
   frameRect = [window frame];
-  currentContentRect = [window contentRectForFrameRect:frameRect];
 
-  scale = gameView.scale;
-
-  // Choose the new scale by rounding up/down
-  if (direction > 0)
-    scale = ceil(scale + 0.001); // bump up
-  else if (direction < 0)
-    scale = floor(scale - 0.001); // bump down
+  if (direction)
+  {
+    // Take the current content rect then ask the game to suggest a better size
+    contentSize = [window contentRectForFrameRect:frameRect].size;
+    [gameView getSuggestedViewSize:&contentSize
+                            border:&gameBorder
+                           forSize:contentSize
+                         direction:direction];
+  }
   else
-    scale = 1.0; // reset
+  {
+    // Get the basic game dimensions
+    [gameView getDefaultViewSize:&contentSize border:&gameBorder];
+  }
 
-  // Clamp to 25% minimum to avoid the window becoming too small
-  if (scale < 0.25)
-    scale = 0.25;
-
-  // Calculate the new window frame
-  newContentRect.origin = currentContentRect.origin;
-  newContentRect.size.width  = gameWidth  * scale + gameBorder * 2;
-  newContentRect.size.height = gameHeight * scale + gameBorder * 2;
-  newFrameRect = [window frameRectForContentRect:newContentRect];
+  // Add in the border
+  contentSize.width  += gameBorder * 2;
+  contentSize.height += gameBorder * 2;
 
   // Centre the window frame over its previous position
-  x = frameRect.origin.x + (frameRect.size.width  - newFrameRect.size.width)  / 2;
-  y = frameRect.origin.y + (frameRect.size.height - newFrameRect.size.height) / 2;
-  centeredFrame = NSMakeRect(x, y, newFrameRect.size.width,
-                                   newFrameRect.size.height);
+  x = frameRect.origin.x + (frameRect.size.width  - contentSize.width)  / 2;
+  y = frameRect.origin.y + (frameRect.size.height - contentSize.height) / 2;
+  centeredFrame = NSMakeRect(x, y, contentSize.width, contentSize.height);
+
+  // Clamp to screen size
+  centeredFrame = NSIntersectionRect(centeredFrame, [[window screen] visibleFrame]);
 
   [window setFrame:centeredFrame display:YES animate:NO];
 }
+
+// -----------------------------------------------------------------------------
+
+#pragma mark - Load/Save Games (ZXGameViewDelegate)
+
+- (NSURL *)getStartupGame
+{
+  return startupGame;
+}
+
+// -----------------------------------------------------------------------------
 
 @end
 

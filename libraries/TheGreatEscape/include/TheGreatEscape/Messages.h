@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 #ifndef MESSAGES_H
@@ -64,6 +64,9 @@ void queue_message(tgestate_t *state,
                    message_t   message_index);
 /* $7D48 */
 void message_display(tgestate_t *state);
+
+/* $7DCD */
+extern const char *messages_table[message__LIMIT];
 
 /* ----------------------------------------------------------------------- */
 

@@ -1,0 +1,11 @@
+Package: GtEscape
+Version: 0.95-1
+Section: Games
+Priority: Optional
+Maintainer: David Thomas <dave@davespace.co.uk>
+Standards-Version: 0.6.0
+Environment: arm
+Licence: Free
+Description: Prison escape game from ZX Spectrum
+Homepage: http://www.davespace.co.uk/the.great.escape/
+Components: Apps.Games.!GtEscape (Movable)

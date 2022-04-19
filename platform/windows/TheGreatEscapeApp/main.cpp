@@ -2,7 +2,7 @@
 //
 // Windows front-end for The Great Escape
 //
-// Copyright (c) David Thomas, 2016-2020. <dave@davespace.co.uk>
+// Copyright (c) David Thomas, 2016-2022. <dave@davespace.co.uk>
 //
 
 #include <cassert>

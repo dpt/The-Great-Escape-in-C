@@ -3,7 +3,7 @@
 //  TheGreatEscape
 //
 //  Created by David Thomas on 10/10/2017.
-//  Copyright © 2017-2018 David Thomas. All rights reserved.
+//  Copyright © 2017-2020 David Thomas. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -23,7 +23,7 @@
   // window is moved.
 
   self.titleVisibility = NSWindowTitleVisible;
-  self.styleMask |= NSFullSizeContentViewWindowMask;
+  self.styleMask |= NSWindowStyleMaskFullSizeContentView;
   self.titlebarAppearsTransparent = YES;
 
   [self setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];

@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 #ifndef THE_GREAT_ESCAPE_H
@@ -88,6 +88,29 @@ TGE_API void tge_setup2(tgestate_t *state);
  */
 TGE_API void tge_main(tgestate_t *state);
 
+#ifdef TGE_SAVES
+
+/**
+ * Save the game state to 'filename'.
+ */
+TGE_API int tge_save(tgestate_t *state, const char *filename);
+
+/**
+ * Load the game state from 'filename'.
+ *
+ * If an error was encountered while loading the game then 'error' _may_ be
+ * populated with an error message. It will be NULL otherwise.
+ */
+TGE_API int tge_load(tgestate_t *state,
+                     const char *filename,
+                     char      **error);
+
+/**
+ * Dispose of an error message returned by tge_load().
+ */
+TGE_API void tge_disposeoferror(char *error);
+
+#endif /* TGE_SAVES */
 
 #ifdef __cplusplus
 }

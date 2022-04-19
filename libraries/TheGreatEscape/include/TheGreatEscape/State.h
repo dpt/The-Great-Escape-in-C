@@ -12,7 +12,7 @@
  *
  * The original game is copyright (c) 1986 Ocean Software Ltd.
  * The original game design is copyright (c) 1986 Denton Designs Ltd.
- * The recreated version is copyright (c) 2012-2019 David Thomas
+ * The recreated version is copyright (c) 2012-2020 David Thomas
  */
 
 #ifndef STATE_H
@@ -33,15 +33,29 @@
 
 /* ----------------------------------------------------------------------- */
 
-#define MASK_BUFFER_WIDTHBYTES 4
-#define MASK_BUFFER_ROWBYTES   (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
-#define MASK_BUFFER_HEIGHT     5
-#define MASK_BUFFER_LENGTH     (MASK_BUFFER_ROWBYTES * MASK_BUFFER_HEIGHT)
+#define MASK_BUFFER_WIDTHBYTES    (4)
+#define MASK_BUFFER_ROWBYTES      (MASK_BUFFER_WIDTHBYTES * 8) /* one row of UDGs */
+#define MASK_BUFFER_HEIGHT        (5)
+#define MASK_BUFFER_LENGTH        (MASK_BUFFER_ROWBYTES * MASK_BUFFER_HEIGHT)
 
-#define MAX_ROOMDEF_OBJECT_BOUNDS 4
+#define TILE_BUF_WIDTH            (24)
+#define TILE_BUF_HEIGHT           (17)
+#define TILE_BUF_LENGTH           (TILE_BUF_WIDTH * TILE_BUF_HEIGHT)
 
-// 7 == max interior mask refs (roomdef_30 uses this many). hoist this elsewhere.
-#define MAX_INTERIOR_MASK_REFS 7
+#define WINDOW_BUF_WIDTH          (24 * 8)
+#define WINDOW_BUF_HEIGHT         (17)
+#define WINDOW_BUF_LENGTH         (WINDOW_BUF_WIDTH * WINDOW_BUF_HEIGHT)
+
+#define MAP_BUF_WIDTH             (7)
+#define MAP_BUF_HEIGHT            (5)
+#define MAP_BUF_LENGTH            (MAP_BUF_WIDTH * MAP_BUF_HEIGHT)
+
+#define MAX_ROOMDEF_OBJECT_BOUNDS (4)
+
+// 7 == max interior mask refs (roomdef_30 uses this many)
+#define MAX_INTERIOR_MASK_REFS    (7)
+
+#define LOCKED_DOORS_LENGTH       (11)
 
 /* ----------------------------------------------------------------------- */
 
@@ -163,38 +177,10 @@ struct tgestate
    */
   itemstruct_t    item_structs[item__LIMIT];
 
-  struct
-  {
-    /**
-     * $7CFC: The queue of message indices.
-     *
-     * Each is a two-byte value. Terminated by a single message_QUEUE_END
-     * byte (0xFF).
-     */
-    uint8_t       queue[message_queue_LENGTH];
-
-    /**
-     * $7D0F: A decrementing counter which shows the next message when it
-     * reaches zero.
-     */
-    uint8_t       display_delay;
-
-    /**
-     * $7D10: The index into the message we're displaying or wiping.
-     */
-    uint8_t       display_index;
-
-    /**
-     * $7D11: A pointer to the next available slot in the message queue.
-     */
-    uint8_t      *queue_pointer;
-
-    /**
-     * $7D13: A pointer to the next message character to be displayed.
-     */
-    const char   *current_character;
-  }
-  messages;
+  /**
+   * $7CFC: Holds the variables related to on-screen messages.
+   */
+  messages_t      messages;
 
   /**
    * $7F00: A table of 256 bit-reversed bytes.
@@ -517,33 +503,17 @@ struct tgestate
   /**
    * $AB66: Holds zoombox parameters.
    */
-  struct
-  {
-    uint8_t       x;
-    uint8_t       width;
-    uint8_t       y;
-    uint8_t       height;
-  }
-  zoombox;
+  zoombox_t       zoombox;
 
   /**
    * $AB6A: A stored copy of game screen attribute, used to draw the zoombox.
    */
   attribute_t     game_window_attribute;
 
-  struct
-  {
-    /**
-     * $AD29: Holds searchlight movement data.
-     */
-    searchlight_movement_t states[3];
-
-    /**
-     * $AE76: The coordinates of the searchlight when hero is caught.
-     */
-    pos8_t        caught_coord;
-  }
-  searchlight;
+  /**
+   * $AD29: Holds searchlight parameters.
+   */
+  searchlight_t   searchlight;
 
   /**
    * $AF8E: The current bribed character.
@@ -565,44 +535,8 @@ struct tgestate
    */
   attribute_t     item_attributes[item__LIMIT];
 
-  /**
-   * $E121..$E363: The formerly self-modified locations used by masked sprite plotters.
-   */
-  uint8_t         self_E121; /* masked_sprite_plotter_24_wide_vischar: height loop (in right shift case) = clipped_height & 0xFF */
-  uint8_t         self_E1E2; /* masked_sprite_plotter_24_wide_vischar: height loop (in left shift case)  = clipped_height & 0xFF */
-  uint8_t         self_E2C2; /* masked_sprite_plotter_16_wide_left:    height loop                       = clipped_height & 0xFF */
-  uint8_t         self_E363; /* masked_sprite_plotter_16_wide_right:   height loop                       = clipped_height & 0xFF */
-
-  /* Note that these adjacent chunks actually overlap in the original game
-   * but I've divided them here for clarity. */
-
-  /**
-   * $E188..$E3EC: Sprite clipping controls.
-   *
-   * In the original game these were self-modified instructions.
-   */
-  uint8_t         enable_24_right_1; /* was $E188 - 24 case, rotate right, first  clip */
-  uint8_t         enable_24_right_2; /* was $E259 - 24 case, rotate right, second clip */
-  uint8_t         enable_24_right_3; /* was $E199 - 24 case, rotate right, third  clip */
-  uint8_t         enable_24_right_4; /* was $E26A - 24 case, rotate right, fourth clip */
-
-  uint8_t         enable_24_left_1;  /* was $E1AA - 24 case, rotate left,  first  clip */
-  uint8_t         enable_24_left_2;  /* was $E27B - 24 case, rotate left,  second clip */
-  uint8_t         enable_24_left_3;  /* was $E1BF - 24 case, rotate left,  third  clip */
-  uint8_t         enable_24_left_4;  /* was $E290 - 24 case, rotate left,  fourth clip */
-
-  uint8_t         enable_16_left_1;  /* was $E319 - 16 case, rotate left,  first  clip */
-  uint8_t         enable_16_left_2;  /* was $E32A - 16 case, rotate left,  second clip */
-  uint8_t         enable_16_left_3;  /* was $E340 - 16 case, rotate left,  third  clip */
-
-  uint8_t         enable_16_right_1; /* was $E3C5 - 16 case, rotate right, first  clip */
-  uint8_t         enable_16_right_2; /* was $E3D6 - 16 case, rotate right, second clip */
-  uint8_t         enable_16_right_3; /* was $E3EC - 16 case, rotate right, third  clip */
-
-  /**
-   * $EDD3: Points to an array of start addresses for game screen (usually 128).
-   */
-  uint16_t       *game_window_start_offsets;
+  /** */
+  spriteplotter_t spriteplotter;
 
   /**
    * $F05D: Holds the gates and doors which are initially locked.
@@ -611,7 +545,7 @@ struct tgestate
    * The first five locked doors are exterior doors.
    * The doors 2..8 include interior doors.
    */
-  doorindex_t     locked_doors[11];
+  doorindex_t     locked_doors[LOCKED_DOORS_LENGTH];
 
   /**
    * $F06B: Holds key definitions.

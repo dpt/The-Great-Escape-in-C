@@ -130,7 +130,7 @@ void zoombox(tgestate_t *state)
 
     /* Conv: Invalidation added over the original game. */
     invalidate_bitmap(state,
-                      &state->speccy->screen.pixels[0] + state->game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
+                      &state->speccy->screen.pixels[0] + game_window_start_offsets[(state->zoombox.y - 1) * 8] + state->zoombox.x - 1,
                       (state->zoombox.width + 2) * 8,
                       (state->zoombox.height + 2) * 8);
 
@@ -169,7 +169,7 @@ static void zoombox_fill(tgestate_t *state)
   offset = state->zoombox.y * state->window_buf_stride + state->zoombox.x;
   src = &state->window_buf[offset + 1];
   ASSERT_WINDOW_BUF_PTR_VALID(src, 0);
-  dst = screen_base + state->game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
+  dst = screen_base + game_window_start_offsets[state->zoombox.y * 8] + state->zoombox.x; // Conv: Screen base was hoisted from table.
   ASSERT_SCREEN_PTR_VALID(dst);
 
   hz_count  = state->zoombox.width;
@@ -222,7 +222,7 @@ static void zoombox_draw_border(tgestate_t *state)
   uint8_t  iters; /* was B */
   int      delta; /* was DE */
 
-  addr = screen_base + state->game_window_start_offsets[(state->zoombox.y - 1) * 8]; // Conv: Screen base hoisted from table.
+  addr = screen_base + game_window_start_offsets[(state->zoombox.y - 1) * 8]; // Conv: Screen base hoisted from table.
   ASSERT_SCREEN_PTR_VALID(addr);
 
   /* Top left */
