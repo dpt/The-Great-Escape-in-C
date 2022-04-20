@@ -94,7 +94,7 @@ add_custom_command(
 # Make sure the 'Resources' directory is correctly created before we build
 add_custom_command(TARGET TheGreatEscapeApp
     PRE_BUILD
-    COMMAND mkdir -p ./\${CONFIGURATION}/TheGreatEscape.app/Contents/Resources)
+    COMMAND mkdir -p ./TheGreatEscape.app/Contents/Resources)
 
 # Place resource files in Resources/*
 set_source_files_properties(${RESOURCES}
@@ -118,6 +118,6 @@ foreach(xib ${XIBS})
         COMMAND ${IBTOOL}
         --errors --warnings --notices
         --output-format human-readable-text
-        --compile ./\${CONFIGURATION}/TheGreatEscape.app/Contents/Resources/${xib}.nib ${RESOURCES_SOURCE_DIR}/${xib}.xib
+        --compile ./TheGreatEscape.app/Contents/Resources/${xib}.nib ${RESOURCES_SOURCE_DIR}/${xib}.xib
         COMMENT "Compiling ${xib}.xib")
 endforeach()
