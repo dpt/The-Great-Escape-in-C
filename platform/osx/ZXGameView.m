@@ -274,7 +274,7 @@ failure:
         NSURL *url = savePanel.URL;
         if (url)
           // The URL flags to cause a save when next able.
-          saveGameURL = url;
+          saveGameURL = [url copy];
       }
       else
       {
