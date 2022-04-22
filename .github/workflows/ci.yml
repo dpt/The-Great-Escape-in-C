@@ -87,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: The-Great-Escape-macOS
-          path: ${{github.workspace}}/build/platform/osx/${{ steps.version.outputs.leafname }}
+          path: ${{github.workspace}}/build/platform/osx/Release/${{ steps.version.outputs.leafname }}
           if-no-files-found: error
 
   # The release only triggers when the thing that was pushed was a tag starting with 'macos-'
