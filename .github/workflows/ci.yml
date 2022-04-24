@@ -51,7 +51,8 @@ jobs:
     runs-on: macos-10.15
     
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      changeset: ${{ steps.version.outputs.changeset }}
+      tag: ${{ steps.version.outputs.tag }}
       leafname: ${{ steps.version.outputs.leafname }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -72,11 +73,14 @@ jobs:
       - name: Give the output a versioned name
         id: version
         run: |
-          version=$(git rev-parse --short HEAD)
-          echo "This is version: $version"
-          leafname="TheGreatEscape-$version-macOS.zip"
+          changeset=$(git rev-parse --short HEAD)
+          tag=$(git describe | awk -F - '{ print $2 }')
+          leafname="TheGreatEscape-$changeset-macOS.zip"
+          
+          echo "This is changeset: $changeset, tag: $tag"
 
-          echo "::set-output name=version::$version"
+          echo "::set-output name=changeset::$changeset"
+          echo "::set-output name=tag::$tag"
           echo "::set-output name=leafname::$leafname"
 
       - name: Archive it
@@ -108,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ needs.macos-cmake-build.outputs.version }}
+          release_name: Release ${{ needs.macos-cmake-build.outputs.tag }}
           draft: true
           prerelease: false
 
@@ -122,7 +126,7 @@ jobs:
           # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: The-Great-Escape-macOS/${{ needs.macos-cmake-build.outputs.leafname }}
-          asset_name: "POTATO-69" ## ${{ needs.macos-cmake-build.outputs.leafname }} # version=$(git describe | awk -F - '{ print $2 }')
+          asset_name: TheGreatEscape-${{ needs.macos-cmake-build.outputs.tag }}-macOS.zip
           asset_content_type: application/zip
 
   ##
