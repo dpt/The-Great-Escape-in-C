@@ -139,7 +139,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      changeset: ${{ steps.version.outputs.changeset }}
+      tag: ${{ steps.version.outputs.tag }}
       leafname: ${{ steps.version.outputs.leafname }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -157,15 +158,14 @@ jobs:
       - name: Give the output a versioned name
         id: version
         run: |
-          if [[ -f VersionNum ]] ; then
-              version=$(sed '/MajorVersion / ! d ; s/.*MajorVersion *"\(.*\)"/\1/' VersionNum)
-          else
-              version=$(git rev-parse --short HEAD)
-          fi
-          echo "This is version: $version"
-          leafname="TheGreatEscape-$version-RISC_OS.zip"
+          changeset=$(git rev-parse --short HEAD)
+          tag=$(git describe --tags | awk -F - '{ print $2 }')
+          leafname="TheGreatEscape-$changeset-RISC_OS.zip"
+          
+          echo "This is changeset: $changeset, tag: $tag"
 
-          echo "::set-output name=version::$version"
+          echo "::set-output name=changeset::$changeset"
+          echo "::set-output name=tag::$tag"
           echo "::set-output name=leafname::$leafname"
 
       - name: Archive it
@@ -202,7 +202,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ needs.riscos-build.outputs.version }}
+          release_name: Release ${{ needs.riscos-build.outputs.tag }}
           draft: true
           prerelease: false
 
@@ -215,6 +215,6 @@ jobs:
           # This pulls from the CREATE RELEASE step above, referencing its ID to get its outputs object, which include a `upload_url`.
           # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: The-Great-Escape/${{ needs.riscos-build.outputs.leafname }}
-          asset_name: ${{ needs.riscos-build.outputs.leafname }} # version=$(git describe | awk -F - '{ print $2 }')
+          asset_path: The-Great-Escape-RISC_OS/${{ needs.riscos-build.outputs.leafname }}
+          asset_name: TheGreatEscape-${{ needs.macos-cmake-build.outputs.tag }}-RISC_OS.zip
           asset_content_type: application/zip
