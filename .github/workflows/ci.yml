@@ -74,7 +74,7 @@ jobs:
         id: version
         run: |
           changeset=$(git rev-parse --short HEAD)
-          tag=$(git describe | awk -F - '{ print $2 }')
+          tag=$(git describe --tags | awk -F - '{ print $2 }')
           leafname="TheGreatEscape-$changeset-macOS.zip"
           
           echo "This is changeset: $changeset, tag: $tag"
