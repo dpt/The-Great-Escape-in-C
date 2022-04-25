@@ -159,7 +159,7 @@ jobs:
         id: version
         run: |
           changeset=$(git rev-parse --short HEAD)
-          tag=$(git describe --tags | awk -F - '{ print $2 }')
+          tag=$(git describe --tags | awk -F - '{ print $3 }')
           leafname="TheGreatEscape-$changeset-RISC_OS.zip"
           
           echo "This is changeset: $changeset, tag: $tag"
@@ -216,5 +216,5 @@ jobs:
           # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: The-Great-Escape-RISC_OS/${{ needs.riscos-build.outputs.leafname }}
-          asset_name: TheGreatEscape-${{ needs.macos-cmake-build.outputs.tag }}-RISC_OS.zip
+          asset_name: TheGreatEscape-${{ needs.riscos-build.outputs.tag }}-RISC_OS.zip
           asset_content_type: application/zip
