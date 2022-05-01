@@ -50,3 +50,4 @@ build*
 .DS_Store
 *.DS_Store
 *.swp
+.vs
