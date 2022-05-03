@@ -647,7 +647,7 @@ INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
         PNMLINK pNMLink = (PNMLINK) lParam;
         LITEM   item    = pNMLink->item;
 
-        ShellExecute(NULL, TEXT("open"), item.szUrl, NULL, NULL, SW_SHOW);
+        ShellExecuteW(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
         return TRUE;
       }
       }

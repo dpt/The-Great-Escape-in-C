@@ -6,7 +6,7 @@
 #
 # vim: sw=4 ts=8 et
 
-add_executable(TheGreatEscapeApp WIN32 TheGreatEscapeApp/main.cpp)
+add_executable(TheGreatEscapeApp WIN32 TheGreatEscapeApp/main.cpp TheGreatEscapeApp/bitfifo.c TheGreatEscapeApp/Resource.rc)
 
 if(TGE_SAVES)
     target_compile_definitions(TheGreatEscapeApp PRIVATE TGE_SAVES)
@@ -17,5 +17,5 @@ set_target_properties(TheGreatEscapeApp
 	LINKER_LANGUAGE CXX
 #    OUTPUT_NAME "TheGreatEscape"
 )
-	
-target_link_libraries(TheGreatEscapeApp ZXSpectrum TheGreatEscape)
+
+target_link_libraries(TheGreatEscapeApp ZXSpectrum TheGreatEscape comctl32.lib version.lib)
