@@ -16,6 +16,10 @@ on:
   #  branches: ["*"]
 
 jobs:
+  ##
+  ## Windows
+  ##
+
   windows-cmake-build:
     runs-on: windows-latest
     steps:
@@ -23,13 +27,17 @@ jobs:
         uses: lukka/get-cmake@v3.21.2
 
       - uses: actions/checkout@v2
-      
+
       - name: Compile The Great Escape for Windows (via CMake)
         run: |
           cmake -E make_directory ${{github.workspace}}\build
           cd ${{github.workspace}}\build
-          cmake ${{github.workspace}}
+          cmake -DCMAKE_BUILD_TYPE=Release ${{github.workspace}}
           cmake --build .
+
+  ##
+  ## macOS
+  ##
 
   macos-build:
     runs-on: macos-10.15
@@ -41,17 +49,89 @@ jobs:
 
   macos-cmake-build:
     runs-on: macos-10.15
+    
+    outputs:
+      changeset: ${{ steps.version.outputs.changeset }}
+      tag: ${{ steps.version.outputs.tag }}
+      leafname: ${{ steps.version.outputs.leafname }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: get-cmake
         uses: lukka/get-cmake@v3.21.2
 
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       - name: Compile The Great Escape for macOS (via CMake)
         run: |
-          mkdir -p build && cd build
-          cmake -GNinja ..
+          cmake -E make_directory ${{github.workspace}}/build
+          cd ${{github.workspace}}/build
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ${{github.workspace}}
           cmake --build .
+
+      - name: Give the output a versioned name
+        id: version
+        run: |
+          changeset=$(git rev-parse --short HEAD)
+          tag=$(git describe --tags | awk -F - '{ print $2 }')
+          leafname="TheGreatEscape-$changeset-macOS.zip"
+          
+          echo "This is changeset: $changeset, tag: $tag"
+
+          echo "::set-output name=changeset::$changeset"
+          echo "::set-output name=tag::$tag"
+          echo "::set-output name=leafname::$leafname"
+
+      - name: Archive it
+        run: |
+          cd ${{github.workspace}}/build/platform/osx/Release
+          zip -9r ${{ steps.version.outputs.leafname }} TheGreatEscape.app
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: The-Great-Escape-macOS
+          path: ${{github.workspace}}/build/platform/osx/Release/${{ steps.version.outputs.leafname }}
+          if-no-files-found: error
+
+  # The release only triggers when the thing that was pushed was a tag starting with 'macos-'
+  macos-release:
+    needs: macos-cmake-build
+    runs-on: macos-10.15
+    if: startsWith(github.ref, 'refs/tags/macos-')
+    steps:
+      - name: Download built binary
+        uses: actions/download-artifact@v1
+        with:
+          name: The-Great-Escape-macOS
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ needs.macos-cmake-build.outputs.tag }}
+          draft: true
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # This pulls from the CREATE RELEASE step above, referencing its ID to get its outputs object, which include a `upload_url`.
+          # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: The-Great-Escape-macOS/${{ needs.macos-cmake-build.outputs.leafname }}
+          asset_name: TheGreatEscape-${{ needs.macos-cmake-build.outputs.tag }}-macOS.zip
+          asset_content_type: application/zip
+
+  ##
+  ## RISC OS
+  ##
 
   riscos-build:
     # The type of runner that the job will run on
@@ -59,7 +139,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      changeset: ${{ steps.version.outputs.changeset }}
+      tag: ${{ steps.version.outputs.tag }}
       leafname: ${{ steps.version.outputs.leafname }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -77,15 +158,14 @@ jobs:
       - name: Give the output a versioned name
         id: version
         run: |
-          if [[ -f VersionNum ]] ; then
-              version=$(sed '/MajorVersion / ! d ; s/.*MajorVersion *"\(.*\)"/\1/' VersionNum)
-          else
-              version=$(git rev-parse --short HEAD)
-          fi
-          echo "This is version: $version"
-          leafname="TheGreatEscape-$version.zip"
+          changeset=$(git rev-parse --short HEAD)
+          tag=$(git describe --tags | awk -F - '{ print $3 }')
+          leafname="TheGreatEscape-$changeset-RISC_OS.zip"
+          
+          echo "This is changeset: $changeset, tag: $tag"
 
-          echo "::set-output name=version::$version"
+          echo "::set-output name=changeset::$changeset"
+          echo "::set-output name=tag::$tag"
           echo "::set-output name=leafname::$leafname"
 
       - name: Archive it
@@ -96,10 +176,11 @@ jobs:
           find . -type f -not -name '*,*' -exec mv '{}' '{},fff' \;  # ensure that type-less files come out as Text
           python3 -m rozipfile --verbose --create ../../${{ steps.version.outputs.leafname }} *
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
-          name: The-Great-Escape
+          name: The-Great-Escape-RISC_OS
           path: ${{ steps.version.outputs.leafname }}
+          if-no-files-found: error
         # The artifact that is downloadable from the Actions is actually a zip of the artifacts
         # that we supply. So it will be a regular Zip file containing a RISC OS Zip file.
 
@@ -112,7 +193,7 @@ jobs:
       - name: Download built binary
         uses: actions/download-artifact@v1
         with:
-          name: The-Great-Escape
+          name: The-Great-Escape-RISC_OS
 
       - name: Create Release
         id: create_release
@@ -121,7 +202,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ needs.riscos-build.outputs.version }}
+          release_name: Release ${{ needs.riscos-build.outputs.tag }}
           draft: true
           prerelease: false
 
@@ -132,8 +213,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # This pulls from the CREATE RELEASE step above, referencing its ID to get its outputs object, which include a `upload_url`.
-          # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: The-Great-Escape/${{ needs.riscos-build.outputs.leafname }}
-          asset_name: ${{ needs.riscos-build.outputs.leafname }}
+          asset_path: The-Great-Escape-RISC_OS/${{ needs.riscos-build.outputs.leafname }}
+          asset_name: TheGreatEscape-${{ needs.riscos-build.outputs.tag }}-RISC_OS.zip
           asset_content_type: application/zip

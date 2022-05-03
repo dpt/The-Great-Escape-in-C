@@ -1,25 +1,20 @@
 BUGS
 ====
 
-Unfixed
--------
+Last update: 2022-05-01
 
-In progress:
-
-* Guards & commandant don't always catch the hero on contact. (prove)
+Queue
+-----
 * Prove the game can be completed.
-
-Queue:
-
-* The macOS UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
-* Have seen NPCs get stuck at night in hero's bedroom. (prove)
-* Have seen guards and prisoners getting bunched up in doorway. (prove)
 * Address Sanitiser reports overwrites walking past end of character defs when plotting.
 * Undefined behaviour in `searchlight_plot` when producing the attribute address.
-* Enter the second tunnel system via the crate room and see the hero drawn standing up. Original bug.
-* Have seen the hero get wedged when randomly wandering - by the watchtower.
 
-* Reset the game when a character is in the hero's bedroom - character is not reset. Original bug perhaps. (can't repeat)
+Possibles (need proving)
+------------------------
+* Have seen NPCs get stuck at night in hero's bedroom.
+* Have seen guards and prisoners getting bunched up in doorway.
+* Have seen the hero get wedged when randomly wandering by the watchtower.
+* Enter the second tunnel system via the crate room and see the hero drawn standing up. Probably an original bug.
 
 Fixed
 -----
@@ -111,6 +106,8 @@ Fixed
 41. Bribes were accepted but had no effect.
     * Conversion bug: a test was accidentally inverted.
     * Fixed 21-Mar-18.
+42. **macOS**: UI game window scales to half its expected size if Cmd-Number is pressed twice in sequence. This is related somehow to 'Supports high-res backing' retina support flag.
+    * Fixed in 0475ed1 22-Dec-21. (Dougie Henderson)
 
 vim: wrap linebreak textwidth=0 wrapmargin=0 breakindent
 
