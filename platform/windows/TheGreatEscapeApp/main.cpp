@@ -40,8 +40,9 @@
 #define GAMEBORDER      (16)    // pixels
 
 #define MAXSTAMPS       (4)     // max depth of timestamps stack
-#define SPEEDQ          (20)    // smallest unit of speed (percent)
+#define SPEEDQ          (25)    // smallest unit of speed (percent)
 #define NORMSPEED       (100)   // normal speed (percent)
+#define MINSPEED        (10)    // slowest possible game (percent)
 #define MAXSPEED        (99999) // fastest possible game (percent)
 
 #define BUFSZ           (44100 / 50) // 1/50th sec at 44.1kHz
@@ -677,8 +678,8 @@ INT_PTR CALLBACK AboutDialogueProcedure(HWND   hwnd,
 // todo: synchronisation
 static void SetSpeed(gamewin_t *gamewin, int tag)
 {
-  const int min_speed = 10;      // percent
-  const int max_speed = 1000000; // percent
+  const int min_speed = MINSPEED; // percent
+  const int max_speed = MAXSPEED; // percent
   int       newspeed;
 
   if (tag == 0)
@@ -701,11 +702,11 @@ static void SetSpeed(gamewin_t *gamewin, int tag)
     break;
 
   case 1: // increase speed
-    newspeed = gamewin->speed + 25;
+    newspeed = gamewin->speed + SPEEDQ;
     break;
 
   case 2: // decrease speed
-    newspeed = gamewin->speed - 25;
+    newspeed = gamewin->speed - SPEEDQ;
     break;
   }
 
