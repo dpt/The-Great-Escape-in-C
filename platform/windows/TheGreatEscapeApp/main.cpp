@@ -29,7 +29,16 @@
 
 #include "bitfifo.h"
 
+///////////////////////////////////////////////////////////////////////////////
+
+// Microsoft voodoo jibberish
+//
+
+// For sound:
 #pragma comment(lib, "winmm.lib")
+
+// For hyperlink in About dialogue:
+#pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 ///////////////////////////////////////////////////////////////////////////////
 
