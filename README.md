@@ -1,5 +1,7 @@
 # “The Great Escape” Ported to C
 
+[![Build status](https://github.com/dpt/The-Great-Escape-in-C/actions/workflows/ci.yml/badge.svg)](https://github.com/dpt/The-Great-Escape-in-C/actions)
+
 © David Thomas, 2013-2022
 
 17th April 2022
