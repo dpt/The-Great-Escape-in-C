@@ -50,12 +50,12 @@ The front-ends attempt to always preserve the game's aspect ratio and snap to wh
 ## Current Builds
 | Port | Maintained? | Notes |
 |-|-|-|
-| macOS CMake | Yes | My default build; the most likely to be up-to-date. To build use `cd <src> && mkdir build && cd build && cmake .. && cmake --build .` or [`build.sh`](build.sh) |
+| macOS CMake | Yes | My default build; the most likely to be up-to-date. To build use `cd <src> && mkdir build && cd build && cmake .. && cmake --build .`, or [`build.sh`](build.sh) which does the same. |
 | macOS native | Probably | To build open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R. |
 | Windows CMake | Yes | CMake build - like above |
 | Windows native | Probably | Needs Visual Studio 2013. Trunk build lacks sound and UI niceties (but there are improvements on a branch somewhere...) To build open up the Visual Studio solution `platform/windows/TheGreatEscape/TheGreatEscape.sln` and build that using F7. Run using F5. |
-| RISC OS | Yes | Runs on RISC OS 3.1 or later. Sound requires a Risc PC or later with a 16-bit sound system. To build this uses GCCSDK and CMake. If you're nutty enough to want to build the RISC OS version then you might want to talk to me first. |
-| Makefile | Occasionally | Minimal headless driver for testing. Runs the game for 100,000 iterations of the main loop then stops. |
+| RISC OS | Yes | Runs on RISC OS 3.1 or later. Sound requires a Risc PC or later with a 16-bit sound system. To build this uses GCCSDK and CMake. If you're nutty enough to want to build the RISC OS version then you might want to talk to me first, or take a look at [`riscos-ci-build.sh`](riscos-ci-build.sh). |
+| Makefile | Occasionally | This builds a minimal headless (no display) version of the game for testing. It runs the game for 100,000 iterations of the main loop then stops. |
 | SDL | Perhaps | SDL build. No sound or UI niceties and broken timing. |
 | Browser, via emscripten | Maybe | [Try it here](http://www.davespace.co.uk/TheGreatEscape/TheGreatEscape.html) using the arrow keys and `.` for fire. This uses the SDL build but targets emscripten. The structure of the game is not exactly amenable to the browser world (the RISC OS build has a similar issues). |
 
