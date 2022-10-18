@@ -50,7 +50,7 @@ The front-ends attempt to always preserve the game's aspect ratio and snap to wh
 ## Current Builds
 | Port | Maintained? | Notes |
 |-|-|-|
-| macOS CMake | Yes | My default build; the most likely to be up-to-date. To build use `cd <src> && mkdir build && cd build && cmake .. && cmake --build .` or `[build.sh](build.sh)` |
+| macOS CMake | Yes | My default build; the most likely to be up-to-date. To build use `cd <src> && mkdir build && cd build && cmake .. && cmake --build .` or [`build.sh`](build.sh) |
 | macOS native | Probably | To build open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R. |
 | Windows CMake | Yes | CMake build - like above |
 | Windows native | Probably | Needs Visual Studio 2013. Trunk build lacks sound and UI niceties (but there are improvements on a branch somewhere...) To build open up the Visual Studio solution `platform/windows/TheGreatEscape/TheGreatEscape.sln` and build that using F7. Run using F5. |
