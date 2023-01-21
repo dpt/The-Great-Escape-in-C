@@ -34,7 +34,6 @@ source /home/riscos/gccsdk-params
 if [[ ! -d PrivateEye ]] ; then
     git clone https://github.com/dpt/PrivateEye
     cd PrivateEye
-    git checkout 5c36b46 # just before PNG changes
 fi
 export APPENGINE_ROOT=${scriptdir}/PrivateEye
 

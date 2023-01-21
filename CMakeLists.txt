@@ -2,7 +2,7 @@
 #
 # The Great Escape in C
 #
-# Copyright (c) David Thomas, 2017-2022
+# Copyright (c) David Thomas, 2017-2024
 #
 # vim: sw=4 ts=8 et
 
@@ -32,7 +32,7 @@ set(EMAIL dave@davespace.co.uk)
 set(CODE_IDENTIFIER uk.co.davespace.TheGreatEscape)
 #set(CODE_SIGN_IDENTITY )
 set(VERSION 1.0.0)
-set(COPYRIGHT "Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2021 David Thomas &lt;dave@davespace.co.uk&gt; (this version).")
+set(COPYRIGHT "Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2024 David Thomas &lt;dave@davespace.co.uk&gt; (this version).")
 
 
 option(TGE_SAVES "Enable loading and saving of games" ON)

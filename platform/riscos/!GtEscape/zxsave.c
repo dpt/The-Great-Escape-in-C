@@ -23,7 +23,7 @@
 
 dialogue_t *zxgamesave_dlg;
 
-static bits save_type; /* 1 for game, else screenshot */
+static bits save_type; /* file type */
 
 /* ----------------------------------------------------------------------- */
 
@@ -43,8 +43,7 @@ static void zxgamesave_dlg_fillout(dialogue_t *d, void *opaque)
   else
     file_name = "Screenshot";
 
-  save_set_file_name(d, file_name);
-  save_set_file_type(d, save_type);
+  save_set_info(d, file_name, save_type, 10000 /* est_size */);
 }
 
 /* Called on 'Save' button clicks, but not on drag saves. */

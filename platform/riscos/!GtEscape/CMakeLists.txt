@@ -76,7 +76,7 @@ set(LIBS_DIR ${APPENGINE_REPO_ROOT}/libs)
 # Import DPTLib
 FetchContent_Declare(DPTLib
     GIT_REPOSITORY https://github.com/dpt/DPTLib
-    GIT_TAG 0.3.0)
+    GIT_TAG 0.4.1)
 # Expanding out FetchContent_MakeAvailable(DPTLib) here so I can use EXCLUDE_FROM_ALL
 FetchContent_GetProperties(DPTLib)
 if(NOT DPTLib_POPULATED)

@@ -20,7 +20,7 @@ fi
 
 mkdir -p $BUILDDIR && cd $BUILDDIR
 echo "Configuring..."
-cmake $GENERATOR -DCMAKE_TOOLCHAIN_FILE=../cmake/riscos.cmake ..
+cmake $GENERATOR -DCMAKE_TOOLCHAIN_FILE==${APPENGINE_ROOT}/cmake/riscos.cmake ..
 echo "Building..."
 cmake --build . $PARALLEL
 echo "Installing..."
