@@ -19,7 +19,7 @@
 # Project
 #
 PROJECT=TheGreatEscape
-LIBS=
+LIBS=-lSDL2
 DONTCOMPILE=main.c
 
 # Paths
@@ -57,7 +57,6 @@ else ifeq ($(TARGET),osx-any-clang)
 	CLANGFLAGS=-ferror-limit=2 -Os
 	#SANITIZE=-fsanitize=integer -fsanitize=address -fsanitize=undefined
 	LDFLAGS=
-	LIBS=-lSDL2
 	CC=$(CLANG) $(CLANGFLAGS) $(SANITIZE)
 	LD=$(CLANG) $(LDFLAGS) $(SANITIZE)
 else ifeq ($(TARGET),linux-arm-clang)

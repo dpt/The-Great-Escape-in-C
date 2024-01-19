@@ -1,4 +1,4 @@
-# Generic Makefile for The Great Escape
+# Generic Makefile for The Great Escape (headless)
 #
 # by dpt
 
@@ -105,7 +105,7 @@ WARNINGS=-Wall -Wextra -Wno-unused-parameter
 # Tools (generic)
 #
 CFLAGS=-std=c99 $(WARNINGS) -MMD -MP $(INCLUDES) $(CROSSFLAGS)
-LDFLAGS=$(CROSSFLAGS) $(LIBS)
+LDFLAGS=$(CROSSFLAGS)
 LDLIBS=$(LIBS)
 
 ifeq ($(MODE),release)

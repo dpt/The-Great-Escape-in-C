@@ -99,7 +99,7 @@ static int key_handler(uint16_t port, void *opaque)
   if (port == port_KEMPSTON_JOYSTICK)
     return state->kempston;
   else
-    return zxkeyset_for_port(port, state->keys);
+    return zxkeyset_for_port(port, &state->keys);
 }
 
 static void border_handler(int colour, void *opaque)
@@ -218,9 +218,9 @@ static void sdl_key_pressed(state_t *state, const SDL_KeyboardEvent *k)
 
     keys = &state->keys;
     if (down)
-      *keys = zxkeyset_setchar(*keys, k->keysym.sym);
+      zxkeyset_setchar(keys, k->keysym.sym);
     else
-      *keys = zxkeyset_clearchar(*keys, k->keysym.sym);
+      zxkeyset_clearchar(keys, k->keysym.sym);
   }
 }
 
@@ -323,7 +323,7 @@ int main(void)
 
   printf("Initialising...\n");
 
-  state.keys      = 0ULL;
+  zxkeyset_clear(&state.keys);
   state.kempston  = 0;
   state.paused    = 0;
   state.quit      = 0;
