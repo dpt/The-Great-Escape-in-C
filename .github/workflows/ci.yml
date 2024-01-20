@@ -24,9 +24,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: get-cmake
-        uses: lukka/get-cmake@v3.21.2
+        uses: lukka/get-cmake@v3.28
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Compile The Great Escape for Windows (via CMake)
         run: |
@@ -42,14 +42,14 @@ jobs:
   macos-build:
     runs-on: macos-10.15
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Compile The Great Escape for macOS (via xcodebuild)
         run: xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData build
 
   macos-cmake-build:
     runs-on: macos-10.15
-    
+
     outputs:
       changeset: ${{ steps.version.outputs.changeset }}
       tag: ${{ steps.version.outputs.tag }}
@@ -58,10 +58,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: get-cmake
-        uses: lukka/get-cmake@v3.21.2
+        uses: lukka/get-cmake@v3.28
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Compile The Great Escape for macOS (via CMake)
         run: |
@@ -76,19 +76,19 @@ jobs:
           changeset=$(git rev-parse --short HEAD)
           tag=$(git describe --tags | awk -F - '{ print $2 }')
           leafname="TheGreatEscape-$changeset-macOS.zip"
-          
+
           echo "This is changeset: $changeset, tag: $tag"
 
-          echo "::set-output name=changeset::$changeset"
-          echo "::set-output name=tag::$tag"
-          echo "::set-output name=leafname::$leafname"
+          echo "changeset=$changeset" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "leafname=$leafname" >> $GITHUB_OUTPUT
 
       - name: Archive it
         run: |
           cd ${{github.workspace}}/build/platform/osx/Release
           zip -9r ${{ steps.version.outputs.leafname }} TheGreatEscape.app
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: The-Great-Escape-macOS
           path: ${{github.workspace}}/build/platform/osx/Release/${{ steps.version.outputs.leafname }}
@@ -101,7 +101,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/macos-')
     steps:
       - name: Download built binary
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: The-Great-Escape-macOS
 
@@ -146,7 +146,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # Step intended to be reused in CI pipelines.
       - name: Cross compile The Great Escape for RISC OS
@@ -161,12 +161,12 @@ jobs:
           changeset=$(git rev-parse --short HEAD)
           tag=$(git describe --tags | awk -F - '{ print $3 }')
           leafname="TheGreatEscape-$changeset-RISC_OS.zip"
-          
+
           echo "This is changeset: $changeset, tag: $tag"
 
-          echo "::set-output name=changeset::$changeset"
-          echo "::set-output name=tag::$tag"
-          echo "::set-output name=leafname::$leafname"
+          echo "changeset=$changeset" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "leafname=$leafname" >> $GITHUB_OUTPUT
 
       - name: Archive it
         run: |
@@ -176,7 +176,7 @@ jobs:
           find . -type f -not -name '*,*' -exec mv '{}' '{},fff' \;  # ensure that type-less files come out as Text
           python3 -m rozipfile --verbose --create ../../${{ steps.version.outputs.leafname }} *
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: The-Great-Escape-RISC_OS
           path: ${{ steps.version.outputs.leafname }}
@@ -191,7 +191,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/risc-os-')
     steps:
       - name: Download built binary
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: The-Great-Escape-RISC_OS
 
