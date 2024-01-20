@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: get-cmake
-        uses: lukka/get-cmake@v3.28
+        uses: lukka/get-cmake@v3.28.1
 
       - uses: actions/checkout@v4
 
@@ -58,7 +58,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: get-cmake
-        uses: lukka/get-cmake@v3.28
+        uses: lukka/get-cmake@v3.28.1
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
