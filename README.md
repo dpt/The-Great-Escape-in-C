@@ -94,4 +94,5 @@ Defines an interface to a virtual ZX Spectrum to which the game talks, replacing
 
 
 # Related Links
-[Porting Chuckie Egg](http://marklomas.net/ch-egg/articles/porting-ch-egg.htm)
+- [Chase H.Q.](https://github.com/dpt/ChaseHQ)
+- [Porting Chuckie Egg](http://marklomas.net/ch-egg/articles/porting-ch-egg.htm)
