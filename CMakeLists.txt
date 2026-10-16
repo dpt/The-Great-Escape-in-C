@@ -84,10 +84,13 @@ if(TGE_SAVES)
 endif()
 
 
-# ZXGame provides the virtual Spectrum and the generic front-ends. It lives
-# beside this repository by default.
-set(ZXGAME_DIR ${CMAKE_SOURCE_DIR}/../ZXGame CACHE PATH "Path to the ZXGame repository")
-add_subdirectory(${ZXGAME_DIR} ZXGame)
+# ZXGame provides the virtual Spectrum and the generic front-ends. Use a local
+# checkout with -DFETCHCONTENT_SOURCE_DIR_ZXGAME=<path>.
+include(FetchContent)
+FetchContent_Declare(ZXGame
+  GIT_REPOSITORY https://github.com/dpt/ZXGame
+  GIT_TAG master)
+FetchContent_MakeAvailable(ZXGame)
 
 add_subdirectory(libraries/TheGreatEscape)
 

@@ -22,7 +22,7 @@ C port of the ZX Spectrum game "The Great Escape", translated routine by routine
   - `Data/` large tables (tiles, sprites, maps, room defs, masks, music) split out as `static const` blobs.
   - `Extend/Save.c` save/load, additions not in original.
 - All original globals live in a single `tgestate` state struct, passed as first argument to every function except leaf functions. Instances created and destroyed via `tge_create()` / `tge_destroy()`.
-- The virtual Spectrum and the front-end hosts live in the separate `ZXGame` repo (sibling directory; override with `-DZXGAME_DIR=`). Game-to-host interface is `zxgame_ops_t` (`ZXGame/Game.h`); TGE supplies `tge_game_ops` in `Engine/GameOps.c`. The Spectrum library replaces Z80 `IN`/`OUT`, and provides screen memory, border, keyboard, Kempston and speaker. It converts Spectrum screen memory to 4bpp or 32bpp. The game talks only to this interface, never to the host platform.
+- The virtual Spectrum and the front-end hosts live in the separate `ZXGame` repo (fetched by CMake FetchContent; use a local checkout with `-DFETCHCONTENT_SOURCE_DIR_ZXGAME=<path>`). Game-to-host interface is `zxgame_ops_t` (`ZXGame/Game.h`); TGE supplies `tge_game_ops` in `Engine/GameOps.c`. The Spectrum library replaces Z80 `IN`/`OUT`, and provides screen memory, border, keyboard, Kempston and speaker. It converts Spectrum screen memory to 4bpp or 32bpp. The game talks only to this interface, never to the host platform.
 - `platform/{osx,windows,riscos,generic}/` hold front ends (UI, sound, timing) that drive the library. `generic/` has the headless `main.c` and SDL `sdl3main.c`. The osx, windows and riscos apps are thin: the hosts are in ZXGame.
 
 ## Conventions
