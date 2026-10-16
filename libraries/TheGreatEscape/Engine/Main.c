@@ -2500,7 +2500,7 @@ void play_speaker(tgestate_t *state, sound_t sound)
       int i;
 
       for (i = 0; i < delay; i++)
-        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);;
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);
     }
 
     speakerbit ^= port_MASK_EAR; /* Toggle speaker bit. */
@@ -4800,7 +4800,7 @@ void action_poison(tgestate_t *state)
 
   state->item_structs[item_FOOD].item_and_flags |= itemstruct_ITEM_FLAG_POISONED;
 
-  state->item_attributes[item_FOOD] = attribute_BRIGHT_PURPLE_OVER_BLACK;
+  state->item_attributes[item_FOOD] = attribute_BRIGHT_MAGENTA_OVER_BLACK;
 
   draw_all_items(state);
 

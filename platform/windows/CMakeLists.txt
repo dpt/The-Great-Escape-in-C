@@ -18,4 +18,4 @@ set_target_properties(TheGreatEscapeApp
 #    OUTPUT_NAME "TheGreatEscape"
 )
 	
-target_link_libraries(TheGreatEscapeApp ZXSpectrum TheGreatEscape)
+target_link_libraries(TheGreatEscapeApp ZXGameWindows TheGreatEscape)

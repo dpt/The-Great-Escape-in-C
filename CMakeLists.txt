@@ -84,8 +84,17 @@ if(TGE_SAVES)
 endif()
 
 
-add_subdirectory(libraries/ZXSpectrum)
+# ZXGame provides the virtual Spectrum and the generic front-ends. It lives
+# beside this repository by default.
+set(ZXGAME_DIR ${CMAKE_SOURCE_DIR}/../ZXGame CACHE PATH "Path to the ZXGame repository")
+add_subdirectory(${ZXGAME_DIR} ZXGame)
+
 add_subdirectory(libraries/TheGreatEscape)
+
+# The ZXGame headless and SDL3 front-ends build everywhere except RISC OS.
+if(NOT TARGET_RISCOS)
+    add_subdirectory(platform/generic)
+endif()
 
 if(APPLE)
     add_subdirectory(platform/osx)
@@ -93,6 +102,4 @@ elseif(TARGET_RISCOS)
     add_subdirectory(platform/riscos/!GtEscape)
 elseif(MSVC)
     add_subdirectory(platform/windows)
-else()
-    add_subdirectory(platform/generic)
 endif()

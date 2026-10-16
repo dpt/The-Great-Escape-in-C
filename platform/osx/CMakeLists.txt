@@ -6,18 +6,8 @@
 #
 # vim: sw=4 ts=8 et
 
-# Note: bitfifo is in DPTLib now.
+# The Cocoa front-end proper lives in ZXGame (ZXGameMacOS).
 set(SOURCES
-    AppDelegate.h
-    AppDelegate.m
-    ZXGameView.h
-    ZXGameView.m
-    ZXGameWindow.h
-    ZXGameWindow.m
-    ZXGameWindowController.h
-    ZXGameWindowController.m
-    bitfifo.c
-    bitfifo.h
     main.m
     en.lproj/MainMenu.xib
     en.lproj/ZXGameWindow.xib)
@@ -41,8 +31,6 @@ add_executable(TheGreatEscapeApp
     ${SOURCES}
     ${RESOURCES})
 
-target_compile_definitions(TheGreatEscapeApp PRIVATE GL_SILENCE_DEPRECATION)
-
 if(CMAKE_GENERATOR STREQUAL "Xcode")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES CACHE INTERNAL "Enable Objective-C ARC")
 endif()
@@ -64,18 +52,9 @@ set_target_properties(TheGreatEscapeApp
     MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION}"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION}")
 
-find_library(AUDIOUNIT_LIBRARY AudioUnit)
-find_library(COCOA_LIBRARY Cocoa)
-find_library(COREIMAGE_LIBRARY CoreImage)
-find_library(OPENGL_LIBRARY OpenGL)
-
 target_link_libraries(TheGreatEscapeApp
-    ZXSpectrum
-    TheGreatEscape
-    ${AUDIOUNIT_LIBRARY}
-    ${COCOA_LIBRARY}
-    ${COREIMAGE_LIBRARY}
-    ${OPENGL_LIBRARY})
+    ZXGameMacOS
+    TheGreatEscape)
 
 set(SRCICONSET
     ${RESOURCES_SOURCE_DIR}/TheGreatEscape/Images.xcassets/AppIcon.appiconset)
