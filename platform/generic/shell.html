@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The Great Escape</title>
+  <script src="coi-serviceworker.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #stage {
+      display: flex;
+    }
+    canvas.emscripten {
+      border: 0;
+      image-rendering: pixelated;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+    #status {
+      position: fixed;
+      top: 0;
+      color: #999;
+      font: 14px monospace;
+    }
+    #controls {
+      position: fixed;
+      left: 1em;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      font: 13px monospace;
+      display: grid;
+      grid-template-columns: auto;
+      gap: 0.35em 0;
+    }
+    #controls span {
+      white-space: nowrap;
+    }
+    #controls kbd {
+      color: #ddd;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 0 0.3em;
+    }
+    #controls details {
+      border-top: 1px solid #333;
+      padding-top: 0.35em;
+    }
+    #controls details[open] {
+      padding-bottom: 0.1em;
+    }
+    #controls summary {
+      cursor: pointer;
+      color: #ccc;
+      margin-bottom: 0.35em;
+    }
+    #controls summary:hover {
+      color: #fff;
+    }
+    #controls summary:focus-visible {
+      outline: 2px solid #7ab8ff;
+      outline-offset: 2px;
+    }
+    #controls details > span {
+      display: block;
+      margin: 0.35em 0;
+    }
+    @media (max-width: 900px), (max-height: 500px) {
+      #controls {
+        position: static;
+        transform: none;
+        width: 90vw;
+        max-width: 28em;
+        margin: 0.75em 1em 0;
+        order: 1;
+      }
+      #stage {
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas.emscripten {
+        max-width: 95vw;
+        order: 0;
+      }
+    }
+    @media (max-width: 480px) {
+      #controls {
+        font: 12px monospace;
+        gap: 0.2em 0;
+      }
+      #controls details > span {
+        margin: 0.2em 0;
+      }
+      #controls kbd {
+        padding: 0 0.2em;
+      }
+    }
+    #about {
+      color: #999;
+      font: 13px sans-serif;
+      max-width: 48em;
+      text-align: center;
+      margin: 0 1em 0.75em;
+      line-height: 1.4;
+    }
+    #about a {
+      color: #7ab8ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+  <div id="stage">
+    <div id="controls">
+      <details open>
+        <summary>Play</summary>
+        <span>Press <kbd>0</kbd> at the menu to define keys</span>
+        <span><kbd>3</kbd> at the menu selects Sinclair: <kbd>6</kbd><kbd>7</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd></span>
+        <span><kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd> move (kempston)</span>
+        <span><kbd>.</kbd> fire (kempston)</span>
+        <span><kbd>F1</kbd> pause</span>
+        <span><kbd>F11</kbd> fullscreen</span>
+        <span><kbd>-</kbd>/<kbd>=</kbd> set window scale</span>
+      </details>
+      <details>
+        <summary>Speed</summary>
+        <span><kbd>[</kbd>/<kbd>]</kbd>/<kbd>\</kbd> speed down/up/reset</span>
+        <span><kbd>Ctrl</kbd>+<kbd>[</kbd>/<kbd>]</kbd> speed min/max</span>
+      </details>
+      <details>
+        <summary>Audio</summary>
+        <span><kbd>F2</kbd> mute all</span>
+        <span><kbd>F5</kbd>/<kbd>F6</kbd> volume down/up</span>
+        <span><kbd>F10</kbd> mute beeper sfx</span>
+      </details>
+      <details>
+        <summary>Palette</summary>
+        <span><kbd>Ctrl</kbd>+<kbd>M</kbd> monochrome palette</span>
+        <span><kbd>Ctrl</kbd>+<kbd>N</kbd> mellow palette (less harsh)</span>
+      </details>
+      <details>
+        <summary>CRT Shader</summary>
+        <span><kbd>F4</kbd> toggle CRT shader</span>
+        <span><kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> select shader param</span>
+        <span><kbd>PgUp</kbd>/<kbd>PgDn</kbd> adjust shader param</span>
+        <span><kbd>Ctrl</kbd>+<kbd>R</kbd> reset shader params</span>
+        <span><kbd>Ctrl</kbd>+<kbd>T</kbd> use tuned shader preset</span>
+      </details>
+    </div>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+  </div>
+  <div id="about">
+    <p>
+      This is a <a href="https://github.com/dpt/The-Great-Escape-in-C" target="_blank" rel="noopener">portable C reimplementation</a>
+      of the <a href="https://en.wikipedia.org/wiki/ZX_Spectrum" target="_blank" rel="noopener">ZX Spectrum</a>
+      game <a href="https://en.wikipedia.org/wiki/The_Great_Escape_(video_game)" target="_blank" rel="noopener"><em>The Great Escape</em></a>
+      by <a href="https://en.wikipedia.org/wiki/Ocean_Software" target="_blank" rel="noopener">Ocean Software</a>,
+      translated routine by routine from a disassembly of the original
+      <a href="https://en.wikipedia.org/wiki/Zilog_Z80" target="_blank" rel="noopener">Z80</a>
+      machine code.
+      This page runs that C port compiled to
+      <a href="https://webassembly.org/" target="_blank" rel="noopener">WebAssembly</a>,
+      playing directly from the original game's graphics and data.
+    </p>
+  </div>
+  <script>
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      setStatus: function (text) {
+        var el = document.getElementById('status');
+        if (!text) { el.remove(); return; }
+        el.textContent = text;
+      }
+    };
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

@@ -11,6 +11,7 @@
 #include "ZXSpectrum/Keyboard.h"
 #include "ZXSpectrum/Spectrum.h"
 
+#include "TheGreatEscape/Font.h"
 #include "TheGreatEscape/GameOps.h"
 #include "TheGreatEscape/TheGreatEscape.h"
 
@@ -157,6 +158,30 @@ static int ops_scripted_key(uint16_t port, unsigned poll_count)
 
 /* ----------------------------------------------------------------------- */
 
+/* Glyph for the front-end's on-screen display, taken from the game's own
+ * font. The font has no lower case so fold it. Unmapped characters (index 37)
+ * and space draw nothing.
+ */
+static const uint8_t *ops_osd_glyph(char c)
+{
+  unsigned char ch;
+  unsigned char index;
+
+  ch = (unsigned char) c;
+  if (ch >= 'a' && ch <= 'z')
+    ch = (unsigned char) (ch - 'a' + 'A');
+
+  index = ascii_to_font[ch];
+  if (ch == ' ' || index >= 37)
+    return NULL;
+
+  /* The font's first row is blank and the host draws seven rows, so skip the
+   * blank one. This also stops the last row being cut off. */
+  return &bitmap_font[index].row[1];
+}
+
+/* ----------------------------------------------------------------------- */
+
 const zxgame_ops_t tge_game_ops =
 {
   "The Great Escape",
@@ -179,7 +204,7 @@ const zxgame_ops_t tge_game_ops =
   NULL,
 #endif
   ops_scripted_key,
-  NULL, /* osd_glyph */
+  ops_osd_glyph,
   NULL, /* toggle_debug */
   NULL, /* debug_buffer */
   ops_in_menu
