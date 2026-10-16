@@ -14,7 +14,7 @@ macOS
 -----
 - [ ] Clicky beeper audio ought to be checked out. Could just need filtering.
 - [ ] Audio performance ought to be checked out. Avoid bitfifo or just optimise its storage? (e.g. runlength encode the waveform)
-- [ ] Perhaps replace the OpenGL front end with SpriteKit or Metal.
+- [x] Replace the OpenGL front end with Metal (done in ZXGame).
 - [ ] Add a help page or user guide. Keymap. Include solutions.
 - [ ] Real joystick support.
 - [ ] Fix tiny icon in about box.

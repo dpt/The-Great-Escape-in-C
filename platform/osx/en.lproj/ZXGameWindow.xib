@@ -23,10 +23,10 @@
                 <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <openGLView misplaced="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" id="4Vq-40-YeS" customClass="ZXGameView">
+                    <customView misplaced="YES" id="4Vq-40-YeS" customClass="ZXGameView">
                         <rect key="frame" x="0.0" y="0.0" width="512" height="384"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                    </openGLView>
+                    </customView>
                 </subviews>
             </view>
             <connections>
