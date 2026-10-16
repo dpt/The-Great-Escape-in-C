@@ -11,7 +11,6 @@ C port of the ZX Spectrum game "The Great Escape", translated routine by routine
 - macOS/Windows/Linux CMake: `./build.sh` (configures and builds in `build/`, uses Ninja if present). Manual: `mkdir build && cd build && cmake .. && cmake --build .`
 - Option `-DTGE_SAVES=OFF` disables load/save.
 - Headless test build (runs 100,000 main loop iterations then exits): `make -C platform/generic TARGET=osx-any-clang MODE=release build` (see header of `platform/generic/Makefile`).
-- Xcode: `platform/osx/TheGreatEscape.xcodeproj` (CI uses `xcodebuild -scheme Debug`).
 - RISC OS: `riscos-ci-build.sh` (GCCSDK + CMake). Emscripten/SDL: scripts in `platform/generic/`.
 - CI definitions: `.github/workflows/ci.yml`. No unit test suite or linter exists. Headless build is the only automated check.
 

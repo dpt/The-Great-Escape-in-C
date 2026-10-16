@@ -39,14 +39,6 @@ jobs:
   ## macOS
   ##
 
-  macos-build:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Compile The Great Escape for macOS (via xcodebuild)
-        run: xcodebuild -project platform/osx/TheGreatEscape.xcodeproj -scheme Debug -derivedDataPath DerivedData build
-
   macos-cmake-build:
     runs-on: macos-latest
 

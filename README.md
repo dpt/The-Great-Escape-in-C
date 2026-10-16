@@ -51,7 +51,7 @@ The front-ends attempt to always preserve the game's aspect ratio and snap to wh
 | Port | Maintained? | Notes |
 |-|-|-|
 | macOS CMake | Yes | My default build; the most likely to be up-to-date. To build use `cd <src> && mkdir build && cd build && cmake .. && cmake --build .`, or [`build.sh`](build.sh) which does the same. |
-| macOS native | Probably | To build open up the Xcode project `platform/osx/The Great Escape.xcodeproj` and build that using ⌘B. Run using ⌘R. |
+| macOS native | Probably | Build with CMake (`./build.sh`). The app is `build/platform/osx/Release/TheGreatEscape.app`. |
 | Windows CMake | Yes | CMake build - like above |
 | Windows native | Probably | Needs Visual Studio 2013. Trunk build lacks sound and UI niceties (but there are improvements on a branch somewhere...) To build open up the Visual Studio solution `platform/windows/TheGreatEscape/TheGreatEscape.sln` and build that using F7. Run using F5. |
 | RISC OS | Yes | Runs on RISC OS 3.1 or later. Sound requires a Risc PC or later with a 16-bit sound system. To build this uses GCCSDK and CMake. If you're nutty enough to want to build the RISC OS version then you might want to talk to me first, or take a look at [`riscos-ci-build.sh`](riscos-ci-build.sh). |
@@ -83,7 +83,7 @@ Defines an interface to a virtual ZX Spectrum to which the game talks, replacing
         ZXSpectrum/
     platform/           - platform-specific source
         generic/        - generic Makefile build environment
-        osx/            - Xcode build environment
+        osx/            - macOS app (CMake)
         riscos/         - RISC OS build environment
         windows/        - Windows build environment
 ```
