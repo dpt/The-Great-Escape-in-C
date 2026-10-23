@@ -157,7 +157,7 @@ static void tge_initialise(tgestate_t *state)
     attribute_BRIGHT_RED_OVER_BLACK,
     attribute_GREEN_OVER_BLACK,
     attribute_WHITE_OVER_BLACK,
-    attribute_PURPLE_OVER_BLACK,
+    attribute_MAGENTA_OVER_BLACK,
     attribute_BRIGHT_RED_OVER_BLACK,
     attribute_YELLOW_OVER_BLACK,
     attribute_GREEN_OVER_BLACK,

@@ -2500,8 +2500,13 @@ void play_speaker(tgestate_t *state, sound_t sound)
       int i;
 
       for (i = 0; i < delay; i++)
-        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);;
+        state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);
     }
+
+    /* Conv: Timing: The original spends 33 + 16 * delay T-states per
+     * iteration. The OUTs above account for 11 each, so log the rest for
+     * hosts which timestamp speaker output. */
+    state->speccy->logtime(state->speccy, 22 + 5 * delay);
 
     speakerbit ^= port_MASK_EAR; /* Toggle speaker bit. */
   }
@@ -4800,7 +4805,7 @@ void action_poison(tgestate_t *state)
 
   state->item_structs[item_FOOD].item_and_flags |= itemstruct_ITEM_FLAG_POISONED;
 
-  state->item_attributes[item_FOOD] = attribute_BRIGHT_PURPLE_OVER_BLACK;
+  state->item_attributes[item_FOOD] = attribute_BRIGHT_MAGENTA_OVER_BLACK;
 
   draw_all_items(state);
 

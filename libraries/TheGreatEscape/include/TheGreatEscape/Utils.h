@@ -32,6 +32,7 @@
 /** Used to specify variable-length arrays. */
 #define UNKNOWN 1
 
+#undef NELEMS
 #define NELEMS(a) ((int) (sizeof(a) / sizeof(a[0])))
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

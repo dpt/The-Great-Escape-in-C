@@ -13,7 +13,7 @@ if(HOST_TOOLS_ONLY)
     return()
 endif()
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.18...3.19)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -24,14 +24,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(ExternalProject)
 
 
-project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
+project(TheGreatEscape VERSION 0.97.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
 
 set(DESCRIPTION "The Great Escape")
 set(AUTHOR "David Thomas")
 set(EMAIL dave@davespace.co.uk)
 set(CODE_IDENTIFIER uk.co.davespace.TheGreatEscape)
 #set(CODE_SIGN_IDENTITY )
-set(VERSION 1.0.0)
+set(VERSION 0.97.0)
 set(COPYRIGHT "Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2024 David Thomas &lt;dave@davespace.co.uk&gt; (this version).")
 
 
@@ -84,8 +84,20 @@ if(TGE_SAVES)
 endif()
 
 
-add_subdirectory(libraries/ZXSpectrum)
+# ZXGame provides the virtual Spectrum and the generic front-ends. Use a local
+# checkout with -DFETCHCONTENT_SOURCE_DIR_ZXGAME=<path>.
+include(FetchContent)
+FetchContent_Declare(ZXGame
+  GIT_REPOSITORY https://github.com/dpt/ZXGame
+  GIT_TAG 0.1.1)
+FetchContent_MakeAvailable(ZXGame)
+
 add_subdirectory(libraries/TheGreatEscape)
+
+# The ZXGame headless and SDL3 front-ends build everywhere except RISC OS.
+if(NOT TARGET_RISCOS)
+    add_subdirectory(platform/generic)
+endif()
 
 if(APPLE)
     add_subdirectory(platform/osx)
@@ -93,6 +105,4 @@ elseif(TARGET_RISCOS)
     add_subdirectory(platform/riscos/!GtEscape)
 elseif(MSVC)
     add_subdirectory(platform/windows)
-else()
-    add_subdirectory(platform/generic)
 endif()

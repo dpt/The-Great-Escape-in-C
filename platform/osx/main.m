@@ -6,11 +6,11 @@
 //  Copyright (c) 2013 David Thomas. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import "TheGreatEscape/GameOps.h"
 
 int main(int argc, char *argv[])
 {
-  return NSApplicationMain(argc, (const char **)argv);
+  return zxgame_macos_main(argc, argv, &tge_game_ops);
 }
 
 // vim: ts=8 sts=2 sw=2 et

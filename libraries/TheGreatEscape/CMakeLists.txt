@@ -24,6 +24,7 @@ add_library(TheGreatEscape
     Engine/Create.c
     Engine/Debug.c
     Engine/Events.c
+    Engine/GameOps.c
     Engine/Input.c
     Engine/Main.c
     Engine/Menu.c
@@ -67,6 +68,7 @@ add_library(TheGreatEscape
     include/TheGreatEscape/Types.h
     include/TheGreatEscape/Utils.h
     include/TheGreatEscape/Zoombox.h
+    ../../include/TheGreatEscape/GameOps.h
     ../../include/TheGreatEscape/TheGreatEscape.h)
 
 target_include_directories(TheGreatEscape
@@ -75,16 +77,18 @@ target_include_directories(TheGreatEscape
     PRIVATE
     include/)
 
+target_link_libraries(TheGreatEscape PUBLIC ZXSpectrum)
+
 if(MSVC)
     target_compile_definitions(TheGreatEscape PUBLIC TGE_BUILD_STATIC)
 endif()
 
 if(TGE_SAVES)
     target_sources(TheGreatEscape PRIVATE Extend/Save.c)
-    target_compile_definitions(TheGreatEscape PRIVATE TGE_SAVES)
+    target_compile_definitions(TheGreatEscape PUBLIC TGE_SAVES)
 
     # zerotape
     add_dependencies(TheGreatEscape zerotape)
     target_include_directories(TheGreatEscape PRIVATE ${ZEROTAPE_INCLUDE})
-    target_link_libraries(TheGreatEscape ${ZEROTAPE_LIB})
+    target_link_libraries(TheGreatEscape PRIVATE ${ZEROTAPE_LIB})
 endif()

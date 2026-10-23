@@ -523,7 +523,7 @@ const static_tile_t static_tiles[79] =
         _____XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -553,7 +553,7 @@ const static_tile_t static_tiles[79] =
         XX__XXX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -568,7 +568,7 @@ const static_tile_t static_tiles[79] =
         XXX__XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -583,7 +583,7 @@ const static_tile_t static_tiles[79] =
         XX___XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -598,7 +598,7 @@ const static_tile_t static_tiles[79] =
         XXX_____
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -613,7 +613,7 @@ const static_tile_t static_tiles[79] =
         _____XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -628,7 +628,7 @@ const static_tile_t static_tiles[79] =
         XX__XXX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -643,7 +643,7 @@ const static_tile_t static_tiles[79] =
         XXX__XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -658,7 +658,7 @@ const static_tile_t static_tiles[79] =
         XX___XX_
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -673,7 +673,7 @@ const static_tile_t static_tiles[79] =
         XXX_____
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -688,7 +688,7 @@ const static_tile_t static_tiles[79] =
         ________
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -718,7 +718,7 @@ const static_tile_t static_tiles[79] =
         ________
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -733,7 +733,7 @@ const static_tile_t static_tiles[79] =
         ________
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -748,7 +748,7 @@ const static_tile_t static_tiles[79] =
         ________
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {
@@ -763,7 +763,7 @@ const static_tile_t static_tiles[79] =
         ________
       }
     },
-    attribute_PURPLE_OVER_BLACK
+    attribute_MAGENTA_OVER_BLACK
   },
   {
     {

@@ -76,7 +76,7 @@ set(LIBS_DIR ${APPENGINE_REPO_ROOT}/libs)
 # Import DPTLib
 FetchContent_Declare(DPTLib
     GIT_REPOSITORY https://github.com/dpt/DPTLib
-    GIT_TAG 0.4.1)
+    GIT_TAG 0.6.0)
 # Expanding out FetchContent_MakeAvailable(DPTLib) here so I can use EXCLUDE_FROM_ALL
 FetchContent_GetProperties(DPTLib)
 if(NOT DPTLib_POPULATED)
@@ -108,26 +108,7 @@ set_target_properties(GtEscape PROPERTIES
     C_STANDARD 99
     RUNTIME_OUTPUT_NAME !RunImage)
 
-set(ALL_SOURCES
-    globals.c
-    globals.h
-    iconbar.c
-    iconbar.h
-    main.c
-    menunames.h
-    poll.c
-    poll.h
-    ssbuffer.h
-    timermod.c
-    timermod.h
-    zxgame.c
-    zxgame.h
-    zxgames.c
-    zxgames.h
-    zxscale.c
-    zxscale.h)
-
-target_sources(GtEscape PRIVATE ${ALL_SOURCES})
+target_sources(GtEscape PRIVATE main.c)
 
 
 # Generate iconnames.h
@@ -149,6 +130,7 @@ add_custom_command(OUTPUT ${ICONNAMES_H}
 add_custom_target(GtEscapeIconNames ALL DEPENDS ${ICONNAMES_H})
 
 add_dependencies(GtEscape GtEscapeIconNames)
+add_dependencies(ZXGameRISCOS GtEscapeIconNames)
 
 target_include_directories(GtEscape PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -165,25 +147,26 @@ endif()
 # Library dependencies
 #
 
-target_link_libraries(GtEscape PRIVATE ZXSpectrum TheGreatEscape)
+target_link_libraries(GtEscape PRIVATE ZXGameRISCOS TheGreatEscape)
+
+# The shared RISC OS host needs the same dependencies as the app.
+target_include_directories(ZXGameRISCOS
+    PRIVATE
+    ${APPENGINE_INCLUDE}
+    ${DPTLIB_INCLUDE}
+    ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(ZXGameRISCOS PRIVATE AppEngine DPTLib)
 
 if(TARGET_RISCOS)
     # OSLib (& anything else in GCCSDK)
     target_include_directories(GtEscape PRIVATE $ENV{GCCSDK_INSTALL_ENV}/include)
+    target_include_directories(ZXGameRISCOS PRIVATE $ENV{GCCSDK_INSTALL_ENV}/include)
     target_link_libraries(GtEscape PRIVATE $ENV{GCCSDK_INSTALL_ENV}/lib/libOSLib32.a)
 endif()
 
 option(USE_FORTIFY "Use Fortify" OFF)
 if(USE_FORTIFY)
     target_link_libraries(GtEscape PRIVATE Fortify)
-endif()
-
-# Feature options
-#
-
-if(TGE_SAVES)
-    target_compile_definitions(GtEscape PRIVATE TGE_SAVES)
-    target_sources(GtEscape PRIVATE dataxfer.c dataxfer.h zxsave.c zxsave.h)
 endif()
 
 # Installation
