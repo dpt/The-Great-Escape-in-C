@@ -24,14 +24,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(ExternalProject)
 
 
-project(TheGreatEscape VERSION 1.0.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
+project(TheGreatEscape VERSION 0.97.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
 
 set(DESCRIPTION "The Great Escape")
 set(AUTHOR "David Thomas")
 set(EMAIL dave@davespace.co.uk)
 set(CODE_IDENTIFIER uk.co.davespace.TheGreatEscape)
 #set(CODE_SIGN_IDENTITY )
-set(VERSION 1.0.0)
+set(VERSION 0.97.0)
 set(COPYRIGHT "Copyright 1986 Ocean Software Ltd. (The Great Escape). Copyright 2012-2024 David Thomas &lt;dave@davespace.co.uk&gt; (this version).")
 
 
