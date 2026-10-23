@@ -122,6 +122,53 @@ jobs:
           asset_content_type: application/zip
 
   ##
+  ## Web (Emscripten, SDL3)
+  ##
+
+  emscripten-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get-cmake
+        uses: lukka/get-cmake@v4.4.2
+
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 6.0.10
+
+      - uses: actions/checkout@v4
+
+      - name: Compile The Great Escape for the web (via CMake)
+        run: |
+          emcmake cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -GNinja -DCMAKE_BUILD_TYPE=Release
+          cmake --build ${{github.workspace}}/build
+
+      - name: Gather the site
+        run: |
+          mkdir site
+          cd ${{github.workspace}}/build/platform/generic
+          cp TheGreatEscapeSDL3.html TheGreatEscapeSDL3.js TheGreatEscapeSDL3.wasm coi-serviceworker.js ${{github.workspace}}/site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  # Deploys to GitHub Pages only for pushes to main
+  emscripten-deploy:
+    needs: emscripten-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}TheGreatEscapeSDL3.html
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  ##
   ## RISC OS
   ##
 
