@@ -570,6 +570,9 @@ int menu_screen(tgestate_t *state)
     do
     {
       int to_emit = 3; // Conv: Whatever we do always emit this many bits
+      int tstates; // Conv: Original T-states for this iteration
+
+      tstates = 48;
 
       // B,C are a pair of counters? half pulse length?
       // B = lo, C = hi  (in this routine)
@@ -582,10 +585,13 @@ int menu_screen(tgestate_t *state)
         bit = speaker0 & port_MASK_EAR;
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker0);
         to_emit--;
+        tstates += 43;
         counter_0 = frequency_0;
       }
       else
       {
+        if (B == 0)
+          tstates += 9;
         counter_0 = (B << 8) | C;
       }
 
@@ -597,19 +603,25 @@ int menu_screen(tgestate_t *state)
         bit = speaker1 & port_MASK_EAR;
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speaker1);
         to_emit--;
+        tstates += 43;
         counter_1 = frequency_1;
       }
       else
       {
+        if (Bdash == 0)
+          tstates += 9;
         counter_1 = (Bdash << 8) | Cdash;
       }
 
       /* Conv: We simulate the EAR port holding its level by adding extra
-       * OUTs here. */
-      // FIXME: The timing needs working out here: 3 OUTs per loop works,
-      // but why?
+       * OUTs here. The common path of the original loop takes 48 T-states:
+       * three OUTs at ~16 T-states per bit for hosts which count bits. */
       while (to_emit-- > 0)
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, bit);
+
+      /* Conv: Timing: The OUTs above account for 11 T-states each, so log
+       * the rest for hosts which timestamp speaker output. */
+      state->speccy->logtime(state->speccy, tstates - 3 * 11);
     }
     while (--minor_delay);
   }

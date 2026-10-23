@@ -2503,6 +2503,11 @@ void play_speaker(tgestate_t *state, sound_t sound)
         state->speccy->out(state->speccy, port_BORDER_EAR_MIC, speakerbit);
     }
 
+    /* Conv: Timing: The original spends 33 + 16 * delay T-states per
+     * iteration. The OUTs above account for 11 each, so log the rest for
+     * hosts which timestamp speaker output. */
+    state->speccy->logtime(state->speccy, 22 + 5 * delay);
+
     speakerbit ^= port_MASK_EAR; /* Toggle speaker bit. */
   }
   while (--iters);
