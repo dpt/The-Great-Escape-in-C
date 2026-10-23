@@ -89,7 +89,7 @@ endif()
 include(FetchContent)
 FetchContent_Declare(ZXGame
   GIT_REPOSITORY https://github.com/dpt/ZXGame
-  GIT_TAG master)
+  GIT_TAG 0.1.0)
 FetchContent_MakeAvailable(ZXGame)
 
 add_subdirectory(libraries/TheGreatEscape)
