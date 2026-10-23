@@ -525,13 +525,14 @@ int menu_screen(tgestate_t *state)
 
   assert(state != NULL);
 
-  state->speccy->stamp(state->speccy);
-
   /* Conv: Menu driving loop was removed and the routine changed to return
    * non-zero when the game should begin. */
   menu_keys_state = check_menu_keys(state);
   if (menu_keys_state < 0 || menu_keys_state >= 2)
     return menu_keys_state; /* Start the game, or terminate the game thread */
+
+  /* Conv: Stamp after the early return so every stamp meets its sleep. */
+  state->speccy->stamp(state->speccy);
 
   wave_morale_flag(state);
 
