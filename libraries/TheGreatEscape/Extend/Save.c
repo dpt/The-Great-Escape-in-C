@@ -27,7 +27,7 @@
 #include "TheGreatEscape/Main.h" /* for animations[] */
 #include "TheGreatEscape/Messages.h" /* for messages_table[] */
 
-#include "zerotape.h"
+#include "zerotape/zerotape.h"
 
 /* ----------------------------------------------------------------------- */
 

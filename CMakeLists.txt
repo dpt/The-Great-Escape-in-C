@@ -21,7 +21,6 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-include(ExternalProject)
 
 
 project(TheGreatEscape VERSION 0.97.0 DESCRIPTION "The Great Escape" LANGUAGES C CXX)
@@ -66,21 +65,14 @@ endif()
 
 
 
+# zerotape provides save game serialisation. Use a local checkout with
+# -DFETCHCONTENT_SOURCE_DIR_ZEROTAPE=<path>.
 if(TGE_SAVES)
-    set(ZEROTAPE_INSTALL_DIR ${CMAKE_BINARY_DIR}/zerotape)
-    set(ZEROTAPE_INCLUDE ${ZEROTAPE_INSTALL_DIR}/include)
-    if(MSVC)
-        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/zerotape.lib)
-    else()
-        set(ZEROTAPE_LIB ${ZEROTAPE_INSTALL_DIR}/lib/libzerotape.a)
-    endif()
-    # BUILD_BYPRODUCTS must be specified in this command otherwise ninja won't
-    # know when to build zerotape.
-    ExternalProject_Add(zerotape
+    include(FetchContent)
+    FetchContent_Declare(zerotape
         GIT_REPOSITORY https://github.com/dpt/zerotape
-        GIT_TAG 0.6.0
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${ZEROTAPE_INSTALL_DIR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-        BUILD_BYPRODUCTS ${ZEROTAPE_LIB})
+        GIT_TAG 0.7.0)
+    FetchContent_MakeAvailable(zerotape)
 endif()
 
 

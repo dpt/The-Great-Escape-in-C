@@ -87,8 +87,5 @@ if(TGE_SAVES)
     target_sources(TheGreatEscape PRIVATE Extend/Save.c)
     target_compile_definitions(TheGreatEscape PUBLIC TGE_SAVES)
 
-    # zerotape
-    add_dependencies(TheGreatEscape zerotape)
-    target_include_directories(TheGreatEscape PRIVATE ${ZEROTAPE_INCLUDE})
-    target_link_libraries(TheGreatEscape PRIVATE ${ZEROTAPE_LIB})
+    target_link_libraries(TheGreatEscape PRIVATE zerotape)
 endif()
