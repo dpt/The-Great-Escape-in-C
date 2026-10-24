@@ -31,19 +31,14 @@ rename --version || { apt-get update && \
 source /home/riscos/gccsdk-params
 
 # AppEngine
-if [[ ! -d PrivateEye ]] ; then
+if [[ -d PrivateEye ]] ; then
+    git -C PrivateEye pull --ff-only
+else
     git clone https://github.com/dpt/PrivateEye
-    cd PrivateEye
 fi
 export APPENGINE_ROOT=${scriptdir}/PrivateEye
 
 cd $APPENGINE_ROOT
-
-if [[ ! -d PrivateEye/libs/flex ]] ; then
-    cd libs
-    ./grabflex.sh
-    cd ..
-fi
 
 if $BUILD_OSLIB ; then
     if [[ ! -d libs/oslib || ! -d "$GCCSDK_INSTALL_ENV/include/oslib/" ]] ; then

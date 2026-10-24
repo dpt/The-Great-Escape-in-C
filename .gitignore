@@ -51,3 +51,6 @@ build*
 *.DS_Store
 *.swp
 .vs
+
+# AppEngine checkout made by riscos-ci-build.sh
+/PrivateEye/
